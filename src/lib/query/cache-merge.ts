@@ -11,7 +11,7 @@
  *
  * `mergePreservingNested` is the canonical replacement: scalar fields from the
  * response overwrite the cache; nested keys are preserved from cache when the
- * response omits them (undefined/null/empty array).
+ * response omits them (undefined/null).
  *
  * Usage pattern (with invalidate as the safety net):
  *
@@ -28,11 +28,11 @@
  *
  * Scalar fields from `partial` overwrite the corresponding fields in
  * `cached`. For every key in `preserveKeys`, the value from `cached` is
- * kept whenever `partial` supplies `undefined`, `null`, or an empty array.
+ * kept whenever `partial` supplies `undefined` or `null`.
  *
  * @param cached - The current value held in the TanStack Query cache.
  * @param partial - The (possibly partial) object returned by the mutation endpoint.
- * @param preserveKeys - Keys whose cached values must not be overwritten by absent or empty partial values.
+ * @param preserveKeys - Keys whose cached values must not be overwritten by null/undefined partial values.
  * @returns A new merged object with scalar fields from `partial` and nested fields from `cached`.
  *
  * @example
@@ -52,9 +52,7 @@ export function mergePreservingNested<T extends object>(
   const merged = { ...cached, ...partial };
   for (const key of preserveKeys) {
     const incoming = (partial as Record<keyof T, unknown>)[key];
-    const isEmpty =
-      incoming == null || (Array.isArray(incoming) && incoming.length === 0);
-    if (isEmpty) {
+    if (incoming == null) {
       merged[key] = cached[key];
     }
   }
