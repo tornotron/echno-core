@@ -13,8 +13,9 @@ import { ApiError } from '@echno-core/lib/api/api-client';
  * getErrorMessage
  *
  * Extracts a user-friendly error message from any error object.
- * Returns the error's message property if available, otherwise
- * returns a generic fallback message.
+ * For {@link ApiError}, appends field-level validation messages from
+ * `error.errors` (if present) to the base message. Returns the error's
+ * message property for generic errors, or a fallback string otherwise.
  *
  * @param error - The error object (unknown type for flexibility)
  * @returns A user-friendly error message string
@@ -31,7 +32,14 @@ import { ApiError } from '@echno-core/lib/api/api-client';
  */
 export function getErrorMessage(error: unknown): string {
   if (error instanceof ApiError) {
-    return error.details ?? error.message;
+    const base = error.details ?? error.message;
+    if (error.errors && Object.keys(error.errors).length > 0) {
+      const fieldMessages = Object.entries(error.errors)
+        .flatMap(([field, messages]) => messages.map((m) => `${field}: ${m}`))
+        .join('; ');
+      return `${base} — ${fieldMessages}`;
+    }
+    return base;
   }
   if (error instanceof Error) {
     return error.message;
