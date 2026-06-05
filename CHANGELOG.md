@@ -4,6 +4,19 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 
 The project currently has released versions in git tags: `v0.0.0`, `v0.0.1`, `v0.1.0`, and `v0.1.1`.
 
+## [v0.3.2] - 2026-06-06
+
+### Added
+
+- GitHub Actions workflow for publishing releases to GitHub Packages.
+- Package metadata for repository, homepage, issues, author, license, and published files.
+
+### Changed
+
+- Package version bumped to `0.3.2`.
+- Publish flow now uses `prepublishOnly` to build before packaging.
+- Publish configuration was added for the GitHub Packages registry.
+
 ## [v0.3.1] - 2026-06-06
 
 ### Added

@@ -1,7 +1,18 @@
 {
   "name": "@tornotron/echno-core",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "private": false,
+  "description": "Shared core library for Echno: API client, RBAC, utilities, types, services, and React Query hooks.",
+  "license": "UNLICENSED",
+  "author": "Tornotron",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tornotron/echno-core.git"
+  },
+  "homepage": "https://github.com/tornotron/echno-core#readme",
+  "bugs": {
+    "url": "https://github.com/tornotron/echno-core/issues"
+  },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
@@ -10,10 +21,15 @@
       "types": "./dist/index.d.ts"
     }
   },
+  "files": [
+    "dist",
+    "README.md",
+    "CHANGELOG.md"
+  ],
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "prepare": "tsc"
+    "prepublishOnly": "npm run build"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.90.12",
@@ -26,5 +42,9 @@
     "@types/node": "^25.9.1",
     "@types/react": "^19.2.16",
     "typescript": "^5"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
+    "access": "restricted"
   }
 }
