@@ -3,17 +3,17 @@
  *
  * React Query mutation hooks for attachments.
  *
- * Cache discipline (per Milestone 8 — attachment):
- *   - `useUploadAttachment` — POST returns `AttachmentDto` (Rule A, full).
- *     Backend doc currently labels it `ResponseDto`; the service parses it as
- *     a single `Attachment` so the actual shape is a single full DTO. No
- *     current external callers; cache writes seeded for future use.
- *   - `useDeleteAttachment` — DELETE returns `ApiResponse` (Rule C, void).
- *     Service returns `Promise<void>`. Discipline: predicate-scan every parent
+ * Cache discipline:
+ *   - `useUploadAttachment` — POST returns a full `AttachmentDto`. Backend
+ *     doc currently labels it `ResponseDto`; the service parses it as a
+ *     single `Attachment` so the actual shape is one full DTO. No current
+ *     external callers; cache writes seeded for future use.
+ *   - `useDeleteAttachment` — DELETE returns `ApiResponse` (void ack).
+ *     Service returns `Promise<void>`. Predicate-scans every parent
  *     namespace that may embed `attachments: Attachment[]` (project, task,
- *     issue, user, organization, employee), and strip the deleted row from
+ *     issue, user, organization, employee) and strips the deleted row from
  *     every cached parent shape (detail object, array of entities, paged
- *     container). Fall back to attachment-namespace invalidation only if
+ *     container). Falls back to attachment-namespace invalidation only if
  *     nothing in any parent cache matched.
  *
  * Toast notifications are intentionally absent — callers supply onSuccess /
@@ -123,8 +123,9 @@ export function useUploadAttachment() {
       attachmentService.upload(request),
     onSuccess: (attachment: Attachment, variables) => {
       // POST /attachment/web/entityId/{entityId}/entityType/{entityType}
-      // → AttachmentDto (Rule A, full). Backend doc labels this `ResponseDto`
-      // but the service parses a single Attachment — drift, not Rule B.
+      // → full `AttachmentDto`. Backend doc labels this `ResponseDto` but the
+      // service parses it as a single Attachment — naming drift, not a
+      // partial-DTO response.
       //
       // Seed the single-attachment cache (`useAttachmentByEntity` consumers
       // like profile picture pages).

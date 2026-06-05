@@ -4,12 +4,10 @@
  * Mutation hooks for the current authenticated user.
  *
  * All three mutations target the same `PATCH /user/web/{id}` endpoint
- * (JSON, multipart, and silent organization-switch variants) and apply
- * **Rule A** — the backend returns the full `UserDto`, so every `onSuccess`
- * patches the singleton {@link userKeys.all} cache directly with the
- * response and runs **zero invalidations**. The longer 10-minute staleTime
- * the hooks once relied on is no longer needed because the response IS the
- * canonical user.
+ * (JSON, multipart, and silent organization-switch variants). The backend
+ * returns the full `UserDto`, so every `onSuccess` patches the singleton
+ * {@link userKeys.all} cache directly with the response and runs **zero
+ * invalidations** — the response is the canonical user.
  *
  * Toast notifications are intentionally absent — callers supply onSuccess /
  * onError feedback appropriate to their UI context.

@@ -5,11 +5,11 @@
  *
  * Key shapes:
  * - `['user']` — namespace root **and** the singleton query key for the
- *   current authenticated user. This deliberately violates the Milestone 1B
- *   "`all` = invalidation prefix only" convention: there is only one
- *   current user at a time, and existing call sites in `UserPrefetcher`,
- *   `profile-edit-form`, and cross-module invalidations from
- *   `useUpdateEmployee*` depend on this shape.
+ *   current authenticated user. This deliberately diverges from the
+ *   project-wide "`all` = invalidation-prefix only" convention: there is
+ *   only one current user at a time, and existing call sites in
+ *   `UserPrefetcher`, `profile-edit-form`, and cross-module invalidations
+ *   from `useUpdateEmployee*` depend on this shape.
  * - `['user', 'list']` — placeholder for the unwired `readAllUsers`
  *   endpoint. Not consumed today.
  * - `['user', 'detail', id]` — placeholder for the unwired per-id
