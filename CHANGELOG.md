@@ -4,6 +4,20 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 
 The project currently has released versions in git tags: `v0.0.0`, `v0.0.1`, `v0.1.0`, and `v0.1.1`.
 
+## [v0.2.0] - 2026-06-05
+
+### Added
+
+- User domain types for profiles, roles, update payloads, and file-upload metadata.
+- User service functions for reading and updating the current user profile.
+- TanStack Query hooks for user queries and mutations.
+- Public module exports for the new user APIs.
+
+### Changed
+
+- The TypeScript target was updated to `ES2023`.
+- User-related attachment, service, and hook imports were normalized to relative paths.
+
 ## [v0.1.1] - 2026-06-05
 
 ### Fixed
