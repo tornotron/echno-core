@@ -28,3 +28,9 @@ export * from './lib/query/cache-merge';
 export * from './types/attachment';
 export * from './services/attachment-service';
 export * from './hooks/attachment';
+
+// User
+export * from './types/user';
+export * from './services/user-service';
+export * from './hooks/user';
+
