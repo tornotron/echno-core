@@ -5,10 +5,8 @@
  *
  * Exports:
  * - {@link useUser} — fetches the current authenticated user's profile.
- *
- * `useUserEmployees` is intentionally absent — it depends on the Employee
- * type which has not yet migrated. It lives in echno-web until the employee
- * module ships.
+ * - {@link useUserEmployees} — fetches every employee membership the current
+ *   user holds across organizations.
  */
 
 import { useQuery } from '@tanstack/react-query';
@@ -20,15 +18,17 @@ import { userKeys } from './user-keys';
 /**
  * Fetches the current authenticated user's profile.
  *
- * Uses the **standard** query profile (staleTime 60 s, gcTime 5 min,
- * `refetchOnWindowFocus` in production only) plus {@link shouldRetry} for
- * retry classification. The profile is prefetched on login by
- * `UserPrefetcher`, so the first observation typically hits cache rather
- * than the network.
+ * Uses the **standard** query profile (`staleTime` 60 s, `gcTime` 5 min,
+ * `refetchOnWindowFocus` in production only) with {@link shouldRetry}.
+ * The query is enabled by default; pass `{ enabled: false }` to defer
+ * until the auth token is available.
  *
- * @param options - Optional flag bag; pass `enabled: false` to defer the
- *   query (e.g. before authentication completes). Defaults to enabled.
- * @returns A TanStack `UseQueryResult` wrapping a {@link User}.
+ * Reads from the singleton {@link userKeys.all} cache, which is also
+ * patched directly by every mutation in this module.
+ *
+ * @param options - Optional consumer overrides.
+ * @param options.enabled - When `false`, the query is paused. Defaults to `true`.
+ * @returns A TanStack `UseQueryResult` wrapping the current {@link User}.
  */
 export function useUser(options?: { enabled?: boolean }) {
   return useQuery({
@@ -37,5 +37,23 @@ export function useUser(options?: { enabled?: boolean }) {
     ...standardQueryOptions,
     retry: shouldRetry,
     enabled: options?.enabled ?? true,
+  });
+}
+
+/**
+ * Fetches every {@link Employee} membership the current user holds across
+ * organizations.
+ *
+ * Uses the **standard** query profile with {@link shouldRetry}; always
+ * enabled because the backend endpoint requires no parameters.
+ *
+ * @returns A TanStack `UseQueryResult` wrapping `Employee[]`.
+ */
+export function useUserEmployees() {
+  return useQuery({
+    queryKey: userKeys.employees(),
+    queryFn: () => userService.getUserEmployees(),
+    ...standardQueryOptions,
+    retry: shouldRetry,
   });
 }
