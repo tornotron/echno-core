@@ -4,6 +4,19 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 
 The project currently has released versions in git tags: `v0.0.0`, `v0.0.1`, `v0.1.0`, and `v0.1.1`.
 
+## [v0.3.1] - 2026-06-06
+
+### Added
+
+- `userService.getUserEmployees()` for fetching the current user's employee memberships.
+- `useUserEmployees()` for querying the current user's memberships across organizations.
+
+### Changed
+
+- User service parsing now handles employee membership responses with dedicated validation and error handling.
+- Documentation and inline comments were refreshed across the user and attachment mutation hooks.
+- Package version bumped to `0.3.1`.
+
 ## [v0.3.0] - 2026-06-06
 
 ### Added
