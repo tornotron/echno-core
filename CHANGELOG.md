@@ -2,7 +2,20 @@
 
 All notable changes to `@tornotron/echno-core` will be documented in this file.
 
-The project currently has two released versions in git tags: `v0.0.0` and `v0.0.1`.
+The project currently has released versions in git tags: `v0.0.0`, `v0.0.1`, `v0.1.0`, and `v0.1.1`.
+
+## [v0.1.1] - 2026-06-05
+
+### Fixed
+
+- Updated attachment-related import paths to use relative imports.
+- Removed the now-unneeded path alias entry from `tsconfig.json`.
+
+## [v0.1.0] - 2026-06-05
+
+### Added
+
+- Initial changelog documenting the first published versions of `@tornotron/echno-core`.
 
 ## [v0.0.1] - 2026-06-05
 
