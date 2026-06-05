@@ -1,10 +1,10 @@
-import { api, ApiError } from '@echno-core/lib/api/api-client';
-import { logger } from '@echno-core/lib/logger';
+import { api, ApiError } from '../lib/api/api-client';
+import { logger } from '../lib/logger';
 import {
   Attachment,
   parseAttachment,
   UploadAttachmentRequest,
-} from '@echno-core/types/attachment';
+} from '../types/attachment';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ApiResponse = any;

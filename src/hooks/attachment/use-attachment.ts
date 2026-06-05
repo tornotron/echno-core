@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
-import { attachmentService } from '@echno-core/services/attachment-service';
-import { Attachment } from '@echno-core/types/attachment';
-import { shouldRetry } from '@echno-core/lib/query/retry';
+import { attachmentService } from '../../services/attachment-service';
+import { Attachment } from '../../types/attachment';
+import { shouldRetry } from '../../lib/query/retry';
 import { attachmentKeys } from './attachment-keys';
 
 /**

@@ -21,8 +21,8 @@
  */
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { attachmentService } from '@echno-core/services/attachment-service';
-import { Attachment, UploadAttachmentRequest } from '@echno-core/types/attachment';
+import { attachmentService } from '../../services/attachment-service';
+import { Attachment, UploadAttachmentRequest } from '../../types/attachment';
 import {
   attachmentKeys,
   ATTACHMENT_PARENT_NAMESPACES,

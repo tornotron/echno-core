@@ -1,5 +1,5 @@
 // types/attachment/attachment.ts
-import { parsePositiveInt } from '@echno-core/lib/utils/parse-id';
+import { parsePositiveInt } from '../../lib/utils/parse-id';
 
 export enum AttachmentType {
   image = 'image',

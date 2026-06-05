@@ -7,7 +7,7 @@
  * Intended for use in mutation `onError` callbacks to populate toast
  * notifications with context-appropriate copy.
  */
-import { ApiError } from '@echno-core/lib/api/api-client';
+import { ApiError } from '../api/api-client';
 
 /**
  * getErrorMessage

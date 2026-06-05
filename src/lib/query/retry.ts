@@ -7,7 +7,7 @@
  * to three times. Skips retries for 4xx client errors and 401/403/404
  * responses where retrying would not change the outcome.
  */
-import { ApiError } from '@echno-core/lib/api/api-client';
+import { ApiError } from '../api/api-client';
 
 /**
  * shouldRetry

@@ -12,9 +12,6 @@
     "skipLibCheck": true,
     "esModuleInterop": true,
     "jsx": "react-jsx",
-    "paths": {
-      "@echno-core/*": ["./src/*"]
-    }
   },
   "include": ["src"],
   "exclude": ["node_modules", "dist"]
