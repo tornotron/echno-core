@@ -34,3 +34,8 @@ export * from './types/user';
 export * from './services/user-service';
 export * from './hooks/user';
 
+// Employee
+export * from './types/employee';
+export * from './services/employee-service';
+export * from './hooks/employee';
+
