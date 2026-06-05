@@ -22,5 +22,9 @@ export * from './lib/query/cache-merge';
 // `OrgRole` from the employee module's types, which has not yet migrated.
 // Add the export when the employee module lands.
 
-// Module exports are added below as each module migrates (see Part 2 of
-// local-docs/echno-core.md). Order: user, employee, organization, …
+// Module Exports
+
+// Attachment
+export * from './types/attachment';
+export * from './services/attachment-service';
+export * from './hooks/attachment';
