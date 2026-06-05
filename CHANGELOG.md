@@ -4,6 +4,21 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 
 The project currently has released versions in git tags: `v0.0.0`, `v0.0.1`, `v0.1.0`, and `v0.1.1`.
 
+## [v0.3.0] - 2026-06-06
+
+### Added
+
+- Employee domain types for profiles, statuses, departments, org roles, and create/update payloads.
+- Employee service functions for reading, updating, deleting, and linking employees to organizations.
+- TanStack Query hooks for employee queries, mutations, and manager-name lookup helpers.
+- Organization query key factories for employee-related cache coordination.
+- Public module exports for the employee APIs.
+
+### Changed
+
+- Package version bumped to `0.3.0`.
+- Added `@types/react` to devDependencies to support the new hook typings.
+
 ## [v0.2.0] - 2026-06-05
 
 ### Added
