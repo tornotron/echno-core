@@ -4,6 +4,8 @@
 export * from './lib/api/api-services';
 export * from './lib/rbac/permissions';
 export * from './lib/utils/error-helpers';
+export * from './lib/utils/date-helpers';
+export * from './lib/utils/parse-id';
 // `api-utils` declares its own `ApiResponse` discriminated union which collides with
 // the wrapper interface from api-client. Namespace-export to keep both available:
 // `ApiResponse` at the top level is the api-client wrapper (used by services);
