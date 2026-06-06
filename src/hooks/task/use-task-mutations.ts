@@ -1,3 +1,19 @@
+/**
+ * @module use-task-mutations
+ *
+ * Write-side TanStack Query hooks for the task domain. Each mutation
+ * patches the task module's own caches (`taskKeys.lists()`,
+ * `taskKeys.detail(id)`, `taskKeys.byProject(projectId)`) plus the
+ * cross-namespace parent {@link Project} cache that carries
+ * `tasks: Task[]` as a nested array — gantt, EVM s-curve, health, and
+ * projects-grid views read `project.tasks` directly, so the parent's
+ * nested array must update instantly for the UI to feel live.
+ *
+ * Update mutations use {@link mergePreservingNested} with
+ * {@link TASK_NESTED_KEYS} so that `creator`, `assignees`, `category`,
+ * `issues`, and `attachments` cached from a prior full-DTO fetch
+ * survive a partial `TaskSimpleDto` response.
+ */
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { taskService } from '../../services/task-service';
 import { Task } from '../../types/task';
@@ -9,6 +25,11 @@ import { mergePreservingNested } from '../../lib/query/cache-merge';
 import { taskKeys } from './task-keys';
 import { projectKeys } from '../project/project-keys';
 
+/**
+ * Nested keys on {@link Task} that update mutations preserve when
+ * merging a partial `TaskSimpleDto` response into the cached detail.
+ * Passed to {@link mergePreservingNested}.
+ */
 const TASK_NESTED_KEYS = [
   'creator',
   'assignees',
@@ -31,6 +52,40 @@ function isTaskListCache(query: { queryKey: ReadonlyArray<unknown> }): boolean {
   );
 }
 
+/**
+ * Creates a new task.
+ *
+ * Backend response: `TaskSimpleDto` (partial — `creator`, `assignees`,
+ * `category`, `issues`, and `attachments` absent).
+ *
+ * Create is excluded from optimistic updates because the server assigns
+ * the task ID; no deterministic optimistic entry can be constructed.
+ *
+ * On success:
+ * - `setQueryData(taskKeys.lists(), append)` — appends the returned task
+ *   to the main list cache. Safe because list rows do not render the
+ *   nested fields.
+ * - `setQueryData(taskKeys.detail(newTask.id), newTask)` — seeds the
+ *   detail cache so navigating to the new task page is instant.
+ * - `invalidateQueries(taskKeys.detail(newTask.id))` — kept: the seed is
+ *   a partial `TaskSimpleDto`; the next observer refetches the canonical
+ *   full `TaskDto` so joined fields render without a hard refresh.
+ * - `setQueryData(taskKeys.byProject(projectId), append-if-exists)` —
+ *   appends to the project-scoped list only if that cache already
+ *   exists. The functional updater returns `undefined` for absent
+ *   entries so no spurious cache entry is created for unvisited project
+ *   views.
+ * - `setQueryData(projectKeys.detail(projectId), patch tasks array)` —
+ *   patches the parent project's `tasks` array directly so consumers
+ *   reading `project.tasks` (gantt, EVM s-curve, health, projects-grid)
+ *   see the new task instantly.
+ * - `invalidateQueries(projectKeys.detail(projectId))` — kept
+ *   (cross-namespace): the project's server-computed derived fields
+ *   (progress %, etc.) must refetch after a task is added.
+ *
+ * @returns A TanStack `UseMutationResult` where the mutate function
+ *   accepts `{ data: CreateTaskRequest; files?: TaskFiles }`.
+ */
 export function useCreateTask() {
   const queryClient = useQueryClient();
 
@@ -79,6 +134,51 @@ export function useCreateTask() {
   });
 }
 
+/**
+ * Updates an existing task.
+ *
+ * Backend response: `TaskSimpleDto` (partial — `creator`, `assignees`,
+ * `category`, `issues`, and `attachments` absent).
+ *
+ * Optimistic update:
+ * - `onMutate` cancels in-flight queries on `taskKeys.detail(id)` and
+ *   every cache matched by `isTaskListCache`, snapshots `previousDetail`
+ *   and `previousListEntries`, then applies the scalar fields from
+ *   `data` over the cached base. If the detail cache is absent, the
+ *   base is recovered by scanning the snapshotted list entries.
+ * - Applied scalar fields: `title`, `projectId`, `description`,
+ *   `startDate`, `endDate`, `status`, `progress`, `tags`.
+ * - Excluded: `creatorId`, `categoryId`, `assigneeIds` — resolving these
+ *   to the joined entities (`Employee`, `WorkCategory`) would require
+ *   separate cache lookups; the reconciliation step handles them.
+ * - Files are not reflected optimistically (file IDs and URLs are only
+ *   known after the server processes the upload).
+ *
+ * Rollback:
+ * - `onError` restores `previousDetail` to `taskKeys.detail(id)` and
+ *   iterates `previousListEntries` to restore each list key individually.
+ *
+ * On success:
+ * - `setQueryData(taskKeys.detail(id), merge)` — uses
+ *   {@link mergePreservingNested} with {@link TASK_NESTED_KEYS} to
+ *   preserve cached joined fields across the partial response.
+ * - `setQueriesData({ predicate: isTaskListCache }, replace-with-merge)`
+ *   — mirrors the merge across `taskKeys.lists()` and every
+ *   `byProject` cache.
+ * - `invalidateQueries(taskKeys.detail(id))` — kept: SimpleDto omits
+ *   nested fields; canonical refetch ensures the full `TaskDto`.
+ * - `invalidateQueries({ predicate: isTaskListCache })` — kept for the
+ *   same reason; list entries are also partial after merge.
+ * - `setQueryData(projectKeys.detail(updatedTask.projectId), patch tasks)`
+ *   — patches the parent project's `tasks` array using the same `merge`
+ *   function. Conditional on `updatedTask.projectId !== undefined`.
+ * - `invalidateQueries(projectKeys.detail(updatedTask.projectId))` —
+ *   kept (cross-namespace): project's server-computed derived fields
+ *   (progress %) must refetch.
+ *
+ * @returns A TanStack `UseMutationResult` where the mutate function
+ *   accepts `{ id: number; data: UpdateTaskRequest; files?: TaskFiles }`.
+ */
 export function useUpdateTask() {
   const queryClient = useQueryClient();
 
@@ -189,6 +289,40 @@ export function useUpdateTask() {
   });
 }
 
+/**
+ * Deletes a task.
+ *
+ * Backend response: `ApiResponse` (ack).
+ *
+ * Optimistic update:
+ * - `onMutate` cancels in-flight queries on `taskKeys.detail(id)` and
+ *   every cache matched by `isTaskListCache`. Snapshots three caches:
+ *   `previousDetail`, `previousListEntries`, and
+ *   `previousParentProject` (looked up via the soon-to-be-deleted
+ *   task's `projectId`, conditional on its presence).
+ * - Applies the deletion immediately:
+ *   `setQueriesData({ predicate: isTaskListCache }, filter)` removes the
+ *   task from every list cache, `removeQueries(taskKeys.detail(id))`
+ *   evicts the detail, and `setQueryData(projectKeys.detail(projectId),
+ *   filter tasks)` removes the task from the parent project's nested
+ *   `tasks` array (conditional on the snapshotted parent).
+ *
+ * Rollback:
+ * - `onError` restores `previousListEntries` to each list key, re-seeds
+ *   the detail cache from `previousDetail` (this is the reverse of
+ *   `removeQueries` — using `setQueryData` to bring the entry back),
+ *   and restores the parent project's `tasks` array from
+ *   `previousParentProject` when present.
+ *
+ * On success:
+ * - `invalidateQueries(projectKeys.detail(previousDetail.projectId))` —
+ *   kept (cross-namespace): refreshes the parent project's
+ *   server-computed derived fields (progress %) after deletion.
+ *   Conditional on the snapshotted `projectId`.
+ *
+ * @returns A TanStack `UseMutationResult` where the mutate function
+ *   accepts the task's `id` directly (not wrapped in an object).
+ */
 export function useDeleteTask() {
   const queryClient = useQueryClient();
 
