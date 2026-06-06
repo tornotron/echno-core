@@ -4,6 +4,20 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 
 The project currently has released versions in git tags: `v0.0.0`, `v0.0.1`, `v0.1.0`, and `v0.1.1`.
 
+## [v0.7.0] - 2026-06-07
+
+### Added
+
+- Issue domain types for issue metadata, status, type, comments, and file uploads.
+- Issue comment domain types and serializers for issue discussion.
+- Issue service functions for list/detail reads, project/task filtering, CRUD operations, and comment handling.
+- TanStack Query hooks for issue reads, mutations, comments, comment mutations, and detail prefetching.
+- Public module exports for the issue APIs.
+
+### Changed
+
+- Package version bumped to `0.7.0`.
+
 ## [v0.6.1] - 2026-06-07
 
 ### Added
