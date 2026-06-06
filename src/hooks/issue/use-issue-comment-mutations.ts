@@ -1,3 +1,10 @@
+/**
+ * @module use-issue-comment-mutations
+ *
+ * TanStack mutation hooks for issue comments. Read-side hooks live in
+ * {@link useIssueComments}, {@link useIssueComment}, and
+ * {@link useIssueCommentsByIssue}.
+ */
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { issueCommentService } from '../../services/issue-comment-service';
 import { Issue } from '../../types/issue';
@@ -8,8 +15,10 @@ import { logger } from '../../lib/logger';
 import { issueKeys, issueCommentKeys } from './issue-keys';
 
 /**
- * Matches every IssueComment[] list cache under the 'issue-comments' namespace
- * while excluding detail entries (numeric second segment).
+ * Matches every `IssueComment[]` list cache under the `'issue-comments'`
+ * namespace while excluding detail entries (numeric second segment).
+ * Covers `['issue-comments', 'list']` and
+ * `['issue-comments', 'issue', issueId]`.
  */
 function isIssueCommentListCache(query: {
   queryKey: ReadonlyArray<unknown>;
@@ -23,6 +32,25 @@ function isIssueCommentListCache(query: {
   );
 }
 
+/**
+ * Creates a new comment on an issue.
+ *
+ * Backend response: `IssueCommentSimpleDto` (partial). `IssueComment` has
+ * no nested arrays, so no merge helper is required.
+ *
+ * On success:
+ * - `setQueryData(issueCommentKeys.byIssue(issueId), append-if-cached)` — appends to the issue-scoped comment list only when already cached.
+ * - `setQueryData(issueCommentKeys.lists(), append-if-cached)` — appends to the main comments list only when already cached.
+ * - `setQueryData(issueCommentKeys.detail(newComment.id), newComment)` — seeds detail for instant nav.
+ * - `setQueryData(issueKeys.detail(issueId), { ...detail, comments: [...comments, newComment] })` — cross-namespace direct patch of the parent {@link Issue}'s nested `comments` array so the issue view updates without a refetch. Falls back to invalidation when the parent isn't cached.
+ *
+ * Invalidations kept:
+ * - `invalidateQueries(issueCommentKeys.detail(newComment.id))` — canonical refetch so the next observer pulls the full `IssueCommentDto`.
+ * - `invalidateQueries(issueKeys.detail(issueId))` — fallback only when the parent issue isn't in detail cache; otherwise the cache write above replaces this invalidation.
+ *
+ * @returns A TanStack `UseMutationResult` where the mutate function accepts
+ *   a {@link CreateIssueCommentRequest}.
+ */
 export function useCreateIssueComment() {
   const queryClient = useQueryClient();
 
@@ -74,12 +102,22 @@ export function useCreateIssueComment() {
 }
 
 /**
- * FIXME: The backend has no PATCH endpoint for issue comments per the live
- * OpenAPI spec (audited 2026-06-01). `issueCommentService.update` calls
- * `PATCH /issues/comments/web/{id}` which returns 404/405. This hook is
- * orphan — exported but never consumed. Either delete it in a follow-up PR or
- * coordinate with the backend team to add the endpoint. Kept here unchanged
- * to keep Milestone 4A scope strict.
+ * Updates an issue comment.
+ *
+ * Backend response: `(orphan endpoint)` — the backend has no PATCH route
+ * for issue comments at present, so this mutation will 404/405 in
+ * production. The hook is preserved with broad-invalidation behaviour so
+ * the wiring is in place when the endpoint lands.
+ *
+ * On success (theoretical):
+ * - `invalidateQueries(issueCommentKeys.detail(id))` — refetch the canonical comment.
+ * - `invalidateQueries({ predicate: isIssueCommentListCache })` — refetch every comment list.
+ * - `invalidateQueries(issueKeys.all)` — broad refresh since the parent issue's nested `comments` array would also be stale.
+ *
+ * @returns A TanStack `UseMutationResult` where the mutate function accepts
+ *   `{ id: number; data: UpdateIssueCommentRequest }`.
+ *
+ * @internal
  */
 export function useUpdateIssueComment() {
   const queryClient = useQueryClient();
@@ -103,6 +141,35 @@ export function useUpdateIssueComment() {
   });
 }
 
+/**
+ * Deletes an issue comment with optimistic eviction and snapshot-based
+ * rollback.
+ *
+ * The `mutationFn` accepts `{ id, issueId }` so the parent issue's
+ * `comments` array and the `byIssue` cache can be patched without a
+ * backend lookup.
+ *
+ * Backend response: `ApiResponse` (ack only).
+ *
+ * Optimistic update (`onMutate`):
+ * - Cancels in-flight `detail(id)`, predicate-matched comment lists, and `issueKeys.detail(issueId)`.
+ * - Snapshots: `previousDetail` (`IssueComment`), `previousListEntries` (`Array<[QueryKey, IssueComment[] | undefined]>`), `previousParentIssue` (`Issue`).
+ * - Applies removal immediately: filters every comment list cache via predicate, evicts the comment detail with `removeQueries`, and filters the parent issue's `comments` array if it was cached.
+ *
+ * Rollback (`onError`):
+ * - Restores comment list caches from `previousListEntries`.
+ * - Re-seeds the comment detail from `previousDetail` if it was present.
+ * - Restores the parent issue's `comments` array from `previousParentIssue` if it was present.
+ *
+ * Cache evictions:
+ * - `removeQueries(issueCommentKeys.detail(id))` — entity no longer exists.
+ *
+ * Invalidations kept:
+ * - `invalidateQueries(issueKeys.detail(issueId))` — fallback only when the parent issue wasn't cached at mutate time; otherwise the optimistic parent-array patch covers the UI update.
+ *
+ * @returns A TanStack `UseMutationResult` where the mutate function accepts
+ *   `{ id: number; issueId: number }`.
+ */
 export function useDeleteIssueComment() {
   const queryClient = useQueryClient();
 
