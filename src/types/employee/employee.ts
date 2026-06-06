@@ -19,8 +19,8 @@
  *   don't crash the UI.
  */
 
-// TODO: restore `import { Project, parseProject, projectToJson }` when project module migrates
 import { Attachment, parseAttachment } from '../attachment';
+import { Project, parseProject, projectToJson } from '../project';
 import { EmployeeStatus, employeeStatusFromString } from './employee-status';
 import { Department } from './departments';
 import { OrgRole, orgRoleFromString } from './org-role';
@@ -132,8 +132,8 @@ export interface Employee {
   /** Date the employee joined the organization; `null` when cleared. */
   joiningDate?: Date | null;
 
-  /** Projects the employee is currently assigned to. Typed as unknown[] until project module migrates. */
-  currentProjects?: unknown[];
+  /** Projects the employee is currently assigned to. */
+  currentProjects?: Project[];
 
   /** Record creation timestamp. */
   createdAt?: Date;
@@ -232,8 +232,8 @@ export function parseEmployee(json: any): Employee {
     shiftTiming: json.shiftTiming ?? undefined,
     status: employeeStatusFromString(json.status ?? 'active'),
     certifications: json.certifications ? [...json.certifications] : undefined,
-    currentProjects: json.currentProjects
-      ? (json.currentProjects as unknown[])
+    currentProjects: Array.isArray(json.currentProjects)
+      ? json.currentProjects.map((p: unknown) => parseProject(p))
       : undefined,
     createdAt: json.createdAt ? new Date(json.createdAt) : undefined,
     updatedAt: json.updatedAt ? new Date(json.updatedAt) : undefined,
@@ -298,7 +298,7 @@ export function employeeToJson(
   if (emp.certifications !== undefined)
     result.certifications = emp.certifications;
   if (emp.currentProjects !== undefined) {
-    result.currentProjects = emp.currentProjects; // TODO: map via projectToJson when project migrates
+    result.currentProjects = emp.currentProjects.map((p) => projectToJson(p));
   }
   if (emp.createdAt !== undefined)
     result.createdAt = emp.createdAt.toISOString();
