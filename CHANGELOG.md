@@ -4,6 +4,18 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 
 The project currently has released versions in git tags: `v0.0.0`, `v0.0.1`, `v0.1.0`, and `v0.1.1`.
 
+## [v0.3.3] - 2026-06-06
+
+### Added
+
+- `useEmployeeRoles()` for deriving the current employee's organisation-scope roles from the cached employee profile.
+- Public export for the employee roles hook.
+
+### Changed
+
+- Package version bumped to `0.3.3`.
+- Package license changed from `UNLICENSED` to `MIT`.
+
 ## [v0.3.2] - 2026-06-06
 
 ### Added
