@@ -4,6 +4,18 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 
 The project currently has released versions in git tags: `v0.0.0`, `v0.0.1`, `v0.1.0`, and `v0.1.1`.
 
+## [v0.5.1] - 2026-06-06
+
+### Added
+
+- Expanded task module exports for the task query hooks and prefetch helper.
+- Detailed documentation for task types, statuses, service methods, and hooks.
+
+### Changed
+
+- Task service and hook comments were normalized and expanded for the current task module surface.
+- Package version bumped to `0.5.1`.
+
 ## [v0.5.0] - 2026-06-06
 
 ### Added
