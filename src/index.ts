@@ -44,3 +44,7 @@ export * from './types/project';
 export * from './services/project-service';
 export * from './hooks/project';
 
+// Task
+export * from './types/task';
+export * from './services/task-service';
+export * from './hooks/task';
