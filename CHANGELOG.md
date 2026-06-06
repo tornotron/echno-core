@@ -4,6 +4,18 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 
 The project currently has released versions in git tags: `v0.0.0`, `v0.0.1`, `v0.1.0`, and `v0.1.1`.
 
+## [v0.5.0] - 2026-06-06
+
+### Added
+
+- Task domain types, services, and hooks for task management and project-scoped task queries.
+- Task prefetch helper for warming detail caches on hover or focus.
+- Public module exports for the task APIs.
+
+### Changed
+
+- Package version bumped to `0.5.0`.
+
 ## [v0.4.1] - 2026-06-06
 
 ### Added
