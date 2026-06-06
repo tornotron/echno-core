@@ -1,3 +1,11 @@
+/**
+ * @module use-projects
+ *
+ * Read-side TanStack Query hooks for the project domain. Each hook wraps
+ * a {@link projectService} call with a 5-minute `staleTime`, the shared
+ * {@link shouldRetry} predicate, and an exponential retry-delay cap at
+ * 30 s. Hooks that depend on an ID stay disabled until the ID is truthy.
+ */
 import { useQuery } from '@tanstack/react-query';
 import { projectService } from '../../services/project-service';
 import { shouldRetry } from '../../lib/query/retry';
@@ -5,8 +13,12 @@ import { projectKeys } from './project-keys';
 export { projectKeys } from './project-keys';
 
 /**
- * Hook to fetch all projects.
- * Includes retry logic for transient errors and caches data for 5 minutes.
+ * Fetches every project visible to the current user.
+ *
+ * `staleTime` is 5 minutes; retries follow {@link shouldRetry} with
+ * exponential backoff capped at 30 s.
+ *
+ * @returns A TanStack `UseQueryResult` wrapping `Project[]`.
  */
 export function useProjects() {
   return useQuery({
@@ -19,8 +31,14 @@ export function useProjects() {
 }
 
 /**
- * Hook to fetch a single project by ID.
- * Includes retry logic for transient errors and caches data for 5 minutes.
+ * Fetches a single project by ID.
+ *
+ * Disabled until `id` is truthy; `staleTime` is 5 minutes; retries follow
+ * {@link shouldRetry} with exponential backoff capped at 30 s.
+ *
+ * @param id - Surrogate ID of the project. Pass `undefined` to defer the
+ *   query until the ID is available.
+ * @returns A TanStack `UseQueryResult` wrapping `Project`.
  */
 export function useProject(id?: number) {
   return useQuery({
@@ -39,8 +57,15 @@ export function useProject(id?: number) {
 }
 
 /**
- * Hook to fetch projects by organization ID.
- * Includes retry logic for transient errors and caches data for 5 minutes.
+ * Fetches every project under one organization.
+ *
+ * Disabled until `organizationId` is truthy; `staleTime` is 5 minutes;
+ * retries follow {@link shouldRetry} with exponential backoff capped at
+ * 30 s.
+ *
+ * @param organizationId - Surrogate ID of the organization. Pass
+ *   `undefined` to defer the query.
+ * @returns A TanStack `UseQueryResult` wrapping `Project[]`.
  */
 export function useProjectsByOrganization(organizationId?: number) {
   return useQuery({
@@ -59,8 +84,15 @@ export function useProjectsByOrganization(organizationId?: number) {
 }
 
 /**
- * Hook to fetch projects assigned to a specific employee.
- * Includes retry logic for transient errors and caches data for 5 minutes.
+ * Fetches every project the given employee is a member of.
+ *
+ * Disabled until `employeeId` is truthy; `staleTime` is 5 minutes;
+ * retries follow {@link shouldRetry} with exponential backoff capped at
+ * 30 s.
+ *
+ * @param employeeId - Surrogate ID of the employee. Pass `undefined` to
+ *   defer the query.
+ * @returns A TanStack `UseQueryResult` wrapping `Project[]`.
  */
 export function useProjectsByEmployee(employeeId?: number) {
   return useQuery({
@@ -79,8 +111,17 @@ export function useProjectsByEmployee(employeeId?: number) {
 }
 
 /**
- * Hook to fetch member employees of a specific project.
- * Includes retry logic for transient errors and caches data for 5 minutes.
+ * Fetches the standalone member list for one project.
+ *
+ * Cache key lives under the `projects` namespace
+ * (`projectKeys.members(projectId)`) because the data is owned by the
+ * project module even though it carries `Employee[]`. Disabled until
+ * `projectId` is truthy; `staleTime` is 5 minutes; retries follow
+ * {@link shouldRetry} with exponential backoff capped at 30 s.
+ *
+ * @param projectId - Surrogate ID of the project. Pass `undefined` to
+ *   defer the query.
+ * @returns A TanStack `UseQueryResult` wrapping `Employee[]`.
  */
 export function useEmployeesByProject(projectId?: number) {
   return useQuery({

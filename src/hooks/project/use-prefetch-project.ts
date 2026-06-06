@@ -1,14 +1,14 @@
 /**
- * hooks/project/use-prefetch-project.ts
+ * @module use-prefetch-project
  *
  * Hover/focus prefetch for the project detail query. Wire on `onMouseEnter`
- * and `onFocus` of list-row links so the detail page renders against a warm
- * cache when the user actually navigates.
+ * and `onFocus` of list-row links so the detail page renders against a
+ * warm cache when the user actually navigates.
  *
- * `staleTime` matches the consuming `useProject` query (5 min). If a prefetch
- * lands within that window of a previous fetch, React Query returns
- * immediately without a network call — rapid hover sweeps over a list cost
- * one fetch per project, not one per hover event.
+ * `staleTime` matches the consuming `useProject` query (5 min). If a
+ * prefetch lands within that window of a previous fetch, React Query
+ * returns immediately without a network call — rapid hover sweeps over a
+ * list cost one fetch per project, not one per hover event.
  */
 
 import { useCallback } from 'react';
@@ -18,6 +18,15 @@ import { projectKeys } from './project-keys';
 
 const PROJECT_DETAIL_STALE_TIME = 5 * 60 * 1000;
 
+/**
+ * Returns a stable prefetch callback for the project detail query.
+ *
+ * The returned function is a no-op when `id` is falsy. Wire it to
+ * `onMouseEnter` / `onFocus` on list rows that link to the detail page.
+ *
+ * @returns A callback `(id: number) => void` that warms the
+ *   `projectKeys.detail(id)` cache via {@link projectService.getById}.
+ */
 export function usePrefetchProject() {
   const queryClient = useQueryClient();
   return useCallback(

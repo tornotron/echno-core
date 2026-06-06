@@ -1,3 +1,18 @@
+/**
+ * @module use-project-mutations
+ *
+ * Write-side TanStack Query hooks for the project domain. Each mutation
+ * patches the project module's own caches (`projectKeys.lists()`,
+ * `projectKeys.detail(id)`, `projectKeys.members(projectId)`) directly
+ * from the server response or from a local computation, and invalidates
+ * only what cannot be patched locally (cross-namespace caches such as
+ * the employee module).
+ *
+ * Update mutations use {@link mergePreservingNested} with
+ * {@link PROJECT_NESTED_KEYS} so that `attachments`, `members`, and
+ * `tasks` cached from a prior full-DTO fetch survive a partial
+ * `ProjectSimpleDto` response.
+ */
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { projectService } from '../../services/project-service';
 import {
@@ -13,6 +28,11 @@ import { mergePreservingNested } from '../../lib/query/cache-merge';
 import { projectKeys } from './project-keys';
 import { employeeKeys } from '../employee/employee-keys';
 
+/**
+ * Nested keys on {@link Project} that update mutations preserve when
+ * merging a partial `ProjectSimpleDto` response into the cached detail.
+ * Passed to {@link mergePreservingNested}.
+ */
 const PROJECT_NESTED_KEYS = [
   'attachments',
   'members',
@@ -36,6 +56,26 @@ function isProjectListCache(query: {
   );
 }
 
+/**
+ * Creates a new project.
+ *
+ * Backend response: `ProjectSimpleDto` (partial — `attachments`,
+ * `members`, and `tasks` absent).
+ *
+ * On success:
+ * - `setQueryData(projectKeys.lists(), append)` — appends the returned
+ *   project to the main list cache. Safe because list rows do not render
+ *   nested arrays.
+ * - `setQueryData(projectKeys.detail(newProject.id), newProject)` — seeds
+ *   the detail cache so navigating to the new project page is instant.
+ *   The seed is intentionally minimal; the detail page's next refetch
+ *   resolves the full `ProjectDto`.
+ * - Zero invalidations. `byOrganization` / `byEmployee` lists self-heal
+ *   on next mount when stale (5 min).
+ *
+ * @returns A TanStack `UseMutationResult` where the mutate function
+ *   accepts a {@link CreateProjectRequest}.
+ */
 export function useCreateProject() {
   const queryClient = useQueryClient();
 
@@ -58,6 +98,23 @@ export function useCreateProject() {
   });
 }
 
+/**
+ * Creates a new project together with attachment uploads in a single
+ * multipart request.
+ *
+ * Backend response: `ProjectSimpleDto` (partial — `attachments`,
+ * `members`, and `tasks` absent).
+ *
+ * On success:
+ * - `setQueryData(projectKeys.lists(), append)` — appends the returned
+ *   project to the main list cache.
+ * - `setQueryData(projectKeys.detail(newProject.id), newProject)` — seeds
+ *   the detail cache so navigating to the new project page is instant.
+ * - Zero invalidations.
+ *
+ * @returns A TanStack `UseMutationResult` where the mutate function
+ *   accepts `{ data: CreateProjectRequest; files: ProjectFiles }`.
+ */
 export function useCreateProjectWithFiles() {
   const queryClient = useQueryClient();
 
@@ -84,6 +141,44 @@ export function useCreateProjectWithFiles() {
   });
 }
 
+/**
+ * Updates an existing project.
+ *
+ * Backend response: `ProjectSimpleDto` (partial — `attachments`,
+ * `members`, and `tasks` absent).
+ *
+ * Optimistic update:
+ * - `onMutate` cancels in-flight queries on `projectKeys.detail(id)` and
+ *   every cache matched by {@link isProjectListCache}, snapshots
+ *   `previousDetail` and `previousListEntries`, then applies the scalar
+ *   fields from `data` over the cached base. If the detail cache is
+ *   absent, the base is recovered by scanning the snapshotted list
+ *   entries for an entry with the same `id`.
+ * - `memberIds` is intentionally excluded from the optimistic patch —
+ *   resolving the ID array to `Employee[]` would require a separate
+ *   cache lookup; the reconciliation step handles it.
+ *
+ * Rollback:
+ * - `onError` restores `previousDetail` to `projectKeys.detail(id)` and
+ *   iterates `previousListEntries` to restore each list key individually.
+ *
+ * On success:
+ * - `setQueryData(projectKeys.detail(id), merge)` — uses
+ *   {@link mergePreservingNested} with {@link PROJECT_NESTED_KEYS} to
+ *   preserve cached `attachments`, `members`, and `tasks` across the
+ *   partial response.
+ * - `setQueriesData({ predicate: isProjectListCache }, replace-with-merge)`
+ *   — mirrors the merge across every `Project[]` list cache (main,
+ *   `byOrganization`, `byEmployee`).
+ * - `invalidateQueries(projectKeys.detail(id))` — kept: SimpleDto omits
+ *   nested fields; canonical refetch ensures the full `ProjectDto` is
+ *   available on next observer.
+ * - `invalidateQueries({ predicate: isProjectListCache })` — kept: list
+ *   entries are also partial after merge.
+ *
+ * @returns A TanStack `UseMutationResult` where the mutate function
+ *   accepts `{ id: number; data: UpdateProjectRequest }`.
+ */
 export function useUpdateProject() {
   const queryClient = useQueryClient();
 
@@ -178,6 +273,37 @@ export function useUpdateProject() {
   });
 }
 
+/**
+ * Updates an existing project together with attachment uploads in a
+ * single multipart request.
+ *
+ * Backend response: `ProjectSimpleDto` (partial — `attachments`,
+ * `members`, and `tasks` absent).
+ *
+ * Optimistic update:
+ * - Identical to {@link useUpdateProject} — cancels detail and list
+ *   caches, snapshots `previousDetail` + `previousListEntries`, then
+ *   patches scalar fields from `data` over the cached base. `files` is
+ *   not reflected optimistically (file IDs and URLs are only known after
+ *   the server processes the upload).
+ *
+ * Rollback:
+ * - `onError` restores `previousDetail` to `projectKeys.detail(id)` and
+ *   iterates `previousListEntries` to restore each list key individually.
+ *
+ * On success:
+ * - `setQueryData(projectKeys.detail(id), merge)` — uses
+ *   {@link mergePreservingNested} with {@link PROJECT_NESTED_KEYS}.
+ * - `setQueriesData({ predicate: isProjectListCache }, replace-with-merge)`.
+ * - `invalidateQueries(projectKeys.detail(id))` — kept: canonical refetch
+ *   so newly uploaded attachments appear on the detail page without a
+ *   hard refresh.
+ * - `invalidateQueries({ predicate: isProjectListCache })` — kept for
+ *   the same reason.
+ *
+ * @returns A TanStack `UseMutationResult` where the mutate function
+ *   accepts `{ id: number; data: UpdateProjectRequest; files: ProjectFiles }`.
+ */
 export function useUpdateProjectWithFiles() {
   const queryClient = useQueryClient();
 
@@ -277,6 +403,44 @@ export function useUpdateProjectWithFiles() {
   });
 }
 
+/**
+ * Adds an employee to a project's member list.
+ *
+ * Backend response: `ApiResponse` (ack). The service discards the
+ * sibling-domain `EmployeeDto` payload returned by the backend and
+ * resolves with `void`; reconciliation happens via the invalidations
+ * listed below.
+ *
+ * Optimistic update:
+ * - `onMutate` cancels in-flight queries on `projectKeys.detail(projectId)`,
+ *   every cache matched by {@link isProjectListCache}, and
+ *   `projectKeys.members(projectId)`. Snapshots `previousDetail`,
+ *   `previousListEntries`, and `previousMembers`.
+ * - Looks up the target `Employee` object from the `employeeKeys.all`
+ *   cache. If the employee is not cached, the optimistic update is
+ *   skipped — the post-success invalidations still reconcile state.
+ * - Guards against double-add: only patches caches if the employee is
+ *   not already present in `previousDetail.members` / `previousMembers`.
+ *
+ * Rollback:
+ * - `onError` restores `previousDetail`, every entry in
+ *   `previousListEntries`, and `previousMembers`.
+ *
+ * On success:
+ * - `invalidateQueries(projectKeys.detail(projectId))` — kept: service
+ *   returned `void`, so the canonical project must be refetched to
+ *   confirm member resolution.
+ * - `invalidateQueries({ predicate: isProjectListCache })` — kept: same
+ *   reason; list entries' `members` arrays must reconcile with the server.
+ * - `invalidateQueries(projectKeys.members(projectId))` — kept: refetches
+ *   the standalone member list.
+ * - `invalidateQueries(employeeKeys.all)` — kept (cross-namespace):
+ *   employee module caches may surface project-membership data that the
+ *   project module cannot patch without owning the employee cache shape.
+ *
+ * @returns A TanStack `UseMutationResult` where the mutate function
+ *   accepts `{ projectId: number; employeeId: number }`.
+ */
 export function useAddEmployeeToProject() {
   const queryClient = useQueryClient();
 
@@ -381,6 +545,36 @@ export function useAddEmployeeToProject() {
   });
 }
 
+/**
+ * Removes an employee from a project's member list.
+ *
+ * Backend response: `ApiResponse` (ack).
+ *
+ * Optimistic update:
+ * - `onMutate` cancels in-flight queries on `projectKeys.detail(projectId)`,
+ *   every cache matched by {@link isProjectListCache}, and
+ *   `projectKeys.members(projectId)`. Snapshots `previousDetail`,
+ *   `previousListEntries`, and `previousMembers`.
+ * - Applies the removal via `Array.filter` on all three caches.
+ *
+ * Rollback:
+ * - `onError` restores `previousDetail`, every entry in
+ *   `previousListEntries`, and `previousMembers`.
+ *
+ * On success:
+ * - `setQueryData(projectKeys.detail(projectId), filter)` — re-applies
+ *   the removal idempotently from current cache state.
+ * - `setQueriesData({ predicate: isProjectListCache }, map+filter)` —
+ *   mirrors the removal across every `Project[]` list cache.
+ * - `setQueryData(projectKeys.members(projectId), filter)` — syncs the
+ *   standalone members list.
+ * - `invalidateQueries(employeeKeys.all)` — kept (cross-namespace): same
+ *   reason as `useAddEmployeeToProject`. Employee detail caches may
+ *   surface project-membership data the project module cannot patch.
+ *
+ * @returns A TanStack `UseMutationResult` where the mutate function
+ *   accepts `{ projectId: number; employeeId: number }`.
+ */
 export function useRemoveEmployeeFromProject() {
   const queryClient = useQueryClient();
 
@@ -479,6 +673,23 @@ export function useRemoveEmployeeFromProject() {
   });
 }
 
+/**
+ * Deletes a project.
+ *
+ * Backend response: `ApiResponse` (ack).
+ *
+ * On success:
+ * - `setQueriesData({ predicate: isProjectListCache }, filter)` — removes
+ *   the deleted project from every `Project[]` list cache (main,
+ *   `byOrganization`, `byEmployee`) in one pass.
+ * - `removeQueries(projectKeys.detail(id))` — evicts the detail entry;
+ *   `removeQueries` (not `invalidateQueries`) because the project no
+ *   longer exists on the server.
+ * - Zero invalidations.
+ *
+ * @returns A TanStack `UseMutationResult` where the mutate function
+ *   accepts the project's `id` directly (not wrapped in an object).
+ */
 export function useDeleteProject() {
   const queryClient = useQueryClient();
 
