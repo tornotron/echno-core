@@ -1,20 +1,57 @@
-// types/issue/issue-type.ts
+/**
+ * @module types/issue/issue-type
+ *
+ * Enumeration of the domain categories an {@link Issue} can belong to,
+ * with helpers for human-readable labels, type-coded colors, and icon
+ * names.
+ */
 
+/**
+ * Domain category of an {@link Issue}. The string values match the
+ * backend's wire representation; do not rename without coordinating a
+ * backend change.
+ */
 export enum IssueType {
+  /** Code-, system-, or infrastructure-related issue. */
   technical = 'technical',
+
+  /** Design specification or visual issue. */
   design = 'design',
+
+  /** Quality-control finding (e.g. workmanship, finish). */
   quality = 'quality',
+
+  /** Worker- or site-safety concern. */
   safety = 'safety',
+
+  /** Materials shortage, defect, or specification mismatch. */
   material = 'material',
+
+  /** Equipment failure, shortage, or maintenance need. */
   equipment = 'equipment',
+
+  /** Labour shortage, performance, or coordination issue. */
   labour = 'labour',
+
+  /** Weather-related delay or hazard. */
   weather = 'weather',
+
+  /** Permit, license, or compliance blocker. */
   permit = 'permit',
+
+  /** Inter-team coordination breakdown. */
   coordination = 'coordination',
+
+  /** Unclassified — use sparingly. */
   other = 'other',
 }
 
-/** Human-readable label */
+/**
+ * Returns a human-readable label for the given issue type.
+ *
+ * @param type - The issue type to label.
+ * @returns Display-ready label string.
+ */
 export function getIssueTypeLabel(type: IssueType): string {
   const map: Record<IssueType, string> = {
     [IssueType.technical]: 'Technical',
@@ -32,25 +69,36 @@ export function getIssueTypeLabel(type: IssueType): string {
   return map[type];
 }
 
-/** Tailwind hex color */
+/**
+ * Returns a hex color associated with the given issue type, suitable for
+ * type badges and chips in the UI.
+ *
+ * @param type - The issue type to color-code.
+ * @returns A 6-digit hex color (e.g. `'#2196F3'`).
+ */
 export function getIssueTypeColor(type: IssueType): string {
   const map: Record<IssueType, string> = {
-    [IssueType.technical]: '#2196F3', // Blue
-    [IssueType.design]: '#9C27B0', // Purple
-    [IssueType.quality]: '#4CAF50', // Green
-    [IssueType.safety]: '#F44336', // Red
-    [IssueType.material]: '#795548', // Brown
-    [IssueType.equipment]: '#607D8B', // Blue Grey
-    [IssueType.labour]: '#FF9800', // Orange
-    [IssueType.weather]: '#00BCD4', // Cyan
-    [IssueType.permit]: '#673AB7', // Deep Purple
-    [IssueType.coordination]: '#3F51B5', // Indigo
-    [IssueType.other]: '#9E9E9E', // Grey
+    [IssueType.technical]: '#2196F3',
+    [IssueType.design]: '#9C27B0',
+    [IssueType.quality]: '#4CAF50',
+    [IssueType.safety]: '#F44336',
+    [IssueType.material]: '#795548',
+    [IssueType.equipment]: '#607D8B',
+    [IssueType.labour]: '#FF9800',
+    [IssueType.weather]: '#00BCD4',
+    [IssueType.permit]: '#673AB7',
+    [IssueType.coordination]: '#3F51B5',
+    [IssueType.other]: '#9E9E9E',
   };
   return map[type];
 }
 
-/** Lucide icon name */
+/**
+ * Returns a Lucide-compatible icon name for the given issue type.
+ *
+ * @param type - The issue type to icon-code.
+ * @returns A kebab-case icon identifier.
+ */
 export function getIssueTypeIcon(type: IssueType): string {
   const map: Record<IssueType, string> = {
     [IssueType.technical]: 'wrench',
@@ -68,7 +116,13 @@ export function getIssueTypeIcon(type: IssueType): string {
   return map[type];
 }
 
-/** Convert string → IssueType */
+/**
+ * Parses a wire-format string into an {@link IssueType}.
+ *
+ * @param str - The backend's string representation of the type.
+ * @returns The matching {@link IssueType} member.
+ * @throws {Error} If `str` does not match any known type.
+ */
 export function issueTypeFromString(str: string): IssueType {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const type = (IssueType as any)[str];
