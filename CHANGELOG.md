@@ -4,6 +4,20 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 
 The project currently has released versions in git tags: `v0.0.0`, `v0.0.1`, `v0.1.0`, and `v0.1.1`.
 
+## [v0.4.0] - 2026-06-06
+
+### Added
+
+- Project domain types for project metadata, statuses, file uploads, and create/update payloads.
+- Issue, task, and work-category domain types used by the new project graph model.
+- Project service functions for list/detail reads, organization filtering, employee membership, CRUD, and file-aware writes.
+- TanStack Query hooks for project list/detail queries, prefetching, and mutation workflows.
+- Public module exports for the new project APIs.
+
+### Changed
+
+- Package version bumped to `0.4.0`.
+
 ## [v0.3.3] - 2026-06-06
 
 ### Added
