@@ -1,18 +1,71 @@
+/**
+ * @module project-update
+ *
+ * Request payload for `PATCH /project/web/{id}` (and the multipart
+ * variant `updateWithFiles`). Every field is optional — callers send
+ * only the keys they want to change.
+ */
 import { ProjectStatus } from './project-status';
 
+/**
+ * Partial update payload for an existing {@link Project}.
+ *
+ * Every field is optional; absent fields are left unchanged on the
+ * server. `Date` values are serialized to ISO-8601 strings by
+ * {@link updateProjectToJson}; `memberIds` replaces the project's
+ * member list and is sent under the backend field name `employees`.
+ *
+ * Backend responds with `ProjectSimpleDto` (nested `attachments`,
+ * `members`, and `tasks` arrays absent).
+ */
 export interface UpdateProjectRequest {
+  /** New display name. */
   projectName?: string;
+
+  /** New site address. */
   projectAddress?: string;
+
+  /** New description. */
   description?: string;
+
+  /** New lifecycle state. */
   status?: ProjectStatus;
+
+  /** New site longitude in decimal degrees. */
   projectLongitude?: number;
+
+  /** New site latitude in decimal degrees. */
   projectLatitude?: number;
+
+  /** Move the project under a different organization. */
   organizationId?: number;
+
+  /** New planned start date. Serialized to ISO-8601. */
   startDate?: Date;
+
+  /** New planned end date. Serialized to ISO-8601. */
   endDate?: Date;
+
+  /**
+   * Replacement member list. Serialized under the backend field name
+   * `employees`. To add or remove individual members without sending
+   * the whole list, prefer the dedicated `addEmployee` /
+   * `removeEmployee` service calls.
+   */
   memberIds?: number[];
 }
 
+/**
+ * Serializes an {@link UpdateProjectRequest} into the JSON body accepted
+ * by `PATCH /project/web/{id}`.
+ *
+ * Only set fields are emitted so the backend can distinguish "not set"
+ * from "explicitly null". `Date` fields are converted to ISO-8601
+ * strings; `memberIds` is renamed to `employees`.
+ *
+ * @param dto - The domain update request.
+ * @returns A plain object matching the backend's request-body schema.
+ */
 export function updateProjectToJson(
   dto: UpdateProjectRequest
 ): Record<string, unknown> {

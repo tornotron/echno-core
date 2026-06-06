@@ -1,3 +1,15 @@
+/**
+ * @module project
+ *
+ * Core {@link Project} domain entity plus its JSON parser, JSON
+ * serializer, and immutable member-list helpers.
+ *
+ * The parser tolerates partial backend payloads (`ProjectSimpleDto`
+ * omits `attachments`, `members`, and `tasks`); fields that are absent
+ * are returned as empty arrays or `undefined`. See `mergePreservingNested`
+ * (from `../../lib/query/cache-merge`) for the caller-side strategy that
+ * preserves cached nested arrays across a partial response.
+ */
 // types/project/project.ts
 import { Employee, parseEmployee, employeeToJson } from '../employee';
 import { Task, parseTask } from '../task';
@@ -6,24 +18,77 @@ import type { Attachment } from '../attachment';
 import { parseAttachment, attachmentToJson } from '../attachment';
 import { parsePositiveInt } from '../../lib/utils/parse-id';
 
+/**
+ * A construction project tracked by Echno.
+ *
+ * Nested collections (`members`, `tasks`, `attachments`) populate from
+ * full-DTO endpoints (`GET /project/web`, `GET /project/web/{id}`); the
+ * Simple-DTO endpoints (`POST`, `PATCH`) leave them empty so callers
+ * must merge with cached state instead of overwriting.
+ */
 export interface Project {
+  /** Unique surrogate identifier assigned by the backend. */
   id: number;
+
+  /** Display name. */
   projectName: string;
+
+  /** Site address. */
   projectAddress: string;
+
+  /** Current lifecycle state. */
   status: ProjectStatus;
+
+  /** Site longitude in decimal degrees. */
   projectLongitude: number;
+
+  /** Site latitude in decimal degrees. */
   projectLatitude: number;
+
+  /** Owning organization, when known. */
   organizationId?: number;
+
+  /** Planned start date. */
   startDate?: Date;
+
+  /** Planned end date. */
   endDate?: Date;
+
+  /** Creation timestamp recorded by the backend. */
   createdAt?: Date;
+
+  /** Completion progress as a number in `[0, 100]`. */
   progress: number;
+
+  /**
+   * Employees currently assigned as members. Empty on `ProjectSimpleDto`
+   * responses; full on detail / list queries.
+   */
   members: Employee[];
+
+  /**
+   * Tasks belonging to the project. Empty on `ProjectSimpleDto`
+   * responses; full on detail queries.
+   */
   tasks: Task[];
+
+  /**
+   * Attachments uploaded against the project. `undefined` on
+   * `ProjectSimpleDto` responses; populated on detail queries.
+   */
   attachments?: Attachment[];
 }
 
-/** Add member (immutable) */
+/**
+ * Returns a new {@link Project} with `employee` added to `members`.
+ *
+ * No-op if the employee is already a member. Pure / immutable — the
+ * input project is not mutated.
+ *
+ * @param project - The project to update.
+ * @param employee - The employee to add.
+ * @returns A new project value with the updated member list.
+ */
 export function addMember(project: Project, employee: Employee): Project {
   if (project.members.some((e) => e.id === employee.id)) {
     return project;
@@ -34,7 +99,15 @@ export function addMember(project: Project, employee: Employee): Project {
   };
 }
 
-/** Remove member (immutable) */
+/**
+ * Returns a new {@link Project} with `employee` removed from `members`.
+ *
+ * Pure / immutable — the input project is not mutated.
+ *
+ * @param project - The project to update.
+ * @param employee - The employee to remove.
+ * @returns A new project value with the updated member list.
+ */
 export function removeMember(project: Project, employee: Employee): Project {
   return {
     ...project,
@@ -42,7 +115,17 @@ export function removeMember(project: Project, employee: Employee): Project {
   };
 }
 
-/** JSON → Project */
+/**
+ * Parses a raw backend payload into a typed {@link Project}.
+ *
+ * Tolerates partial responses (`ProjectSimpleDto`): missing
+ * `employees` / `tasks` produce empty arrays; missing `attachments`
+ * stays `undefined`; missing numeric fields default to `0`.
+ *
+ * @param json - The raw JSON object returned by the backend.
+ * @returns A validated `Project` domain object.
+ * @throws {Error} If `json.id` is missing or not a positive integer.
+ */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function parseProject(json: any): Project {
   return {
@@ -69,7 +152,17 @@ export function parseProject(json: any): Project {
   };
 }
 
-/** Project → JSON */
+/**
+ * Serializes a {@link Project} into a JSON payload suitable for the
+ * backend update endpoints.
+ *
+ * `members` is renamed to `employees`; `Date` fields are emitted as
+ * ISO-8601 strings; `tasks` is intentionally omitted because the
+ * backend does not accept task arrays on project update.
+ *
+ * @param project - The domain project to serialize.
+ * @returns A plain object matching the backend's expected shape.
+ */
 export function projectToJson(project: Project): Record<string, unknown> {
   return {
     id: project.id,
