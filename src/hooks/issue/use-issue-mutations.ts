@@ -1,3 +1,10 @@
+/**
+ * @module use-issue-mutations
+ *
+ * TanStack mutation hooks for the issue domain. Read-side hooks live in
+ * {@link useIssues}, {@link useIssue}, {@link useIssuesByProject}, and
+ * {@link useIssuesByTask}.
+ */
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { issueService } from '../../services/issue-service';
 import { Issue, IssueFiles } from '../../types/issue';
@@ -9,6 +16,12 @@ import { mergePreservingNested } from '../../lib/query/cache-merge';
 import { issueKeys } from './issue-keys';
 import { taskKeys } from '../task/task-keys';
 
+/**
+ * Nested keys preserved from the cached `Issue` when merging a partial
+ * `IssueSimpleDto` response into the detail / list caches. The first two
+ * are nested arrays; `taskName` is a denormalised join scalar that the
+ * SimpleDto may omit.
+ */
 const ISSUE_NESTED_KEYS = [
   'comments',
   'attachments',
@@ -16,10 +29,11 @@ const ISSUE_NESTED_KEYS = [
 ] as const satisfies ReadonlyArray<keyof Issue>;
 
 /**
- * Matches every Issue[] list cache under the 'issues' namespace while excluding
- * detail entries (Issue), which have a numeric second segment (`['issues', id]`).
- * Used by `setQueriesData` to batch-patch the main list and every `byProject` /
- * `byTask` cache in one call.
+ * Matches every `Issue[]` list cache under the `'issues'` namespace while
+ * excluding detail entries (which use `['issues', id]` with a numeric
+ * second segment). Covers `['issues', 'list']`,
+ * `['issues', 'project', projectId]`, and `['issues', 'task', taskId]`
+ * in a single `setQueriesData` pass.
  */
 function isIssueListCache(query: {
   queryKey: ReadonlyArray<unknown>;
@@ -33,6 +47,26 @@ function isIssueListCache(query: {
   );
 }
 
+/**
+ * Creates a new issue, optionally with attachments.
+ *
+ * Backend response: `IssueSimpleDto` (partial — `comments`, `attachments`,
+ * and `taskName` may be absent).
+ *
+ * On success:
+ * - `setQueryData(issueKeys.lists(), append)` — appends to the main list.
+ * - `setQueryData(issueKeys.detail(newIssue.id), newIssue)` — seeds detail for instant nav.
+ * - `setQueryData(issueKeys.byTask(taskId), append-if-cached)` — appends to the task-scoped list only when already cached (functional updater returns `undefined` for absent entries, avoiding spurious cache rows).
+ * - `setQueryData(issueKeys.byProject(projectId), append-if-cached)` — same for the project-scoped list.
+ * - `setQueryData(taskKeys.detail(taskId), { ...old, issues: [...issues, newIssue] })` — cross-namespace patch of the parent {@link Task}'s nested `issues` array so task-detail consumers update instantly. Conditional on `data.taskId !== undefined`.
+ *
+ * Invalidations kept:
+ * - `invalidateQueries(issueKeys.detail(newIssue.id))` — canonical refetch so the next observer pulls the full `IssueDto` with nested arrays. The SimpleDto seed is partial.
+ * - `invalidateQueries(taskKeys.detail(taskId))` — cross-namespace; refetches derived server-side task fields that the client cannot replicate.
+ *
+ * @returns A TanStack `UseMutationResult` where the mutate function accepts
+ *   `{ data: CreateIssueRequest; files?: IssueFiles }`.
+ */
 export function useCreateIssue() {
   const queryClient = useQueryClient();
 
@@ -87,6 +121,34 @@ export function useCreateIssue() {
   });
 }
 
+/**
+ * Updates an existing issue with optimistic patching and partial-DTO
+ * reconciliation.
+ *
+ * Backend response: `IssueSimpleDto` (partial — `comments`, `attachments`,
+ * and `taskName` may be absent on the response).
+ *
+ * Optimistic update (`onMutate`):
+ * - Cancels in-flight `detail(id)` and predicate-matched list queries.
+ * - Snapshots: `previousDetail` (`Issue`), `previousListEntries` (`Array<[QueryKey, Issue[] | undefined]>`).
+ * - Falls back to scanning list caches if the detail entry isn't yet cached.
+ * - Applies the deterministic scalar fields (`title`, `description`, `type`, `status`, `assigneeId`) over the cached base. Joined objects (`creator`, `assignee`) and nested arrays are left to `onSuccess` reconciliation.
+ *
+ * Rollback (`onError`): restores `previousDetail` and iterates
+ * `previousListEntries` to restore each list key individually.
+ *
+ * On success:
+ * - `setQueryData(issueKeys.detail(id), merge)` — uses {@link mergePreservingNested} with `ISSUE_NESTED_KEYS` so cached `comments`, `attachments`, and `taskName` survive the partial response.
+ * - `setQueriesData({ predicate: isIssueListCache }, replace-with-merge)` — mirrors the merge across main, byProject, and byTask list caches.
+ * - `setQueryData(taskKeys.detail(taskId), { ...old, issues: old.issues.map(replace) })` — cross-namespace patch of the parent task's nested `issues` array. Conditional on `updatedIssue.taskId !== undefined`.
+ *
+ * Invalidations kept:
+ * - `invalidateQueries(issueKeys.detail(id))` + `invalidateQueries({ predicate: isIssueListCache })` — canonical reconciliation; the merged write is still partial, and the canonical refetch ensures nested arrays render without a hard refresh.
+ * - `invalidateQueries(taskKeys.detail(taskId))` — cross-namespace; derived task fields refetch.
+ *
+ * @returns A TanStack `UseMutationResult` where the mutate function accepts
+ *   `{ id: number; data: UpdateIssueRequest; files?: IssueFiles }`.
+ */
 export function useUpdateIssue() {
   const queryClient = useQueryClient();
 
@@ -196,6 +258,31 @@ export function useUpdateIssue() {
   });
 }
 
+/**
+ * Deletes an issue by ID with optimistic eviction and snapshot-based
+ * rollback.
+ *
+ * Backend response: `ApiResponse` (ack only).
+ *
+ * Optimistic update (`onMutate`):
+ * - Cancels in-flight `detail(id)` and predicate-matched list queries.
+ * - Snapshots: `previousDetail` (`Issue`), `previousListEntries`, and `previousParentTask` (`Task`) — read from `taskKeys.detail(previousDetail.taskId)` if the issue had a parent task. The parent-task snapshot is captured *before* the optimistic eviction so it's available for rollback.
+ * - Applies removal immediately: filters every list cache via predicate, evicts the detail entry with `removeQueries`, and filters the parent task's nested `issues` array.
+ *
+ * Rollback (`onError`):
+ * - Restores list caches from `previousListEntries`.
+ * - Re-seeds the detail entry from `previousDetail` if it was present.
+ * - Restores the parent task's `issues` array from `previousParentTask` if it was present.
+ *
+ * Cache evictions:
+ * - `removeQueries(issueKeys.detail(id))` — entity no longer exists; nothing to refetch.
+ *
+ * Invalidations kept:
+ * - `invalidateQueries(taskKeys.detail(previousDetail.taskId))` — cross-namespace; derived task fields refetch. Read from the pre-deletion snapshot since the live detail is gone. Conditional on `previousDetail.taskId !== undefined`.
+ *
+ * @returns A TanStack `UseMutationResult` where the mutate function accepts
+ *   the numeric ID of the issue to delete.
+ */
 export function useDeleteIssue() {
   const queryClient = useQueryClient();
 
