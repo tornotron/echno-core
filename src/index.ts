@@ -48,3 +48,8 @@ export * from './hooks/project';
 export * from './types/task';
 export * from './services/task-service';
 export * from './hooks/task';
+
+// Work Category
+export * from './types/work-category';
+export * from './services/work-category-service';
+export * from './hooks/work-category';
