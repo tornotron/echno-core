@@ -53,3 +53,8 @@ export * from './hooks/task';
 export * from './types/work-category';
 export * from './services/work-category-service';
 export * from './hooks/work-category';
+
+// Issue
+export * from './types/issue';
+export * from './services/issue-service';
+export * from './hooks/issue';
