@@ -39,3 +39,8 @@ export * from './types/employee';
 export * from './services/employee-service';
 export * from './hooks/employee';
 
+// Project
+export * from './types/project';
+export * from './services/project-service';
+export * from './hooks/project';
+
