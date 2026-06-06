@@ -1,3 +1,13 @@
+/**
+ * @module work-category-service
+ *
+ * Typed client for the work-category backend endpoints under
+ * `/category/web`. Wraps `api.*` calls and parses raw JSON into strongly-
+ * typed {@link WorkCategory} domain objects.
+ *
+ * All exported functions throw {@link ApiError} on non-2xx responses or
+ * when the response payload fails parsing.
+ */
 import { api, ApiError } from '../lib/api/api-client';
 import { logger } from '../lib/logger';
 import {
@@ -11,8 +21,30 @@ import {
 type ApiResponse = any;
 
 /**
- * Safely parse work category data with error handling.
- * @throws {ApiError} when parsing fails
+ * Backend response shape audit:
+ *
+ *   GET    /category/web        → CategoryDto[]       (full)
+ *   GET    /category/web/{id}   → CategoryDto         (full)
+ *   POST   /category/web        → CategorySimpleDto   (partial — optional scalars may be absent)
+ *   DELETE /category/web/{id}   → ApiResponse         (ack only)
+ *
+ * `WorkCategory` is a flat domain type (no nested arrays). Direct
+ * `setQueryData` is safe for both the full and partial response shapes;
+ * `mergePreservingNested` would degenerate to a plain overwrite here.
+ * The mutation hooks issue a follow-up detail invalidation after a POST so
+ * the next observer fetches the canonical `CategoryDto` even if the
+ * `CategorySimpleDto` response omitted optional scalar fields.
+ *
+ * No PATCH endpoint exists for this domain.
+ */
+
+/**
+ * Parses a single category payload, wrapping parser failures in
+ * {@link ApiError} so callers receive a uniform error shape.
+ *
+ * @param data - The raw JSON object from the backend.
+ * @returns The parsed {@link WorkCategory}.
+ * @throws {ApiError} When parsing fails (HTTP 422).
  */
 function safeParseWorkCategory(data: ApiResponse): WorkCategory {
   try {
@@ -27,8 +59,14 @@ function safeParseWorkCategory(data: ApiResponse): WorkCategory {
 }
 
 /**
- * Safely parse work category array with error handling.
- * @throws {ApiError} when parsing fails
+ * Parses an array of category payloads. Logs a contract-violation warning
+ * and throws if the backend returns a non-array, since downstream consumers
+ * assume an iterable shape.
+ *
+ * @param data - The raw JSON array from the backend.
+ * @returns An array of parsed {@link WorkCategory} objects.
+ * @throws {ApiError} When the payload is not an array or any item fails
+ *   parsing (HTTP 422).
  */
 function safeParseWorkCategories(data: ApiResponse[]): WorkCategory[] {
   if (!Array.isArray(data)) {
@@ -64,13 +102,16 @@ function safeParseWorkCategories(data: ApiResponse[]): WorkCategory[] {
 }
 
 /**
- * workCategoryService
- *
- * Thin wrapper around the backend work category REST endpoints.
+ * Thin wrapper around the backend work-category REST endpoints.
  */
 export const workCategoryService = {
   /**
-   * Fetch all work categories.
+   * Fetches every work category.
+   *
+   * `GET /category/web` → `CategoryDto[]` (full).
+   *
+   * @returns A resolved array of {@link WorkCategory} objects.
+   * @throws {ApiError} On non-2xx response or unparseable payload.
    */
   async getAll(): Promise<WorkCategory[]> {
     const data = await api.get<ApiResponse[]>('/category/web');
@@ -78,7 +119,13 @@ export const workCategoryService = {
   },
 
   /**
-   * Fetch a single work category by id.
+   * Fetches a single work category by ID.
+   *
+   * `GET /category/web/{id}` → `CategoryDto` (full).
+   *
+   * @param id - Surrogate ID of the work category.
+   * @returns The resolved {@link WorkCategory}.
+   * @throws {ApiError} On non-2xx response or unparseable payload.
    */
   async getById(id: number): Promise<WorkCategory> {
     const data = await api.get<ApiResponse>(`/category/web/${id}`);
@@ -86,7 +133,18 @@ export const workCategoryService = {
   },
 
   /**
-   * Create a new work category.
+   * Creates a new work category.
+   *
+   * `POST /category/web` → `CategorySimpleDto` (partial — optional scalar
+   * fields like `description`, `icon`, and `image` may be absent on the
+   * response even when supplied in the request).
+   *
+   * @param dto - The create request payload.
+   * @returns The newly created {@link WorkCategory}. Optional scalar fields
+   *   may be undefined; mutation hooks invalidate the detail key after a
+   *   successful create so the next observer pulls the canonical
+   *   `CategoryDto`.
+   * @throws {ApiError} On non-2xx response or unparseable payload.
    */
   async create(dto: CreateWorkCategoryRequest): Promise<WorkCategory> {
     const data = await api.post<ApiResponse>(
@@ -97,7 +155,13 @@ export const workCategoryService = {
   },
 
   /**
-   * Delete a work category by id.
+   * Deletes a work category by ID.
+   *
+   * `DELETE /category/web/{id}` → `ApiResponse` (ack only — no body to parse).
+   *
+   * @param id - Surrogate ID of the work category to delete.
+   * @returns A void promise that resolves on a successful ack.
+   * @throws {ApiError} On non-2xx response.
    */
   async delete(id: number): Promise<void> {
     await api.delete(`/category/web/${id}`);
