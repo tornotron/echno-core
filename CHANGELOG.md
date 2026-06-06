@@ -4,6 +4,19 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 
 The project currently has released versions in git tags: `v0.0.0`, `v0.0.1`, `v0.1.0`, and `v0.1.1`.
 
+## [v0.6.0] - 2026-06-06
+
+### Added
+
+- Work-category domain types for category metadata and create/update payloads.
+- Work-category service functions for list/detail reads and CRUD operations.
+- TanStack Query hooks for work-category reads, mutations, and cache keys.
+- Public module exports for the work-category APIs.
+
+### Changed
+
+- Package version bumped to `0.6.0`.
+
 ## [v0.5.1] - 2026-06-06
 
 ### Added
