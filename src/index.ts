@@ -58,3 +58,8 @@ export * from './hooks/work-category';
 export * from './types/issue';
 export * from './services/issue-service';
 export * from './hooks/issue';
+
+// Organization
+export * from './types/organization';
+export * from './services/organization-service';
+export * from './hooks/organization';
