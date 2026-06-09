@@ -124,6 +124,11 @@ const RETRYABLE_ERRORS = new Set(['TypeError', 'AbortError']);
  * All public methods are generic on the expected response type `T` and
  * throw {@link ApiError} on non-2xx responses or network failures.
  *
+ * Request URLs are formed by concatenating `baseURL + endpoint`. When
+ * `baseURL` is relative (e.g. `/api/v1`), the final URL is resolved against
+ * `globalThis.location.origin` at request time, so relative configuration
+ * requires a browser runtime.
+ *
  * Use the pre-configured {@link api} singleton rather than constructing
  * this class directly.
  */
@@ -136,7 +141,9 @@ class ApiClient {
   /**
    * Create a new ApiClient
    * @param baseURL - Base URL to prefix endpoints with. Defaults to `NEXT_PUBLIC_API_URL`.
-   *   Consumer apps must set this; in echno-core there's no browser-origin fallback.
+   *   May be absolute (e.g. `https://api.example.com`) or relative (e.g. `/api/v1`).
+   *   Relative values are resolved against `globalThis.location.origin` at request time
+   *   and therefore only work in a browser context.
    */
   constructor(baseURL: string = process.env.NEXT_PUBLIC_API_URL ?? '') {
     this.baseURL = baseURL;
@@ -148,6 +155,34 @@ class ApiClient {
    */
   setDefaultHeader(key: string, value: string): void {
     (this.headers as Record<string, string>)[key] = value;
+  }
+
+  /**
+   * Build a `URL` from `endpoint` + optional query params, resolving relative
+   * `baseURL` against the browser origin when necessary.
+   *
+   * @throws {Error} when `baseURL` is relative and no browser origin is available.
+   */
+  private buildUrl(
+    endpoint: string,
+    params?: Record<string, string | number | boolean>
+  ): URL {
+    const target = `${this.baseURL}${endpoint}`;
+    const origin =
+      typeof globalThis.location === 'undefined'
+        ? undefined
+        : globalThis.location.origin;
+    const url = new URL(target, origin);
+
+    if (params) {
+      for (const key of Object.keys(params)) {
+        if (params[key] !== undefined && params[key] !== null) {
+          url.searchParams.append(key, params[key].toString());
+        }
+      }
+    }
+
+    return url;
   }
 
   /**
@@ -296,26 +331,20 @@ class ApiClient {
   /**
    * Issues a GET request.
    *
-   * @param endpoint - Path relative to `baseURL`, must begin with `'/'`.
+   * @param endpoint - Path appended to `baseURL`. Must begin with `'/'`.
    * @param params - Optional query-string parameters appended to the URL.
    * @param options - Per-request timeout and retry overrides.
    * @returns Parsed JSON response typed as `T`.
    * @throws {ApiError} On non-2xx HTTP responses or network failure.
+   * @throws {TypeError} When `baseURL` is relative and no browser origin is available
+   *   (see {@link buildUrl}).
    */
   async get<T = unknown>(
     endpoint: string,
     params?: Record<string, string | number | boolean>,
     options?: RequestOptions
   ): Promise<T> {
-    const url = new URL(`${this.baseURL}${endpoint}`);
-
-    if (params) {
-      for (const key of Object.keys(params)) {
-        if (params[key] !== undefined && params[key] !== null) {
-          url.searchParams.append(key, params[key].toString());
-        }
-      }
-    }
+    const url = this.buildUrl(endpoint, params);
 
     const response = await this.fetchWithRetry(
       url.toString(),
@@ -329,12 +358,14 @@ class ApiClient {
   /**
    * Issues a POST request with a JSON body.
    *
-   * @param endpoint - Path relative to `baseURL`.
+   * @param endpoint - Path appended to `baseURL`. Must begin with `'/'`.
    * @param data - Request body serialised to JSON.
    * @param params - Optional query-string parameters.
    * @param options - Per-request timeout and retry overrides.
    * @returns Parsed JSON response typed as `T`.
    * @throws {ApiError} On non-2xx HTTP responses or network failure.
+   * @throws {TypeError} When `baseURL` is relative and no browser origin is available
+   *   (see {@link buildUrl}).
    */
   async post<T = unknown>(
     endpoint: string,
@@ -342,15 +373,7 @@ class ApiClient {
     params?: Record<string, string | number | boolean>,
     options?: RequestOptions
   ): Promise<T> {
-    const url = new URL(`${this.baseURL}${endpoint}`);
-
-    if (params) {
-      for (const key of Object.keys(params)) {
-        if (params[key] !== undefined && params[key] !== null) {
-          url.searchParams.append(key, params[key].toString());
-        }
-      }
-    }
+    const url = this.buildUrl(endpoint, params);
 
     const response = await this.fetchWithRetry(
       url.toString(),
@@ -368,12 +391,14 @@ class ApiClient {
   /**
    * Issues a PUT request with a JSON body.
    *
-   * @param endpoint - Path relative to `baseURL`.
+   * @param endpoint - Path appended to `baseURL`. Must begin with `'/'`.
    * @param data - Request body serialised to JSON.
    * @param params - Optional query-string parameters.
    * @param options - Per-request timeout and retry overrides.
    * @returns Parsed JSON response typed as `T`.
    * @throws {ApiError} On non-2xx HTTP responses or network failure.
+   * @throws {TypeError} When `baseURL` is relative and no browser origin is available
+   *   (see {@link buildUrl}).
    */
   async put<T = unknown>(
     endpoint: string,
@@ -381,15 +406,7 @@ class ApiClient {
     params?: Record<string, string | number | boolean>,
     options?: RequestOptions
   ): Promise<T> {
-    const url = new URL(`${this.baseURL}${endpoint}`);
-
-    if (params) {
-      for (const key of Object.keys(params)) {
-        if (params[key] !== undefined && params[key] !== null) {
-          url.searchParams.append(key, params[key].toString());
-        }
-      }
-    }
+    const url = this.buildUrl(endpoint, params);
 
     const response = await this.fetchWithRetry(
       url.toString(),
@@ -410,12 +427,14 @@ class ApiClient {
    * Salary numeric values are re-serialised as floats (e.g. `45000.0`)
    * to satisfy the Java backend's Jackson type expectations.
    *
-   * @param endpoint - Path relative to `baseURL`.
+   * @param endpoint - Path appended to `baseURL`. Must begin with `'/'`.
    * @param data - Request body serialised to JSON.
    * @param params - Optional query-string parameters.
    * @param options - Per-request timeout and retry overrides.
    * @returns Parsed JSON response typed as `T`.
    * @throws {ApiError} On non-2xx HTTP responses or network failure.
+   * @throws {TypeError} When `baseURL` is relative and no browser origin is available
+   *   (see {@link buildUrl}).
    */
   async patch<T = unknown>(
     endpoint: string,
@@ -423,15 +442,7 @@ class ApiClient {
     params?: Record<string, string | number | boolean>,
     options?: RequestOptions
   ): Promise<T> {
-    const url = new URL(`${this.baseURL}${endpoint}`);
-
-    if (params) {
-      for (const key of Object.keys(params)) {
-        if (params[key] !== undefined && params[key] !== null) {
-          url.searchParams.append(key, params[key].toString());
-        }
-      }
-    }
+    const url = this.buildUrl(endpoint, params);
 
     // Custom JSON stringification for PATCH to handle Java backend type expectations
     let body: string | undefined;
@@ -458,26 +469,20 @@ class ApiClient {
   /**
    * Issues a DELETE request.
    *
-   * @param endpoint - Path relative to `baseURL`.
+   * @param endpoint - Path appended to `baseURL`. Must begin with `'/'`.
    * @param params - Optional query-string parameters.
    * @param options - Per-request timeout and retry overrides.
    * @returns Parsed JSON response typed as `T`.
    * @throws {ApiError} On non-2xx HTTP responses or network failure.
+   * @throws {TypeError} When `baseURL` is relative and no browser origin is available
+   *   (see {@link buildUrl}).
    */
   async delete<T = unknown>(
     endpoint: string,
     params?: Record<string, string | number | boolean>,
     options?: RequestOptions
   ): Promise<T> {
-    const url = new URL(`${this.baseURL}${endpoint}`);
-
-    if (params) {
-      for (const key of Object.keys(params)) {
-        if (params[key] !== undefined && params[key] !== null) {
-          url.searchParams.append(key, params[key].toString());
-        }
-      }
-    }
+    const url = this.buildUrl(endpoint, params);
 
     const response = await this.fetchWithRetry(
       url.toString(),
@@ -495,12 +500,18 @@ class ApiClient {
    * are appended under their respective field names. Timeout defaults to
    * 120 000 ms and retries are disabled for uploads.
    *
-   * @param endpoint - Path relative to `baseURL`.
+   * Unlike the JSON request methods, the URL is passed to `fetch` as a raw
+   * string. A relative `baseURL` is resolved by `fetch` itself against
+   * `document.baseURI` in the browser and throws `TypeError` otherwise.
+   *
+   * @param endpoint - Path appended to `baseURL`. Must begin with `'/'`.
    * @param data - Entity data serialised to JSON and sent as the `'data'` field.
    * @param files - Map of field names to `File` arrays (e.g. `{ attachments: [file1] }`).
    * @param options - Per-request timeout override (retries remain disabled).
    * @returns Parsed JSON response typed as `T`.
    * @throws {ApiError} On non-2xx HTTP responses or network failure.
+   * @throws {TypeError} When `baseURL` is relative and `fetch` cannot resolve it
+   *   (non-browser runtime).
    */
   async postMultipart<T = unknown>(
     endpoint: string,
@@ -541,14 +552,17 @@ class ApiClient {
    *
    * Same envelope convention as {@link postMultipart}: entity data in a
    * `'data'` field, files appended by name. Timeout defaults to 120 000 ms;
-   * retries are disabled.
+   * retries are disabled. URL resolution follows the same rules as
+   * {@link postMultipart}.
    *
-   * @param endpoint - Path relative to `baseURL`.
+   * @param endpoint - Path appended to `baseURL`. Must begin with `'/'`.
    * @param data - Entity data serialised to JSON and sent as the `'data'` field.
    * @param files - Map of field names to `File` arrays.
    * @param options - Per-request timeout override.
    * @returns Parsed JSON response typed as `T`.
    * @throws {ApiError} On non-2xx HTTP responses or network failure.
+   * @throws {TypeError} When `baseURL` is relative and `fetch` cannot resolve it
+   *   (non-browser runtime).
    */
   async patchMultipart<T = unknown>(
     endpoint: string,
@@ -589,13 +603,16 @@ class ApiClient {
    *
    * Use when the caller constructs the `FormData` directly (e.g. simple
    * single-file uploads without a JSON `'data'` field). Timeout defaults
-   * to 120 000 ms; retries are disabled.
+   * to 120 000 ms; retries are disabled. URL resolution follows the same
+   * rules as {@link postMultipart}.
    *
-   * @param endpoint - Path relative to `baseURL`.
+   * @param endpoint - Path appended to `baseURL`. Must begin with `'/'`.
    * @param formData - Pre-built `FormData` object containing files and fields.
    * @param options - Per-request timeout override.
    * @returns Parsed JSON response typed as `T`.
    * @throws {ApiError} On non-2xx HTTP responses or network failure.
+   * @throws {TypeError} When `baseURL` is relative and `fetch` cannot resolve it
+   *   (non-browser runtime).
    */
   async postFormData<T = unknown>(
     endpoint: string,
