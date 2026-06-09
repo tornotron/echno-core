@@ -4,6 +4,18 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 
 The project currently has released versions in git tags: `v0.0.0`, `v0.0.1`, `v0.1.0`, and `v0.1.1`.
 
+## [v0.8.1] - 2026-06-09
+
+### Added
+
+- Detailed organization documentation for types, services, query hooks, and cache keys.
+- Public re-exports for the full organization hook surface.
+
+### Changed
+
+- Organization service, hook, and type comments were expanded to describe API shapes, multipart logo handling, and cache behavior.
+- Package version bumped to `0.8.1`.
+
 ## [v0.8.0] - 2026-06-09
 
 ### Added
