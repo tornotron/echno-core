@@ -1,3 +1,14 @@
+/**
+ * @module use-organization-mutations
+ *
+ * Mutation hooks for creating, updating, and deleting organizations.
+ *
+ * POST and PATCH both return `OrganizationSimpleDto` (partial), so updates
+ * use {@link mergePreservingNested} with `ORGANIZATION_NESTED_KEYS` to
+ * preserve cached nested arrays. Delete performs a 3-way cross-namespace
+ * fan-out to keep user and employee caches consistent.
+ */
+
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { organizationService } from '../../services/organization-service';
 import { Organization } from '../../types/organization';
@@ -16,6 +27,24 @@ const ORGANIZATION_NESTED_KEYS = [
   'attachments',
 ] as const satisfies ReadonlyArray<keyof Organization>;
 
+/**
+ * Creates a new organization.
+ *
+ * Backend response: `OrganizationSimpleDto` (partial — `employees`,
+ * `projects`, and `attachments` may be absent).
+ *
+ * On success:
+ * - `setQueryData(organizationKeys.detail(newOrg.id), newOrg)` — seeds the
+ *   detail cache with the server-returned object.
+ * - `setQueryData(organizationKeys.all, append)` — appends the new organization
+ *   to the list cache.
+ * - `invalidateQueries(organizationKeys.detail(newOrg.id))` — triggers a
+ *   canonical refetch so server-computed fields (e.g. derived `logo`) are
+ *   populated without a hard refresh.
+ *
+ * @returns A TanStack `UseMutationResult` where the mutate function accepts
+ *   `{ data: CreateOrganizationRequest; files?: OrganizationFiles }`.
+ */
 export function useCreateOrganization() {
   const queryClient = useQueryClient();
 
@@ -47,6 +76,29 @@ export function useCreateOrganization() {
   });
 }
 
+/**
+ * Updates an existing organization, optionally replacing the logo.
+ *
+ * Backend response: `OrganizationSimpleDto` (partial — `employees`,
+ * `projects`, and `attachments` may be absent).
+ *
+ * On success:
+ * - `setQueryData(organizationKeys.detail(id), merge)` — uses
+ *   {@link mergePreservingNested} with `ORGANIZATION_NESTED_KEYS`
+ *   (`['employees', 'projects', 'attachments']`) to preserve cached nested arrays.
+ * - `setQueryData(organizationKeys.all, merge map)` — mirrors the merge in
+ *   the list cache.
+ * - `invalidateQueries(organizationKeys.detail(id))` — canonical refetch so
+ *   nested collections appear without a hard refresh.
+ * - `invalidateQueries(organizationKeys.all)` — canonical refetch for the
+ *   list; SimpleDto may omit nested data present in cached entries.
+ * - `invalidateQueries(employeeKeys.lists())` — cross-namespace: Employee
+ *   carries a denormalized `organizationName?` field that is stale after
+ *   an organization name change.
+ *
+ * @returns A TanStack `UseMutationResult` where the mutate function accepts
+ *   `{ id: number; data: UpdateOrganizationRequest; files?: OrganizationFiles }`.
+ */
 export function useUpdateOrganization() {
   const queryClient = useQueryClient();
 
@@ -89,6 +141,26 @@ export function useUpdateOrganization() {
   });
 }
 
+/**
+ * Deletes an organization and evicts all related cache entries.
+ *
+ * Backend response: `ApiResponse` (ack — no entity payload).
+ *
+ * On success:
+ * - `removeQueries(organizationKeys.detail(id))` — evicts the detail cache
+ *   (entity deleted; refetch would 404).
+ * - `setQueryData(organizationKeys.all, filter)` — removes the deleted entry
+ *   from the list cache.
+ * - `invalidateQueries(userKeys.all)` — cross-namespace: `user.defaultOrganizationId`
+ *   may reference the deleted organization.
+ * - `invalidateQueries(userKeys.employees())` — cross-namespace: the
+ *   user-prefetched employee list may include records tied to this organization.
+ * - `invalidateQueries(employeeKeys.lists())` — cross-namespace: denormalized
+ *   `organizationName` / `organizationId` in employee records is now invalid.
+ *
+ * @returns A TanStack `UseMutationResult` where the mutate function accepts
+ *   the organization `id` as a `number`.
+ */
 export function useDeleteOrganization() {
   const queryClient = useQueryClient();
 

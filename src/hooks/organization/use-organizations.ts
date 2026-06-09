@@ -1,7 +1,7 @@
 /**
- * hooks/organization/use-organizations.ts
+ * @module use-organizations
  *
- * Organization-related query hooks.
+ * Query hooks for fetching organization data.
  */
 
 import { useQuery } from '@tanstack/react-query';
@@ -11,11 +11,16 @@ import { standardQueryOptions } from '../../lib/query/options';
 import { organizationKeys } from './organization-keys';
 
 /**
- * Hook to fetch all organizations for the current user.
+ * Fetches all organizations visible to the current user.
  *
- * Note: writes to `organizationKeys.all` not `lists()` because
- * `use-organization-prefetch.ts` seeds the cache at `organizationKeys.all`
- * on auth bootstrap. Keeps the prefetched data accessible to this hook.
+ * Uses the **standard** query profile (`staleTime` 60 s, `gcTime` 5 min,
+ * `refetchOnWindowFocus` in production only).
+ *
+ * The query key is `organizationKeys.all` (`['organizations']`) rather than
+ * `lists()` so that data prefetched at `organizationKeys.all` on auth
+ * bootstrap remains accessible without a network round-trip.
+ *
+ * @returns A TanStack `UseQueryResult` wrapping `Organization[]`.
  */
 export function useOrganizations() {
   return useQuery({
@@ -27,7 +32,14 @@ export function useOrganizations() {
 }
 
 /**
- * Hook to fetch a single organization by ID.
+ * Fetches a single organization by ID.
+ *
+ * Uses the **standard** query profile (`staleTime` 60 s, `gcTime` 5 min,
+ * `refetchOnWindowFocus` in production only).
+ * The query is disabled until `id` is truthy.
+ *
+ * @param id - Surrogate ID of the organization.
+ * @returns A TanStack `UseQueryResult` wrapping {@link Organization}.
  */
 export function useOrganization(id: number) {
   return useQuery({
