@@ -1,3 +1,16 @@
+/**
+ * @module invitation-service
+ *
+ * Typed client for invitation (project invite code) backend endpoints.
+ *
+ * All methods currently route to legacy `/api/v1/project/web/invite-codes/*`
+ * paths that no longer exist on the backend. The live spec exposes invitation
+ * endpoints under `/api/v1/invitation/web/...`. An `integrate-module` pass is
+ * required to realign service paths before any method will succeed in
+ * production. See the module-level FIXME in `use-invitation-mutations.ts` for
+ * the full remediation plan.
+ */
+
 import { api, ApiError } from '../lib/api/api-client';
 import { logger } from '../lib/logger';
 import { Invitation, parseInvitation } from '../types/invitation/invitation';
@@ -38,9 +51,14 @@ function safeParseInvitations(data: ApiResponse[]): Invitation[] {
 
 export const invitationService = {
   /**
-   * Generate a new project invite code.
+   * Generates a new project invite code.
    *
-   * POST /api/v1/project/web/invite-codes
+   * `POST /api/v1/project/web/invite-codes` — path is stale; the live spec
+   * endpoint is `POST /invitation/web/generateCode/organizationId/{organizationId}`.
+   *
+   * @param dto - Invite code generation parameters.
+   * @returns The created {@link Invitation}.
+   * @throws {ApiError} On non-2xx HTTP responses or parse failure.
    */
   async generateCode(dto: GenerateInviteCodeRequest): Promise<Invitation> {
     const data = await api.post<ApiResponse>(
@@ -51,9 +69,15 @@ export const invitationService = {
   },
 
   /**
-   * Fetch all invite codes for a project.
+   * Fetches all invite codes for a project (or organization per spec).
    *
-   * GET /api/v1/project/web/invite-codes?projectId={projectId}
+   * `GET /api/v1/project/web/invite-codes?projectId={projectId}` — path is
+   * stale; the live spec endpoint is
+   * `GET /invitation/web/organizationId/{organizationId}`.
+   *
+   * @param projectId - ID of the project (effectively the organization) to query.
+   * @returns Resolved array of {@link Invitation} objects.
+   * @throws {ApiError} On non-2xx HTTP responses or parse failure.
    */
   async getByProject(projectId: number): Promise<Invitation[]> {
     const data = await api.get<ApiResponse[]>(
@@ -63,9 +87,15 @@ export const invitationService = {
   },
 
   /**
-   * Fetch a single invite code by its numeric id.
+   * Fetches a single invite code by its numeric ID.
    *
-   * GET /api/v1/project/web/invite-codes/{id}
+   * `GET /api/v1/project/web/invite-codes/{id}` — path is stale and has no
+   * equivalent in the live spec. The backend exposes no GET-by-id endpoint for
+   * invite codes; this method will 404 in production.
+   *
+   * @param id - Surrogate ID of the invite code.
+   * @returns The resolved {@link Invitation}.
+   * @throws {ApiError} On non-2xx HTTP responses or parse failure.
    */
   async getById(id: number): Promise<Invitation> {
     const data = await api.get<ApiResponse>(
@@ -75,9 +105,13 @@ export const invitationService = {
   },
 
   /**
-   * Delete an invite code.
+   * Deletes an invite code by ID.
    *
-   * DELETE /api/v1/project/web/invite-codes/{id}
+   * `DELETE /api/v1/project/web/invite-codes/{id}` — path is stale; the
+   * backend has no DELETE endpoint for invite codes.
+   *
+   * @param id - Surrogate ID of the invite code to delete.
+   * @throws {ApiError} On non-2xx HTTP responses.
    */
   async delete(id: number): Promise<void> {
     await api.delete(`/api/v1/project/web/invite-codes/${id}`);
