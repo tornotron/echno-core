@@ -4,6 +4,20 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 
 The project currently has released versions in git tags: `v0.0.0`, `v0.0.1`, `v0.1.0`, and `v0.1.1`.
 
+## [v0.10.0] - 2026-06-09
+
+### Added
+
+- Storage location domain types for location metadata, create/update payloads, and location type labels.
+- Storage location service methods for list/detail reads, create, update, and delete operations.
+- TanStack Query hooks for storage location list/detail queries and create/update/delete mutations.
+- Public module exports for the storage location APIs.
+
+### Changed
+
+- Storage location mutations now seed and update cache entries directly from full DTO responses, including every list cache under the namespace.
+- Package version bumped to `0.10.0`.
+
 ## [v0.9.1] - 2026-06-09
 
 ### Added
