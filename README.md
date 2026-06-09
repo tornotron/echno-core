@@ -315,6 +315,8 @@ export default function App() {
 
 Set `NEXT_PUBLIC_API_URL` (web) or the platform-equivalent environment variable to your backend URL before any service calls are made.
 
+The value may be **absolute** (e.g. `https://api.example.com`) — works in any runtime — or **relative** (e.g. `/api/v1`) — resolved against `globalThis.location.origin` at request time, which means it only works in a browser context. Use a relative value when calls are same-origin and proxied through the host app (e.g. Next.js route handlers).
+
 ### Injecting the auth token
 
 After login, inject the Bearer token once. All subsequent API calls include it automatically:

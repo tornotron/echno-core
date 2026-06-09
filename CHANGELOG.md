@@ -4,6 +4,19 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 
 The project currently has released versions in git tags: `v0.0.0`, `v0.0.1`, `v0.1.0`, and `v0.1.1`.
 
+## [v0.10.2] - 2026-06-09
+
+### Added
+
+- Relative `baseURL` support in the API client for browser-based apps.
+- Centralized URL resolution logic for JSON, multipart, and form-data requests.
+
+### Changed
+
+- API client request builders now resolve relative `baseURL` values against `globalThis.location.origin` at request time.
+- API client documentation now distinguishes browser-only relative URLs from absolute base URLs.
+- Package version bumped to `0.10.2`.
+
 ## [v0.10.1] - 2026-06-09
 
 ### Added
