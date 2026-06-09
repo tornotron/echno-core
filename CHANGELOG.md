@@ -4,6 +4,21 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 
 The project currently has released versions in git tags: `v0.0.0`, `v0.0.1`, `v0.1.0`, and `v0.1.1`.
 
+## [v0.8.0] - 2026-06-09
+
+### Added
+
+- Organization domain types for organization profiles, create/update payloads, and optional logo file uploads.
+- Organization service methods for list/detail reads, create, update, and delete operations.
+- TanStack Query hooks for organization list/detail queries and create/update/delete mutations.
+- Public module exports for the organization APIs.
+
+### Changed
+
+- Organization parsing now preserves nested employees, projects, attachments, and derived logo data from backend responses.
+- Organization mutations now preserve nested cache data where possible and invalidate related user and employee caches after writes.
+- Package version bumped to `0.8.0`.
+
 ## [v0.7.1] - 2026-06-07
 
 ### Added
