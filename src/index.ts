@@ -68,3 +68,8 @@ export * from './hooks/organization';
 export * from './types/invitation';
 export * from './services/invitation-service';
 export * from './hooks/invitation';
+
+// Storage Locations
+export * from './types/storage-locations';
+export * from './services/storage-locations-service';
+export * from './hooks/storage-locations';
