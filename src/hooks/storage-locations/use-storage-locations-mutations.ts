@@ -1,7 +1,12 @@
 /**
- * hooks/storage-locations/use-storage-locations-mutations.ts
+ * @module use-storage-locations-mutations
  *
- * React Query mutation hooks for storage locations.
+ * TanStack mutation hooks for the storage-location domain. Read-side hooks
+ * live in {@link useStorageLocations} and {@link useStorageLocation}.
+ *
+ * Every endpoint in this domain returns the full `StorageLocationDto`
+ * (or an ack for delete), so each `onSuccess` patches the cache directly
+ * and issues zero invalidations.
  */
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -15,11 +20,15 @@ import {
 } from '../../types/storage-locations';
 
 /**
- * Matches every StorageLocation[] list cache under the 'storage-locations'
+ * Matches every `StorageLocation[]` list cache under the `storage-locations`
  * namespace. Currently scopes to `lists()` (`['storage-locations', 'list']`),
  * but the predicate excludes only `detail(id)` so any future shapes
- * (`byProject(id)`, `byType(t)`, `paginated(...)`) are picked up automatically
- * when added.
+ * (`byProject(id)`, `byType(t)`, `paginated(...)`) are picked up
+ * automatically when added.
+ *
+ * @param query - The cached query under inspection.
+ * @returns `true` when `query.queryKey` targets a list cache, `false` for
+ *   detail caches or non-namespace keys.
  */
 function isStorageLocationListCache(query: {
   queryKey: ReadonlyArray<unknown>;
@@ -30,6 +39,27 @@ function isStorageLocationListCache(query: {
   );
 }
 
+/**
+ * Creates a new storage location.
+ *
+ * Backend response: `StorageLocationDto` (full — `StorageLocation` is a flat
+ * type with no nested arrays).
+ *
+ * On success:
+ * - `setQueryData(storageLocationKeys.detail(newLocation.id), newLocation)` —
+ *   seeds the detail cache with the server-returned object so an immediate
+ *   read returns a value rather than triggering a fetch.
+ * - `setQueryData(storageLocationKeys.lists(), append)` — appends the new
+ *   location to the cached list, avoiding a full list refetch.
+ *
+ * No invalidations — the full DTO response is authoritative.
+ *
+ * Errors are logged via {@link logger}; the mutation result still surfaces
+ * the error to the caller via `onError`.
+ *
+ * @returns A TanStack `UseMutationResult` where the mutate function accepts
+ *   a {@link CreateStorageLocationRequest}.
+ */
 export const useCreateStorageLocation = () => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -53,6 +83,22 @@ export const useCreateStorageLocation = () => {
   });
 };
 
+/**
+ * Updates an existing storage location.
+ *
+ * Backend response: `StorageLocationDto` (full).
+ *
+ * On success:
+ * - `setQueryData(storageLocationKeys.detail(id), updatedLocation)` —
+ *   replaces the cached detail with the server-returned object.
+ * - `setQueriesData({ predicate: isStorageLocationListCache }, replace)` —
+ *   updates the matching row in every cached list under the namespace.
+ *
+ * No invalidations — the full DTO response is authoritative.
+ *
+ * @returns A TanStack `UseMutationResult` where the mutate function accepts
+ *   `{ id: number; data: UpdateStorageLocationRequest }`.
+ */
 export const useUpdateStorageLocation = () => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -78,6 +124,23 @@ export const useUpdateStorageLocation = () => {
   });
 };
 
+/**
+ * Deletes a storage location.
+ *
+ * Backend response: `ApiResponse` (ack — no entity body).
+ *
+ * On success:
+ * - `removeQueries(storageLocationKeys.detail(id))` — evicts the detail
+ *   cache; the entity is gone, so a refetch would 404.
+ * - `setQueriesData({ predicate: isStorageLocationListCache }, filter)` —
+ *   removes the deleted row from every cached list under the namespace.
+ *
+ * No invalidations — the eviction and list filter together leave the cache
+ * consistent without a network round-trip.
+ *
+ * @returns A TanStack `UseMutationResult` where the mutate function accepts
+ *   the location ID to delete.
+ */
 export const useDeleteStorageLocation = () => {
   const queryClient = useQueryClient();
   return useMutation({
