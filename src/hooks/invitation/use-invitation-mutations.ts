@@ -1,3 +1,12 @@
+/**
+ * @module use-invitation-mutations
+ *
+ * Mutation hooks for generating and managing project invite codes.
+ *
+ * Only `useGenerateInviteCode` applies cache discipline; the other two hooks
+ * fail fast because their backend endpoints do not exist in the live spec.
+ */
+
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { invitationService } from '../../services/invitation-service';
 import { GenerateInviteCodeRequest, Invitation } from '../../types/invitation';
@@ -6,8 +15,8 @@ import { invitationKeys } from './invitation-keys';
 import { userKeys } from '../user/user-keys';
 import { employeeKeys } from '../employee/employee-keys';
 
-/**
- * MODULE-LEVEL FIXME (audited 2026-06-02):
+/*
+ * MODULE-LEVEL FIXME:
  *
  * `services/invitation-service.ts` routes every call to the legacy
  * `/api/v1/project/web/invite-codes/*` path family which no longer exists on
@@ -31,6 +40,24 @@ import { employeeKeys } from '../employee/employee-keys';
  * assumes a full `ProjectInviteCodeDto` response per spec.
  */
 
+/**
+ * Generates a new project invite code.
+ *
+ * Backend response: `ProjectInviteCodeDto` (full — per spec; assumes paths
+ * are realigned by `integrate-module`).
+ *
+ * On success:
+ * - `setQueryData(invitationKeys.detail(invitation.id), invitation)` — seeds
+ *   the detail cache with the server-returned object.
+ * - `setQueryData(invitationKeys.byProject(invitation.projectId), append-if-cached)` —
+ *   appends to the per-project list cache; functional updater returns `undefined`
+ *   for absent caches to avoid seeding a stale array-of-one.
+ *
+ * No invalidations — full-DTO response covers the cache directly.
+ *
+ * @returns A TanStack `UseMutationResult` where the mutate function accepts
+ *   a {@link GenerateInviteCodeRequest}.
+ */
 export function useGenerateInviteCode() {
   const queryClient = useQueryClient();
 
@@ -58,12 +85,14 @@ export function useGenerateInviteCode() {
 }
 
 /**
- * Backend has no DELETE endpoint for invite codes per the live OpenAPI spec
- * (audited 2026-06-02). The legacy `/api/v1/project/web/invite-codes/{id}`
- * path called by the service does not exist on the current backend.
+ * Deletes a project invite code.
  *
- * Fails fast with a clear message until the backend either adds the endpoint
- * or the consumer is updated to use a status transition.
+ * @deprecated The backend has no DELETE endpoint for invite codes. This hook
+ *   throws immediately with a clear message. Remove once the backend adds the
+ *   endpoint or consumers are updated to use a status-transition flow instead.
+ *
+ * @returns A TanStack `UseMutationResult` where the mutate function accepts
+ *   the invite code `id` as a `number`.
  */
 export function useDeleteInviteCode() {
   return useMutation({
@@ -76,13 +105,23 @@ export function useDeleteInviteCode() {
 }
 
 /**
- * The legacy `/api/v1/project/web/invite-codes/join` endpoint this hook
- * targets does not exist on the current backend. The closest endpoint is
- * `POST /invitation/web/validate/userId/{userId}` which returns an
- * `OrganizationDto` (the org the user joins via the code).
+ * Joins an organization via an invite code.
  *
- * Fails fast until the integrate-module skill realigns the flow as
- * `useValidateInviteCode` + downstream org/employee cache updates.
+ * @deprecated The legacy join endpoint does not exist on the current backend.
+ *   The live spec equivalent is `POST /invitation/web/validate/userId/{userId}`
+ *   which returns an `OrganizationDto`. This hook throws immediately until the
+ *   flow is rewired as `useValidateInviteCode` with downstream org/employee
+ *   cache updates.
+ *
+ * The unreachable `onSuccess` block preserves the intended cross-namespace
+ * invalidations for when the flow is implemented:
+ * - `invalidateQueries(userKeys.all)` — joining changes the user's identity
+ *   context (new `defaultOrganizationId`).
+ * - `invalidateQueries(userKeys.employees())` — user gains an employee record.
+ * - `invalidateQueries(employeeKeys.lists())` — new employee appears in lists.
+ *
+ * @returns A TanStack `UseMutationResult` where the mutate function accepts
+ *   `{ inviteCode: string }`.
  */
 export function useJoinWithInviteCode() {
   const queryClient = useQueryClient();

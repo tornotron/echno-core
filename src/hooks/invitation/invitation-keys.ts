@@ -1,18 +1,20 @@
 /**
- * hooks/invitation/invitation-keys.ts
+ * TanStack Query key factory for the Invitation domain.
  *
- * React Query key factory for invitation (project invite code) queries.
+ * Key shapes:
+ * - `['invitations']` — namespace root (invalidation prefix only; never used
+ *   as a direct query key).
+ * - `['invitations', 'list']` — explicit list key; reserved for future
+ *   paginated or filtered list queries.
+ * - `['invitations', 'project', projectId]` — invite codes scoped to a project.
+ *   Note: the naming reflects legacy service semantics; the live spec endpoint
+ *   is organization-scoped. This key shape will be renamed to `byOrganization`
+ *   after service paths are realigned.
+ * - `['invitations', 'detail', id]` — single invite code detail.
  *
- * NOTE on naming drift: the local code uses `byProject(projectId)` while the
- * actual backend endpoints (post-Milestone 7 audit 2026-06-02) are
- * organization-scoped under `/api/v1/invitation/web/organizationId/{orgId}`.
- * The service paths in `invitation-service.ts` still point at the legacy
- * `/api/v1/project/web/invite-codes/*` paths which no longer exist on the
- * backend. Until the integrate-module skill is run on this submodule to
- * realign the service + types + consumers, the `byProject(id)` shape is
- * effectively a misnamed `byOrganization(id)`.
+ * @see {@link useInvitationsByProject}
+ * @see {@link useInvitationById}
  */
-
 export const invitationKeys = {
   all: ['invitations'] as const,
   lists: () => [...invitationKeys.all, 'list'] as const,
