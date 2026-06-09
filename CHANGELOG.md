@@ -4,6 +4,18 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 
 The project currently has released versions in git tags: `v0.0.0`, `v0.0.1`, `v0.1.0`, and `v0.1.1`.
 
+## [v0.9.1] - 2026-06-09
+
+### Added
+
+- Detailed invitation documentation for types, services, hooks, and query keys.
+- Public re-exports for the full invitation hook surface.
+
+### Changed
+
+- Invitation service and hook comments were expanded to clearly describe the current backend path mismatches and the required integration follow-up.
+- Package version bumped to `0.9.1`.
+
 ## [v0.9.0] - 2026-06-09
 
 ### Added
