@@ -4,6 +4,18 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 
 The project currently has released versions in git tags: `v0.0.0`, `v0.0.1`, `v0.1.0`, and `v0.1.1`.
 
+## [v0.10.1] - 2026-06-09
+
+### Added
+
+- Detailed storage-location documentation for types, services, hooks, cache keys, and payload serializers.
+- Public re-exports for the full storage-location hook surface.
+
+### Changed
+
+- Storage location comments were expanded to document flat DTO handling, list-cache coverage, and backend response shapes.
+- Package version bumped to `0.10.1`.
+
 ## [v0.10.0] - 2026-06-09
 
 ### Added
