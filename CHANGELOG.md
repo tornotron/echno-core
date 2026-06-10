@@ -4,6 +4,22 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 
 The project currently has released versions in git tags: `v0.0.0`, `v0.0.1`, `v0.1.0`, and `v0.1.1`.
 
+## [v0.16.0] - 2026-06-10
+
+### Added
+
+- Purchase order domain types for purchase orders, line items, statuses, and create/update payloads.
+- Purchase order service methods for list/detail reads, vendor/indent/status filters, CRUD operations, and status transitions.
+- Purchase order item service methods for line-item reads and create/update/delete operations.
+- TanStack Query hooks for purchase order and line-item query variants plus mutation workflows.
+- Public module exports for the purchase order APIs.
+
+### Changed
+
+- Purchase order parsing now normalizes legacy `createdBy` shapes and embedded line items into a canonical domain object.
+- Purchase order and line-item mutation hooks now keep embedded `items` arrays and vendor summary caches consistent across writes.
+- Package version bumped to `0.16.0`.
+
 ## [v0.15.0] - 2026-06-10
 
 ### Added
