@@ -23,7 +23,7 @@ import { useUser, useUserEmployees } from '../user/use-user';
 import { useMemo } from 'react';
 import { shouldRetry } from '../../lib/query/retry';
 import { standardQueryOptions } from '../../lib/query/options';
-import { employeeKeys } from './employee-keys';
+import { employeeKeys } from './keys';
 
 /**
  * Fetches every employee visible to the caller.

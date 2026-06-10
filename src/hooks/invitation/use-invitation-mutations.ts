@@ -13,7 +13,7 @@ import { GenerateInviteCodeRequest, Invitation } from '../../types/invitation';
 import { logger } from '../../lib/logger';
 import { invitationKeys } from './invitation-keys';
 import { userKeys } from '../user/user-keys';
-import { employeeKeys } from '../employee/employee-keys';
+import { employeeKeys } from '../employee/keys';
 
 /*
  * MODULE-LEVEL FIXME:

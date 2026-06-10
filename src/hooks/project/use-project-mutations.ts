@@ -26,7 +26,7 @@ import { logger } from '../../lib/logger';
 import { getErrorMessage, getErrorTitle } from '../../lib/utils/error-helpers';
 import { mergePreservingNested } from '../../lib/query/cache-merge';
 import { projectKeys } from './project-keys';
-import { employeeKeys } from '../employee/employee-keys';
+import { employeeKeys } from '../employee/keys';
 
 /**
  * Nested keys on {@link Project} that update mutations preserve when

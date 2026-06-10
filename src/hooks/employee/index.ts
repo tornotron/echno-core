@@ -1,4 +1,4 @@
-export * from './employee-keys';
+export * from './keys';
 export * from './use-employee';
 export * from './use-employee-mutations';
 export * from './use-employee-roles';

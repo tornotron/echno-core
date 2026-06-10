@@ -24,7 +24,7 @@ import { employeeService } from '../../services/employee-service';
 import { Employee } from '../../types/employee';
 import { CreateEmployeeRequest } from '../../types/employee/employee-create';
 import { UpdateEmployeeRequest } from '../../types/employee/employee-update';
-import { employeeKeys } from './employee-keys';
+import { employeeKeys } from './keys';
 import { organizationKeys } from '../organization/organization-keys';
 import { userKeys } from '../user/user-keys';
 

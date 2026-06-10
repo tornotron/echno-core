@@ -19,7 +19,7 @@ import { logger } from '../../lib/logger';
 import { mergePreservingNested } from '../../lib/query/cache-merge';
 import { organizationKeys } from './organization-keys';
 import { userKeys } from '../user/user-keys';
-import { employeeKeys } from '../employee/employee-keys';
+import { employeeKeys } from '../employee/keys';
 
 const ORGANIZATION_NESTED_KEYS = [
   'employees',
