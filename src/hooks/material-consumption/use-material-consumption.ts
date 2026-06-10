@@ -12,7 +12,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { materialConsumptionService } from '../../services/material-consumption-service';
 import { ConsumptionType } from '../../types/materials';
-import { materialConsumptionsKeys } from './material-consumption-keys';
+import { materialConsumptionsKeys } from './keys';
 
 /**
  * Fetches every consumption event (unpaginated).
