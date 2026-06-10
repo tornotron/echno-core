@@ -4,6 +4,21 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 
 The project currently has released versions in git tags: `v0.0.0`, `v0.0.1`, `v0.1.0`, and `v0.1.1`.
 
+## [v0.14.0] - 2026-06-10
+
+### Added
+
+- Material-consumption domain types for consumption events, consumption types, and create payloads.
+- Material-consumption service methods for list/detail reads, filtered queries, paginated reads, and create operations.
+- TanStack Query hooks for material-consumption reads and create mutations.
+- Public module exports for the material-consumption APIs.
+
+### Changed
+
+- Material-consumption parsing now normalizes append-only ledger responses into canonical domain objects with denormalized display fields.
+- Material-consumption create mutations invalidate the full consumption namespace and the affected material stock cache so downstream views refetch correctly.
+- Package version bumped to `0.14.0`.
+
 ## [v0.13.0] - 2026-06-10
 
 ### Added
