@@ -1,10 +1,22 @@
 /**
- * hooks/vendor/use-vendor-mutations.ts
+ * @module use-vendor-mutations
  *
- * React Query mutation hooks for vendors and their sub-resources
- * (contacts, tax identifiers, bank accounts, payment terms).
+ * TanStack mutation hooks for the vendor domain — core CRUD plus the
+ * contact / tax identifier / bank account / payment terms sub-resources.
+ * Read-side hooks live in {@link useVendor}, {@link useVendors},
+ * {@link useVendorsPaginated}, {@link useVendorSearch},
+ * {@link useVendorSummary}, and the per-sub-resource list hooks.
+ *
+ * Every sub-resource mutation invalidates `vendorKeys.detail(vendorId)`
+ * because the parent {@link Vendor} interface denormalises fields from
+ * each sub-resource onto top-level scalar properties (primary contact →
+ * `contactPerson`/`phone`/`alternatePhone`; GST/PAN tax identifiers →
+ * `gstNumber`/`panNumber`; default bank account → `bankName`/
+ * `accountNumber`/`ifscCode`/`accountHolderName`/`swift`; payment-terms
+ * object → `paymentTerms`/`creditLimit`/`creditDays`). The sub-resource
+ * response payload doesn't carry the parent's recalculated derived
+ * fields, so invalidating and refetching is the only correct path.
  */
-
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { vendorService } from '../../services/vendor-service';
 import { vendorKeys } from './vendor-keys';
@@ -26,13 +38,19 @@ import {
 } from '../../types/vendor';
 
 /**
- * Matches every Vendor[] list cache under the 'vendors' namespace —
- * `lists()`, `search(name)`, and `paginated({...})`. Service flattens
- * `PageVendorDto` into `Vendor[]` so all three share the same data shape.
+ * Matches every `Vendor[]` list cache under the `vendors` namespace —
+ * `lists()`, `search(name)`, and `paginated({ pageNo, pageSize })`.
+ * `vendorService.getAllPaginated` flattens `PageVendorDto` to `Vendor[]`
+ * so all three share the same data shape and a single predicate covers
+ * them.
  *
  * Excludes single-vendor caches: `detail`, `summary`, `contacts`,
- * `tax-identifiers`, `bank-accounts`, `payment-terms`. Those are addressed
- * directly by their own key shapes in sub-resource mutations.
+ * `tax-identifiers`, `bank-accounts`, `payment-terms`. Those are
+ * addressed directly by their own key shapes inside the sub-resource
+ * mutations.
+ *
+ * @param query - The TanStack query whose key is being tested.
+ * @returns `true` when the key belongs to a vendor list cache.
  */
 function isVendorListCache(query: {
   queryKey: ReadonlyArray<unknown>;
@@ -52,6 +70,28 @@ function isVendorListCache(query: {
 
 // ── Core CRUD ───────────────────────────────────────────────────────────────
 
+/**
+ * Creates a new vendor.
+ *
+ * Backend response: `VendorDto` (full).
+ *
+ * On success:
+ * - `setQueryData(vendorKeys.detail(newVendor.id), newVendor)` — seeds
+ *   the detail cache so an immediate read returns the new vendor without
+ *   a network round-trip.
+ * - `setQueryData(vendorKeys.lists(), append)` — appends the new vendor
+ *   to the unpaginated list.
+ * - `invalidateQueries({ predicate: search OR paginated })` — kept:
+ *   search results are name-scoped (the new vendor may not match the
+ *   active query) and paginated views depend on sort/page boundaries
+ *   that can't be recomputed locally.
+ *
+ * Errors are logged via {@link logger}; the mutation result still
+ * surfaces the error to the caller via `onError`.
+ *
+ * @returns A TanStack `UseMutationResult` where the mutate function
+ *   accepts a {@link CreateVendorRequest}.
+ */
 export const useCreateVendor = () => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -78,6 +118,24 @@ export const useCreateVendor = () => {
   });
 };
 
+/**
+ * Updates a vendor.
+ *
+ * Backend response: `VendorDto` (full).
+ *
+ * On success:
+ * - `setQueryData(vendorKeys.detail(id), updatedVendor)` — direct patch
+ *   of the detail cache from the full DTO.
+ * - `setQueriesData({ predicate: isVendorListCache }, replace)` —
+ *   mirrors the update across every `Vendor[]` list cache (`lists`,
+ *   `search`, `paginated`).
+ * - `invalidateQueries(vendorKeys.summary(id))` — kept: the summary
+ *   cache is `VendorSummary` (server-side financial rollups + order
+ *   counts), can't be patched from a `Vendor`.
+ *
+ * @returns A TanStack `UseMutationResult` where the mutate function
+ *   accepts `{ id: number; data: UpdateVendorRequest }`.
+ */
 export const useUpdateVendor = () => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -100,6 +158,30 @@ export const useUpdateVendor = () => {
   });
 };
 
+/**
+ * Deletes a vendor by ID.
+ *
+ * Backend response: `ApiResponse` (ack only).
+ *
+ * On success:
+ * - `removeQueries(vendorKeys.detail(id))` — entity is gone; refetch
+ *   would 404.
+ * - `removeQueries(vendorKeys.summary(id))` — summary is per-vendor and
+ *   no longer addressable.
+ * - `removeQueries(vendorKeys.contacts(id))` — sub-resource list keyed
+ *   by the now-deleted parent.
+ * - `removeQueries(vendorKeys.taxIdentifiers(id))` — same.
+ * - `removeQueries(vendorKeys.bankAccounts(id))` — same.
+ * - `removeQueries(vendorKeys.paymentTerms(id))` — same.
+ * - `setQueriesData({ predicate: isVendorListCache }, filter)` — drops
+ *   the deleted vendor from every list cache without a refetch.
+ *
+ * No invalidations are kept: with the entity gone, every consequence of
+ * the delete is local-cache cleanup.
+ *
+ * @returns A TanStack `UseMutationResult` where the mutate function
+ *   accepts the numeric ID of the vendor to delete.
+ */
 export const useDeleteVendor = () => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -127,6 +209,24 @@ export const useDeleteVendor = () => {
 
 // ── Contacts ────────────────────────────────────────────────────────────────
 
+/**
+ * Adds a contact to a vendor.
+ *
+ * Backend response: `VendorContactDto` (full).
+ *
+ * On success:
+ * - `setQueryData(vendorKeys.contacts(vendorId), append)` — appends the
+ *   new contact to the per-vendor contact list.
+ * - `invalidateQueries(vendorKeys.detail(vendorId))` — kept: the parent
+ *   vendor's `contactPerson`, `phone`, and `alternatePhone` are
+ *   denormalised from `contacts[]` primary, so adding a contact (or
+ *   adding one with `primary: true`) may change the parent's derived
+ *   fields. Refetch on next observer.
+ *
+ * @param vendorId - Surrogate ID of the parent vendor.
+ * @returns A TanStack `UseMutationResult` where the mutate function
+ *   accepts a {@link CreateVendorContactRequest}.
+ */
 export const useAddVendorContact = (vendorId: number) => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -150,6 +250,23 @@ export const useAddVendorContact = (vendorId: number) => {
   });
 };
 
+/**
+ * Updates a vendor contact.
+ *
+ * Backend response: `VendorContactDto` (full).
+ *
+ * On success:
+ * - `setQueryData(vendorKeys.contacts(vendorId), replace)` — replaces
+ *   the updated row in the per-vendor contact list.
+ * - `invalidateQueries(vendorKeys.detail(vendorId))` — kept: same
+ *   denormalisation reason as the add case; promoting a contact to
+ *   primary (or changing the primary's fields) shifts the parent's
+ *   derived values.
+ *
+ * @param vendorId - Surrogate ID of the parent vendor.
+ * @returns A TanStack `UseMutationResult` where the mutate function
+ *   accepts `{ contactId: number; contactInput: UpdateVendorContactRequest }`.
+ */
 export const useUpdateVendorContact = (vendorId: number) => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -176,6 +293,23 @@ export const useUpdateVendorContact = (vendorId: number) => {
   });
 };
 
+/**
+ * Deletes a vendor contact.
+ *
+ * Backend response: `ApiResponse` (ack only).
+ *
+ * On success:
+ * - `setQueryData(vendorKeys.contacts(vendorId), filter)` — drops the
+ *   deleted row from the per-vendor contact list.
+ * - `invalidateQueries(vendorKeys.detail(vendorId))` — kept: deleting
+ *   the primary contact promotes the next contact's fields onto the
+ *   parent's `contactPerson`/`phone`/`alternatePhone`. Refetch on next
+ *   observer.
+ *
+ * @param vendorId - Surrogate ID of the parent vendor.
+ * @returns A TanStack `UseMutationResult` where the mutate function
+ *   accepts the numeric ID of the contact to delete.
+ */
 export const useDeleteVendorContact = (vendorId: number) => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -198,6 +332,23 @@ export const useDeleteVendorContact = (vendorId: number) => {
 
 // ── Tax Identifiers ──────────────────────────────────────────────────────────
 
+/**
+ * Adds a tax identifier to a vendor.
+ *
+ * Backend response: `VendorTaxIdentifierDto` (full).
+ *
+ * On success:
+ * - `setQueryData(vendorKeys.taxIdentifiers(vendorId), append)` —
+ *   appends the new row to the per-vendor tax identifier list.
+ * - `invalidateQueries(vendorKeys.detail(vendorId))` — kept: the parent
+ *   vendor's `gstNumber` and `panNumber` are denormalised from
+ *   `taxIdentifiers[]` by type. Adding a GST or PAN row changes the
+ *   parent's derived fields.
+ *
+ * @param vendorId - Surrogate ID of the parent vendor.
+ * @returns A TanStack `UseMutationResult` where the mutate function
+ *   accepts a {@link CreateVendorTaxIdentifierRequest}.
+ */
 export const useAddVendorTaxIdentifier = (vendorId: number) => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -219,6 +370,22 @@ export const useAddVendorTaxIdentifier = (vendorId: number) => {
   });
 };
 
+/**
+ * Updates a vendor tax identifier.
+ *
+ * Backend response: `VendorTaxIdentifierDto` (full).
+ *
+ * On success:
+ * - `setQueryData(vendorKeys.taxIdentifiers(vendorId), replace)` —
+ *   replaces the updated row in the per-vendor tax identifier list.
+ * - `invalidateQueries(vendorKeys.detail(vendorId))` — kept: same
+ *   denormalisation reason as the add case; updating a GST or PAN value
+ *   shifts the parent's `gstNumber`/`panNumber` derived fields.
+ *
+ * @param vendorId - Surrogate ID of the parent vendor.
+ * @returns A TanStack `UseMutationResult` where the mutate function
+ *   accepts `{ taxIdId: number; taxIdentifierInput: UpdateVendorTaxIdentifierRequest }`.
+ */
 export const useUpdateVendorTaxIdentifier = (vendorId: number) => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -244,6 +411,22 @@ export const useUpdateVendorTaxIdentifier = (vendorId: number) => {
   });
 };
 
+/**
+ * Deletes a vendor tax identifier.
+ *
+ * Backend response: `ApiResponse` (ack only).
+ *
+ * On success:
+ * - `setQueryData(vendorKeys.taxIdentifiers(vendorId), filter)` — drops
+ *   the deleted row from the per-vendor tax identifier list.
+ * - `invalidateQueries(vendorKeys.detail(vendorId))` — kept: removing
+ *   the GST or PAN row clears the parent's derived `gstNumber`/
+ *   `panNumber`.
+ *
+ * @param vendorId - Surrogate ID of the parent vendor.
+ * @returns A TanStack `UseMutationResult` where the mutate function
+ *   accepts the numeric ID of the tax identifier to delete.
+ */
 export const useDeleteVendorTaxIdentifier = (vendorId: number) => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -265,6 +448,23 @@ export const useDeleteVendorTaxIdentifier = (vendorId: number) => {
 
 // ── Bank Accounts ────────────────────────────────────────────────────────────
 
+/**
+ * Adds a bank account to a vendor.
+ *
+ * Backend response: `VendorBankAccountDto` (full).
+ *
+ * On success:
+ * - `setQueryData(vendorKeys.bankAccounts(vendorId), append)` — appends
+ *   the new row to the per-vendor bank account list.
+ * - `invalidateQueries(vendorKeys.detail(vendorId))` — kept: the parent
+ *   vendor's `bankName`, `accountNumber`, `ifscCode`, `accountHolderName`,
+ *   and `swift` are denormalised from `bankAccounts[]` default. Adding
+ *   an account flagged as default shifts the parent's derived fields.
+ *
+ * @param vendorId - Surrogate ID of the parent vendor.
+ * @returns A TanStack `UseMutationResult` where the mutate function
+ *   accepts a {@link CreateVendorBankAccountRequest}.
+ */
 export const useAddVendorBankAccount = (vendorId: number) => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -287,6 +487,24 @@ export const useAddVendorBankAccount = (vendorId: number) => {
   });
 };
 
+/**
+ * Updates a vendor bank account.
+ *
+ * Backend response: `VendorBankAccountDto` (full).
+ *
+ * On success:
+ * - `setQueryData(vendorKeys.bankAccounts(vendorId), replace)` —
+ *   replaces the updated row in the per-vendor bank account list.
+ * - `invalidateQueries(vendorKeys.detail(vendorId))` — kept: same
+ *   denormalisation reason as the add case; updating the default
+ *   account's fields (or promoting an account to default) shifts the
+ *   parent's `bankName`/`accountNumber`/`ifscCode`/`accountHolderName`/
+ *   `swift` derived fields.
+ *
+ * @param vendorId - Surrogate ID of the parent vendor.
+ * @returns A TanStack `UseMutationResult` where the mutate function
+ *   accepts `{ accountId: number; bankAccountInput: UpdateVendorBankAccountRequest }`.
+ */
 export const useUpdateVendorBankAccount = (vendorId: number) => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -312,6 +530,22 @@ export const useUpdateVendorBankAccount = (vendorId: number) => {
   });
 };
 
+/**
+ * Deletes a vendor bank account.
+ *
+ * Backend response: `ApiResponse` (ack only).
+ *
+ * On success:
+ * - `setQueryData(vendorKeys.bankAccounts(vendorId), filter)` — drops
+ *   the deleted row from the per-vendor bank account list.
+ * - `invalidateQueries(vendorKeys.detail(vendorId))` — kept: removing
+ *   the default account promotes the next account onto the parent's
+ *   derived bank fields.
+ *
+ * @param vendorId - Surrogate ID of the parent vendor.
+ * @returns A TanStack `UseMutationResult` where the mutate function
+ *   accepts the numeric ID of the bank account to delete.
+ */
 export const useDeleteVendorBankAccount = (vendorId: number) => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -333,6 +567,23 @@ export const useDeleteVendorBankAccount = (vendorId: number) => {
 
 // ── Payment Terms ────────────────────────────────────────────────────────────
 
+/**
+ * Upserts the payment-terms record for one vendor.
+ *
+ * Backend response: `VendorPaymentTermsDto` (full).
+ *
+ * On success:
+ * - `setQueryData(vendorKeys.paymentTerms(vendorId), data)` — direct
+ *   overwrite. Payment terms is a single record per vendor (not an
+ *   array), so the cache entry is the entire object.
+ * - `invalidateQueries(vendorKeys.detail(vendorId))` — kept: the parent
+ *   vendor's `paymentTerms`, `creditLimit`, and `creditDays` are
+ *   denormalised from this object. Refetch on next observer.
+ *
+ * @param vendorId - Surrogate ID of the vendor.
+ * @returns A TanStack `UseMutationResult` where the mutate function
+ *   accepts a {@link SetVendorPaymentTermsRequest}.
+ */
 export const useSetVendorPaymentTerms = (vendorId: number) => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -353,6 +604,22 @@ export const useSetVendorPaymentTerms = (vendorId: number) => {
   });
 };
 
+/**
+ * Removes the payment-terms record for one vendor.
+ *
+ * Backend response: `ApiResponse` (ack only).
+ *
+ * On success:
+ * - `setQueryData(vendorKeys.paymentTerms(vendorId), null)` — clears
+ *   the cached object. Mirrors the service's "404 → null" read-side
+ *   convention so consumers see the cleared state immediately.
+ * - `invalidateQueries(vendorKeys.detail(vendorId))` — kept: clears the
+ *   parent's `paymentTerms`/`creditLimit`/`creditDays` derived fields.
+ *
+ * @param vendorId - Surrogate ID of the vendor.
+ * @returns A TanStack `UseMutationResult` whose mutate function takes
+ *   no arguments — the `vendorId` is captured in the hook closure.
+ */
 export const useDeleteVendorPaymentTerms = (vendorId: number) => {
   const queryClient = useQueryClient();
   return useMutation({
