@@ -4,6 +4,18 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 
 The project currently has released versions in git tags: `v0.0.0`, `v0.0.1`, `v0.1.0`, and `v0.1.1`.
 
+## [v0.17.1] - 2026-06-10
+
+### Added
+
+- Per-domain `keys.ts` barrels for every hook module so query-key factories share a consistent import path.
+
+### Changed
+
+- Replaced the remaining `*-keys.ts` hook key files with `keys.ts` and updated imports across all hook modules.
+- Removed the deprecated hook, service, and type root barrels to keep imports domain-local.
+- Package version bumped to `0.17.1`.
+
 ## [v0.17.0] - 2026-06-10
 
 ### Added
