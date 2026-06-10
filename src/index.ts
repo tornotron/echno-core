@@ -88,3 +88,7 @@ export * from './hooks/vendor';
 export * from './types/materials';
 export * from './services/materials-service';
 export * from './hooks/materials';
+
+// Material Consumption
+export * from './services/material-consumption-service';
+export * from './hooks/material-consumption';
