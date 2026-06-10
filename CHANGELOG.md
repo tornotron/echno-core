@@ -4,6 +4,22 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 
 The project currently has released versions in git tags: `v0.0.0`, `v0.0.1`, `v0.1.0`, and `v0.1.1`.
 
+## [v0.18.0] - 2026-06-10
+
+### Added
+
+- Indent domain types for requisitions, statuses, and create/update payloads.
+- Indent item domain types and serializers for line items on requisitions.
+- Indent service methods for list/detail reads, paginated reads, create, update, and delete operations.
+- Indent item service methods for direct line-item reads, create, update, delete, and conversion operations.
+- TanStack Query hooks for indent and indent-item reads plus mutation workflows.
+- Public module exports for the indent APIs.
+
+### Changed
+
+- Indent and indent-item mutations now patch parent-indent item arrays directly and invalidate dependent purchase-order caches where needed.
+- Package version bumped to `0.18.0`.
+
 ## [v0.17.1] - 2026-06-10
 
 ### Added
