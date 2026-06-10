@@ -83,3 +83,8 @@ export * from './hooks/labour';
 export * from './types/vendor';
 export * from './services/vendor-service';
 export * from './hooks/vendor';
+
+// Materials
+export * from './types/materials';
+export * from './services/materials-service';
+export * from './hooks/materials';
