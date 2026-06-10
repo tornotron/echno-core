@@ -73,3 +73,8 @@ export * from './hooks/invitation';
 export * from './types/storage-locations';
 export * from './services/storage-locations-service';
 export * from './hooks/storage-locations';
+
+// Labour
+export * from './types/labour';
+export * from './services/labour-service';
+export * from './hooks/labour';
