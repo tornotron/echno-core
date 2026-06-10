@@ -102,3 +102,8 @@ export * from './hooks/purchase-orders';
 export * from './types/indents';
 export * from './services/indents-service';
 export * from './hooks/indents';
+
+// Inventory Transactions
+export * from './types/inventory-transactions';
+export * from './services/inventory-transactions-service';
+export * from './hooks/inventory-transactions';
