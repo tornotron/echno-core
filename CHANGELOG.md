@@ -4,6 +4,18 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 
 The project currently has released versions in git tags: `v0.0.0`, `v0.0.1`, `v0.1.0`, and `v0.1.1`.
 
+## [v0.15.0] - 2026-06-10
+
+### Added
+
+- Barrel files for top-level type, service, hook, and query-key exports.
+- Package entrypoint exports for the new barrel files.
+
+### Changed
+
+- Package exports now centralize module access through `types/index.ts`, `services/index.ts`, `hooks/index.ts`, and `hooks/keys.ts`.
+- Package version bumped to `0.15.0`.
+
 ## [v0.14.0] - 2026-06-10
 
 ### Added
