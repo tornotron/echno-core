@@ -11,7 +11,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { invitationService } from '../../services/invitation-service';
 import { GenerateInviteCodeRequest, Invitation } from '../../types/invitation';
 import { logger } from '../../lib/logger';
-import { invitationKeys } from './invitation-keys';
+import { invitationKeys } from './keys';
 import { userKeys } from '../user/user-keys';
 import { employeeKeys } from '../employee/keys';
 

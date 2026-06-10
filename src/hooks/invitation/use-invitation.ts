@@ -12,7 +12,7 @@ import { useQuery } from '@tanstack/react-query';
 import { invitationService } from '../../services/invitation-service';
 import { shouldRetry } from '../../lib/query/retry';
 import { standardQueryOptions } from '../../lib/query/options';
-import { invitationKeys } from './invitation-keys';
+import { invitationKeys } from './keys';
 
 /**
  * Fetches all invite codes scoped to a project (or organization per spec).
