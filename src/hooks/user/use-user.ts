@@ -13,7 +13,7 @@ import { useQuery } from '@tanstack/react-query';
 import { userService } from '../../services/user-service';
 import { shouldRetry } from '../../lib/query/retry';
 import { standardQueryOptions } from '../../lib/query/options';
-import { userKeys } from './user-keys';
+import { userKeys } from './keys';
 
 /**
  * Fetches the current authenticated user's profile.

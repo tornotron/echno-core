@@ -18,7 +18,7 @@ import { OrganizationFiles } from '../../types/organization/organization-files';
 import { logger } from '../../lib/logger';
 import { mergePreservingNested } from '../../lib/query/cache-merge';
 import { organizationKeys } from './keys';
-import { userKeys } from '../user/user-keys';
+import { userKeys } from '../user/keys';
 import { employeeKeys } from '../employee/keys';
 
 const ORGANIZATION_NESTED_KEYS = [

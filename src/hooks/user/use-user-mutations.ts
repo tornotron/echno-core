@@ -22,7 +22,7 @@ import { User } from '../../types/user/user';
 import { UserFiles } from '../../types/user/user-files';
 import { UpdateUserRequest } from '../../types/user/user-update';
 import { logger } from '../../lib/logger';
-import { userKeys } from './user-keys';
+import { userKeys } from './keys';
 
 /**
  * Updates the current user's profile (JSON-only payload, no attachments).

@@ -26,7 +26,7 @@ import { CreateEmployeeRequest } from '../../types/employee/employee-create';
 import { UpdateEmployeeRequest } from '../../types/employee/employee-update';
 import { employeeKeys } from './keys';
 import { organizationKeys } from '../organization/keys';
-import { userKeys } from '../user/user-keys';
+import { userKeys } from '../user/keys';
 
 /**
  * Matches every `Employee[]` list cache under the `'employees'` namespace:

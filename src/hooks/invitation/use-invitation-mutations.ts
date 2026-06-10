@@ -12,7 +12,7 @@ import { invitationService } from '../../services/invitation-service';
 import { GenerateInviteCodeRequest, Invitation } from '../../types/invitation';
 import { logger } from '../../lib/logger';
 import { invitationKeys } from './keys';
-import { userKeys } from '../user/user-keys';
+import { userKeys } from '../user/keys';
 import { employeeKeys } from '../employee/keys';
 
 /*
