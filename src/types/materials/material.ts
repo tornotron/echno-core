@@ -89,7 +89,7 @@ export interface Material {
  * `currentStock` from optional to required so consumers don't need to
  * null-check it.
  */
-export interface MaterialStock extends Material {
+export interface MaterialWithStock extends Material {
   /** Current on-hand quantity; guaranteed present on this variant. */
   currentStock: number;
 }
@@ -133,15 +133,15 @@ export function parseMaterial(raw: Raw): Material {
 
 /**
  * Parses a raw payload from a stock-aware endpoint into a typed
- * {@link MaterialStock}. Defaults `currentStock` to `0` when the backend
+ * {@link MaterialWithStock}. Defaults `currentStock` to `0` when the backend
  * omits it so the field stays non-optional for consumers.
  *
  * @param raw - The raw JSON object from the backend.
- * @returns The parsed {@link MaterialStock}.
+ * @returns The parsed {@link MaterialWithStock}.
  * @throws {TypeError} When `raw.id` is missing or non-positive
  *   (propagated from {@link parsePositiveInt}).
  */
-export function parseMaterialWithStock(raw: Raw): MaterialStock {
+export function parseMaterialWithStock(raw: Raw): MaterialWithStock {
   return {
     ...parseMaterial(raw),
     currentStock: raw.currentStock ?? 0,

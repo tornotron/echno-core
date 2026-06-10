@@ -24,7 +24,7 @@ import { logger } from '../../lib/logger';
  * predicate covers them.
  *
  * Excludes single-material caches `detail(id)` (Material) and `stock(id)`
- * (MaterialStock), which the mutations address by their own key shapes.
+ * (MaterialWithStock), which the mutations address by their own key shapes.
  *
  * @param query - The TanStack query whose key is being tested.
  * @returns `true` when the key belongs to a material list cache.
@@ -106,7 +106,7 @@ export const useCreateMaterial = () => {
  *   mirrors the update across every `Material[]` list cache (`list`,
  *   `search`, `paginated`).
  * - `invalidateQueries(materialsKeys.stock(id))` — kept: the stock view is
- *   `MaterialStock`, not `MaterialDto`, and edited material fields (e.g.
+ *   `MaterialWithStock`, not `MaterialDto`, and edited material fields (e.g.
  *   `materialName`, `unit`, `reorderLevel`) may affect its display.
  *
  * @returns A TanStack `UseMutationResult` where the mutate function

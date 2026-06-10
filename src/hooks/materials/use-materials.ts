@@ -74,7 +74,7 @@ export const useMaterial = (id: number) =>
  * `id` is truthy.
  *
  * @param id - Surrogate ID of the material.
- * @returns A TanStack `UseQueryResult` wrapping a single `MaterialStock`.
+ * @returns A TanStack `UseQueryResult` wrapping a single `MaterialWithStock`.
  */
 export const useMaterialWithStock = (id: number) =>
   useQuery({

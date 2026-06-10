@@ -3,7 +3,7 @@
  *
  * Typed client for the materials backend endpoints under `/materials/web`.
  * Wraps `api.*` calls and parses raw JSON into strongly-typed
- * {@link Material} and {@link MaterialStock} domain objects.
+ * {@link Material} and {@link MaterialWithStock} domain objects.
  *
  * All exported functions throw {@link ApiError} on non-2xx responses or
  * when the response payload fails parsing.
@@ -12,7 +12,7 @@ import { api, ApiError } from '../lib/api/api-client';
 import { logger } from '../lib/logger';
 import {
   Material,
-  MaterialStock,
+  MaterialWithStock,
   parseMaterial,
   parseMaterialWithStock,
   CreateMaterialRequest,
@@ -38,7 +38,7 @@ type Raw = any;
  *
  * Every mutation endpoint returns the full {@link Material} (or an ack on
  * delete), so the mutation hooks can patch caches directly without a
- * follow-up refetch. The `/stock` read returns {@link MaterialStock}, a
+ * follow-up refetch. The `/stock` read returns {@link MaterialWithStock}, a
  * superset of `Material` with a guaranteed `currentStock`; it is keyed
  * separately by the hook layer.
  */
@@ -106,10 +106,10 @@ function safeParseMaterials(data: Raw): Material[] {
  * in {@link ApiError}.
  *
  * @param data - The raw JSON object from the backend.
- * @returns The parsed {@link MaterialStock}.
+ * @returns The parsed {@link MaterialWithStock}.
  * @throws {ApiError} When parsing fails (HTTP 422).
  */
-function safeParseMaterialWithStock(data: Raw): MaterialStock {
+function safeParseMaterialWithStock(data: Raw): MaterialWithStock {
   try {
     return parseMaterialWithStock(data);
   } catch (error) {
@@ -202,10 +202,10 @@ export const materialsService = {
    * resolved `currentStock`).
    *
    * @param id - Surrogate ID of the material.
-   * @returns The {@link MaterialStock}.
+   * @returns The {@link MaterialWithStock}.
    * @throws {ApiError} On non-2xx HTTP responses or parser failure.
    */
-  async getWithStock(id: number): Promise<MaterialStock> {
+  async getWithStock(id: number): Promise<MaterialWithStock> {
     const data = await api.get<Raw>(`/materials/web/${id}/stock`);
     return safeParseMaterialWithStock(data);
   },
