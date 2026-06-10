@@ -6,7 +6,7 @@
  */
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { labourService } from '../../services/labour-service';
-import { labourKeys } from './labour-keys';
+import { labourKeys } from './keys';
 import type {
   Labour,
   LabourCreateRequest,
