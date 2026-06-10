@@ -4,6 +4,20 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 
 The project currently has released versions in git tags: `v0.0.0`, `v0.0.1`, `v0.1.0`, and `v0.1.1`.
 
+## [v0.12.0] - 2026-06-10
+
+### Added
+
+- Vendor domain types for vendor profiles, summaries, contacts, tax identifiers, bank accounts, payment terms, and create/update payloads.
+- Vendor service methods for CRUD operations plus contact, tax identifier, bank account, payment term, search, paginated, and summary endpoints.
+- TanStack Query hooks for vendor list/detail queries and vendor-related mutation workflows.
+- Public module exports for the vendor APIs.
+
+### Changed
+
+- Vendor parsing now normalizes nested contact, tax identifier, bank account, and payment term shapes into a single canonical vendor model.
+- Package version bumped to `0.12.0`.
+
 ## [v0.11.1] - 2026-06-10
 
 ### Added
