@@ -19,7 +19,7 @@
  */
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { vendorService } from '../../services/vendor-service';
-import { vendorKeys } from './vendor-keys';
+import { vendorKeys } from './keys';
 import { logger } from '../../lib/logger';
 import {
   CreateVendorRequest,

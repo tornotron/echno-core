@@ -13,7 +13,7 @@
  */
 import { useQuery } from '@tanstack/react-query';
 import { vendorService } from '../../services/vendor-service';
-import { vendorKeys } from './vendor-keys';
+import { vendorKeys } from './keys';
 
 /**
  * Fetches every vendor (unpaginated).

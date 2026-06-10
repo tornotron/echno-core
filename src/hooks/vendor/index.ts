@@ -1,4 +1,4 @@
-export { vendorKeys } from './vendor-keys';
+export { vendorKeys } from './keys';
 export {
   useVendors,
   useVendorsPaginated,
