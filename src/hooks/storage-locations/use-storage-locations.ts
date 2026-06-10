@@ -8,7 +8,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { storageLocationsService } from '../../services/storage-locations-service';
-import { storageLocationKeys } from './storage-location-keys';
+import { storageLocationKeys } from './keys';
 
 /**
  * Fetches every storage location.

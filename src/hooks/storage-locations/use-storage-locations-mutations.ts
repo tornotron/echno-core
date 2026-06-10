@@ -11,7 +11,7 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { storageLocationsService } from '../../services/storage-locations-service';
-import { storageLocationKeys } from './storage-location-keys';
+import { storageLocationKeys } from './keys';
 import { logger } from '../../lib/logger';
 import {
   CreateStorageLocationRequest,
