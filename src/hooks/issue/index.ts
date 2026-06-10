@@ -4,7 +4,7 @@
  * Re-exports for the issue React Query hooks: key factories, query hooks,
  * mutation hooks, and the detail prefetch helper.
  */
-export * from './issue-keys';
+export * from './keys';
 export * from './use-issues';
 export * from './use-issue-mutations';
 export * from './use-issue-comments';

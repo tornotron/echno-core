@@ -17,7 +17,7 @@ import { useUserEmployees } from '../user/use-user';
 import { Issue } from '../../types/issue/issue';
 import { Employee } from '../../types/employee';
 import { shouldRetry } from '../../lib/query/retry';
-import { issueKeys } from './issue-keys';
+import { issueKeys } from './keys';
 
 /**
  * Resolves `creator`, `assignee`, and each comment's `author` on every

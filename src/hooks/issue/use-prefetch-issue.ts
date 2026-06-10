@@ -12,7 +12,7 @@
 import { useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { issueService } from '../../services/issue-service';
-import { issueKeys } from './issue-keys';
+import { issueKeys } from './keys';
 
 const ISSUE_DETAIL_STALE_TIME = 5 * 60 * 1000;
 

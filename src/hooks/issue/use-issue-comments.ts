@@ -16,7 +16,7 @@ import { useUserEmployees } from '../user/use-user';
 import { IssueComment } from '../../types/issue/issue-comment';
 import { Employee } from '../../types/employee';
 import { shouldRetry } from '../../lib/query/retry';
-import { issueCommentKeys } from './issue-keys';
+import { issueCommentKeys } from './keys';
 
 /**
  * Resolves the `author` on every comment by looking up `authorId` in the

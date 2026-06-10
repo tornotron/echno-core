@@ -12,7 +12,7 @@ import { IssueComment } from '../../types/issue/issue-comment';
 import { CreateIssueCommentRequest } from '../../types/issue/issue-create';
 import { UpdateIssueCommentRequest } from '../../types/issue/issue-update';
 import { logger } from '../../lib/logger';
-import { issueKeys, issueCommentKeys } from './issue-keys';
+import { issueKeys, issueCommentKeys } from './keys';
 
 /**
  * Matches every `IssueComment[]` list cache under the `'issue-comments'`

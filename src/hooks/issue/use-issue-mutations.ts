@@ -13,7 +13,7 @@ import { CreateIssueRequest } from '../../types/issue/issue-create';
 import { UpdateIssueRequest } from '../../types/issue/issue-update';
 import { logger } from '../../lib/logger';
 import { mergePreservingNested } from '../../lib/query/cache-merge';
-import { issueKeys } from './issue-keys';
+import { issueKeys } from './keys';
 import { taskKeys } from '../task/task-keys';
 
 /**
