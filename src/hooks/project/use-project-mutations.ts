@@ -25,7 +25,7 @@ import { Employee } from '../../types/employee';
 import { logger } from '../../lib/logger';
 import { getErrorMessage, getErrorTitle } from '../../lib/utils/error-helpers';
 import { mergePreservingNested } from '../../lib/query/cache-merge';
-import { projectKeys } from './project-keys';
+import { projectKeys } from './keys';
 import { employeeKeys } from '../employee/keys';
 
 /**

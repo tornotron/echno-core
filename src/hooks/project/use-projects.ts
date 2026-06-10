@@ -9,8 +9,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { projectService } from '../../services/project-service';
 import { shouldRetry } from '../../lib/query/retry';
-import { projectKeys } from './project-keys';
-export { projectKeys } from './project-keys';
+import { projectKeys } from './keys';
+export { projectKeys } from './keys';
 
 /**
  * Fetches every project visible to the current user.

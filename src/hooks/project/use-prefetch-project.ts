@@ -14,7 +14,7 @@
 import { useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { projectService } from '../../services/project-service';
-import { projectKeys } from './project-keys';
+import { projectKeys } from './keys';
 
 const PROJECT_DETAIL_STALE_TIME = 5 * 60 * 1000;
 

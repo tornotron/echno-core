@@ -23,7 +23,7 @@ import { UpdateTaskRequest } from '../../types/task/task-update';
 import { logger } from '../../lib/logger';
 import { mergePreservingNested } from '../../lib/query/cache-merge';
 import { taskKeys } from './task-keys';
-import { projectKeys } from '../project/project-keys';
+import { projectKeys } from '../project/keys';
 
 /**
  * Nested keys on {@link Task} that update mutations preserve when
