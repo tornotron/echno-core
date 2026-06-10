@@ -8,7 +8,7 @@
  */
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { materialsService } from '../../services/materials-service';
-import { materialsKeys } from './material-keys';
+import { materialsKeys } from './keys';
 import {
   CreateMaterialRequest,
   UpdateMaterialRequest,

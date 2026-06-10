@@ -12,7 +12,7 @@
  */
 import { useQuery } from '@tanstack/react-query';
 import { materialsService } from '../../services/materials-service';
-import { materialsKeys } from './material-keys';
+import { materialsKeys } from './keys';
 
 /**
  * Fetches every material (unpaginated).
@@ -83,4 +83,4 @@ export const useMaterialWithStock = (id: number) =>
     enabled: !!id,
   });
 
-export { materialsKeys } from './material-keys';
+export { materialsKeys } from './keys';
