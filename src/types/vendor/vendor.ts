@@ -1,5 +1,13 @@
-// types/vendor/vendor.ts
-
+/**
+ * @module vendor
+ *
+ * Domain type and parser for the vendor entity. {@link parseVendor}
+ * normalises the backend's wire format (which uses `vendorName`,
+ * `vendorEmail`, `vendorAddress`, `pinCode` field names) into the
+ * canonical {@link Vendor} shape and denormalises selected fields from
+ * the sub-resource arrays (contacts, tax identifiers, bank accounts,
+ * payment terms) onto top-level scalar properties for UI convenience.
+ */
 import { Attachment } from '../attachment';
 import { parseUTCDate } from '../../lib/utils/date-helpers';
 import { VendorType, VendorStatus, PaymentTerms } from './enums';
@@ -12,51 +20,154 @@ import { VendorPaymentTermsDetails } from './payment-terms';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Raw = any;
 
+/**
+ * A supplier the organisation purchases from. The interface mixes scalar
+ * vendor fields with denormalised fields drawn from the vendor's
+ * sub-resources for UI convenience. Mutation hooks that change a
+ * sub-resource invalidate `vendorKeys.detail(id)` so the next observer
+ * picks up the recalculated derived fields.
+ */
 export interface Vendor {
+  /** Surrogate primary key. */
   id: number;
+
+  /** Vendor's display name. */
   name: string;
+
+  /** Vendor's primary contact email. */
   email: string;
+
+  /** Postal / billing address. */
   address?: string;
+
+  /** Vendor website URL. */
   website?: string;
+
+  /** City portion of the address. */
   city?: string;
+
+  /** State / province portion of the address. */
   state?: string;
+
+  /** PIN / postal / ZIP code. */
   pincode?: string;
+
+  /** Country portion of the address. */
   country?: string;
+
+  /** Trade category — see {@link VendorType}. */
   type?: VendorType;
+
+  /** Trading relationship state — see {@link VendorStatus}. */
   status?: VendorStatus;
+
+  /** Free-form internal notes about the vendor. */
   notes?: string;
-  // from contacts[] primary/first
+
+  // Denormalised from contacts[] (primary, or first if no primary is flagged).
+
+  /** Primary contact person's name. */
   contactPerson?: string;
+
+  /** Primary contact phone. */
   phone?: string;
+
+  /** Primary contact secondary phone. */
   alternatePhone?: string;
-  // from taxIdentifiers[] by type
+
+  // Denormalised from taxIdentifiers[] by `type`.
+
+  /** GST registration number (looked up from `taxIdentifiers` where `type === 'GST'`). */
   gstNumber?: string;
+
+  /** PAN number (looked up from `taxIdentifiers` where `type === 'PAN'`). */
   panNumber?: string;
-  // from bankAccounts[] default/first
+
+  // Denormalised from bankAccounts[] (default, or first if no default is flagged).
+
+  /** Default bank's name. */
   bankName?: string;
+
+  /** Default bank account number. */
   accountNumber?: string;
+
+  /** Default bank IFSC code (India) or local equivalent. */
   ifscCode?: string;
+
+  /** Default account holder name. */
   accountHolderName?: string;
+
+  /** Default account SWIFT / BIC code. */
   swift?: string;
-  // from paymentTerms object
+
+  // Denormalised from paymentTerms object.
+
+  /** Negotiated credit-period code — see {@link PaymentTerms}. */
   paymentTerms?: PaymentTerms;
+
+  /** Maximum outstanding balance allowed for this vendor. */
   creditLimit?: number;
+
+  /** Calendar days of credit on each invoice. */
   creditDays?: number;
-  // financial summary
+
+  // Server-side computed financial rollups (mirror of VendorSummary fields).
+
+  /** Cumulative monetary value of all purchase orders raised against this vendor. */
   totalPurchaseValue?: number;
+
+  /** Cumulative amount paid to this vendor to date. */
   totalPaid?: number;
+
+  /** Outstanding balance owed to this vendor. */
   totalOutstanding?: number;
+
+  /** Date of the most recent payment to this vendor. */
   lastPaymentDate?: Date;
+
+  /** Amount of the most recent payment. */
   lastPaymentAmount?: number;
+
+  /** Total purchase orders ever raised against this vendor. */
   totalOrders?: number;
+
+  /** Orders currently open or awaiting fulfilment. */
   pendingOrders?: number;
+
+  /** Orders fully received and closed. */
   completedOrders?: number;
+
+  /** Orders cancelled before or during fulfilment. */
   cancelledOrders?: number;
+
+  /** Attachments uploaded against the vendor record (contracts, certificates, etc.). */
   attachments?: Attachment[];
+
+  /** When the vendor was created. */
   createdAt?: Date;
+
+  /** When the vendor was last updated. */
   updatedAt?: Date;
 }
 
+/**
+ * Parses a raw vendor payload into a typed {@link Vendor} domain object.
+ *
+ * Accepts the backend's wire-format field names (`vendorName`,
+ * `vendorEmail`, `vendorAddress`, `pinCode`) and falls back to the
+ * canonical names if the wire-format key is absent — useful when a
+ * mutation seeds the cache with a request-shaped object before the
+ * canonical refetch lands. Denormalises selected fields from the
+ * `contacts`, `taxIdentifiers`, `bankAccounts`, and `paymentTerms`
+ * sub-resources onto top-level scalar properties; the same fields on
+ * `raw` are honoured as a fallback when the sub-resource array is empty
+ * or missing.
+ *
+ * @param raw - The untyped JSON object received from the backend.
+ * @returns A canonical {@link Vendor} domain object.
+ * @throws {Error} If `raw.id` is missing or not a positive integer.
+ * @throws {Error} If the vendor has neither `vendorName` nor `name`.
+ */
 export function parseVendor(raw: Raw): Vendor {
   const id = parsePositiveInt(raw.id, 'parseVendor.id');
   const name = raw.vendorName ?? raw.name ?? '';
