@@ -14,7 +14,7 @@ import { UpdateIssueRequest } from '../../types/issue/issue-update';
 import { logger } from '../../lib/logger';
 import { mergePreservingNested } from '../../lib/query/cache-merge';
 import { issueKeys } from './keys';
-import { taskKeys } from '../task/task-keys';
+import { taskKeys } from '../task/keys';
 
 /**
  * Nested keys preserved from the cached `Issue` when merging a partial

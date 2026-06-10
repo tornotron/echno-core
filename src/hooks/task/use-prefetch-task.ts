@@ -13,7 +13,7 @@
 import { useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { taskService } from '../../services/task-service';
-import { taskKeys } from './task-keys';
+import { taskKeys } from './keys';
 
 const TASK_DETAIL_STALE_TIME = 5 * 60 * 1000;
 

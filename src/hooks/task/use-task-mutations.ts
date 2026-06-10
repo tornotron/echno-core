@@ -22,7 +22,7 @@ import { CreateTaskRequest, TaskFiles } from '../../types/task/task-create';
 import { UpdateTaskRequest } from '../../types/task/task-update';
 import { logger } from '../../lib/logger';
 import { mergePreservingNested } from '../../lib/query/cache-merge';
-import { taskKeys } from './task-keys';
+import { taskKeys } from './keys';
 import { projectKeys } from '../project/keys';
 
 /**
