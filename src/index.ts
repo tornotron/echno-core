@@ -78,3 +78,8 @@ export * from './hooks/storage-locations';
 export * from './types/labour';
 export * from './services/labour-service';
 export * from './hooks/labour';
+
+// Vendor
+export * from './types/vendor';
+export * from './services/vendor-service';
+export * from './hooks/vendor';
