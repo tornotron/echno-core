@@ -8,7 +8,7 @@ import { useQuery } from '@tanstack/react-query';
 import { organizationService } from '../../services/organization-service';
 import { shouldRetry } from '../../lib/query/retry';
 import { standardQueryOptions } from '../../lib/query/options';
-import { organizationKeys } from './organization-keys';
+import { organizationKeys } from './keys';
 
 /**
  * Fetches all organizations visible to the current user.

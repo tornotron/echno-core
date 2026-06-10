@@ -17,7 +17,7 @@ import { UpdateOrganizationRequest } from '../../types/organization/organization
 import { OrganizationFiles } from '../../types/organization/organization-files';
 import { logger } from '../../lib/logger';
 import { mergePreservingNested } from '../../lib/query/cache-merge';
-import { organizationKeys } from './organization-keys';
+import { organizationKeys } from './keys';
 import { userKeys } from '../user/user-keys';
 import { employeeKeys } from '../employee/keys';
 
