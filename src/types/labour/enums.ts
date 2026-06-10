@@ -1,0 +1,20 @@
+export enum EmploymentType {
+  DAILY_WAGE = 'DAILY_WAGE',
+  MONTHLY = 'MONTHLY',
+  CONTRACT = 'CONTRACT',
+  PIECE_RATE = 'PIECE_RATE',
+}
+
+export enum SkillLevel {
+  UNSKILLED = 'UNSKILLED',
+  SEMI_SKILLED = 'SEMI_SKILLED',
+  SKILLED = 'SKILLED',
+  HIGHLY_SKILLED = 'HIGHLY_SKILLED',
+}
+
+export enum LabourStatus {
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE',
+  ON_LEAVE = 'ON_LEAVE',
+  TERMINATED = 'TERMINATED',
+}
