@@ -4,6 +4,21 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 
 The project currently has released versions in git tags: `v0.0.0`, `v0.0.1`, `v0.1.0`, and `v0.1.1`.
 
+## [v0.11.0] - 2026-06-10
+
+### Added
+
+- Labour domain types for labour records, create/update payloads, and employment-related enums.
+- Labour service methods for list/detail reads, create, update, and delete operations.
+- TanStack Query hooks for labour list/detail queries and create/update/delete mutations.
+- Public module exports for the labour APIs.
+
+### Changed
+
+- Labour create/update flows now document the mixed DTO response shapes and the cache invalidation strategy used after writes.
+- Labour delete mutations now preserve and restore cached list/detail state on error.
+- Package version bumped to `0.11.0`.
+
 ## [v0.10.2] - 2026-06-09
 
 ### Added
