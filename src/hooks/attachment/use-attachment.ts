@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { attachmentService } from '../../services/attachment-service';
 import { Attachment } from '../../types/attachment';
 import { shouldRetry } from '../../lib/query/retry';
-import { attachmentKeys } from './attachment-keys';
+import { attachmentKeys } from './keys';
 
 /**
  * Hook to fetch attachment by entity ID and type.

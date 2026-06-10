@@ -26,7 +26,7 @@ import { Attachment, UploadAttachmentRequest } from '../../types/attachment';
 import {
   attachmentKeys,
   ATTACHMENT_PARENT_NAMESPACES,
-} from './attachment-keys';
+} from './keys';
 
 /**
  * Recursively strip the attachment with `id` from any value the cache might
