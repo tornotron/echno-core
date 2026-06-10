@@ -8,7 +8,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { workCategoryService } from '../../services/work-category-service';
 import { CreateWorkCategoryRequest, WorkCategory } from '../../types/work-category';
 import { logger } from '../../lib/logger';
-import { workCategoryKeys } from './work-category-keys';
+import { workCategoryKeys } from './keys';
 
 /**
  * Creates a new work category.

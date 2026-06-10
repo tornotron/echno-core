@@ -8,7 +8,7 @@ import { useQuery } from '@tanstack/react-query';
 import { workCategoryService } from '../../services/work-category-service';
 import { shouldRetry } from '../../lib/query/retry';
 import { staticQueryOptions } from '../../lib/query/options';
-import { workCategoryKeys } from './work-category-keys';
+import { workCategoryKeys } from './keys';
 
 /**
  * Fetches every work category.
