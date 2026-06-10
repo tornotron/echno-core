@@ -4,6 +4,22 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 
 The project currently has released versions in git tags: `v0.0.0`, `v0.0.1`, `v0.1.0`, and `v0.1.1`.
 
+## [v0.19.0] - 2026-06-11
+
+### Added
+
+- Inventory-transaction domain types for ledger entries, transaction types, and stock-status summaries.
+- Inventory-transaction service methods for read-only ledger access: list, detail, paginated, and filtered reads (by material, type, date-range, and storage-location).
+- Material and Storage-Location stock methods to retrieve current inventory levels.
+- TanStack Query hooks for inventory-transaction list/detail queries and stock-level tracking.
+- Public module exports for the inventory-transactions APIs.
+
+### Changed
+
+- Renamed `MaterialStock` to `MaterialWithStock` in the materials module to avoid collision with inventory-transaction stock models and improve clarity.
+- Updated materials service, hooks, and types to use the new `MaterialWithStock` interface.
+- Package version bumped to `0.19.0`.
+
 ## [v0.18.0] - 2026-06-10
 
 ### Added
