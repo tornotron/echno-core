@@ -107,3 +107,8 @@ export * from './hooks/indents';
 export * from './types/inventory-transactions';
 export * from './services/inventory-transactions-service';
 export * from './hooks/inventory-transactions';
+
+// GRN
+export * from './types/grn';
+export * from './services/grn-service';
+export * from './hooks/grn';
