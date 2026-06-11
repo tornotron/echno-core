@@ -4,6 +4,20 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 
 The project currently has released versions in git tags: `v0.0.0`, `v0.0.1`, `v0.1.0`, and `v0.1.1`.
 
+## [v0.22.0] - 2026-06-11
+
+### Added
+
+- WBS-element domain types for hierarchical work-breakdown structures, including create/update/move payloads and tree/leaf nodes.
+- WBS-element service methods for project-scoped writes and reads: single/bulk create, hierarchical tree reads, flat list reads, leaf filtering, move (reparenting), and recalculation.
+- TanStack Query hooks for WBS-element reads and mutation workflows, with integrated cross-namespace cache invalidation.
+- Public module exports for the WBS-element APIs.
+
+### Changed
+
+- WBS-element mutations now automatically invalidate derived tree and leaf views while patching flat list and detail caches from full DTO responses.
+- Package version bumped to `0.22.0`.
+
 ## [v0.21.0] - 2026-06-11
 
 ### Added
