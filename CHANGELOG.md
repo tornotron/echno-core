@@ -4,6 +4,20 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 
 The project currently has released versions in git tags: `v0.0.0`, `v0.0.1`, `v0.1.0`, and `v0.1.1`.
 
+## [v0.20.0] - 2026-06-11
+
+### Added
+
+- GRN domain types for goods-received notes, line items, and create/update payloads.
+- GRN service methods for list/detail reads, paginated access, vendor/date-range filtering, and CRUD operations.
+- TanStack Query hooks for GRN reads and mutation workflows.
+- Public module exports for the GRN APIs.
+
+### Changed
+
+- GRN create mutations now invalidate material-stock, purchase-order, and inventory-transaction caches to propagate stock increments and PO advancement.
+- Package version bumped to `0.20.0`.
+
 ## [v0.19.0] - 2026-06-11
 
 ### Added
