@@ -1,0 +1,93 @@
+/**
+ * @module grn-create
+ *
+ * Request payload and serializer for creating a new
+ * {@link GoodsReceivedNote}. Line items are embedded inline via
+ * {@link CreateGrnItemRequest}; the server creates the parent GRN and
+ * its items in one round-trip and posts the corresponding stock
+ * increments + inventory-transaction ledger entries as a side-effect.
+ */
+import { CreateGrnItemRequest } from './grn-item-create';
+
+/**
+ * Inputs required to create a new {@link GoodsReceivedNote} together
+ * with its line items.
+ */
+export interface CreateGrnRequest {
+  /** Human-readable GRN number; must be unique within the organisation. */
+  grnNumber: string;
+
+  /** ISO 8601 date the goods were received on site. */
+  receivedOn: string;
+
+  /** Surrogate ID of the {@link Employee} recording the receipt. */
+  receivedByEmployeeId: number;
+
+  /** Surrogate ID of the {@link Vendor} the goods were received from. */
+  vendorId: number;
+
+  /** Surrogate ID of the source {@link PurchaseOrder}, if any. */
+  purchaseOrderId?: number;
+
+  /** Surrogate ID of the project the receipt is allocated to. */
+  projectId?: number;
+
+  /** Surrogate ID of the storage location the goods were received at. */
+  storageLocationId?: number;
+
+  /** Vendor's delivery challan / dispatch note number. */
+  deliveryChallanNumber?: string;
+
+  /** Vendor invoice number tied to the receipt. */
+  invoiceNumber?: string;
+
+  /** Vendor invoice amount tied to the receipt. */
+  invoiceAmount?: number;
+
+  /** Line items to create alongside the GRN. */
+  items: CreateGrnItemRequest[];
+}
+
+/**
+ * Serializes a {@link CreateGrnRequest} into the backend's expected
+ * request body. Optional fields are omitted from the payload when
+ * `undefined` (rather than sent as `undefined`); item-level optional
+ * fields follow the same omit-when-absent rule.
+ *
+ * @param dto - The domain request to serialize.
+ * @returns A plain object matching the backend's expected JSON shape.
+ */
+export function createGrnToJson(
+  dto: CreateGrnRequest
+): Record<string, unknown> {
+  return {
+    grnNumber: dto.grnNumber,
+    receivedOn: dto.receivedOn,
+    receivedByEmployeeId: dto.receivedByEmployeeId,
+    vendorId: dto.vendorId,
+    ...(dto.purchaseOrderId !== undefined && {
+      purchaseOrderId: dto.purchaseOrderId,
+    }),
+    ...(dto.projectId !== undefined && { projectId: dto.projectId }),
+    ...(dto.storageLocationId !== undefined && {
+      storageLocationId: dto.storageLocationId,
+    }),
+    ...(dto.deliveryChallanNumber !== undefined && {
+      deliveryChallanNumber: dto.deliveryChallanNumber,
+    }),
+    ...(dto.invoiceNumber !== undefined && {
+      invoiceNumber: dto.invoiceNumber,
+    }),
+    ...(dto.invoiceAmount !== undefined && {
+      invoiceAmount: dto.invoiceAmount,
+    }),
+    items: dto.items.map((item: CreateGrnItemRequest) => ({
+      materialId: item.materialId,
+      orderedQuantity: item.orderedQuantity,
+      receivedQuantity: item.receivedQuantity,
+      ...(item.unitCost !== undefined && { unitCost: item.unitCost }),
+    })),
+  };
+}
+
+export { type CreateGrnItemRequest } from './grn-item-create';
