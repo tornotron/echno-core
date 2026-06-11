@@ -4,6 +4,20 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 
 The project currently has released versions in git tags: `v0.0.0`, `v0.0.1`, `v0.1.0`, and `v0.1.1`.
 
+## [v0.21.0] - 2026-06-11
+
+### Added
+
+- Site-transfer domain types for transfers, line items, and create payloads.
+- Site-transfer service methods for list/detail reads, paginated access, status filtering, and sending/receiving project filtering.
+- TanStack Query hooks for site-transfer reads and mutation workflows (create, status transition).
+- Public module exports for the site-transfers APIs.
+
+### Changed
+
+- Site-transfer mutations now invalidate material-stock and inventory-transaction caches to propagate stock movements and ledger writes.
+- Package version bumped to `0.21.0`.
+
 ## [v0.20.0] - 2026-06-11
 
 ### Added
