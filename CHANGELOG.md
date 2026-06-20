@@ -4,6 +4,18 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 
 The project currently has released versions in git tags: `v0.0.0`, `v0.0.1`, `v0.1.0`, and `v0.1.1`.
 
+## [v0.23.0] - 2026-06-20
+
+### Added
+
+- Shift timing domain types, create/update payloads, service methods, and query hooks for scheduling and attendance rules.
+- Public module exports for the shift-timing APIs.
+
+### Changed
+
+- Shift timing serialization now normalizes `HH:MM` inputs to backend `LocalTime` strings and preserves server defaults for omitted thresholds.
+- Package version bumped to `0.23.0`.
+
 ## [v0.22.0] - 2026-06-11
 
 ### Added
