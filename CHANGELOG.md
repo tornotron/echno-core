@@ -4,6 +4,20 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 
 The project currently has released versions in git tags: `v0.0.0`, `v0.0.1`, `v0.1.0`, and `v0.1.1`.
 
+## [v0.24.0] - 2026-06-20
+
+### Added
+
+- Role-management service methods for assigning and unassigning organization roles via the Keycloak group endpoints.
+- TanStack Query hooks for derived role-management reads and role assignment mutations.
+- Public module exports for the role-management APIs.
+
+### Changed
+
+- Role assignments now patch the employee detail and list caches directly from request parameters instead of refetching.
+- `useRoleManagement` now derives current and available roles from the shared employees cache without its own query namespace.
+- Package version bumped to `0.24.0`.
+
 ## [v0.23.0] - 2026-06-20
 
 ### Added
