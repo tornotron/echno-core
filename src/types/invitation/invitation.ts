@@ -1,107 +1,269 @@
 /**
  * @module invitation
  *
- * Core `Invitation` domain type, status enum, parser, and status helper.
+ * Invitation domain model, status helpers, and (de)serialization utilities
+ * for the `project-invite-code-controller` backend.
  *
- * Note: `Invitation.projectId` reflects a legacy backend field name; the
- * live spec endpoint is organization-scoped and a rename to `organizationId`
- * is pending an `integrate-module` pass.
+ * The backend issues organization-scoped invite codes that carry the invited
+ * employee's details (`employeeDetails`). This module exposes the `Invitation`
+ * type, the `parseInvitation` mapper (backend JSON → typed object), the inverse
+ * `invitationToJson`, status/validity helpers, and share-message builders
+ * (`whatsappMessage`, `emailSubject`, `emailBody`).
+ *
+ * Backend field mapping (see {@link parseInvitation}):
+ * - `code` → `inviteCode`
+ * - `active` → `isActive`
+ * - `currentUses` → `usedCount`
  */
-
-import { parsePositiveInt } from '../../lib/utils/parse-id';
 
 /**
- * Normalized status values derived from the raw backend status string.
- *
- * The backend stores status as a freeform string (`'active'`, `'expired'`,
- * `'used'`, etc.). Use {@link getInvitationStatus} to convert to this enum.
+ * Normalized invitation status derived from `isActive`, `expiryDate`, and
+ * usage counts via {@link getInvitationStatus}.
  */
 export enum InvitationStatus {
-  /** Invite code is active and within usage and expiry limits. */
+  /** Active, not expired, and usage slots remain. */
   pending = 'pending',
-  /** Invite code has been fully consumed (all usage slots filled). */
+  /** Fully consumed (all usage slots filled). */
   accepted = 'accepted',
-  /** Invite code was rejected or is in an unrecognized state. */
+  /** Explicitly inactive or in an unrecognized state. */
   rejected = 'rejected',
-  /** Invite code has passed its expiry date. */
+  /** Past its expiry date. */
   expired = 'expired',
 }
 
 /**
- * Represents a project invite code record.
+ * Employee details carried by an invitation. `department` and `designation`
+ * are always present; the remaining fields are optional.
+ */
+export interface EmployeeDetails {
+  department: string;
+  designation: string;
+  email?: string;
+  employeeId?: string;
+  employeeName?: string;
+  joiningDate?: Date;
+  phone?: string;
+  managerId?: number;
+  salary?: number;
+  shiftTiming?: string;
+  status?: string;
+}
+
+/**
+ * An organization invite code and its associated employee details.
  */
 export interface Invitation {
-  /** Unique surrogate identifier. */
-  id: number;
-  /**
-   * ID of the associated project. Note: the live spec endpoint is
-   * organization-scoped; this field will be renamed to `organizationId`
-   * after the service paths are realigned.
-   */
-  projectId: number;
-  /** The invite code string shared with invitees. */
+  id?: number;
   inviteCode: string;
-  /** Role to assign when the invite code is accepted. */
-  role: string;
-  /** Optional expiry date after which the code is no longer valid. */
   expiryDate?: Date;
-  /** Maximum number of times the code can be used. `undefined` means unlimited. */
-  maxUsageCount?: number;
-  /** Number of times the code has been used. */
-  usageCount: number;
-  /** Raw status string from the backend (`'active'`, `'expired'`, `'used'`, etc.). */
-  status: string;
-  /** Timestamp when this invite code was created. */
-  createdDate: Date;
+  maxUses?: number;
+  usedCount: number;
+  employeeDetails: EmployeeDetails;
+  isActive: boolean;
+  /** Present on validation responses. */
+  organizationId?: number;
+  /** Present on validation responses. */
+  organizationName?: string;
 }
 
 /**
- * Derives a normalized {@link InvitationStatus} from the raw backend status string.
+ * Parses a raw backend payload into a typed {@link Invitation}.
  *
- * Maps `'active'` to `pending`, `expired`, or `accepted` based on expiry date
- * and usage-count checks. Maps `'used'` and `'completed'` to `accepted`.
- * Falls back to `rejected` for any unrecognized value.
- *
- * @param inv - The invitation to evaluate.
- * @returns The computed {@link InvitationStatus}.
- */
-export function getInvitationStatus(inv: Invitation): InvitationStatus {
-  const s = inv.status?.toLowerCase();
-  if (s === 'active') {
-    if (inv.expiryDate && new Date() > inv.expiryDate)
-      return InvitationStatus.expired;
-    if (inv.maxUsageCount != null && inv.usageCount >= inv.maxUsageCount)
-      return InvitationStatus.accepted;
-    return InvitationStatus.pending;
-  }
-  if (s === 'expired') return InvitationStatus.expired;
-  if (s === 'used' || s === 'completed') return InvitationStatus.accepted;
-  return InvitationStatus.rejected;
-}
-
-/**
- * Parses a raw API payload into a typed {@link Invitation}.
+ * Applies defensive fallbacks for inconsistent payloads and normalizes all
+ * date fields to `Date` instances.
  *
  * @param json - The untyped JSON object received from the backend.
  * @returns A validated `Invitation` domain object.
- * @throws {Error} If `id` or `projectId` is not a positive integer.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function parseInvitation(json: any): Invitation {
-  const id = parsePositiveInt(json.id, 'parseInvitation.id');
-  const projectId = parsePositiveInt(
-    json.projectId,
-    'parseInvitation.projectId'
-  );
-  return {
-    id,
-    projectId,
-    inviteCode: String(json.inviteCode ?? ''),
-    role: json.role ?? '',
-    expiryDate: json.expiryDate ? new Date(json.expiryDate) : undefined,
-    maxUsageCount: json.maxUsageCount ?? undefined,
-    usageCount: json.usageCount ?? 0,
-    status: json.status ?? '',
-    createdDate: json.createdDate ? new Date(json.createdDate) : new Date(),
+  const employeeDetails: EmployeeDetails = {
+    department: json.employeeDetails?.department ?? '',
+    designation: json.employeeDetails?.designation ?? '',
+    email: json.employeeDetails?.email ?? undefined,
+    employeeId: json.employeeDetails?.employeeId ?? undefined,
+    employeeName: json.employeeDetails?.employeeName ?? undefined,
+    joiningDate: json.employeeDetails?.joiningDate
+      ? new Date(json.employeeDetails.joiningDate)
+      : undefined,
+    phone: json.employeeDetails?.phone ?? undefined,
+    managerId: json.employeeDetails?.managerId ?? undefined,
+    salary:
+      json.employeeDetails?.salary == null
+        ? undefined
+        : Number(json.employeeDetails.salary),
+    shiftTiming: json.employeeDetails?.shiftTiming ?? undefined,
+    status: json.employeeDetails?.status ?? undefined,
   };
+
+  return {
+    id: json.id ?? undefined,
+    inviteCode: json.code == null ? '' : String(json.code),
+    expiryDate: json.expiryDate ? new Date(json.expiryDate) : undefined,
+    maxUses: json.maxUses ?? undefined,
+    usedCount: json.currentUses ?? 0,
+    employeeDetails,
+    isActive: json.active ?? true,
+    organizationId: json.organizationId ?? undefined,
+    organizationName: json.organizationName ?? undefined,
+  };
+}
+
+/**
+ * Serializes an {@link Invitation} to the backend JSON shape.
+ *
+ * @param inv - The invitation to serialize.
+ * @returns A plain object matching the backend's payload shape.
+ */
+export function invitationToJson(inv: Invitation): Record<string, unknown> {
+  return {
+    id: inv.id,
+    code: inv.inviteCode,
+    expiryDate: inv.expiryDate?.toISOString(),
+    maxUses: inv.maxUses,
+    currentUses: inv.usedCount,
+    employeeDetails: {
+      department: inv.employeeDetails.department,
+      designation: inv.employeeDetails.designation,
+      email: inv.employeeDetails.email,
+      employeeId: inv.employeeDetails.employeeId,
+      employeeName: inv.employeeDetails.employeeName,
+      joiningDate: inv.employeeDetails.joiningDate?.toISOString(),
+      phone: inv.employeeDetails.phone,
+      managerId: inv.employeeDetails.managerId,
+      salary: inv.employeeDetails.salary,
+      shiftTiming: inv.employeeDetails.shiftTiming,
+      status: inv.employeeDetails.status,
+    },
+    active: inv.isActive,
+  };
+}
+
+/**
+ * Derives the normalized {@link InvitationStatus} from `isActive`, `expiryDate`,
+ * and usage counts.
+ *
+ * @param inv - The invitation to evaluate.
+ * @returns The computed status.
+ */
+export function getInvitationStatus(inv: Invitation): InvitationStatus {
+  if (!inv.isActive) {
+    return InvitationStatus.rejected;
+  }
+  if (inv.expiryDate && new Date() > inv.expiryDate) {
+    return InvitationStatus.expired;
+  }
+  if (inv.maxUses && inv.usedCount && inv.usedCount >= inv.maxUses) {
+    return InvitationStatus.accepted;
+  }
+  return InvitationStatus.pending;
+}
+
+/** Returns `true` if the invitation has passed its expiry date. */
+export function isExpired(inv: Invitation): boolean {
+  if (!inv.expiryDate) return false;
+  return new Date() > inv.expiryDate;
+}
+
+/** Returns `true` if the invitation is active, unexpired, and has usage slots left. */
+export function isInvitationValid(inv: Invitation): boolean {
+  if (!inv.isActive) return false;
+  if (isExpired(inv)) return false;
+  if (inv.maxUses && inv.usedCount && inv.usedCount >= inv.maxUses) {
+    return false;
+  }
+  return true;
+}
+
+/** Builds a WhatsApp/plain-text share message for an invitation. */
+export function whatsappMessage(
+  inv: Invitation,
+  organizationName?: string
+): string {
+  const lines = [
+    '*Employee Invitation*',
+    '',
+    `You've been invited to join${organizationName ? ` *${organizationName}*` : ' the organization'}!`,
+    '',
+    `*Position*: ${inv.employeeDetails.designation}`,
+    `*Department*: ${inv.employeeDetails.department}`,
+  ];
+
+  if (inv.employeeDetails.employeeId) {
+    lines.push(`*Employee ID*: ${inv.employeeDetails.employeeId}`);
+  }
+
+  if (inv.employeeDetails.joiningDate) {
+    const d = inv.employeeDetails.joiningDate;
+    lines.push(
+      `*Start Date*: ${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`
+    );
+  }
+  if (inv.employeeDetails.shiftTiming)
+    lines.push(`*Shift Timing*: ${inv.employeeDetails.shiftTiming}`);
+
+  lines.push(
+    '',
+    `*Invite Code*: *${inv.inviteCode}*`,
+    '',
+    'Download the Echno Attendance app and use this code to join the organization.'
+  );
+
+  return lines.join('\n');
+}
+
+/** Builds the email subject line for an invitation. */
+export function emailSubject(
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  inv: Invitation,
+  organizationName?: string
+): string {
+  return `Employee Invitation${organizationName ? ` - ${organizationName}` : ''}`;
+}
+
+/** Builds the email body for an invitation. */
+export function emailBody(inv: Invitation, organizationName?: string): string {
+  const lines = [
+    `Dear Employee,`,
+    '',
+    `You have been invited to join${organizationName ? ` ${organizationName}` : ' the organization'} as a ${inv.employeeDetails.designation} in the ${inv.employeeDetails.department} department.`,
+    '',
+    'Employee Details:',
+  ];
+
+  if (inv.employeeDetails.employeeId) {
+    lines.push(`- Employee ID: ${inv.employeeDetails.employeeId}`);
+  }
+  lines.push(
+    `- Position: ${inv.employeeDetails.designation}`,
+    `- Department: ${inv.employeeDetails.department}`
+  );
+
+  if (inv.employeeDetails.joiningDate) {
+    const d = inv.employeeDetails.joiningDate;
+    lines.push(
+      `- Start Date: ${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`
+    );
+  }
+  if (inv.employeeDetails.shiftTiming)
+    lines.push(`- Shift Timing: ${inv.employeeDetails.shiftTiming}`);
+
+  lines.push(
+    '',
+    `Your invitation code is: ${inv.inviteCode}`,
+    '',
+    'To get started:',
+    '1. Download the Echno Attendance mobile app',
+    '2. Open the app and select "Join with Invite Code"',
+    '3. Enter the code: ' + inv.inviteCode,
+    '4. Complete your profile setup',
+    '',
+    '',
+    'Welcome to the team!',
+    '',
+    'Best regards,',
+    'HR Team'
+  );
+
+  return lines.join('\n');
 }
