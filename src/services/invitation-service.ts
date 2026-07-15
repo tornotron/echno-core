@@ -1,14 +1,17 @@
 /**
  * @module invitation-service
  *
- * Typed client for invitation (project invite code) backend endpoints.
+ * Typed client for the `project-invite-code-controller` backend endpoints.
  *
- * All methods currently route to legacy `/api/v1/project/web/invite-codes/*`
- * paths that no longer exist on the backend. The live spec exposes invitation
- * endpoints under `/api/v1/invitation/web/...`. An `integrate-module` pass is
- * required to realign service paths before any method will succeed in
- * production. See the module-level FIXME in `use-invitation-mutations.ts` for
- * the full remediation plan.
+ * Wraps lower-level `api` calls and converts raw JSON into strongly-typed
+ * domain objects (`Invitation`) via parse-safe helpers. Parsing failures are
+ * normalized into `ApiError`; network and non-2xx errors propagate from the
+ * API client for callers (React Query mutation/query error handlers) to handle.
+ *
+ * Endpoints (organization-scoped):
+ * - `POST /invitation/web/generateCode/organizationId/{organizationId}`
+ * - `POST /invitation/web/validate/userId/{userId}`
+ * - `GET  /invitation/web/organizationId/{organizationId}`
  */
 
 import { api, ApiError } from '../lib/api/api-client';
@@ -18,6 +21,10 @@ import {
   GenerateInviteCodeRequest,
   generateInviteCodeToJson,
 } from '../types/invitation/invitation-create';
+import {
+  ValidateInviteCodeRequest,
+  ValidateInviteCodeResponse,
+} from '../types/invitation/invitation-validate';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ApiResponse = any;
@@ -51,69 +58,92 @@ function safeParseInvitations(data: ApiResponse[]): Invitation[] {
 
 export const invitationService = {
   /**
-   * Generates a new project invite code.
+   * Generates a new employee invite code for an organization.
    *
-   * `POST /api/v1/project/web/invite-codes` — path is stale; the live spec
-   * endpoint is `POST /invitation/web/generateCode/organizationId/{organizationId}`.
+   * `POST /invitation/web/generateCode/organizationId/{organizationId}`.
    *
-   * @param dto - Invite code generation parameters.
-   * @returns The created {@link Invitation}.
+   * @param organizationId - Organization ID (travels in the URL path).
+   * @param request - Invitation details (without organizationId/name).
+   * @returns The generated {@link Invitation} with its code.
    * @throws {ApiError} On non-2xx HTTP responses or parse failure.
    */
-  async generateCode(dto: GenerateInviteCodeRequest): Promise<Invitation> {
+  async generateCode(
+    organizationId: number,
+    request: GenerateInviteCodeRequest
+  ): Promise<Invitation> {
     const data = await api.post<ApiResponse>(
-      '/api/v1/project/web/invite-codes',
-      generateInviteCodeToJson(dto)
+      `/invitation/web/generateCode/organizationId/${organizationId}`,
+      generateInviteCodeToJson(request)
     );
     return safeParseInvitation(data);
   },
 
   /**
-   * Fetches all invite codes for a project (or organization per spec).
+   * Validates an invite code for a user (accepting it joins the organization).
    *
-   * `GET /api/v1/project/web/invite-codes?projectId={projectId}` — path is
-   * stale; the live spec endpoint is
+   * `POST /invitation/web/validate/userId/{userId}`. The backend returns the
+   * joined organization object directly on success; a 404/400 is treated as an
+   * invalid code rather than an error.
+   *
+   * @param userId - User ID validating (and joining with) the code.
+   * @param inviteCode - The invite code to validate.
+   * @returns A {@link ValidateInviteCodeResponse}.
+   * @throws {ApiError} On unexpected (non-404/400) HTTP errors.
+   */
+  async validateCode(
+    userId: number,
+    inviteCode: string
+  ): Promise<ValidateInviteCodeResponse> {
+    const payload: ValidateInviteCodeRequest = { code: inviteCode };
+
+    try {
+      const data = await api.post<ApiResponse>(
+        `/invitation/web/validate/userId/${userId}`,
+        payload
+      );
+
+      return {
+        valid: true,
+        invitation: {
+          inviteCode,
+          organizationId: data.id,
+          organizationName: data.organizationName,
+          usedCount: 0,
+          isActive: true,
+          employeeDetails: {
+            department: '',
+            designation: '',
+          },
+        },
+        message: 'Valid invitation code',
+      };
+    } catch (error) {
+      if (
+        error instanceof ApiError &&
+        (error.isNotFound || error.status === 400)
+      ) {
+        return {
+          valid: false,
+          message: error.message || 'Invalid or expired invite code',
+        };
+      }
+      throw error;
+    }
+  },
+
+  /**
+   * Fetches all invite codes for an organization.
+   *
    * `GET /invitation/web/organizationId/{organizationId}`.
    *
-   * @param projectId - ID of the project (effectively the organization) to query.
+   * @param organizationId - Organization ID to query.
    * @returns Resolved array of {@link Invitation} objects.
    * @throws {ApiError} On non-2xx HTTP responses or parse failure.
    */
-  async getByProject(projectId: number): Promise<Invitation[]> {
+  async getByOrganization(organizationId: number): Promise<Invitation[]> {
     const data = await api.get<ApiResponse[]>(
-      `/api/v1/project/web/invite-codes?projectId=${projectId}`
+      `/invitation/web/organizationId/${organizationId}`
     );
     return safeParseInvitations(data);
-  },
-
-  /**
-   * Fetches a single invite code by its numeric ID.
-   *
-   * `GET /api/v1/project/web/invite-codes/{id}` — path is stale and has no
-   * equivalent in the live spec. The backend exposes no GET-by-id endpoint for
-   * invite codes; this method will 404 in production.
-   *
-   * @param id - Surrogate ID of the invite code.
-   * @returns The resolved {@link Invitation}.
-   * @throws {ApiError} On non-2xx HTTP responses or parse failure.
-   */
-  async getById(id: number): Promise<Invitation> {
-    const data = await api.get<ApiResponse>(
-      `/api/v1/project/web/invite-codes/${id}`
-    );
-    return safeParseInvitation(data);
-  },
-
-  /**
-   * Deletes an invite code by ID.
-   *
-   * `DELETE /api/v1/project/web/invite-codes/{id}` — path is stale; the
-   * backend has no DELETE endpoint for invite codes.
-   *
-   * @param id - Surrogate ID of the invite code to delete.
-   * @throws {ApiError} On non-2xx HTTP responses.
-   */
-  async delete(id: number): Promise<void> {
-    await api.delete(`/api/v1/project/web/invite-codes/${id}`);
   },
 };
