@@ -4,6 +4,26 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 
 The project currently has released versions in git tags: `v0.0.0`, `v0.0.1`, `v0.1.0`, and `v0.1.1`.
 
+## [v0.25.0] - 2026-07-15
+
+### Added
+
+- Attendance domain types for check-ins, clock events, summaries, reports, profiles, status, movements, regularizations, and work-duration calculations.
+- Attendance service methods for core attendance reads and writes, including check-in, clock events, approvals, absences, deletes, and summary retrieval.
+- Attendance-settings service methods for attendance profiles and resolved organization/project settings.
+- Attendance-regularization service methods for request processing and queue access.
+- Movement service methods for movement logging, retrieval, and verification.
+- TanStack Query hooks for attendance, attendance settings, attendance regularization, and movement queries plus mutation workflows.
+- Attendance settings page orchestration helpers for managing profile and shift dialogs.
+- Public module exports for the attendance-related APIs.
+
+### Changed
+
+- Attendance mutations now patch detail and list caches in place where possible, while invalidating dependent summary caches that are recomputed server-side.
+- Movement mutations now patch the parent attendance's embedded movement list directly instead of forcing a parent refetch.
+- Regularization mutations preserve enriched cached context fields while syncing the parent attendance's embedded regularization state.
+- Package version bumped to `0.25.0`.
+
 ## [v0.24.1] - 2026-07-15
 
 ### Added
