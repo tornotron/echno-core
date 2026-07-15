@@ -1,82 +1,45 @@
 /**
  * @module use-invitation-mutations
  *
- * Mutation hooks for generating and managing project invite codes.
+ * Mutation hooks for generating and validating invitation codes against the
+ * `project-invite-code-controller` backend.
  *
- * Only `useGenerateInviteCode` applies cache discipline; the other two hooks
- * fail fast because their backend endpoints do not exist in the live spec.
+ * Hooks are UI-agnostic: they apply cache discipline and log errors, but do not
+ * surface toasts. Consumers attach user-facing feedback at the call site.
  */
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { invitationService } from '../../services/invitation-service';
-import { GenerateInviteCodeRequest, Invitation } from '../../types/invitation';
+import { GenerateInviteCodeRequest } from '../../types/invitation';
 import { logger } from '../../lib/logger';
 import { invitationKeys } from './keys';
 import { userKeys } from '../user/keys';
 import { employeeKeys } from '../employee/keys';
 
-/*
- * MODULE-LEVEL FIXME:
- *
- * `services/invitation-service.ts` routes every call to the legacy
- * `/api/v1/project/web/invite-codes/*` path family which no longer exists on
- * the backend. The live spec exposes invitation endpoints under
- * `/api/v1/invitation/web/...` (organization-scoped, project-invite-code
- * controller).
- *
- * Required follow-up:
- *   1. Run the integrate-module skill on the invitation module to realign
- *      service paths, request DTOs, and the `Invitation.projectId` field
- *      (likely needs renaming to `organizationId` per spec).
- *   2. Add `useValidateInviteCode` (POST /invitation/web/validate/userId/{userId}
- *      → OrganizationDto — sibling response, returns the joined org).
- *   3. Add `usePatchInviteCode` (PATCH /invitation/web/{inviteCodeId} →
- *      ProjectInviteCodeDto).
- *   4. Remove `useDeleteInviteCode` and `useJoinWithInviteCode` once their
- *      stale paths are confirmed obsolete (no replacement endpoints exist).
- *
- * Until the integrate-module skill runs, the only mutation expected to
- * function is `useGenerateInviteCode`. The cache discipline applied below
- * assumes a full `ProjectInviteCodeDto` response per spec.
- */
-
 /**
- * Generates a new project invite code.
+ * Generates a new employee invite code for an organization.
  *
- * Backend response: `ProjectInviteCodeDto` (full — per spec; assumes paths
- * are realigned by `integrate-module`).
+ * On success, invalidates the organization's invitation list so it refetches
+ * with the newly created code.
  *
- * On success:
- * - `setQueryData(invitationKeys.detail(invitation.id), invitation)` — seeds
- *   the detail cache with the server-returned object.
- * - `setQueryData(invitationKeys.byProject(invitation.projectId), append-if-cached)` —
- *   appends to the per-project list cache; functional updater returns `undefined`
- *   for absent caches to avoid seeding a stale array-of-one.
- *
- * No invalidations — full-DTO response covers the cache directly.
- *
- * @returns A TanStack `UseMutationResult` where the mutate function accepts
- *   a {@link GenerateInviteCodeRequest}.
+ * @returns A TanStack `UseMutationResult` whose mutate function accepts
+ *   `{ organizationId, request }`.
  */
 export function useGenerateInviteCode() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (dto: GenerateInviteCodeRequest) =>
-      invitationService.generateCode(dto),
-    onSuccess: (invitation) => {
-      // POST /invitation/web/generateCode/... → ProjectInviteCodeDto (full
-      // per spec). Seed detail + append to the per-project list cache.
-      // (Per-project semantics is legacy naming for what the backend treats
-      // as per-organization — see module-level FIXME.)
-      queryClient.setQueryData(
-        invitationKeys.detail(invitation.id),
-        invitation
-      );
-      queryClient.setQueryData<Invitation[]>(
-        invitationKeys.byProject(invitation.projectId),
-        (old) => (old ? [...old, invitation] : undefined)
-      );
+    mutationFn: ({
+      organizationId,
+      request,
+    }: {
+      organizationId: number;
+      request: GenerateInviteCodeRequest;
+    }) => invitationService.generateCode(organizationId, request),
+    onSuccess: (_invitation, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: invitationKeys.byOrganization(variables.organizationId),
+      });
     },
     onError: (error) => {
       logger.error('Failed to generate invite code:', error);
@@ -85,67 +48,63 @@ export function useGenerateInviteCode() {
 }
 
 /**
- * Deletes a project invite code.
+ * Validates an invite code for a user; a valid code joins the organization.
  *
- * @deprecated The backend has no DELETE endpoint for invite codes. This hook
- *   throws immediately with a clear message. Remove once the backend adds the
- *   endpoint or consumers are updated to use a status-transition flow instead.
+ * On a valid result, invalidates user and employee caches (joining changes the
+ * user's identity context and adds an employee record).
  *
- * @returns A TanStack `UseMutationResult` where the mutate function accepts
- *   the invite code `id` as a `number`.
+ * @returns A TanStack `UseMutationResult` whose mutate function accepts
+ *   `{ userId, inviteCode }`.
  */
-export function useDeleteInviteCode() {
+export function useValidateInviteCodeMutation() {
+  const queryClient = useQueryClient();
+
   return useMutation({
-    mutationFn: async (_id: number): Promise<void> => {
-      throw new Error(
-        'Delete is not supported by the backend (no DELETE /invitation/web/{id} endpoint). Coordinate with the backend team to add the endpoint or use a status transition.'
-      );
+    mutationFn: ({
+      userId,
+      inviteCode,
+    }: {
+      userId: number;
+      inviteCode: string;
+    }) => invitationService.validateCode(userId, inviteCode),
+    onSuccess: (result) => {
+      if (result.valid) {
+        queryClient.invalidateQueries({ queryKey: userKeys.all });
+        queryClient.invalidateQueries({ queryKey: employeeKeys.lists() });
+        queryClient.invalidateQueries({ queryKey: invitationKeys.all });
+      }
+    },
+    onError: (error) => {
+      logger.error('Failed to validate invite code:', error);
     },
   });
 }
 
 /**
- * Joins an organization via an invite code.
+ * Resends an invitation by generating a new code with the same details. A thin
+ * convenience wrapper around {@link invitationService.generateCode}.
  *
- * @deprecated The legacy join endpoint does not exist on the current backend.
- *   The live spec equivalent is `POST /invitation/web/validate/userId/{userId}`
- *   which returns an `OrganizationDto`. This hook throws immediately until the
- *   flow is rewired as `useValidateInviteCode` with downstream org/employee
- *   cache updates.
- *
- * The unreachable `onSuccess` block preserves the intended cross-namespace
- * invalidations for when the flow is implemented:
- * - `invalidateQueries(userKeys.all)` — joining changes the user's identity
- *   context (new `defaultOrganizationId`).
- * - `invalidateQueries(userKeys.employees())` — user gains an employee record.
- * - `invalidateQueries(employeeKeys.lists())` — new employee appears in lists.
- *
- * @returns A TanStack `UseMutationResult` where the mutate function accepts
- *   `{ inviteCode: string }`.
+ * @returns A TanStack `UseMutationResult` whose mutate function accepts
+ *   `{ organizationId, request }`.
  */
-export function useJoinWithInviteCode() {
+export function useResendInvitation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({
-      inviteCode: _inviteCode,
+    mutationFn: ({
+      organizationId,
+      request,
     }: {
-      inviteCode: string;
-    }): Promise<void> => {
-      throw new Error(
-        'Join via invite code is not currently wired to the backend. The legacy /project/web/invite-codes/join endpoint does not exist; use the spec endpoint POST /invitation/web/validate/userId/{userId} which returns the joined Organization. Coordinate with the integrate-module skill to wire this flow.'
-      );
-    },
-    onSuccess: () => {
-      // Reachable only if mutationFn stops throwing in the future.
-      // Cross-namespace: joining adds an employee record for the user and
-      // changes the user's identity context.
-      queryClient.invalidateQueries({ queryKey: userKeys.all });
-      queryClient.invalidateQueries({ queryKey: userKeys.employees() });
-      queryClient.invalidateQueries({ queryKey: employeeKeys.lists() });
+      organizationId: number;
+      request: GenerateInviteCodeRequest;
+    }) => invitationService.generateCode(organizationId, request),
+    onSuccess: (_invitation, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: invitationKeys.byOrganization(variables.organizationId),
+      });
     },
     onError: (error) => {
-      logger.error('Failed to join with invite code:', error);
+      logger.error('Failed to resend invitation:', error);
     },
   });
 }

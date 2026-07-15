@@ -1,11 +1,12 @@
 /**
  * @module use-invitation
  *
- * Query hooks for fetching invitation (project invite code) data.
+ * Query hooks for fetching and validating invitation data against the
+ * `project-invite-code-controller` backend.
  *
- * Note: both hooks route to stale backend paths. An `integrate-module` pass
- * is required to realign service endpoints before either will succeed in
- * production.
+ * Exports:
+ * - `useInvitationsByOrganization(organizationId?)` — list invitations for an org.
+ * - `useValidateInviteCode(userId?, inviteCode?, enabled?)` — one-off validation.
  */
 
 import { useQuery } from '@tanstack/react-query';
@@ -15,57 +16,54 @@ import { standardQueryOptions } from '../../lib/query/options';
 import { invitationKeys } from './keys';
 
 /**
- * Fetches all invite codes scoped to a project (or organization per spec).
+ * Fetches all invite codes for an organization.
  *
- * Uses the **standard** query profile (`staleTime` 60 s, `gcTime` 5 min,
- * `refetchOnWindowFocus` in production only).
- * The query is disabled until `projectId` is truthy.
+ * Uses the **standard** query profile (`staleTime` 60 s, `gcTime` 5 min).
+ * The query is disabled until `organizationId` is truthy.
  *
- * @deprecated Service path is stale — the live spec endpoint is
- *   `GET /invitation/web/organizationId/{orgId}`. An `integrate-module` pass
- *   is needed to realign the service and rename the parameter to `organizationId`.
- *
- * @param projectId - ID of the project (effectively the organization) to scope
- *   the invite-code query.
+ * @param organizationId - Organization ID to scope the invite-code query.
  * @returns A TanStack `UseQueryResult` wrapping `Invitation[]`.
  */
-export function useInvitationsByProject(projectId?: number) {
+export function useInvitationsByOrganization(organizationId?: number) {
   return useQuery({
-    queryKey: invitationKeys.byProject(projectId),
+    queryKey: invitationKeys.byOrganization(organizationId),
     queryFn: () => {
-      if (!projectId) throw new Error('Project ID is required');
-      return invitationService.getByProject(projectId);
+      if (!organizationId) throw new Error('Organization ID is required');
+      return invitationService.getByOrganization(organizationId);
     },
-    enabled: !!projectId,
+    enabled: !!organizationId,
     ...standardQueryOptions,
     retry: shouldRetry,
   });
 }
 
 /**
- * Fetches a single invite code by ID.
+ * Validates an invite code for a user. Results are never cached — validation
+ * must be fresh on each call.
  *
- * Uses the **standard** query profile (`staleTime` 60 s, `gcTime` 5 min,
- * `refetchOnWindowFocus` in production only).
- * The query is disabled until `id` is truthy.
+ * The query is disabled until both `userId` and `inviteCode` are provided
+ * (and `enabled` is `true`).
  *
- * @deprecated The backend exposes no GET-by-id endpoint for invite codes.
- *   This hook will 404 in production. Kept for the
- *   `invitations/[id]/page.tsx` consumer until the backend integration is
- *   rewired or the consumer is updated.
- *
- * @param id - Surrogate ID of the invite code.
- * @returns A TanStack `UseQueryResult` wrapping {@link Invitation}.
+ * @param userId - User ID to validate the code for.
+ * @param inviteCode - Invite code to validate.
+ * @param enabled - Gate for enabling the query (default `true`).
+ * @returns A TanStack `UseQueryResult` wrapping `ValidateInviteCodeResponse`.
  */
-export function useInvitationById(id?: number) {
+export function useValidateInviteCode(
+  userId?: number,
+  inviteCode?: string,
+  enabled = true
+) {
   return useQuery({
-    queryKey: invitationKeys.detail(id),
+    queryKey: invitationKeys.validate(userId, inviteCode),
     queryFn: () => {
-      if (!id) throw new Error('Invitation ID is required');
-      return invitationService.getById(id);
+      if (!userId) throw new Error('User ID is required');
+      if (!inviteCode) throw new Error('Invite code is required');
+      return invitationService.validateCode(userId, inviteCode);
     },
-    enabled: !!id,
-    ...standardQueryOptions,
-    retry: shouldRetry,
+    enabled: enabled && !!userId && !!inviteCode,
+    staleTime: 0,
+    gcTime: 0,
+    retry: false,
   });
 }
