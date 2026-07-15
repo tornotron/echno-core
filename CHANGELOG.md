@@ -4,6 +4,23 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 
 The project currently has released versions in git tags: `v0.0.0`, `v0.0.1`, `v0.1.0`, and `v0.1.1`.
 
+## [v0.26.0] - 2026-07-15
+
+### Added
+
+- Leave-management domain types for policies, balances, requests, approvals, calendar views, notifications, and related helper enums/parsers.
+- Leave service methods for policy, balance, request, approval, calendar, and notification workflows.
+- TanStack Query hooks for leave policy, balance, request, approval, calendar, and notification queries.
+- Leave mutation hooks for policy CRUD, balance adjustments, request workflows, approval actions, and notification updates.
+- Derived approver-dashboard hook for urgent and non-urgent pending approvals.
+- Public module exports for the leave-management APIs.
+
+### Changed
+
+- Leave query and mutation caches now use dedicated key namespaces for policies, balances, requests, approvals, calendar views, and notifications.
+- Leave mutations patch cached policy and request lists directly where possible and update approver pending counts without a refetch.
+- Package version bumped to `0.26.0`.
+
 ## [v0.25.0] - 2026-07-15
 
 ### Added
