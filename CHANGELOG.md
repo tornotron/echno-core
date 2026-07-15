@@ -4,6 +4,23 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 
 The project currently has released versions in git tags: `v0.0.0`, `v0.0.1`, `v0.1.0`, and `v0.1.1`.
 
+## [v0.24.1] - 2026-07-15
+
+### Added
+
+- Invitation service methods for organization-scoped invite generation, validation, and listing.
+- TanStack Query hooks for fetching invitations by organization and validating invite codes.
+- Invitation create/request serializers for organization invite payloads.
+- Rich invitation domain types, status helpers, and share-message builders for employee invite codes.
+- Public module exports for the invitation APIs.
+
+### Changed
+
+- Invitation validation now normalizes backend responses into a typed invitation shape and treats invalid or expired codes as non-fatal validation results.
+- Invitation mutations now invalidate the affected user, employee, and invitation caches after a successful validation.
+- Invite-code generation now serializes optional employee details, status defaults, and date fields consistently for the backend.
+- Package version bumped to `0.24.1`.
+
 ## [v0.24.0] - 2026-06-20
 
 ### Added
