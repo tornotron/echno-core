@@ -131,3 +131,16 @@ export * from './hooks/shift-timing';
 // Role Management
 export * from './services/role-management-service';
 export * from './hooks/role-management';
+
+// Attendance
+export * from './types/attendance';
+export * from './services/attendance-service';
+export * from './hooks/attendance';
+
+// Attendance Regularization
+export * from './services/attendance-regularization-service';
+export * from './hooks/attendance-regularization';
+
+// Attendance Settings
+export * from './services/attendance-settings-service';
+export * from './hooks/attendance-settings';
