@@ -4,6 +4,13 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 
 The project currently has released versions in git tags: `v0.0.0`, `v0.0.1`, `v0.1.0`, and `v0.1.1`.
 
+## [v0.26.1] - 2026-07-15
+
+### Changed
+
+- Removed the unused `use-attendance-settings-page` hook and the corresponding attendance-settings barrel export.
+- Package version bumped to `0.26.1`.
+
 ## [v0.26.0] - 2026-07-15
 
 ### Added
