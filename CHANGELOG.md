@@ -2,7 +2,20 @@
 
 All notable changes to `@tornotron/echno-core` will be documented in this file.
 
-The project currently has released versions in git tags: `v0.0.0`, `v0.0.1`, `v0.1.0`, and `v0.1.1`.
+## [v0.27.0] - 2026-07-28
+
+### Added
+
+- Finance domain types for chart-of-accounts, account trees, company bank accounts, customers, invoices, payments, and financial reports.
+- Finance services for account, bank-account, customer, invoice, payment, and report operations.
+- TanStack Query hooks and query-key factories for finance queries and mutations.
+- Public package exports for the finance types, services, and hooks.
+
+### Changed
+
+- API requests can now include additional request headers.
+- Added `parseUuid` for validating and normalizing UUID values.
+- Package version bumped to `0.27.0`.
 
 ## [v0.26.1] - 2026-07-15
 
