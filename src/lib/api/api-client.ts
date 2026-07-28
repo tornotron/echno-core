@@ -106,6 +106,12 @@ interface RequestOptions {
   timeout?: number;
   /** Maximum retry attempts on network failure. Defaults to 2. */
   retries?: number;
+  /**
+   * Extra headers merged over the client's default headers for this request
+   * only (e.g. an `Idempotency-Key` on a payment POST). Does not mutate the
+   * client's persistent default headers.
+   */
+  headers?: Record<string, string>;
 }
 
 const DEFAULT_TIMEOUT_MS = 30_000; // 30 seconds
@@ -348,7 +354,7 @@ class ApiClient {
 
     const response = await this.fetchWithRetry(
       url.toString(),
-      { method: 'GET', headers: this.headers },
+      { method: 'GET', headers: { ...this.headers, ...options?.headers } },
       options
     );
 
@@ -379,7 +385,7 @@ class ApiClient {
       url.toString(),
       {
         method: 'POST',
-        headers: this.headers,
+        headers: { ...this.headers, ...options?.headers },
         body: data ? JSON.stringify(data) : undefined,
       },
       options
@@ -412,7 +418,7 @@ class ApiClient {
       url.toString(),
       {
         method: 'PUT',
-        headers: this.headers,
+        headers: { ...this.headers, ...options?.headers },
         body: data ? JSON.stringify(data) : undefined,
       },
       options
@@ -457,7 +463,7 @@ class ApiClient {
       url.toString(),
       {
         method: 'PATCH',
-        headers: this.headers,
+        headers: { ...this.headers, ...options?.headers },
         body,
       },
       options
@@ -486,7 +492,7 @@ class ApiClient {
 
     const response = await this.fetchWithRetry(
       url.toString(),
-      { method: 'DELETE', headers: this.headers },
+      { method: 'DELETE', headers: { ...this.headers, ...options?.headers } },
       options
     );
 
