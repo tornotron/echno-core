@@ -24,6 +24,13 @@ export enum InvoiceStatus {
   CANCELLED = 'CANCELLED',
 }
 
+/** Lifecycle state of a journal entry. (`DRAFT` exists but the backend posts immediately.) */
+export enum JournalEntryStatus {
+  DRAFT = 'DRAFT',
+  POSTED = 'POSTED',
+  REVERSED = 'REVERSED',
+}
+
 /**
  * Narrows an untyped backend string to {@link AccountType}, defaulting to
  * `ASSET` when the value is absent or unrecognized.
@@ -44,4 +51,16 @@ export function parseInvoiceStatus(raw: unknown): InvoiceStatus {
     (Object.values(InvoiceStatus) as string[]).includes(raw)
     ? (raw as InvoiceStatus)
     : InvoiceStatus.DRAFT;
+}
+
+/**
+ * Narrows an untyped backend string to {@link JournalEntryStatus}, defaulting
+ * to `POSTED` when the value is absent or unrecognized (the backend posts
+ * entries immediately).
+ */
+export function parseJournalEntryStatus(raw: unknown): JournalEntryStatus {
+  return typeof raw === 'string' &&
+    (Object.values(JournalEntryStatus) as string[]).includes(raw)
+    ? (raw as JournalEntryStatus)
+    : JournalEntryStatus.POSTED;
 }
