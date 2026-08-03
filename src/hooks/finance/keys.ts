@@ -52,6 +52,13 @@ export const financeKeys = {
   payments: () => [...financeKeys.all, 'payments'] as const,
   payment: (id: string) => [...financeKeys.payments(), 'detail', id] as const,
 
+  // Journal entries
+  journalEntries: () => [...financeKeys.all, 'journal-entries'] as const,
+  journalEntriesList: (pageNo?: number, pageSize?: number) =>
+    [...financeKeys.journalEntries(), 'list', { pageNo, pageSize }] as const,
+  journalEntry: (id: string) =>
+    [...financeKeys.journalEntries(), 'detail', id] as const,
+
   // Reports
   reports: () => [...financeKeys.all, 'reports'] as const,
   trialBalance: (asOfDate: string) =>

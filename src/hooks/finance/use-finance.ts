@@ -17,6 +17,7 @@ import {
 } from '../../services/finance-customer-service';
 import { financeInvoiceService } from '../../services/finance-invoice-service';
 import { financePaymentService } from '../../services/finance-payment-service';
+import { financeJournalService } from '../../services/finance-journal-service';
 import { financeReportsService } from '../../services/finance-reports-service';
 import {
   standardQueryOptions,
@@ -192,6 +193,41 @@ export const useFinancePayment = (id: string) =>
   useQuery({
     queryKey: financeKeys.payment(id),
     queryFn: () => financePaymentService.getById(id),
+    enabled: !!id,
+    ...standardQueryOptions,
+  });
+
+// ==================== Journal Entries ====================
+
+/**
+ * Fetches a page of journal entries.
+ *
+ * Uses the **standard** query profile (`staleTime` 60 s, `gcTime` 5 min).
+ *
+ * @param pageNo - 0-based page index.
+ * @param pageSize - Page size.
+ * @returns A TanStack `UseQueryResult` wrapping `JournalEntry[]`.
+ */
+export const useJournalEntries = (pageNo?: number, pageSize?: number) =>
+  useQuery({
+    queryKey: financeKeys.journalEntriesList(pageNo, pageSize),
+    queryFn: () => financeJournalService.listAll(pageNo, pageSize),
+    ...standardQueryOptions,
+  });
+
+/**
+ * Fetches a single journal entry by id.
+ *
+ * Uses the **standard** query profile (`staleTime` 60 s, `gcTime` 5 min).
+ * Disabled until `id` is truthy.
+ *
+ * @param id - UUID of the entry.
+ * @returns A TanStack `UseQueryResult` wrapping `JournalEntry`.
+ */
+export const useJournalEntry = (id: string) =>
+  useQuery({
+    queryKey: financeKeys.journalEntry(id),
+    queryFn: () => financeJournalService.getById(id),
     enabled: !!id,
     ...standardQueryOptions,
   });
