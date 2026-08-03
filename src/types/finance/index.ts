@@ -3,10 +3,8 @@
  *
  * Barrel export for the finance (general-ledger) domain types — enums,
  * accounts and the account tree, company bank accounts, customers, invoices,
- * payments, and financial reports — plus their parsers and serializers.
- *
- * Journal entries are intentionally not yet included (deferred pending backend
- * confirmation of the journal-line request shape).
+ * payments, journal entries, and financial reports — plus their parsers and
+ * serializers.
  */
 
 export * from './finance-enums';
@@ -23,4 +21,6 @@ export * from './invoice';
 export * from './invoice-create';
 export * from './payment';
 export * from './payment-create';
+export * from './journal-entry';
+export * from './journal-entry-create';
 export * from './reports';
