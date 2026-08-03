@@ -2,6 +2,20 @@
 
 All notable changes to `@tornotron/echno-core` will be documented in this file.
 
+## [v0.27.1] - 2026-08-03
+
+### Added
+
+- Journal-entry domain types, parsers, and request serializers for manual postings and reversals.
+- Finance journal service methods for listing, fetching, posting, and reversing journal entries.
+- TanStack Query hooks and query-key factories for journal-entry queries and mutations.
+- Public package exports for the finance journal APIs.
+
+### Changed
+
+- Journal-entry mutations now seed detail caches and invalidate journal-entry and report caches when ledger balances change.
+- Package version bumped to `0.27.1`.
+
 ## [v0.27.0] - 2026-07-28
 
 ### Added
