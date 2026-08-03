@@ -24,6 +24,7 @@ import { financeBankAccountService } from '../../services/finance-bank-account-s
 import { financeCustomerService } from '../../services/finance-customer-service';
 import { financeInvoiceService } from '../../services/finance-invoice-service';
 import { financePaymentService } from '../../services/finance-payment-service';
+import { financeJournalService } from '../../services/finance-journal-service';
 import type {
   CreateAccountRequest,
   CreateCompanyBankAccountRequest,
@@ -31,6 +32,8 @@ import type {
   UpdateCustomerRequest,
   CreateInvoiceRequest,
   RecordPaymentRequest,
+  PostJournalRequest,
+  ReverseJournalRequest,
 } from '../../types/finance';
 
 // ==================== Accounts ====================
@@ -377,5 +380,80 @@ export const useRecordPayment = () => {
       queryClient.invalidateQueries({ queryKey: financeKeys.reports() });
     },
     onError: (error) => logger.error('Failed to record payment:', error),
+  });
+};
+
+// ==================== Journal Entries ====================
+
+/**
+ * Posts a manual journal entry.
+ *
+ * Backend response: `JournalEntryDto` (full).
+ *
+ * On success:
+ * - `setQueryData(financeKeys.journalEntry(id), entry)` — seeds the detail cache.
+ * - `invalidateQueries(financeKeys.journalEntries())` — the paged list gained an
+ *   entry (list caches are keyed by page params, can't be spliced).
+ * - `invalidateQueries(financeKeys.reports())` — posting moves ledger balances.
+ *
+ * @returns A TanStack `UseMutationResult` whose mutate function accepts a
+ *   {@link PostJournalRequest}.
+ */
+export const usePostJournalEntry = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (dto: PostJournalRequest) => financeJournalService.post(dto),
+    // POST /finance/journal-entries/web → JournalEntryDto (full)
+    onSuccess: (entry) => {
+      queryClient.setQueryData(financeKeys.journalEntry(entry.id), entry);
+      queryClient.invalidateQueries({
+        queryKey: financeKeys.journalEntries(),
+      });
+      queryClient.invalidateQueries({ queryKey: financeKeys.reports() });
+    },
+    onError: (error) => logger.error('Failed to post journal entry:', error),
+  });
+};
+
+/** Arguments for {@link useReverseJournalEntry}. */
+export interface ReverseJournalArgs {
+  /** UUID of the entry to reverse. */
+  id: string;
+  /** Reversal details (optional reason). */
+  dto?: ReverseJournalRequest;
+}
+
+/**
+ * Reverses a posted journal entry (posts a mirror-image entry).
+ *
+ * Backend response: `JournalEntryDto` (full) — the newly-created **reversal**
+ * entry, not the original.
+ *
+ * On success:
+ * - `setQueryData(financeKeys.journalEntry(reversal.id), reversal)` — seeds the
+ *   reversal's detail cache.
+ * - `invalidateQueries(financeKeys.journalEntry(originalId))` — the original is
+ *   now `REVERSED`; refetch it.
+ * - `invalidateQueries(financeKeys.journalEntries())` + `reports()` — the list
+ *   gained an entry and ledger balances moved.
+ *
+ * @returns A TanStack `UseMutationResult` whose mutate function accepts
+ *   {@link ReverseJournalArgs}.
+ */
+export const useReverseJournalEntry = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, dto }: ReverseJournalArgs) =>
+      financeJournalService.reverse(id, dto),
+    // POST /finance/journal-entries/web/reverse?id → JournalEntryDto (full, the reversal)
+    onSuccess: (reversal, { id }) => {
+      queryClient.setQueryData(financeKeys.journalEntry(reversal.id), reversal);
+      queryClient.invalidateQueries({ queryKey: financeKeys.journalEntry(id) });
+      queryClient.invalidateQueries({
+        queryKey: financeKeys.journalEntries(),
+      });
+      queryClient.invalidateQueries({ queryKey: financeKeys.reports() });
+    },
+    onError: (error) => logger.error('Failed to reverse journal entry:', error),
   });
 };
