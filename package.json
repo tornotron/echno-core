@@ -45,6 +45,9 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "bun test",
+    "test:coverage": "bun test --coverage",
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
