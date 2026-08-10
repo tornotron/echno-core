@@ -9,6 +9,7 @@
  */
 
 import { parsePositiveInt } from "../../lib/utils/parse-id";
+import { parseUTCDate } from "../../lib/utils/date-helpers";
 
 
 /** A request to correct one attendance day's missing or wrong clock events. */
@@ -72,9 +73,9 @@ export function parseAttendanceRegularization(
     ),
     reason: data.reason,
     requestedBy: data.requestedBy,
-    requestedAt: new Date(data.requestedAt),
+    requestedAt: parseUTCDate(data.requestedAt) ?? new Date(data.requestedAt),
     approvedBy: data.approvedBy ?? undefined,
-    approvedAt: data.approvedAt ? new Date(data.approvedAt) : undefined,
+    approvedAt: parseUTCDate(data.approvedAt) ?? undefined,
     status: data.status,
     rejectionReason: data.rejectionReason ?? undefined,
     missingEvents: data.missingEvents ?? [],

@@ -7,6 +7,7 @@
  */
 
 import { parsePositiveInt } from "../../lib/utils/parse-id";
+import { parseUTCDate } from "../../lib/utils/date-helpers";
 
 
 /** The four punch points that make up an attendance day. */
@@ -166,8 +167,8 @@ export function parseClockEvent(data: any): ClockEvent {
   return {
     ...data,
     id: parsePositiveInt(data.id, 'parseClockEvent.id'),
-    timestamp: new Date(data.timestamp),
-    verifiedAt: data.verifiedAt ? new Date(data.verifiedAt) : undefined,
+    timestamp: parseUTCDate(data.timestamp) ?? new Date(data.timestamp),
+    verifiedAt: parseUTCDate(data.verifiedAt) ?? undefined,
   };
 }
 
