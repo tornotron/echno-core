@@ -8,6 +8,7 @@
  */
 
 import { parsePositiveInt } from '../../lib/utils/parse-id';
+import { parseUTCDate } from '../../lib/utils/date-helpers';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -96,8 +97,8 @@ export function parseLeavePolicy(json: any): LeavePolicy {
     isPaid: json.isPaid ?? true,
     displayOrder: json.displayOrder ?? 0,
     isActive: json.isActive ?? true,
-    createdAt: json.createdAt ? new Date(json.createdAt) : undefined,
-    updatedAt: json.updatedAt ? new Date(json.updatedAt) : undefined,
+    createdAt: parseUTCDate(json.createdAt) ?? undefined,
+    updatedAt: parseUTCDate(json.updatedAt) ?? undefined,
   };
 }
 

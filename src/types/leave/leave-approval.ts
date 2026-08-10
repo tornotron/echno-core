@@ -11,6 +11,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { parsePositiveInt } from '../../lib/utils/parse-id';
+import { parseUTCDate } from '../../lib/utils/date-helpers';
 import { ApprovalAction } from './leave-enums';
 
 /** One recorded step in a leave request's approval chain. */
@@ -97,8 +98,8 @@ export function parseLeaveApproval(json: any): LeaveApproval {
     comments: json.comments,
     delegatedFromId: json.delegatedFromId,
     delegatedFromName: json.delegatedFromName,
-    actionAt: json.actionAt ? new Date(json.actionAt) : undefined,
-    createdAt: json.createdAt ? new Date(json.createdAt) : undefined,
+    actionAt: parseUTCDate(json.actionAt) ?? undefined,
+    createdAt: parseUTCDate(json.createdAt) ?? undefined,
   };
 }
 

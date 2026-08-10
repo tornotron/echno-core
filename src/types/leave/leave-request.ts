@@ -13,6 +13,7 @@
 import { LeaveStatus, HalfDayType } from './leave-enums';
 import { LeaveApproval, parseLeaveApproval } from './leave-approval';
 import { parsePositiveInt } from '../../lib/utils/parse-id';
+import { parseUTCDate } from '../../lib/utils/date-helpers';
 
 /** An employee's request for leave over a date range. */
 export interface LeaveRequest {
@@ -137,9 +138,9 @@ export function parseLeaveRequest(json: any): LeaveRequest {
       'parseLeaveRequest.leavePolicyId'
     ),
     leaveTypeName: json.leaveTypeName ?? json.leavePolicy?.leaveTypeName,
-    startDate: json.startDate ? new Date(json.startDate) : new Date(),
+    startDate: parseUTCDate(json.startDate) ?? new Date(),
     startHalfDayType: json.startHalfDayType as HalfDayType,
-    endDate: json.endDate ? new Date(json.endDate) : new Date(),
+    endDate: parseUTCDate(json.endDate) ?? new Date(),
     endHalfDayType: json.endHalfDayType as HalfDayType,
     totalDays: json.totalDays ?? 0,
     reason: json.reason ?? '',
@@ -156,13 +157,13 @@ export function parseLeaveRequest(json: any): LeaveRequest {
     approvals: json.approvals
       ? json.approvals.map((approval: any) => parseLeaveApproval(approval))
       : undefined,
-    createdAt: json.createdAt ? new Date(json.createdAt) : undefined,
-    updatedAt: json.updatedAt ? new Date(json.updatedAt) : undefined,
-    submittedAt: json.submittedAt ? new Date(json.submittedAt) : undefined,
-    approvedAt: json.approvedAt ? new Date(json.approvedAt) : undefined,
-    rejectedAt: json.rejectedAt ? new Date(json.rejectedAt) : undefined,
-    cancelledAt: json.cancelledAt ? new Date(json.cancelledAt) : undefined,
-    withdrawnAt: json.withdrawnAt ? new Date(json.withdrawnAt) : undefined,
+    createdAt: parseUTCDate(json.createdAt) ?? undefined,
+    updatedAt: parseUTCDate(json.updatedAt) ?? undefined,
+    submittedAt: parseUTCDate(json.submittedAt) ?? undefined,
+    approvedAt: parseUTCDate(json.approvedAt) ?? undefined,
+    rejectedAt: parseUTCDate(json.rejectedAt) ?? undefined,
+    cancelledAt: parseUTCDate(json.cancelledAt) ?? undefined,
+    withdrawnAt: parseUTCDate(json.withdrawnAt) ?? undefined,
   };
 }
 
