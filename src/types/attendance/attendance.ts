@@ -13,6 +13,7 @@
  */
 
 import { parsePositiveInt } from "../../lib/utils/parse-id";
+import { parseUTCDate } from "../../lib/utils/date-helpers";
 import { parseShiftTiming, ShiftTiming } from "../shift-timing";
 import { AttendanceStatus } from "./attendance-status";
 import { ClockEvent, parseClockEvent } from "./clock-event";
@@ -187,7 +188,7 @@ export function parseAttendance(data: any): Attendance {
   return {
     ...data,
     id: parsePositiveInt(data.id, 'parseAttendance.id'),
-    date: new Date(data.date),
+    date: parseUTCDate(data.date) ?? new Date(data.date),
     shiftTiming: parseShiftTiming(data.shiftTiming),
     morningClockIn: data.morningClockIn
       ? parseClockEvent(data.morningClockIn)
@@ -208,9 +209,9 @@ export function parseAttendance(data: any): Attendance {
       ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (data.movements as any[]).map((m) => parseMovementRecord(m))
       : undefined,
-    createdAt: new Date(data.createdAt),
-    updatedAt: new Date(data.updatedAt),
-    approvedAt: data.approvedAt ? new Date(data.approvedAt) : undefined,
+    createdAt: parseUTCDate(data.createdAt) ?? new Date(data.createdAt),
+    updatedAt: parseUTCDate(data.updatedAt) ?? new Date(data.updatedAt),
+    approvedAt: parseUTCDate(data.approvedAt) ?? undefined,
   };
 }
 

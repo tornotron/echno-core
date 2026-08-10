@@ -8,6 +8,7 @@
  */
 
 import { parsePositiveInt } from "../../lib/utils/parse-id";
+import { parseUTCDate } from "../../lib/utils/date-helpers";
 import { MovementType } from "./movement-type";
 
 
@@ -80,11 +81,11 @@ export function parseMovementRecord(data: any): MovementRecord {
   return {
     ...data,
     id: parsePositiveInt(data.id, 'parseMovementRecord.id'),
-    startTime: new Date(data.startTime),
-    endTime: data.endTime ? new Date(data.endTime) : undefined,
-    verifiedAt: data.verifiedAt ? new Date(data.verifiedAt) : undefined,
-    createdAt: new Date(data.createdAt),
-    updatedAt: new Date(data.updatedAt),
+    startTime: parseUTCDate(data.startTime) ?? new Date(data.startTime),
+    endTime: parseUTCDate(data.endTime) ?? undefined,
+    verifiedAt: parseUTCDate(data.verifiedAt) ?? undefined,
+    createdAt: parseUTCDate(data.createdAt) ?? new Date(data.createdAt),
+    updatedAt: parseUTCDate(data.updatedAt) ?? new Date(data.updatedAt),
   };
 }
 
