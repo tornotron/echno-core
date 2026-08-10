@@ -8,6 +8,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { parsePositiveInt } from '../../lib/utils/parse-id';
+import { parseUTCDate } from '../../lib/utils/date-helpers';
 import { LeaveNotificationType } from './leave-enums';
 
 /** A notification raised by a leave-workflow event. */
@@ -57,7 +58,7 @@ export function parseLeaveNotification(json: any): LeaveNotification {
     message: json.message ?? '',
     leaveRequestId: json.leaveRequestId,
     isRead: json.isRead ?? false,
-    createdAt: json.createdAt ? new Date(json.createdAt) : new Date(),
-    readAt: json.readAt ? new Date(json.readAt) : undefined,
+    createdAt: parseUTCDate(json.createdAt) ?? new Date(),
+    readAt: parseUTCDate(json.readAt) ?? undefined,
   };
 }

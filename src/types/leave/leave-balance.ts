@@ -11,6 +11,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { parsePositiveInt } from '../../lib/utils/parse-id';
+import { parseUTCDate } from '../../lib/utils/date-helpers';
 import { TransactionType } from './leave-enums';
 
 /** An employee's balance under one leave policy for one year. */
@@ -139,11 +140,9 @@ export function parseLeaveBalance(json: any): LeaveBalance {
     availableBalance: json.availableBalance ?? json.available ?? 0,
     bookableBalance: json.bookableBalance ?? json.bookable ?? 0,
     lastAccrualDate:
-      (json.lastAccrualDate ?? json.lastCalculatedAt)
-        ? new Date(json.lastAccrualDate ?? json.lastCalculatedAt)
-        : undefined,
-    createdAt: json.createdAt ? new Date(json.createdAt) : undefined,
-    updatedAt: json.updatedAt ? new Date(json.updatedAt) : undefined,
+      parseUTCDate(json.lastAccrualDate ?? json.lastCalculatedAt) ?? undefined,
+    createdAt: parseUTCDate(json.createdAt) ?? undefined,
+    updatedAt: parseUTCDate(json.updatedAt) ?? undefined,
   };
 }
 
@@ -199,10 +198,8 @@ export function parseLeaveTransaction(json: any): LeaveTransaction {
     balanceAfter: json.balanceAfter ?? 0,
     leaveRequestId: json.leaveRequestId,
     reason: json.reason,
-    transactionDate: json.transactionDate
-      ? new Date(json.transactionDate)
-      : new Date(),
+    transactionDate: parseUTCDate(json.transactionDate) ?? new Date(),
     createdById: json.createdById,
-    createdAt: json.createdAt ? new Date(json.createdAt) : undefined,
+    createdAt: parseUTCDate(json.createdAt) ?? undefined,
   };
 }

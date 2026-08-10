@@ -10,6 +10,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { parsePositiveInt } from '../../lib/utils/parse-id';
+import { parseUTCDate } from '../../lib/utils/date-helpers';
 import { HalfDayType, LeaveStatus } from './leave-enums';
 
 /** One employee's leave on one calendar day. */
@@ -79,11 +80,11 @@ export function parseLeaveCalendarEntry(json: any): LeaveCalendarEntry {
     ),
     employeeName: json.employeeName,
     department: json.department,
-    leaveDate: json.leaveDate ? new Date(json.leaveDate) : new Date(),
+    leaveDate: parseUTCDate(json.leaveDate) ?? new Date(),
     halfDayType: (json.halfDayType as HalfDayType) ?? HalfDayType.FULL_DAY,
     leaveTypeName: json.leaveTypeName,
     status: json.status as LeaveStatus,
-    createdAt: json.createdAt ? new Date(json.createdAt) : undefined,
+    createdAt: parseUTCDate(json.createdAt) ?? undefined,
   };
 }
 
@@ -102,7 +103,7 @@ export function parseGroupedLeaveCalendarEntry(
 
 ): GroupedLeaveCalendarEntry {
   return {
-    date: json.date ? new Date(json.date) : new Date(),
+    date: parseUTCDate(json.date) ?? new Date(),
     entries: json.entries
       ? json.entries.map((e: any) => parseLeaveCalendarEntry(e))
       : [],
