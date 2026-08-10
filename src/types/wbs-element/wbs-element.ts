@@ -8,6 +8,7 @@
  * server returns a tree-shaped payload.
  */
 import { parsePositiveInt } from "../../lib/utils/parse-id";
+import { parseUTCDate } from "../../lib/utils/date-helpers";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Raw = any;
@@ -100,12 +101,8 @@ export function parseWbsElement(raw: Raw): WbsElement {
     code: raw.code ?? undefined,
     description: raw.description ?? undefined,
     parentElementId: raw.parentElementId ?? undefined,
-    plannedStartDate: raw.plannedStartDate
-      ? new Date(raw.plannedStartDate)
-      : undefined,
-    plannedEndDate: raw.plannedEndDate
-      ? new Date(raw.plannedEndDate)
-      : undefined,
+    plannedStartDate: parseUTCDate(raw.plannedStartDate) ?? undefined,
+    plannedEndDate: parseUTCDate(raw.plannedEndDate) ?? undefined,
     status: raw.status ?? undefined,
     progress: raw.progress ?? undefined,
     allocatedBudget: raw.allocatedBudget ?? undefined,

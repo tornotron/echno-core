@@ -1,5 +1,6 @@
 // types/attachment/attachment.ts
 import { parsePositiveInt } from '../../lib/utils/parse-id';
+import { parseUTCDate } from '../../lib/utils/date-helpers';
 
 export enum AttachmentType {
   image = 'image',
@@ -110,16 +111,10 @@ export function parseAttachment(json: any): Attachment {
     fileType,
     contentType,
     entityType: json.entityType ?? undefined,
-    createdAt: json.createdAt
-      ? new Date(json.createdAt)
-      : json.uploadedAt
-        ? new Date(json.uploadedAt)
-        : new Date(),
-    updatedAt: json.updatedAt
-      ? new Date(json.updatedAt)
-      : json.createdAt
-        ? new Date(json.createdAt)
-        : new Date(),
+    createdAt:
+      parseUTCDate(json.createdAt) ?? parseUTCDate(json.uploadedAt) ?? new Date(),
+    updatedAt:
+      parseUTCDate(json.updatedAt) ?? parseUTCDate(json.createdAt) ?? new Date(),
     uploadedBy: json.uploadedBy ?? undefined,
     description: json.description ?? undefined,
   };

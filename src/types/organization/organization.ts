@@ -9,6 +9,7 @@
  */
 
 import { Employee, employeeToJson, parseEmployee } from '../employee';
+import { parseUTCDate } from '../../lib/utils/date-helpers';
 import { Project, projectToJson, parseProject } from '../project';
 import { Attachment, parseAttachment } from '../attachment';
 import { parsePositiveInt } from '../../lib/utils/parse-id';
@@ -127,7 +128,7 @@ export function parseOrganization(json: any): Organization {
       ? (json.projects as unknown[]).map((p) => parseProject(p))
       : undefined,
     creatorId: json.proprietorId ?? json.creatorId ?? 0,
-    createdAt: json.createdAt ? new Date(json.createdAt) : undefined,
+    createdAt: parseUTCDate(json.createdAt) ?? undefined,
     isActive: json.isActive ?? true,
     attachments,
     logo,
