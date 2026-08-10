@@ -20,6 +20,7 @@
  */
 
 import { Attachment, parseAttachment } from '../attachment';
+import { parseUTCDate } from '../../lib/utils/date-helpers';
 import { Project, parseProject, projectToJson } from '../project';
 import { EmployeeStatus, employeeStatusFromString } from './employee-status';
 import { Department } from './departments';
@@ -201,7 +202,7 @@ export function parseEmployee(json: any): Employee {
     email: json.emailAddress ?? '',
     phone: json.phoneNumber ?? '',
     gender: json.gender ?? '',
-    dateOfBirth: json.dateOfBirth ? new Date(json.dateOfBirth) : new Date(),
+    dateOfBirth: parseUTCDate(json.dateOfBirth) ?? new Date(),
     qualification: json.qualification ?? '',
     skills: json.skills ? [...json.skills] : undefined,
     experience: json.experience ? Number(json.experience) : undefined,
@@ -225,7 +226,7 @@ export function parseEmployee(json: any): Employee {
       json.department && json.department in Department
         ? Department[json.department as keyof typeof Department]
         : undefined,
-    joiningDate: json.joiningDate ? new Date(json.joiningDate) : undefined,
+    joiningDate: parseUTCDate(json.joiningDate) ?? undefined,
     salary: json.salary == null ? undefined : Number(json.salary),
     managerId: json.managerId ?? undefined,
     managerName: json.managerName ?? undefined,
@@ -235,8 +236,8 @@ export function parseEmployee(json: any): Employee {
     currentProjects: Array.isArray(json.currentProjects)
       ? json.currentProjects.map((p: unknown) => parseProject(p))
       : undefined,
-    createdAt: json.createdAt ? new Date(json.createdAt) : undefined,
-    updatedAt: json.updatedAt ? new Date(json.updatedAt) : undefined,
+    createdAt: parseUTCDate(json.createdAt) ?? undefined,
+    updatedAt: parseUTCDate(json.updatedAt) ?? undefined,
   };
 }
 

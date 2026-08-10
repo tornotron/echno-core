@@ -12,6 +12,7 @@
  */
 // types/project/project.ts
 import { Employee, parseEmployee, employeeToJson } from '../employee';
+import { parseUTCDate } from '../../lib/utils/date-helpers';
 import { Task, parseTask } from '../task';
 import { ProjectStatus, getProjectStatus } from './project-status';
 import type { Attachment } from '../attachment';
@@ -138,9 +139,9 @@ export function parseProject(json: any): Project {
       : undefined,
     projectLongitude: Number(json.projectLongitude ?? 0),
     projectLatitude: Number(json.projectLatitude ?? 0),
-    startDate: json.startDate ? new Date(json.startDate) : undefined,
-    endDate: json.endDate ? new Date(json.endDate) : undefined,
-    createdAt: json.createdAt ? new Date(json.createdAt) : undefined,
+    startDate: parseUTCDate(json.startDate) ?? undefined,
+    endDate: parseUTCDate(json.endDate) ?? undefined,
+    createdAt: parseUTCDate(json.createdAt) ?? undefined,
     progress: Number(json.progress ?? 0),
     members: json.employees
       ? (json.employees as unknown[]).map((e) => parseEmployee(e))

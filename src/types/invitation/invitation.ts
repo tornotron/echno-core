@@ -16,6 +16,8 @@
  * - `currentUses` → `usedCount`
  */
 
+import { parseUTCDate } from '../../lib/utils/date-helpers';
+
 /**
  * Normalized invitation status derived from `isActive`, `expiryDate`, and
  * usage counts via {@link getInvitationStatus}.
@@ -83,9 +85,7 @@ export function parseInvitation(json: any): Invitation {
     email: json.employeeDetails?.email ?? undefined,
     employeeId: json.employeeDetails?.employeeId ?? undefined,
     employeeName: json.employeeDetails?.employeeName ?? undefined,
-    joiningDate: json.employeeDetails?.joiningDate
-      ? new Date(json.employeeDetails.joiningDate)
-      : undefined,
+    joiningDate: parseUTCDate(json.employeeDetails?.joiningDate) ?? undefined,
     phone: json.employeeDetails?.phone ?? undefined,
     managerId: json.employeeDetails?.managerId ?? undefined,
     salary:
@@ -99,7 +99,7 @@ export function parseInvitation(json: any): Invitation {
   return {
     id: json.id ?? undefined,
     inviteCode: json.code == null ? '' : String(json.code),
-    expiryDate: json.expiryDate ? new Date(json.expiryDate) : undefined,
+    expiryDate: parseUTCDate(json.expiryDate) ?? undefined,
     maxUses: json.maxUses ?? undefined,
     usedCount: json.currentUses ?? 0,
     employeeDetails,

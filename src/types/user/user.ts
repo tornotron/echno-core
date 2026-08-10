@@ -10,6 +10,7 @@
  */
 
 import { Attachment, parseAttachment } from '../attachment';
+import { parseUTCDate } from '../../lib/utils/date-helpers';
 import { parsePositiveInt } from '../../lib/utils/parse-id';
 
 /**
@@ -198,7 +199,7 @@ export function parseUser(json: any): User {
     email: json.email ?? 'Not Specified',
     phone: json.phone ?? 'Not Specified',
     gender: json.gender ?? 'Not Specified',
-    dateOfBirth: json.dateOfBirth ? new Date(json.dateOfBirth) : new Date(),
+    dateOfBirth: parseUTCDate(json.dateOfBirth) ?? new Date(),
     qualification: json.qualification ?? 'Not Specified',
     skills: json.skills ? parseSkills(json.skills) : undefined,
     experience: json.experience ?? undefined,
@@ -209,8 +210,8 @@ export function parseUser(json: any): User {
     attachments,
     cv,
     profilePicture,
-    createdAt: json.createdAt ? new Date(json.createdAt) : undefined,
-    updatedAt: json.updatedAt ? new Date(json.updatedAt) : undefined,
+    createdAt: parseUTCDate(json.createdAt) ?? undefined,
+    updatedAt: parseUTCDate(json.updatedAt) ?? undefined,
   };
 }
 
