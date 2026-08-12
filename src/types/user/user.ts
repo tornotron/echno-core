@@ -9,9 +9,48 @@
  * `attachments` array for convenient access by UI code.
  */
 
+import { z } from 'zod';
 import { Attachment, parseAttachment } from '../attachment';
 import { parseUTCDate } from '../../lib/utils/date-helpers';
-import { parsePositiveInt } from '../../lib/utils/parse-id';
+import {
+  backendDate,
+  nullableNumber,
+  nullableString,
+  numericId,
+  opaque,
+  optionalNumericId,
+} from '../../lib/validation/backend-schema';
+
+/**
+ * Shape of the backend `UserDto` at the parse boundary. Validates field types so
+ * a structurally wrong payload fails fast (with the offending path) instead of
+ * silently becoming a fabricated value. Optional fields the backend may omit are
+ * `nullish`; polymorphic blobs (attachments, cv, profile picture) stay opaque and
+ * are handed to `parseAttachment`.
+ */
+const UserResponseSchema = z.object({
+  id: numericId,
+  name: nullableString,
+  address: nullableString,
+  bloodGroup: nullableString,
+  email: nullableString,
+  phone: nullableString,
+  gender: nullableString,
+  dateOfBirth: backendDate,
+  qualification: nullableString,
+  emergencyContact: nullableString,
+  experience: nullableNumber,
+  roles: z.array(z.string()).nullish(),
+  certifications: z.array(z.string()).nullish(),
+  skills: opaque,
+  defaultOrganizationId: optionalNumericId,
+  attachments: z.array(z.unknown()).nullish(),
+  cv: opaque,
+  profilePicture: opaque,
+  profilePictureUrl: opaque,
+  createdAt: backendDate,
+  updatedAt: backendDate,
+});
 
 /**
  * Authenticated user profile.
@@ -156,12 +195,13 @@ function parseSkills(data: unknown): string[] {
  * @throws {TypeError} If `json.id` is missing or not a positive integer.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function parseUser(json: any): User {
-  const id = parsePositiveInt(json.id, 'parseUser.id');
+export function parseUser(json: unknown): User {
+  const raw = UserResponseSchema.parse(json);
+  const id = raw.id;
 
   // Parse attachments array from backend
-  const attachments: Attachment[] | undefined = json.attachments
-    ? (json.attachments as unknown[]).map((att) => parseAttachment(att))
+  const attachments: Attachment[] | undefined = raw.attachments
+    ? raw.attachments.map((att) => parseAttachment(att))
     : undefined;
 
   // Extract specific attachments - use latest by createdAt if multiple exist
@@ -174,8 +214,8 @@ export function parseUser(json: any): User {
           (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
         )[0]
       : // Fallback for old API responses
-        json.profilePicture || json.profilePictureUrl
-        ? parseAttachment(json.profilePicture || json.profilePictureUrl)
+        raw.profilePicture || raw.profilePictureUrl
+        ? parseAttachment(raw.profilePicture || raw.profilePictureUrl)
         : undefined;
 
   const cvAttachments = attachments?.filter(
@@ -187,31 +227,31 @@ export function parseUser(json: any): User {
           (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
         )[0]
       : // Fallback for old API responses
-        json.cv
-        ? parseAttachment(json.cv)
+        raw.cv
+        ? parseAttachment(raw.cv)
         : undefined;
 
   return {
     id,
-    name: json.name ?? 'Not Specified',
-    address: json.address ?? 'Not Specified',
-    bloodGroup: json.bloodGroup ?? undefined,
-    email: json.email ?? 'Not Specified',
-    phone: json.phone ?? 'Not Specified',
-    gender: json.gender ?? 'Not Specified',
-    dateOfBirth: parseUTCDate(json.dateOfBirth) ?? new Date(),
-    qualification: json.qualification ?? 'Not Specified',
-    skills: json.skills ? parseSkills(json.skills) : undefined,
-    experience: json.experience ?? undefined,
-    emergencyContact: json.emergencyContact ?? undefined,
-    roles: json.roles ? (json.roles as string[]) : undefined,
-    certifications: json.certifications ? [...json.certifications] : undefined,
-    defaultOrganizationId: json.defaultOrganizationId ?? undefined,
+    name: raw.name ?? 'Not Specified',
+    address: raw.address ?? 'Not Specified',
+    bloodGroup: raw.bloodGroup ?? undefined,
+    email: raw.email ?? 'Not Specified',
+    phone: raw.phone ?? 'Not Specified',
+    gender: raw.gender ?? 'Not Specified',
+    dateOfBirth: parseUTCDate(raw.dateOfBirth) ?? new Date(),
+    qualification: raw.qualification ?? 'Not Specified',
+    skills: raw.skills ? parseSkills(raw.skills) : undefined,
+    experience: raw.experience ?? undefined,
+    emergencyContact: raw.emergencyContact ?? undefined,
+    roles: raw.roles ?? undefined,
+    certifications: raw.certifications ? [...raw.certifications] : undefined,
+    defaultOrganizationId: raw.defaultOrganizationId ?? undefined,
     attachments,
     cv,
     profilePicture,
-    createdAt: parseUTCDate(json.createdAt) ?? undefined,
-    updatedAt: parseUTCDate(json.updatedAt) ?? undefined,
+    createdAt: parseUTCDate(raw.createdAt) ?? undefined,
+    updatedAt: parseUTCDate(raw.updatedAt) ?? undefined,
   };
 }
 
