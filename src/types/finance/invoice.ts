@@ -6,8 +6,47 @@
  * `invoice-create.ts` (re-exported).
  */
 
+import { z } from 'zod';
 import { parseUuid } from '../../lib/utils/parse-id';
+import {
+  backendDate,
+  money,
+  nullableString,
+  opaque,
+} from '../../lib/validation/backend-schema';
 import { InvoiceStatus, parseInvoiceStatus } from './finance-enums';
+
+const InvoiceLineSchema = z.object({
+  id: z.string().nullish(),
+  description: nullableString,
+  quantity: money,
+  unitPrice: money,
+  lineSubtotal: money,
+  taxRate: money,
+  taxAmount: money,
+  lineTotal: money,
+  revenueAccountId: nullableString,
+  revenueAccountCode: nullableString,
+});
+
+const InvoiceSchema = z.object({
+  id: z.string().nullish(),
+  invoiceNumber: nullableString,
+  customerId: nullableString,
+  customerName: nullableString,
+  invoiceDate: backendDate,
+  dueDate: backendDate,
+  status: opaque,
+  subtotal: money,
+  taxTotal: money,
+  total: money,
+  amountPaid: money,
+  balanceDue: money,
+  journalEntryId: nullableString,
+  reversalJournalEntryId: nullableString,
+  notes: nullableString,
+  lines: z.array(z.unknown()).nullish(),
+});
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -72,18 +111,19 @@ export interface Invoice {
 }
 
 /** Parses a raw invoice-line payload into a typed {@link InvoiceLine}. */
-export function parseInvoiceLine(json: any): InvoiceLine {
+export function parseInvoiceLine(json: unknown): InvoiceLine {
+  const raw = InvoiceLineSchema.parse(json);
   return {
-    id: parseUuid(json.id, 'parseInvoiceLine.id'),
-    description: json.description ?? undefined,
-    quantity: json.quantity ?? 0,
-    unitPrice: json.unitPrice ?? 0,
-    lineSubtotal: json.lineSubtotal ?? 0,
-    taxRate: json.taxRate ?? 0,
-    taxAmount: json.taxAmount ?? 0,
-    lineTotal: json.lineTotal ?? 0,
-    revenueAccountId: json.revenueAccountId ?? undefined,
-    revenueAccountCode: json.revenueAccountCode ?? undefined,
+    id: parseUuid(raw.id, 'parseInvoiceLine.id'),
+    description: raw.description ?? undefined,
+    quantity: raw.quantity ?? 0,
+    unitPrice: raw.unitPrice ?? 0,
+    lineSubtotal: raw.lineSubtotal ?? 0,
+    taxRate: raw.taxRate ?? 0,
+    taxAmount: raw.taxAmount ?? 0,
+    lineTotal: raw.lineTotal ?? 0,
+    revenueAccountId: raw.revenueAccountId ?? undefined,
+    revenueAccountCode: raw.revenueAccountCode ?? undefined,
   };
 }
 
@@ -94,25 +134,26 @@ export function parseInvoiceLine(json: any): InvoiceLine {
  * @returns A validated `Invoice`.
  * @throws {TypeError} If `id` is missing or not a non-empty string.
  */
-export function parseInvoice(json: any): Invoice {
+export function parseInvoice(json: unknown): Invoice {
+  const raw = InvoiceSchema.parse(json);
   return {
-    id: parseUuid(json.id, 'parseInvoice.id'),
-    invoiceNumber: json.invoiceNumber ?? '',
-    customerId: json.customerId ?? undefined,
-    customerName: json.customerName ?? undefined,
-    invoiceDate: json.invoiceDate ?? undefined,
-    dueDate: json.dueDate ?? undefined,
-    status: parseInvoiceStatus(json.status),
-    subtotal: json.subtotal ?? 0,
-    taxTotal: json.taxTotal ?? 0,
-    total: json.total ?? 0,
-    amountPaid: json.amountPaid ?? 0,
-    balanceDue: json.balanceDue ?? 0,
-    journalEntryId: json.journalEntryId ?? undefined,
-    reversalJournalEntryId: json.reversalJournalEntryId ?? undefined,
-    notes: json.notes ?? undefined,
-    lines: Array.isArray(json.lines)
-      ? json.lines.map((line: any) => parseInvoiceLine(line))
+    id: parseUuid(raw.id, 'parseInvoice.id'),
+    invoiceNumber: raw.invoiceNumber ?? '',
+    customerId: raw.customerId ?? undefined,
+    customerName: raw.customerName ?? undefined,
+    invoiceDate: raw.invoiceDate ?? undefined,
+    dueDate: raw.dueDate ?? undefined,
+    status: parseInvoiceStatus(raw.status),
+    subtotal: raw.subtotal ?? 0,
+    taxTotal: raw.taxTotal ?? 0,
+    total: raw.total ?? 0,
+    amountPaid: raw.amountPaid ?? 0,
+    balanceDue: raw.balanceDue ?? 0,
+    journalEntryId: raw.journalEntryId ?? undefined,
+    reversalJournalEntryId: raw.reversalJournalEntryId ?? undefined,
+    notes: raw.notes ?? undefined,
+    lines: Array.isArray(raw.lines)
+      ? raw.lines.map((line) => parseInvoiceLine(line))
       : [],
   };
 }
