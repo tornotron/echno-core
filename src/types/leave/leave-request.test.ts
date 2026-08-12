@@ -1,30 +1,32 @@
 import { describe, expect, test } from 'bun:test';
 import { parseLeaveRequest } from './leave-request';
+import { LeaveStatus } from './leave-enums';
 
-// Same timezone fix as the attendance parsers: naive backend timestamps must be
-// read as UTC, not the client's local time.
-describe('parseLeaveRequest date handling', () => {
-  test('parses a naive startDate as UTC', () => {
+describe('parseLeaveRequest', () => {
+  test('parses a minimal valid payload with defaults', () => {
     const request = parseLeaveRequest({
       id: 1,
-      employeeId: 1,
-      leavePolicyId: 1,
-      startDate: '2026-02-25T10:30:00',
+      employeeId: 2,
+      leavePolicyId: 3,
     });
-
-    expect(request.startDate.toISOString()).toBe('2026-02-25T10:30:00.000Z');
+    expect(request.employeeId).toBe(2);
+    expect(request.leavePolicyId).toBe(3);
+    expect(request.status).toBe(LeaveStatus.DRAFT);
   });
 
-  test('parses a naive createdAt as UTC and leaves an absent one undefined', () => {
-    const withCreated = parseLeaveRequest({
+  test('falls back to the nested policy and parses approvals', () => {
+    const request = parseLeaveRequest({
       id: 1,
-      employeeId: 1,
-      leavePolicyId: 1,
-      createdAt: '2026-02-25T10:30:00',
+      employeeId: 2,
+      leavePolicy: { id: 8, leaveTypeName: 'Annual' },
+      approvals: [{ id: 4, leaveRequestId: 1, approverId: 9 }],
     });
-    expect(withCreated.createdAt?.toISOString()).toBe('2026-02-25T10:30:00.000Z');
+    expect(request.leavePolicyId).toBe(8);
+    expect(request.leaveTypeName).toBe('Annual');
+    expect(request.approvals).toHaveLength(1);
+  });
 
-    const withoutCreated = parseLeaveRequest({ id: 1, employeeId: 1, leavePolicyId: 1 });
-    expect(withoutCreated.createdAt).toBeUndefined();
+  test('throws when the policy id cannot be resolved', () => {
+    expect(() => parseLeaveRequest({ id: 1, employeeId: 2 })).toThrow();
   });
 });

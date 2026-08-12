@@ -7,10 +7,23 @@
  * `account-tree.ts`.
  */
 
+import { z } from 'zod';
 import { parseUuid } from '../../lib/utils/parse-id';
 import { AccountType, parseAccountType } from './finance-enums';
+import {
+  nullableBoolean,
+  nullableString,
+} from '../../lib/validation/backend-schema';
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
+const AccountResponseSchema = z.object({
+  id: z.string().nullish(),
+  code: nullableString,
+  name: nullableString,
+  type: nullableString,
+  parentId: nullableString,
+  active: nullableBoolean,
+  description: nullableString,
+});
 
 /** A single ledger account in the chart of accounts. */
 export interface Account {
@@ -37,15 +50,16 @@ export interface Account {
  * @returns A validated `Account`.
  * @throws {TypeError} If `id` is missing or not a non-empty string.
  */
-export function parseAccount(json: any): Account {
+export function parseAccount(json: unknown): Account {
+  const raw = AccountResponseSchema.parse(json);
   return {
-    id: parseUuid(json.id, 'parseAccount.id'),
-    code: json.code ?? '',
-    name: json.name ?? '',
-    type: parseAccountType(json.type),
-    parentId: json.parentId ?? undefined,
-    active: json.active ?? true,
-    description: json.description ?? undefined,
+    id: parseUuid(raw.id, 'parseAccount.id'),
+    code: raw.code ?? '',
+    name: raw.name ?? '',
+    type: parseAccountType(raw.type),
+    parentId: raw.parentId ?? undefined,
+    active: raw.active ?? true,
+    description: raw.description ?? undefined,
   };
 }
 

@@ -6,9 +6,26 @@
  * The write payload lives in `company-bank-account-create.ts` (re-exported).
  */
 
+import { z } from 'zod';
 import { parseUuid } from '../../lib/utils/parse-id';
+import {
+  nullableBoolean,
+  nullableString,
+} from '../../lib/validation/backend-schema';
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
+const CompanyBankAccountResponseSchema = z.object({
+  id: z.string().nullish(),
+  bankName: nullableString,
+  accountNumber: nullableString,
+  accountHolderName: nullableString,
+  ifscCode: nullableString,
+  swiftCode: nullableString,
+  isDefault: nullableBoolean,
+  active: nullableBoolean,
+  ledgerAccountId: nullableString,
+  ledgerAccountCode: nullableString,
+  ledgerAccountName: nullableString,
+});
 
 /** An organization bank account, linked to a ledger account in the chart of accounts. */
 export interface CompanyBankAccount {
@@ -44,19 +61,20 @@ export interface CompanyBankAccount {
  * @returns A validated `CompanyBankAccount`.
  * @throws {TypeError} If `id` is missing or not a non-empty string.
  */
-export function parseCompanyBankAccount(json: any): CompanyBankAccount {
+export function parseCompanyBankAccount(json: unknown): CompanyBankAccount {
+  const raw = CompanyBankAccountResponseSchema.parse(json);
   return {
-    id: parseUuid(json.id, 'parseCompanyBankAccount.id'),
-    bankName: json.bankName ?? undefined,
-    accountNumber: json.accountNumber ?? undefined,
-    accountHolderName: json.accountHolderName ?? undefined,
-    ifscCode: json.ifscCode ?? undefined,
-    swiftCode: json.swiftCode ?? undefined,
-    isDefault: json.isDefault ?? false,
-    active: json.active ?? true,
-    ledgerAccountId: json.ledgerAccountId ?? undefined,
-    ledgerAccountCode: json.ledgerAccountCode ?? undefined,
-    ledgerAccountName: json.ledgerAccountName ?? undefined,
+    id: parseUuid(raw.id, 'parseCompanyBankAccount.id'),
+    bankName: raw.bankName ?? undefined,
+    accountNumber: raw.accountNumber ?? undefined,
+    accountHolderName: raw.accountHolderName ?? undefined,
+    ifscCode: raw.ifscCode ?? undefined,
+    swiftCode: raw.swiftCode ?? undefined,
+    isDefault: raw.isDefault ?? false,
+    active: raw.active ?? true,
+    ledgerAccountId: raw.ledgerAccountId ?? undefined,
+    ledgerAccountCode: raw.ledgerAccountCode ?? undefined,
+    ledgerAccountName: raw.ledgerAccountName ?? undefined,
   };
 }
 

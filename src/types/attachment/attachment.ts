@@ -1,6 +1,13 @@
 // types/attachment/attachment.ts
+import { z } from 'zod';
 import { parsePositiveInt } from '../../lib/utils/parse-id';
 import { parseUTCDate } from '../../lib/utils/date-helpers';
+import {
+  backendDate,
+  nullableNumber,
+  nullableString,
+  opaque,
+} from '../../lib/validation/backend-schema';
 
 export enum AttachmentType {
   image = 'image',
@@ -93,30 +100,52 @@ export function getFileTypeColor(type: AttachmentType): string {
   return colorMap[type];
 }
 
+const AttachmentResponseSchema = z.object({
+  id: opaque,
+  fileName: nullableString,
+  file: nullableString,
+  fileUrl: nullableString,
+  url: nullableString,
+  downloadUrl: nullableString,
+  fileSize: nullableNumber,
+  fileType: nullableString,
+  contentType: nullableString,
+  mimeType: nullableString,
+  entityType: nullableString,
+  createdAt: backendDate,
+  uploadedAt: backendDate,
+  updatedAt: backendDate,
+  uploadedBy: nullableString,
+  description: nullableString,
+});
+
 /** JSON → Attachment */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function parseAttachment(json: any): Attachment {
-  const id = parsePositiveInt(json.id, 'parseAttachment.id');
+export function parseAttachment(json: unknown): Attachment {
+  const raw = AttachmentResponseSchema.parse(json);
+
+  const id = parsePositiveInt(raw.id, 'parseAttachment.id');
 
   // Derive fileType from contentType if not provided
-  const contentType = json.contentType ?? json.mimeType ?? '';
-  const fileType = json.fileType ?? getFileTypeFromMimeType(contentType);
+  const contentType = raw.contentType ?? raw.mimeType ?? '';
+  const fileType =
+    (raw.fileType as AttachmentType | undefined) ??
+    getFileTypeFromMimeType(contentType);
 
   return {
     id,
-    fileName: json.fileName ?? '',
+    fileName: raw.fileName ?? '',
     // Support multiple possible field names for the file URL
-    file: json.file ?? json.fileUrl ?? json.url ?? json.downloadUrl ?? '',
-    fileSize: json.fileSize ?? 0,
+    file: raw.file ?? raw.fileUrl ?? raw.url ?? raw.downloadUrl ?? '',
+    fileSize: raw.fileSize ?? 0,
     fileType,
     contentType,
-    entityType: json.entityType ?? undefined,
+    entityType: raw.entityType ?? undefined,
     createdAt:
-      parseUTCDate(json.createdAt) ?? parseUTCDate(json.uploadedAt) ?? new Date(),
+      parseUTCDate(raw.createdAt) ?? parseUTCDate(raw.uploadedAt) ?? new Date(),
     updatedAt:
-      parseUTCDate(json.updatedAt) ?? parseUTCDate(json.createdAt) ?? new Date(),
-    uploadedBy: json.uploadedBy ?? undefined,
-    description: json.description ?? undefined,
+      parseUTCDate(raw.updatedAt) ?? parseUTCDate(raw.createdAt) ?? new Date(),
+    uploadedBy: raw.uploadedBy ?? undefined,
+    description: raw.description ?? undefined,
   };
 }
 

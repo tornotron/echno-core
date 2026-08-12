@@ -7,11 +7,41 @@
  * for the write payloads (re-exported here).
  */
 
+import { z } from 'zod';
 import { parsePositiveInt } from '../../lib/utils/parse-id';
 import { parseUTCDate } from '../../lib/utils/date-helpers';
+import {
+  backendDate,
+  nullableBoolean,
+  nullableNumber,
+  nullableString,
+  opaque,
+} from '../../lib/validation/backend-schema';
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
+const LeavePolicyResponseSchema = z.object({
+  id: opaque,
+  organizationId: opaque,
+  leaveTypeCode: nullableString,
+  leaveTypeName: nullableString,
+  description: nullableString,
+  annualQuota: nullableNumber,
+  accrualRatePerMonth: nullableNumber,
+  carryForwardLimit: nullableNumber,
+  carryForwardExpiryMonths: nullableNumber,
+  minDaysPerRequest: nullableNumber,
+  maxDaysPerRequest: nullableNumber,
+  advanceNoticeDays: nullableNumber,
+  requiresAttachment: nullableBoolean,
+  attachmentRequiredAfterDays: nullableNumber,
+  applicableGenders: nullableString,
+  minServiceMonths: nullableNumber,
+  allowHalfDay: nullableBoolean,
+  isPaid: nullableBoolean,
+  displayOrder: nullableNumber,
+  isActive: nullableBoolean,
+  createdAt: backendDate,
+  updatedAt: backendDate,
+});
 
 /** Rules governing one type of leave for an organization. */
 export interface LeavePolicy {
@@ -72,33 +102,34 @@ export interface LeavePolicy {
  * @returns A validated `LeavePolicy` domain object.
  * @throws {Error} If `id` or `organizationId` is missing or not a positive int.
  */
-export function parseLeavePolicy(json: any): LeavePolicy {
+export function parseLeavePolicy(json: unknown): LeavePolicy {
+  const raw = LeavePolicyResponseSchema.parse(json);
   return {
-    id: parsePositiveInt(json.id, 'parseLeavePolicy.id'),
+    id: parsePositiveInt(raw.id, 'parseLeavePolicy.id'),
     organizationId: parsePositiveInt(
-      json.organizationId,
+      raw.organizationId,
       'parseLeavePolicy.organizationId'
     ),
-    leaveTypeCode: json.leaveTypeCode ?? '',
-    leaveTypeName: json.leaveTypeName ?? '',
-    description: json.description,
-    annualQuota: json.annualQuota ?? 0,
-    accrualRatePerMonth: json.accrualRatePerMonth ?? 0,
-    carryForwardLimit: json.carryForwardLimit ?? 0,
-    carryForwardExpiryMonths: json.carryForwardExpiryMonths,
-    minDaysPerRequest: json.minDaysPerRequest ?? 0.5,
-    maxDaysPerRequest: json.maxDaysPerRequest,
-    advanceNoticeDays: json.advanceNoticeDays ?? 0,
-    requiresAttachment: json.requiresAttachment ?? false,
-    attachmentRequiredAfterDays: json.attachmentRequiredAfterDays,
-    applicableGenders: json.applicableGenders ?? 'ALL',
-    minServiceMonths: json.minServiceMonths ?? 0,
-    allowHalfDay: json.allowHalfDay ?? true,
-    isPaid: json.isPaid ?? true,
-    displayOrder: json.displayOrder ?? 0,
-    isActive: json.isActive ?? true,
-    createdAt: parseUTCDate(json.createdAt) ?? undefined,
-    updatedAt: parseUTCDate(json.updatedAt) ?? undefined,
+    leaveTypeCode: raw.leaveTypeCode ?? '',
+    leaveTypeName: raw.leaveTypeName ?? '',
+    description: raw.description ?? undefined,
+    annualQuota: raw.annualQuota ?? 0,
+    accrualRatePerMonth: raw.accrualRatePerMonth ?? 0,
+    carryForwardLimit: raw.carryForwardLimit ?? 0,
+    carryForwardExpiryMonths: raw.carryForwardExpiryMonths ?? undefined,
+    minDaysPerRequest: raw.minDaysPerRequest ?? 0.5,
+    maxDaysPerRequest: raw.maxDaysPerRequest ?? undefined,
+    advanceNoticeDays: raw.advanceNoticeDays ?? 0,
+    requiresAttachment: raw.requiresAttachment ?? false,
+    attachmentRequiredAfterDays: raw.attachmentRequiredAfterDays ?? undefined,
+    applicableGenders: raw.applicableGenders ?? 'ALL',
+    minServiceMonths: raw.minServiceMonths ?? 0,
+    allowHalfDay: raw.allowHalfDay ?? true,
+    isPaid: raw.isPaid ?? true,
+    displayOrder: raw.displayOrder ?? 0,
+    isActive: raw.isActive ?? true,
+    createdAt: parseUTCDate(raw.createdAt) ?? undefined,
+    updatedAt: parseUTCDate(raw.updatedAt) ?? undefined,
   };
 }
 

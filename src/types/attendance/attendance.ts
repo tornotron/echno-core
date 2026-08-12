@@ -12,6 +12,7 @@
  * (`@/types/shift-timing`).
  */
 
+import { z } from "zod";
 import { parsePositiveInt } from "../../lib/utils/parse-id";
 import { parseUTCDate } from "../../lib/utils/date-helpers";
 import { parseShiftTiming, ShiftTiming } from "../shift-timing";
@@ -20,6 +21,48 @@ import { ClockEvent, parseClockEvent } from "./clock-event";
 import { MovementRecord, parseMovementRecord } from "./movement";
 import { AttendanceRegularization, parseAttendanceRegularization } from "./regularization";
 import { WorkDuration } from "./work-duration";
+import {
+  backendDate,
+  nullableBoolean,
+  nullableString,
+  opaque,
+  optionalNumericId,
+} from "../../lib/validation/backend-schema";
+
+/**
+ * Shape of the backend attendance payload at the parse boundary. `id` is
+ * validated by `parsePositiveInt` and `shiftTiming` is required by a dedicated
+ * guard below; the embedded events, regularization, and movements pass to their
+ * own parsers. Other fields are validated by type and passed through.
+ */
+const AttendanceResponseSchema = z.object({
+  id: opaque,
+  employeeId: optionalNumericId,
+  employeeName: nullableString,
+  date: backendDate,
+  projectId: optionalNumericId,
+  projectName: nullableString,
+  status: nullableString,
+  shiftTiming: opaque,
+  morningClockIn: opaque,
+  lunchBreakStart: opaque,
+  lunchBreakEnd: opaque,
+  eveningClockOut: opaque,
+  workDuration: opaque,
+  isLateArrival: nullableBoolean,
+  isEarlyCheckout: nullableBoolean,
+  isOvertime: nullableBoolean,
+  leaveId: optionalNumericId,
+  leaveType: nullableString,
+  regularization: opaque,
+  movements: z.array(z.unknown()).nullish(),
+  approvalStatus: nullableString,
+  approvedBy: nullableString,
+  approvedAt: backendDate,
+  remarks: nullableString,
+  createdAt: backendDate,
+  updatedAt: backendDate,
+});
 
 
 /**
@@ -174,45 +217,44 @@ export function determineAttendanceStatus(
  *   helpers dereference it unconditionally, so the failure is raised here
  *   rather than at first access.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function parseAttendance(data: any): Attendance {
+export function parseAttendance(data: unknown): Attendance {
+  const raw = AttendanceResponseSchema.parse(data);
   // `Attendance.shiftTiming` is non-optional and downstream helpers
   // (determineAttendanceStatus, calculateWorkDuration) dereference it
   // unconditionally. Fail loudly here rather than silently producing an
   // object that throws on first access elsewhere.
-  if (!data.shiftTiming) {
+  if (!raw.shiftTiming) {
     throw new Error(
       'parseAttendance: required field `shiftTiming` is missing on the response'
     );
   }
   return {
-    ...data,
-    id: parsePositiveInt(data.id, 'parseAttendance.id'),
-    date: parseUTCDate(data.date) ?? new Date(data.date),
-    shiftTiming: parseShiftTiming(data.shiftTiming),
-    morningClockIn: data.morningClockIn
-      ? parseClockEvent(data.morningClockIn)
+    ...raw,
+    id: parsePositiveInt(raw.id, 'parseAttendance.id'),
+    date: parseUTCDate(raw.date) ?? new Date(raw.date as string),
+    shiftTiming: parseShiftTiming(raw.shiftTiming),
+    morningClockIn: raw.morningClockIn
+      ? parseClockEvent(raw.morningClockIn)
       : undefined,
-    lunchBreakStart: data.lunchBreakStart
-      ? parseClockEvent(data.lunchBreakStart)
+    lunchBreakStart: raw.lunchBreakStart
+      ? parseClockEvent(raw.lunchBreakStart)
       : undefined,
-    lunchBreakEnd: data.lunchBreakEnd
-      ? parseClockEvent(data.lunchBreakEnd)
+    lunchBreakEnd: raw.lunchBreakEnd
+      ? parseClockEvent(raw.lunchBreakEnd)
       : undefined,
-    eveningClockOut: data.eveningClockOut
-      ? parseClockEvent(data.eveningClockOut)
+    eveningClockOut: raw.eveningClockOut
+      ? parseClockEvent(raw.eveningClockOut)
       : undefined,
-    regularization: data.regularization
-      ? parseAttendanceRegularization(data.regularization)
+    regularization: raw.regularization
+      ? parseAttendanceRegularization(raw.regularization)
       : undefined,
-    movements: data.movements
-      ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (data.movements as any[]).map((m) => parseMovementRecord(m))
+    movements: raw.movements
+      ? raw.movements.map((m) => parseMovementRecord(m))
       : undefined,
-    createdAt: parseUTCDate(data.createdAt) ?? new Date(data.createdAt),
-    updatedAt: parseUTCDate(data.updatedAt) ?? new Date(data.updatedAt),
-    approvedAt: parseUTCDate(data.approvedAt) ?? undefined,
-  };
+    createdAt: parseUTCDate(raw.createdAt) ?? new Date(raw.createdAt as string),
+    updatedAt: parseUTCDate(raw.updatedAt) ?? new Date(raw.updatedAt as string),
+    approvedAt: parseUTCDate(raw.approvedAt) ?? undefined,
+  } as Attendance;
 }
 
 /**

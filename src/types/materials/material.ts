@@ -6,12 +6,46 @@
  * canonical {@link Material} shape; {@link parseMaterialWithStock}
  * specialises it for endpoints that always carry a numeric `currentStock`.
  */
+import { z } from 'zod';
 import { parsePositiveInt } from '../../lib/utils/parse-id';
 import { Employee, parseEmployee } from '../employee';
 import { MaterialStatus } from './enum';
+import {
+  money,
+  nullableNumber,
+  nullableString,
+  opaque,
+  optionalNumericId,
+} from '../../lib/validation/backend-schema';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type Raw = any;
+/**
+ * Shape of the backend material payload at the parse boundary. `id` stays
+ * `opaque` (validated by `parsePositiveInt`); stock quantities/values coerce
+ * string BigDecimals through `money`; `createdBy` is handed to `parseEmployee`.
+ */
+const MaterialResponseSchema = z.object({
+  id: opaque,
+  sku: nullableString,
+  materialName: z.string(),
+  unit: z.string(),
+  description: nullableString,
+  hsn: nullableString,
+  currentStock: money,
+  stockValue: money,
+  openingStock: money,
+  storageLocationId: optionalNumericId,
+  projectId: optionalNumericId,
+  moq: nullableNumber,
+  minStock: nullableNumber,
+  maxStock: nullableNumber,
+  safetyStock: nullableNumber,
+  reorderLevel: nullableNumber,
+  createdBy: opaque,
+  category: nullableString,
+  status: nullableString,
+  trend: z.array(z.number()).nullish(),
+  ltc: nullableNumber,
+});
 
 /**
  * A single inventory item the organisation tracks stock for. Optional
@@ -100,12 +134,13 @@ export interface MaterialWithStock extends Material {
  * `null`/`undefined` to `undefined`; `trend` falls back to `undefined`
  * unless the payload supplies an array.
  *
- * @param raw - The raw JSON object from the backend.
+ * @param json - The raw JSON object from the backend.
  * @returns The parsed {@link Material}.
  * @throws {TypeError} When `raw.id` is missing or non-positive
  *   (propagated from {@link parsePositiveInt}).
  */
-export function parseMaterial(raw: Raw): Material {
+export function parseMaterial(json: unknown): Material {
+  const raw = MaterialResponseSchema.parse(json);
   return {
     id: parsePositiveInt(raw.id, 'parseMaterial.id'),
     sku: raw.sku ?? undefined,
@@ -125,7 +160,7 @@ export function parseMaterial(raw: Raw): Material {
     reorderLevel: raw.reorderLevel ?? undefined,
     createdBy: raw.createdBy ? parseEmployee(raw.createdBy) : undefined,
     category: raw.category ?? undefined,
-    status: raw.status ?? undefined,
+    status: (raw.status ?? undefined) as MaterialStatus | undefined,
     trend: Array.isArray(raw.trend) ? (raw.trend as number[]) : undefined,
     ltc: raw.ltc ?? undefined,
   };
@@ -136,14 +171,15 @@ export function parseMaterial(raw: Raw): Material {
  * {@link MaterialWithStock}. Defaults `currentStock` to `0` when the backend
  * omits it so the field stays non-optional for consumers.
  *
- * @param raw - The raw JSON object from the backend.
+ * @param json - The raw JSON object from the backend.
  * @returns The parsed {@link MaterialWithStock}.
  * @throws {TypeError} When `raw.id` is missing or non-positive
  *   (propagated from {@link parsePositiveInt}).
  */
-export function parseMaterialWithStock(raw: Raw): MaterialWithStock {
+export function parseMaterialWithStock(json: unknown): MaterialWithStock {
+  const raw = MaterialResponseSchema.parse(json);
   return {
-    ...parseMaterial(raw),
+    ...parseMaterial(json),
     currentStock: raw.currentStock ?? 0,
   };
 }

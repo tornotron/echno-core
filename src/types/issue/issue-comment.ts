@@ -4,9 +4,24 @@
  * Domain type and JSON converters for an issue comment — a single
  * timestamped message authored by an employee on a parent {@link Issue}.
  */
+import { z } from 'zod';
 import { Employee } from '../employee/employee';
 import { parseUTCDate } from '../../lib/utils/date-helpers';
 import { parsePositiveInt } from '../../lib/utils/parse-id';
+import {
+  backendDate,
+  nullableString,
+  opaque,
+  optionalNumericId,
+} from '../../lib/validation/backend-schema';
+
+/** Shape of the backend issue-comment payload at the parse boundary. */
+const IssueCommentResponseSchema = z.object({
+  id: opaque,
+  comment: nullableString,
+  authorId: optionalNumericId,
+  createdAt: backendDate,
+});
 
 /**
  * Represents a single comment on an issue.
@@ -41,15 +56,15 @@ export interface IssueComment {
  * @returns A validated `IssueComment` domain object.
  * @throws {TypeError} If `id` is missing or not a positive integer.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function parseIssueComment(json: any): IssueComment {
-  const id = parsePositiveInt(json.id, 'parseIssueComment.id');
+export function parseIssueComment(json: unknown): IssueComment {
+  const raw = IssueCommentResponseSchema.parse(json);
+  const id = parsePositiveInt(raw.id, 'parseIssueComment.id');
 
   return {
     id,
-    comment: json.comment ?? '',
-    authorId: json.authorId ?? undefined,
-    createdAt: parseUTCDate(json.createdAt) ?? new Date(),
+    comment: raw.comment ?? '',
+    authorId: raw.authorId ?? undefined,
+    createdAt: parseUTCDate(raw.createdAt) ?? new Date(),
   };
 }
 

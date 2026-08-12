@@ -5,11 +5,29 @@
  * {@link parseLeaveNotification}.
  */
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
+import { z } from 'zod';
 import { parsePositiveInt } from '../../lib/utils/parse-id';
 import { parseUTCDate } from '../../lib/utils/date-helpers';
 import { LeaveNotificationType } from './leave-enums';
+import {
+  backendDate,
+  nullableBoolean,
+  nullableString,
+  opaque,
+  optionalNumericId,
+} from '../../lib/validation/backend-schema';
+
+const LeaveNotificationResponseSchema = z.object({
+  id: opaque,
+  employeeId: opaque,
+  type: nullableString,
+  title: nullableString,
+  message: nullableString,
+  leaveRequestId: optionalNumericId,
+  isRead: nullableBoolean,
+  createdAt: backendDate,
+  readAt: backendDate,
+});
 
 /** A notification raised by a leave-workflow event. */
 export interface LeaveNotification {
@@ -44,21 +62,22 @@ export interface LeaveNotification {
  * @returns A validated `LeaveNotification` domain object.
  * @throws {Error} If `id` or `employeeId` is missing or not a positive int.
  */
-export function parseLeaveNotification(json: any): LeaveNotification {
+export function parseLeaveNotification(json: unknown): LeaveNotification {
+  const raw = LeaveNotificationResponseSchema.parse(json);
   return {
-    id: parsePositiveInt(json.id, 'parseLeaveNotification.id'),
+    id: parsePositiveInt(raw.id, 'parseLeaveNotification.id'),
     employeeId: parsePositiveInt(
-      json.employeeId,
+      raw.employeeId,
       'parseLeaveNotification.employeeId'
     ),
     type:
-      (json.type as LeaveNotificationType) ??
+      (raw.type as LeaveNotificationType) ??
       LeaveNotificationType.LEAVE_REMINDER,
-    title: json.title ?? '',
-    message: json.message ?? '',
-    leaveRequestId: json.leaveRequestId,
-    isRead: json.isRead ?? false,
-    createdAt: parseUTCDate(json.createdAt) ?? new Date(),
-    readAt: parseUTCDate(json.readAt) ?? undefined,
+    title: raw.title ?? '',
+    message: raw.message ?? '',
+    leaveRequestId: raw.leaveRequestId ?? undefined,
+    isRead: raw.isRead ?? false,
+    createdAt: parseUTCDate(raw.createdAt) ?? new Date(),
+    readAt: parseUTCDate(raw.readAt) ?? undefined,
   };
 }

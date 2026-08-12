@@ -7,11 +7,35 @@
  * {@link parseLeaveCalendarEntry} and {@link parseGroupedLeaveCalendarEntry}.
  */
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
+import { z } from 'zod';
 import { parsePositiveInt } from '../../lib/utils/parse-id';
 import { parseUTCDate } from '../../lib/utils/date-helpers';
 import { HalfDayType, LeaveStatus } from './leave-enums';
+import {
+  backendDate,
+  nullableNumber,
+  nullableString,
+  opaque,
+} from '../../lib/validation/backend-schema';
+
+const LeaveCalendarEntryResponseSchema = z.object({
+  id: opaque,
+  leaveRequestId: opaque,
+  employeeId: opaque,
+  employeeName: nullableString,
+  department: nullableString,
+  leaveDate: backendDate,
+  halfDayType: nullableString,
+  leaveTypeName: nullableString,
+  status: nullableString,
+  createdAt: backendDate,
+});
+
+const GroupedLeaveCalendarEntryResponseSchema = z.object({
+  date: backendDate,
+  entries: z.array(z.unknown()).nullish(),
+  count: nullableNumber,
+});
 
 /** One employee's leave on one calendar day. */
 export interface LeaveCalendarEntry {
@@ -67,24 +91,25 @@ export interface LeaveCountResponse {
  * @throws {Error} If `id`, `leaveRequestId`, or `employeeId` is missing or not a
  *   positive int.
  */
-export function parseLeaveCalendarEntry(json: any): LeaveCalendarEntry {
+export function parseLeaveCalendarEntry(json: unknown): LeaveCalendarEntry {
+  const raw = LeaveCalendarEntryResponseSchema.parse(json);
   return {
-    id: parsePositiveInt(json.id, 'parseLeaveCalendarEntry.id'),
+    id: parsePositiveInt(raw.id, 'parseLeaveCalendarEntry.id'),
     leaveRequestId: parsePositiveInt(
-      json.leaveRequestId,
+      raw.leaveRequestId,
       'parseLeaveCalendarEntry.leaveRequestId'
     ),
     employeeId: parsePositiveInt(
-      json.employeeId,
+      raw.employeeId,
       'parseLeaveCalendarEntry.employeeId'
     ),
-    employeeName: json.employeeName,
-    department: json.department,
-    leaveDate: parseUTCDate(json.leaveDate) ?? new Date(),
-    halfDayType: (json.halfDayType as HalfDayType) ?? HalfDayType.FULL_DAY,
-    leaveTypeName: json.leaveTypeName,
-    status: json.status as LeaveStatus,
-    createdAt: parseUTCDate(json.createdAt) ?? undefined,
+    employeeName: raw.employeeName ?? undefined,
+    department: raw.department ?? undefined,
+    leaveDate: parseUTCDate(raw.leaveDate) ?? new Date(),
+    halfDayType: (raw.halfDayType as HalfDayType) ?? HalfDayType.FULL_DAY,
+    leaveTypeName: raw.leaveTypeName ?? undefined,
+    status: raw.status as LeaveStatus,
+    createdAt: parseUTCDate(raw.createdAt) ?? undefined,
   };
 }
 
@@ -99,14 +124,14 @@ export function parseLeaveCalendarEntry(json: any): LeaveCalendarEntry {
  * @returns A validated `GroupedLeaveCalendarEntry` domain object.
  */
 export function parseGroupedLeaveCalendarEntry(
-  json: any
-
+  json: unknown
 ): GroupedLeaveCalendarEntry {
+  const raw = GroupedLeaveCalendarEntryResponseSchema.parse(json);
   return {
-    date: parseUTCDate(json.date) ?? new Date(),
-    entries: json.entries
-      ? json.entries.map((e: any) => parseLeaveCalendarEntry(e))
+    date: parseUTCDate(raw.date) ?? new Date(),
+    entries: raw.entries
+      ? raw.entries.map((e) => parseLeaveCalendarEntry(e))
       : [],
-    count: json.count ?? 0,
+    count: raw.count ?? 0,
   };
 }

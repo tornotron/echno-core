@@ -29,4 +29,10 @@ describe('parseClockEvent timestamp handling', () => {
 
     expect(event.verifiedAt).toBeUndefined();
   });
+
+  test('rejects a non-positive id', () => {
+    expect(() =>
+      parseClockEvent({ id: 0, timestamp: '2026-02-25T10:30:00Z' })
+    ).toThrow();
+  });
 });

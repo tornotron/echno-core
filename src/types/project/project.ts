@@ -11,6 +11,7 @@
  * preserves cached nested arrays across a partial response.
  */
 // types/project/project.ts
+import { z } from 'zod';
 import { Employee, parseEmployee, employeeToJson } from '../employee';
 import { parseUTCDate } from '../../lib/utils/date-helpers';
 import { Task, parseTask } from '../task';
@@ -18,6 +19,13 @@ import { ProjectStatus, getProjectStatus } from './project-status';
 import type { Attachment } from '../attachment';
 import { parseAttachment, attachmentToJson } from '../attachment';
 import { parsePositiveInt } from '../../lib/utils/parse-id';
+import {
+  backendDate,
+  nullableNumber,
+  nullableString,
+  opaque,
+  optionalNumericId,
+} from '../../lib/validation/backend-schema';
 
 /**
  * A construction project tracked by Echno.
@@ -116,6 +124,23 @@ export function removeMember(project: Project, employee: Employee): Project {
   };
 }
 
+const ProjectResponseSchema = z.object({
+  id: opaque,
+  projectName: nullableString,
+  projectAddress: nullableString,
+  status: nullableString,
+  organizationId: optionalNumericId,
+  projectLongitude: nullableNumber,
+  projectLatitude: nullableNumber,
+  startDate: backendDate,
+  endDate: backendDate,
+  createdAt: backendDate,
+  progress: nullableNumber,
+  employees: z.array(z.unknown()).nullish(),
+  tasks: z.array(z.unknown()).nullish(),
+  attachments: z.array(z.unknown()).nullish(),
+});
+
 /**
  * Parses a raw backend payload into a typed {@link Project}.
  *
@@ -127,28 +152,29 @@ export function removeMember(project: Project, employee: Employee): Project {
  * @returns A validated `Project` domain object.
  * @throws {Error} If `json.id` is missing or not a positive integer.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function parseProject(json: any): Project {
+export function parseProject(json: unknown): Project {
+  const raw = ProjectResponseSchema.parse(json);
+
   return {
-    id: parsePositiveInt(json.id, 'parseProject.id'),
-    projectName: json.projectName ?? '',
-    projectAddress: json.projectAddress ?? '',
-    status: getProjectStatus(json.status) ?? ProjectStatus.upcoming,
-    organizationId: json.organizationId
-      ? Number(json.organizationId)
+    id: parsePositiveInt(raw.id, 'parseProject.id'),
+    projectName: raw.projectName ?? '',
+    projectAddress: raw.projectAddress ?? '',
+    status: getProjectStatus(raw.status ?? undefined) ?? ProjectStatus.upcoming,
+    organizationId: raw.organizationId
+      ? Number(raw.organizationId)
       : undefined,
-    projectLongitude: Number(json.projectLongitude ?? 0),
-    projectLatitude: Number(json.projectLatitude ?? 0),
-    startDate: parseUTCDate(json.startDate) ?? undefined,
-    endDate: parseUTCDate(json.endDate) ?? undefined,
-    createdAt: parseUTCDate(json.createdAt) ?? undefined,
-    progress: Number(json.progress ?? 0),
-    members: json.employees
-      ? (json.employees as unknown[]).map((e) => parseEmployee(e))
+    projectLongitude: Number(raw.projectLongitude ?? 0),
+    projectLatitude: Number(raw.projectLatitude ?? 0),
+    startDate: parseUTCDate(raw.startDate) ?? undefined,
+    endDate: parseUTCDate(raw.endDate) ?? undefined,
+    createdAt: parseUTCDate(raw.createdAt) ?? undefined,
+    progress: Number(raw.progress ?? 0),
+    members: raw.employees
+      ? (raw.employees as unknown[]).map((e) => parseEmployee(e))
       : [],
-    tasks: json.tasks ? (json.tasks as unknown[]).map((t) => parseTask(t)) : [],
-    attachments: json.attachments
-      ? (json.attachments as unknown[]).map((a) => parseAttachment(a))
+    tasks: raw.tasks ? (raw.tasks as unknown[]).map((t) => parseTask(t)) : [],
+    attachments: raw.attachments
+      ? (raw.attachments as unknown[]).map((a) => parseAttachment(a))
       : undefined,
   };
 }

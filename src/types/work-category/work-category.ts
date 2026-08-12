@@ -6,6 +6,19 @@
  * used to group {@link Task} and related work entities.
  */
 import { parsePositiveInt } from '../../lib/utils/parse-id';
+import { z } from 'zod';
+import {
+  nullableString,
+  opaque,
+} from '../../lib/validation/backend-schema';
+
+const WorkCategoryResponseSchema = z.object({
+  id: opaque,
+  name: nullableString,
+  description: nullableString,
+  icon: nullableString,
+  image: nullableString,
+});
 
 /**
  * Represents a single work category.
@@ -45,16 +58,16 @@ export interface WorkCategory {
  * @returns A validated `WorkCategory` domain object.
  * @throws {TypeError} If `id` is missing or not a positive integer.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function parseWorkCategory(json: any): WorkCategory {
-  const id = parsePositiveInt(json.id, 'parseWorkCategory.id');
-  const name = json.name ?? '';
+export function parseWorkCategory(json: unknown): WorkCategory {
+  const raw = WorkCategoryResponseSchema.parse(json);
+  const id = parsePositiveInt(raw.id, 'parseWorkCategory.id');
+  const name = raw.name ?? '';
   return {
     id,
     name,
-    description: json.description ?? undefined,
-    icon: json.icon ?? generateAbbreviation(name),
-    image: json.image ?? undefined,
+    description: raw.description ?? undefined,
+    icon: raw.icon ?? generateAbbreviation(name),
+    image: raw.image ?? undefined,
   };
 }
 

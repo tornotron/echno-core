@@ -7,11 +7,40 @@
  * (GRN, consumption, site transfer, stock-take, …); the frontend reads
  * them but never creates or mutates them.
  */
+import { z } from 'zod';
 import { parsePositiveInt } from '../../lib/utils/parse-id';
 import type { InventoryTransactionType } from './enums';
+import {
+  money,
+  nullableString,
+  opaque,
+  numericId,
+} from '../../lib/validation/backend-schema';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type Raw = any;
+/**
+ * Shape of the backend inventory-transaction payload at the parse boundary.
+ * Ids stay `opaque` (validated by `parsePositiveInt`); `transactionType` is
+ * cast to the domain enum by the parser; stock quantities coerce string
+ * BigDecimals through `money`.
+ */
+const InventoryTransactionResponseSchema = z.object({
+  id: opaque,
+  transactionDate: z.string(),
+  materialId: numericId,
+  materialName: nullableString,
+  openingStock: money,
+  quantityChanged: money,
+  closingStock: money,
+  transactionType: opaque,
+  referenceNumber: nullableString,
+  remarks: nullableString,
+  projectId: numericId,
+  projectName: nullableString,
+  storageLocationId: numericId,
+  storageLocationName: nullableString,
+  unitCost: money,
+  createdBy: z.object({ id: opaque, employeeName: nullableString }).nullish(),
+});
 
 /**
  * A single stock-movement ledger entry. Carries denormalised display
@@ -96,12 +125,13 @@ export interface InventoryTransaction {
  * back to `null` (distinct from `0`) to preserve "no cost basis" as a
  * separate state from "zero cost".
  *
- * @param raw - The raw JSON object from the backend.
+ * @param json - The raw JSON object from the backend.
  * @returns The parsed {@link InventoryTransaction}.
  * @throws {TypeError} When `raw.id` or `raw.createdBy.id` is missing or
  *   non-positive (propagated from {@link parsePositiveInt}).
  */
-export function parseInventoryTransaction(raw: Raw): InventoryTransaction {
+export function parseInventoryTransaction(json: unknown): InventoryTransaction {
+  const raw = InventoryTransactionResponseSchema.parse(json);
   return {
     id: parsePositiveInt(raw.id, 'parseInventoryTransaction.id'),
     transactionDate: raw.transactionDate,

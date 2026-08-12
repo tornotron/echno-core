@@ -15,13 +15,40 @@
  * {@link SiteTransfer} shape and tolerates two `sendingPerson` field
  * names (`employeeName` vs `name`) for backwards compatibility.
  */
+import { z } from 'zod';
 import { parsePositiveInt } from '../../lib/utils/parse-id';
 import { SiteTransferStatus } from './enums';
 import type { SiteTransferItem } from './site-transfer-item';
 import { parseSiteTransferItem } from './site-transfer-item';
+import {
+  nullableString,
+  opaque,
+  optionalNumericId,
+} from '../../lib/validation/backend-schema';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type Raw = any;
+/**
+ * Shape of the backend site-transfer payload at the parse boundary. `id` and
+ * `sendingPerson.id` stay `opaque` (validated by `parsePositiveInt`); `status`
+ * is cast to the domain enum; `items` are handed to `parseSiteTransferItem`.
+ */
+const SiteTransferResponseSchema = z.object({
+  id: opaque,
+  transferNumber: z.string(),
+  issueDate: z.string(),
+  sendingPerson: z
+    .object({ id: opaque, employeeName: nullableString, name: nullableString })
+    .nullish(),
+  sendingProjectId: optionalNumericId,
+  sendingProjectName: nullableString,
+  sendingStorageLocationId: optionalNumericId,
+  sendingStorageLocationName: nullableString,
+  receivingProjectId: optionalNumericId,
+  receivingProjectName: nullableString,
+  receivingStorageLocationId: optionalNumericId,
+  receivingStorageLocationName: nullableString,
+  status: opaque,
+  items: z.array(z.unknown()).nullish(),
+});
 
 /**
  * A stock-movement order between two storage locations. Carries
@@ -86,12 +113,13 @@ export interface SiteTransfer {
  * doesn't break list rendering. Optional fields resolve to
  * `undefined`; an absent or non-array `items` resolves to `[]`.
  *
- * @param raw - The raw JSON object from the backend.
+ * @param json - The raw JSON object from the backend.
  * @returns The parsed {@link SiteTransfer}.
  * @throws {TypeError} When `raw.id` or `raw.sendingPerson.id` is
  *   missing or non-positive (propagated from {@link parsePositiveInt}).
  */
-export function parseSiteTransfer(raw: Raw): SiteTransfer {
+export function parseSiteTransfer(json: unknown): SiteTransfer {
+  const raw = SiteTransferResponseSchema.parse(json);
   const id = parsePositiveInt(raw.id, 'parseSiteTransfer.id');
   return {
     id,
@@ -112,11 +140,13 @@ export function parseSiteTransfer(raw: Raw): SiteTransfer {
     receivingProjectName: raw.receivingProjectName ?? undefined,
     receivingStorageLocationId: raw.receivingStorageLocationId ?? undefined,
     receivingStorageLocationName: raw.receivingStorageLocationName ?? undefined,
-    status: Object.values(SiteTransferStatus).includes(raw.status)
+    status: Object.values(SiteTransferStatus).includes(
+      raw.status as SiteTransferStatus
+    )
       ? (raw.status as SiteTransferStatus)
       : SiteTransferStatus.pending,
     items: Array.isArray(raw.items)
-      ? raw.items.map((item: Raw) => parseSiteTransferItem(item))
+      ? raw.items.map((item) => parseSiteTransferItem(item))
       : [],
   };
 }

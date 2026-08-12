@@ -22,6 +22,36 @@ import {
 import { TaskStatus, taskStatusFromString } from './task-status';
 import { Attachment, parseAttachment } from '../attachment';
 import { parsePositiveInt } from '../../lib/utils/parse-id';
+import { z } from 'zod';
+import {
+  nullableNumber,
+  nullableString,
+  opaque,
+  optionalNumericId,
+} from '../../lib/validation/backend-schema';
+
+// The backend serializes date fields as ISO strings, but `parseDateTime` also
+// accepts millisecond timestamps, so both are allowed through here.
+const dateValue = z.union([z.string(), z.number()]).nullish();
+
+const TaskResponseSchema = z.object({
+  id: opaque,
+  projectId: optionalNumericId,
+  title: nullableString,
+  description: nullableString,
+  startDate: dateValue,
+  endDate: dateValue,
+  creator: opaque,
+  assignees: z.array(z.unknown()).nullish(),
+  category: opaque,
+  progress: nullableNumber,
+  tags: z.array(z.unknown()).nullish(),
+  createdAt: dateValue,
+  updatedAt: dateValue,
+  status: nullableString,
+  issues: z.array(z.unknown()).nullish(),
+  attachments: z.array(z.unknown()).nullish(),
+});
 
 /**
  * A unit of work belonging to a {@link Project}.
@@ -103,38 +133,32 @@ export const asignees = (task: Task): Employee[] | undefined => task.assignees;
  * @returns A validated `Task` domain object.
  * @throws {Error} If `json.id` is missing or not a positive integer.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function parseTask(json: any): Task {
-  const id = parsePositiveInt(json.id, 'parseTask.id');
+export function parseTask(json: unknown): Task {
+  const raw = TaskResponseSchema.parse(json);
+  const id = parsePositiveInt(raw.id, 'parseTask.id');
 
   return {
     id,
-    projectId: json.projectId ?? 1,
-    title: json.title ?? 'Untitled Task',
-    description: json.description ?? undefined,
-    startDate: parseDateTime(json.startDate),
-    endDate: parseDateTime(json.endDate),
-    creator: json.creator ? parseEmployee(json.creator) : undefined,
-    assignees: json.assignees
-      ? (json.assignees as unknown[])
-          .filter(Boolean)
-          .map((m) => parseEmployee(m))
+    projectId: raw.projectId ?? 1,
+    title: raw.title ?? 'Untitled Task',
+    description: raw.description ?? undefined,
+    startDate: parseDateTime(raw.startDate),
+    endDate: parseDateTime(raw.endDate),
+    creator: raw.creator ? parseEmployee(raw.creator) : undefined,
+    assignees: raw.assignees
+      ? raw.assignees.filter(Boolean).map((m) => parseEmployee(m))
       : [],
-    category: json.category ? parseWorkCategory(json.category) : undefined,
-    progress: Number(json.progress ?? 0),
-    tags: json.tags
-      ? ((json.tags as unknown[]).filter(Boolean) as string[])
+    category: raw.category ? parseWorkCategory(raw.category) : undefined,
+    progress: Number(raw.progress ?? 0),
+    tags: raw.tags ? (raw.tags.filter(Boolean) as string[]) : [],
+    createdAt: parseDateTime(raw.createdAt),
+    updatedAt: parseDateTime(raw.updatedAt),
+    status: taskStatusFromString(raw.status as string),
+    issues: raw.issues
+      ? raw.issues.filter(Boolean).map((i) => parseIssue(i))
       : [],
-    createdAt: parseDateTime(json.createdAt),
-    updatedAt: parseDateTime(json.updatedAt),
-    status: taskStatusFromString(json.status),
-    issues: json.issues
-      ? (json.issues as unknown[]).filter(Boolean).map((i) => parseIssue(i))
-      : [],
-    attachments: json.attachments
-      ? (json.attachments as unknown[])
-          .filter(Boolean)
-          .map((a) => parseAttachment(a))
+    attachments: raw.attachments
+      ? raw.attachments.filter(Boolean).map((a) => parseAttachment(a))
       : [],
   };
 }
