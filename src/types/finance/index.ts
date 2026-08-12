@@ -21,6 +21,8 @@ export * from './invoice';
 export * from './invoice-create';
 export * from './payment';
 export * from './payment-create';
+export * from './construction-invoice';
+export * from './construction-payment';
 export * from './journal-entry';
 export * from './journal-entry-create';
 export * from './reports';
