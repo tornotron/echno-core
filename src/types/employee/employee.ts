@@ -19,6 +19,7 @@
  *   don't crash the UI.
  */
 
+import { z } from 'zod';
 import { Attachment, parseAttachment } from '../attachment';
 import { parseUTCDate } from '../../lib/utils/date-helpers';
 import { Project, parseProject, projectToJson } from '../project';
@@ -26,6 +27,51 @@ import { EmployeeStatus, employeeStatusFromString } from './employee-status';
 import { Department } from './departments';
 import { OrgRole, orgRoleFromString } from './org-role';
 import { parsePositiveInt } from '../../lib/utils/parse-id';
+import {
+  backendDate,
+  money,
+  nullableString,
+  opaque,
+  optionalNumericId,
+} from '../../lib/validation/backend-schema';
+
+/**
+ * Shape of the backend `EmployeeDto` at the parse boundary. Validates field types
+ * so a malformed payload fails fast instead of becoming fabricated values. Ids
+ * stay `opaque` and are validated by `parsePositiveInt`; polymorphic blobs
+ * (attachments, projects) are handed to their own parsers.
+ */
+const EmployeeResponseSchema = z.object({
+  id: opaque,
+  employeeName: nullableString,
+  address: nullableString,
+  bloodGroup: nullableString,
+  emailAddress: nullableString,
+  phoneNumber: nullableString,
+  gender: nullableString,
+  dateOfBirth: backendDate,
+  qualification: nullableString,
+  skills: z.array(z.string()).nullish(),
+  experience: money,
+  emergencyContact: nullableString,
+  orgRoles: z.array(z.string()).nullish(),
+  attachments: z.array(z.unknown()).nullish(),
+  employeeId: nullableString,
+  organizationId: opaque,
+  organizationName: nullableString,
+  designation: nullableString,
+  department: nullableString,
+  joiningDate: backendDate,
+  salary: money,
+  managerId: optionalNumericId,
+  managerName: nullableString,
+  shiftTiming: nullableString,
+  status: nullableString,
+  certifications: z.array(z.string()).nullish(),
+  currentProjects: z.array(z.unknown()).nullish(),
+  createdAt: backendDate,
+  updatedAt: backendDate,
+});
 
 /**
  * Authenticated user's employee record within a single organization.
@@ -164,10 +210,12 @@ export interface Employee {
  *   not a positive integer.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function parseEmployee(json: any): Employee {
+export function parseEmployee(json: unknown): Employee {
+  const raw = EmployeeResponseSchema.parse(json);
+
   // Parse attachments array from backend
-  const attachments: Attachment[] | undefined = json.attachments
-    ? (json.attachments as unknown[]).map((att) => parseAttachment(att))
+  const attachments: Attachment[] | undefined = raw.attachments
+    ? raw.attachments.map((att) => parseAttachment(att))
     : undefined;
 
   // Extract profile picture — use latest by createdAt if multiple exist
@@ -192,52 +240,52 @@ export function parseEmployee(json: any): Employee {
         )[0]
       : undefined;
 
-  const id = parsePositiveInt(json.id, 'parseEmployee.id');
+  const id = parsePositiveInt(raw.id, 'parseEmployee.id');
 
   return {
     id,
-    name: json.employeeName ?? '',
-    address: json.address ?? '',
-    bloodGroup: json.bloodGroup ?? undefined,
-    email: json.emailAddress ?? '',
-    phone: json.phoneNumber ?? '',
-    gender: json.gender ?? '',
-    dateOfBirth: parseUTCDate(json.dateOfBirth) ?? new Date(),
-    qualification: json.qualification ?? '',
-    skills: json.skills ? [...json.skills] : undefined,
-    experience: json.experience ? Number(json.experience) : undefined,
-    emergencyContact: json.emergencyContact ?? undefined,
-    orgRoles: Array.isArray(json.orgRoles)
-      ? (json.orgRoles as string[])
+    name: raw.employeeName ?? '',
+    address: raw.address ?? '',
+    bloodGroup: raw.bloodGroup ?? undefined,
+    email: raw.emailAddress ?? '',
+    phone: raw.phoneNumber ?? '',
+    gender: raw.gender ?? '',
+    dateOfBirth: parseUTCDate(raw.dateOfBirth) ?? new Date(),
+    qualification: raw.qualification ?? '',
+    skills: raw.skills ? [...raw.skills] : undefined,
+    experience: raw.experience ?? undefined,
+    emergencyContact: raw.emergencyContact ?? undefined,
+    orgRoles: raw.orgRoles
+      ? raw.orgRoles
           .map((role) => orgRoleFromString(role))
           .filter((r): r is OrgRole => r !== undefined)
       : [],
     attachments,
     cv,
     profilePicture,
-    employeeId: json.employeeId ?? json.id?.toString() ?? '',
+    employeeId: raw.employeeId ?? String(id),
     organizationId: parsePositiveInt(
-      json.organizationId,
+      raw.organizationId,
       'parseEmployee.organizationId'
     ),
-    organizationName: json.organizationName ?? undefined,
-    designation: json.designation ?? '',
+    organizationName: raw.organizationName ?? undefined,
+    designation: raw.designation ?? '',
     department:
-      json.department && json.department in Department
-        ? Department[json.department as keyof typeof Department]
+      raw.department && raw.department in Department
+        ? Department[raw.department as keyof typeof Department]
         : undefined,
-    joiningDate: parseUTCDate(json.joiningDate) ?? undefined,
-    salary: json.salary == null ? undefined : Number(json.salary),
-    managerId: json.managerId ?? undefined,
-    managerName: json.managerName ?? undefined,
-    shiftTiming: json.shiftTiming ?? undefined,
-    status: employeeStatusFromString(json.status ?? 'active'),
-    certifications: json.certifications ? [...json.certifications] : undefined,
-    currentProjects: Array.isArray(json.currentProjects)
-      ? json.currentProjects.map((p: unknown) => parseProject(p))
+    joiningDate: parseUTCDate(raw.joiningDate) ?? undefined,
+    salary: raw.salary ?? undefined,
+    managerId: raw.managerId ?? undefined,
+    managerName: raw.managerName ?? undefined,
+    shiftTiming: raw.shiftTiming ?? undefined,
+    status: employeeStatusFromString(raw.status ?? 'active'),
+    certifications: raw.certifications ? [...raw.certifications] : undefined,
+    currentProjects: raw.currentProjects
+      ? raw.currentProjects.map((p) => parseProject(p))
       : undefined,
-    createdAt: parseUTCDate(json.createdAt) ?? undefined,
-    updatedAt: parseUTCDate(json.updatedAt) ?? undefined,
+    createdAt: parseUTCDate(raw.createdAt) ?? undefined,
+    updatedAt: parseUTCDate(raw.updatedAt) ?? undefined,
   };
 }
 
