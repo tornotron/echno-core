@@ -156,6 +156,8 @@ export * from './services/finance-bank-account-service';
 export * from './services/finance-customer-service';
 export * from './services/finance-invoice-service';
 export * from './services/finance-payment-service';
+export * from './services/finance-construction-invoice-service';
+export * from './services/finance-construction-payment-service';
 export * from './services/finance-journal-service';
 export * from './services/finance-reports-service';
 export * from './hooks/finance';
