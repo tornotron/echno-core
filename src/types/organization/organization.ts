@@ -13,6 +13,32 @@ import { parseUTCDate } from '../../lib/utils/date-helpers';
 import { Project, projectToJson, parseProject } from '../project';
 import { Attachment, parseAttachment } from '../attachment';
 import { parsePositiveInt } from '../../lib/utils/parse-id';
+import { z } from 'zod';
+import {
+  backendDate,
+  nullableBoolean,
+  nullableNumber,
+  nullableString,
+  opaque,
+} from '../../lib/validation/backend-schema';
+
+const OrganizationResponseSchema = z.object({
+  id: opaque,
+  organizationName: nullableString,
+  organizationAddress: nullableString,
+  organizationEmail: nullableString,
+  organizationPhone: nullableString,
+  organizationWebsite: nullableString,
+  employees: z.array(z.unknown()).nullish(),
+  projects: z.array(z.unknown()).nullish(),
+  proprietorId: nullableNumber,
+  creatorId: nullableNumber,
+  createdAt: backendDate,
+  isActive: nullableBoolean,
+  logo: opaque,
+  organizationLogo: opaque,
+  attachments: z.array(z.unknown()).nullish(),
+});
 
 /**
  * Represents an organization in the Echno system.
@@ -92,10 +118,12 @@ export function getOrganizationLogo(org: Organization): Attachment | undefined {
  * @throws {Error} If `id` is not a positive integer.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function parseOrganization(json: any): Organization {
+export function parseOrganization(json: unknown): Organization {
+  const raw = OrganizationResponseSchema.parse(json);
+
   // Parse attachments array from backend
-  const attachments: Attachment[] | undefined = json.attachments
-    ? (json.attachments as unknown[]).map((att) => parseAttachment(att))
+  const attachments: Attachment[] | undefined = raw.attachments
+    ? raw.attachments.map((att) => parseAttachment(att))
     : undefined;
 
   // Extract logo - use latest by createdAt if multiple exist
@@ -108,28 +136,28 @@ export function parseOrganization(json: any): Organization {
           (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
         )[0]
       : // Fallback for old API responses
-        (json.logo ?? json.organizationLogo)
-        ? parseAttachment(json.logo ?? json.organizationLogo)
+        (raw.logo ?? raw.organizationLogo)
+        ? parseAttachment(raw.logo ?? raw.organizationLogo)
         : undefined;
 
-  const id = parsePositiveInt(json.id, 'parseOrganization.id');
+  const id = parsePositiveInt(raw.id, 'parseOrganization.id');
 
   return {
     id,
-    organizationName: json.organizationName ?? '',
-    organizationAddress: json.organizationAddress ?? '',
-    organizationEmail: json.organizationEmail ?? '',
-    organizationPhone: json.organizationPhone ?? '',
-    organizationWebsite: json.organizationWebsite ?? undefined,
-    employees: json.employees
-      ? (json.employees as unknown[]).map((e) => parseEmployee(e))
+    organizationName: raw.organizationName ?? '',
+    organizationAddress: raw.organizationAddress ?? '',
+    organizationEmail: raw.organizationEmail ?? '',
+    organizationPhone: raw.organizationPhone ?? '',
+    organizationWebsite: raw.organizationWebsite ?? undefined,
+    employees: raw.employees
+      ? raw.employees.map((e) => parseEmployee(e))
       : undefined,
-    projects: json.projects
-      ? (json.projects as unknown[]).map((p) => parseProject(p))
+    projects: raw.projects
+      ? raw.projects.map((p) => parseProject(p))
       : undefined,
-    creatorId: json.proprietorId ?? json.creatorId ?? 0,
-    createdAt: parseUTCDate(json.createdAt) ?? undefined,
-    isActive: json.isActive ?? true,
+    creatorId: raw.proprietorId ?? raw.creatorId ?? 0,
+    createdAt: parseUTCDate(raw.createdAt) ?? undefined,
+    isActive: raw.isActive ?? true,
     attachments,
     logo,
   };
