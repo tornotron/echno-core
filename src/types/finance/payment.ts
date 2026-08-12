@@ -6,7 +6,36 @@
  * payload lives in `payment-create.ts` (re-exported).
  */
 
+import { z } from 'zod';
 import { parseUuid } from '../../lib/utils/parse-id';
+import {
+  backendDate,
+  money,
+  nullableString,
+} from '../../lib/validation/backend-schema';
+
+const AllocationSchema = z.object({
+  id: z.string().nullish(),
+  invoiceId: nullableString,
+  invoiceNumber: nullableString,
+  allocatedAmount: money,
+});
+
+const PaymentSchema = z.object({
+  id: z.string().nullish(),
+  paymentNumber: nullableString,
+  customerId: nullableString,
+  customerName: nullableString,
+  paymentDate: backendDate,
+  amount: money,
+  companyBankAccountId: nullableString,
+  bankName: nullableString,
+  bankAccountNumber: nullableString,
+  externalReference: nullableString,
+  journalEntryId: nullableString,
+  notes: nullableString,
+  allocations: z.array(z.unknown()).nullish(),
+});
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -53,12 +82,13 @@ export interface Payment {
 }
 
 /** Parses a raw allocation payload into a typed {@link Allocation}. */
-export function parseAllocation(json: any): Allocation {
+export function parseAllocation(json: unknown): Allocation {
+  const raw = AllocationSchema.parse(json);
   return {
-    id: parseUuid(json.id, 'parseAllocation.id'),
-    invoiceId: json.invoiceId ?? undefined,
-    invoiceNumber: json.invoiceNumber ?? undefined,
-    allocatedAmount: json.allocatedAmount ?? 0,
+    id: parseUuid(raw.id, 'parseAllocation.id'),
+    invoiceId: raw.invoiceId ?? undefined,
+    invoiceNumber: raw.invoiceNumber ?? undefined,
+    allocatedAmount: raw.allocatedAmount ?? 0,
   };
 }
 
@@ -69,22 +99,23 @@ export function parseAllocation(json: any): Allocation {
  * @returns A validated `Payment`.
  * @throws {TypeError} If `id` is missing or not a non-empty string.
  */
-export function parsePayment(json: any): Payment {
+export function parsePayment(json: unknown): Payment {
+  const raw = PaymentSchema.parse(json);
   return {
-    id: parseUuid(json.id, 'parsePayment.id'),
-    paymentNumber: json.paymentNumber ?? '',
-    customerId: json.customerId ?? undefined,
-    customerName: json.customerName ?? undefined,
-    paymentDate: json.paymentDate ?? undefined,
-    amount: json.amount ?? 0,
-    companyBankAccountId: json.companyBankAccountId ?? undefined,
-    bankName: json.bankName ?? undefined,
-    bankAccountNumber: json.bankAccountNumber ?? undefined,
-    externalReference: json.externalReference ?? undefined,
-    journalEntryId: json.journalEntryId ?? undefined,
-    notes: json.notes ?? undefined,
-    allocations: Array.isArray(json.allocations)
-      ? json.allocations.map((a: any) => parseAllocation(a))
+    id: parseUuid(raw.id, 'parsePayment.id'),
+    paymentNumber: raw.paymentNumber ?? '',
+    customerId: raw.customerId ?? undefined,
+    customerName: raw.customerName ?? undefined,
+    paymentDate: raw.paymentDate ?? undefined,
+    amount: raw.amount ?? 0,
+    companyBankAccountId: raw.companyBankAccountId ?? undefined,
+    bankName: raw.bankName ?? undefined,
+    bankAccountNumber: raw.bankAccountNumber ?? undefined,
+    externalReference: raw.externalReference ?? undefined,
+    journalEntryId: raw.journalEntryId ?? undefined,
+    notes: raw.notes ?? undefined,
+    allocations: Array.isArray(raw.allocations)
+      ? raw.allocations.map((a) => parseAllocation(a))
       : [],
   };
 }

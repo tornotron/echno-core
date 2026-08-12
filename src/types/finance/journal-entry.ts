@@ -6,8 +6,43 @@
  * Write payloads live in `journal-entry-create.ts` (re-exported).
  */
 
+import { z } from 'zod';
 import { parseUuid } from '../../lib/utils/parse-id';
+import {
+  backendDate,
+  money,
+  nullableNumber,
+  nullableString,
+  opaque,
+} from '../../lib/validation/backend-schema';
 import { JournalEntryStatus, parseJournalEntryStatus } from './finance-enums';
+
+const JournalEntryLineSchema = z.object({
+  id: z.string().nullish(),
+  accountId: nullableString,
+  accountCode: nullableString,
+  accountName: nullableString,
+  debit: money,
+  credit: money,
+  narration: nullableString,
+  lineOrder: nullableNumber,
+});
+
+const JournalEntrySchema = z.object({
+  id: z.string().nullish(),
+  entryNumber: nullableString,
+  entryDate: backendDate,
+  description: nullableString,
+  reference: nullableString,
+  status: opaque,
+  reversedByEntryId: nullableString,
+  reversesEntryId: nullableString,
+  sourceType: nullableString,
+  sourceId: nullableString,
+  lines: z.array(z.unknown()).nullish(),
+  createdAt: backendDate,
+  createdBy: nullableString,
+});
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -62,16 +97,17 @@ export interface JournalEntry {
 }
 
 /** Parses a raw journal-line payload into a typed {@link JournalEntryLine}. */
-export function parseJournalEntryLine(json: any): JournalEntryLine {
+export function parseJournalEntryLine(json: unknown): JournalEntryLine {
+  const raw = JournalEntryLineSchema.parse(json);
   return {
-    id: parseUuid(json.id, 'parseJournalEntryLine.id'),
-    accountId: json.accountId ?? undefined,
-    accountCode: json.accountCode ?? undefined,
-    accountName: json.accountName ?? undefined,
-    debit: json.debit ?? 0,
-    credit: json.credit ?? 0,
-    narration: json.narration ?? undefined,
-    lineOrder: json.lineOrder ?? undefined,
+    id: parseUuid(raw.id, 'parseJournalEntryLine.id'),
+    accountId: raw.accountId ?? undefined,
+    accountCode: raw.accountCode ?? undefined,
+    accountName: raw.accountName ?? undefined,
+    debit: raw.debit ?? 0,
+    credit: raw.credit ?? 0,
+    narration: raw.narration ?? undefined,
+    lineOrder: raw.lineOrder ?? undefined,
   };
 }
 
@@ -82,23 +118,24 @@ export function parseJournalEntryLine(json: any): JournalEntryLine {
  * @returns A validated `JournalEntry`.
  * @throws {TypeError} If `id` is missing or not a non-empty string.
  */
-export function parseJournalEntry(json: any): JournalEntry {
+export function parseJournalEntry(json: unknown): JournalEntry {
+  const raw = JournalEntrySchema.parse(json);
   return {
-    id: parseUuid(json.id, 'parseJournalEntry.id'),
-    entryNumber: json.entryNumber ?? '',
-    entryDate: json.entryDate ?? undefined,
-    description: json.description ?? undefined,
-    reference: json.reference ?? undefined,
-    status: parseJournalEntryStatus(json.status),
-    reversedByEntryId: json.reversedByEntryId ?? undefined,
-    reversesEntryId: json.reversesEntryId ?? undefined,
-    sourceType: json.sourceType ?? undefined,
-    sourceId: json.sourceId ?? undefined,
-    lines: Array.isArray(json.lines)
-      ? json.lines.map((line: any) => parseJournalEntryLine(line))
+    id: parseUuid(raw.id, 'parseJournalEntry.id'),
+    entryNumber: raw.entryNumber ?? '',
+    entryDate: raw.entryDate ?? undefined,
+    description: raw.description ?? undefined,
+    reference: raw.reference ?? undefined,
+    status: parseJournalEntryStatus(raw.status),
+    reversedByEntryId: raw.reversedByEntryId ?? undefined,
+    reversesEntryId: raw.reversesEntryId ?? undefined,
+    sourceType: raw.sourceType ?? undefined,
+    sourceId: raw.sourceId ?? undefined,
+    lines: Array.isArray(raw.lines)
+      ? raw.lines.map((line) => parseJournalEntryLine(line))
       : [],
-    createdAt: json.createdAt ?? undefined,
-    createdBy: json.createdBy ?? undefined,
+    createdAt: raw.createdAt ?? undefined,
+    createdBy: raw.createdBy ?? undefined,
   };
 }
 
