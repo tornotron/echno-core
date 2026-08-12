@@ -8,11 +8,66 @@
  * {@link parseLeaveTransaction}.
  */
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
+import { z } from 'zod';
 import { parsePositiveInt } from '../../lib/utils/parse-id';
 import { parseUTCDate } from '../../lib/utils/date-helpers';
 import { TransactionType } from './leave-enums';
+import {
+  backendDate,
+  nullableNumber,
+  nullableString,
+  opaque,
+  optionalNumericId,
+} from '../../lib/validation/backend-schema';
+
+const LeaveBalanceResponseSchema = z.object({
+  id: opaque,
+  employeeId: opaque,
+  leavePolicyId: opaque,
+  leavePolicy: z
+    .object({ id: opaque, leaveTypeName: nullableString })
+    .nullish(),
+  leaveTypeName: nullableString,
+  year: nullableNumber,
+  openingBalance: nullableNumber,
+  accrued: nullableNumber,
+  used: nullableNumber,
+  pending: nullableNumber,
+  carryForwardFromPrevious: nullableNumber,
+  availableBalance: nullableNumber,
+  available: nullableNumber,
+  bookableBalance: nullableNumber,
+  bookable: nullableNumber,
+  lastAccrualDate: backendDate,
+  lastCalculatedAt: backendDate,
+  createdAt: backendDate,
+  updatedAt: backendDate,
+});
+
+const LeaveBalanceSummaryResponseSchema = z.object({
+  employeeId: opaque,
+  year: nullableNumber,
+  balances: z.array(z.unknown()).nullish(),
+  totalAvailable: nullableNumber,
+  totalUsed: nullableNumber,
+  totalPending: nullableNumber,
+});
+
+const LeaveTransactionResponseSchema = z.object({
+  id: opaque,
+  leaveBalanceId: opaque,
+  leaveBalance: z.object({ leaveTypeName: nullableString }).nullish(),
+  leaveTypeName: nullableString,
+  transactionType: nullableString,
+  days: nullableNumber,
+  balanceBefore: nullableNumber,
+  balanceAfter: nullableNumber,
+  leaveRequestId: optionalNumericId,
+  reason: nullableString,
+  transactionDate: backendDate,
+  createdById: optionalNumericId,
+  createdAt: backendDate,
+});
 
 /** An employee's balance under one leave policy for one year. */
 export interface LeaveBalance {
@@ -119,30 +174,32 @@ export interface AdjustLeaveBalanceRequest {
  * @throws {Error} If `id`, `employeeId`, or the resolved policy id is missing or
  *   not a positive int.
  */
-export function parseLeaveBalance(json: any): LeaveBalance {
+export function parseLeaveBalance(json: unknown): LeaveBalance {
+  const raw = LeaveBalanceResponseSchema.parse(json);
   return {
-    id: parsePositiveInt(json.id, 'parseLeaveBalance.id'),
+    id: parsePositiveInt(raw.id, 'parseLeaveBalance.id'),
     employeeId: parsePositiveInt(
-      json.employeeId,
+      raw.employeeId,
       'parseLeaveBalance.employeeId'
     ),
     leavePolicyId: parsePositiveInt(
-      json.leavePolicyId ?? json.leavePolicy?.id,
+      raw.leavePolicyId ?? raw.leavePolicy?.id,
       'parseLeaveBalance.leavePolicyId'
     ),
-    leaveTypeName: json.leaveTypeName ?? json.leavePolicy?.leaveTypeName,
-    year: json.year ?? new Date().getFullYear(),
-    openingBalance: json.openingBalance ?? 0,
-    accrued: json.accrued ?? 0,
-    used: json.used ?? 0,
-    pending: json.pending ?? 0,
-    carryForwardFromPrevious: json.carryForwardFromPrevious ?? 0,
-    availableBalance: json.availableBalance ?? json.available ?? 0,
-    bookableBalance: json.bookableBalance ?? json.bookable ?? 0,
+    leaveTypeName:
+      raw.leaveTypeName ?? raw.leavePolicy?.leaveTypeName ?? undefined,
+    year: raw.year ?? new Date().getFullYear(),
+    openingBalance: raw.openingBalance ?? 0,
+    accrued: raw.accrued ?? 0,
+    used: raw.used ?? 0,
+    pending: raw.pending ?? 0,
+    carryForwardFromPrevious: raw.carryForwardFromPrevious ?? 0,
+    availableBalance: raw.availableBalance ?? raw.available ?? 0,
+    bookableBalance: raw.bookableBalance ?? raw.bookable ?? 0,
     lastAccrualDate:
-      parseUTCDate(json.lastAccrualDate ?? json.lastCalculatedAt) ?? undefined,
-    createdAt: parseUTCDate(json.createdAt) ?? undefined,
-    updatedAt: parseUTCDate(json.updatedAt) ?? undefined,
+      parseUTCDate(raw.lastAccrualDate ?? raw.lastCalculatedAt) ?? undefined,
+    createdAt: parseUTCDate(raw.createdAt) ?? undefined,
+    updatedAt: parseUTCDate(raw.updatedAt) ?? undefined,
   };
 }
 
@@ -156,19 +213,20 @@ export function parseLeaveBalance(json: any): LeaveBalance {
  * @returns A validated `LeaveBalanceSummary` domain object.
  * @throws {Error} If `employeeId` is missing or not a positive int.
  */
-export function parseLeaveBalanceSummary(json: any): LeaveBalanceSummary {
+export function parseLeaveBalanceSummary(json: unknown): LeaveBalanceSummary {
+  const raw = LeaveBalanceSummaryResponseSchema.parse(json);
   return {
     employeeId: parsePositiveInt(
-      json.employeeId,
+      raw.employeeId,
       'parseLeaveBalanceSummary.employeeId'
     ),
-    year: json.year ?? new Date().getFullYear(),
-    balances: json.balances
-      ? json.balances.map((b: any) => parseLeaveBalance(b))
+    year: raw.year ?? new Date().getFullYear(),
+    balances: raw.balances
+      ? raw.balances.map((b) => parseLeaveBalance(b))
       : [],
-    totalAvailable: json.totalAvailable ?? 0,
-    totalUsed: json.totalUsed ?? 0,
-    totalPending: json.totalPending ?? 0,
+    totalAvailable: raw.totalAvailable ?? 0,
+    totalUsed: raw.totalUsed ?? 0,
+    totalPending: raw.totalPending ?? 0,
   };
 }
 
@@ -184,22 +242,25 @@ export function parseLeaveBalanceSummary(json: any): LeaveBalanceSummary {
  * @returns A validated `LeaveTransaction` domain object.
  * @throws {Error} If `id` or `leaveBalanceId` is missing or not a positive int.
  */
-export function parseLeaveTransaction(json: any): LeaveTransaction {
+export function parseLeaveTransaction(json: unknown): LeaveTransaction {
+  const raw = LeaveTransactionResponseSchema.parse(json);
   return {
-    id: parsePositiveInt(json.id, 'parseLeaveTransaction.id'),
+    id: parsePositiveInt(raw.id, 'parseLeaveTransaction.id'),
     leaveBalanceId: parsePositiveInt(
-      json.leaveBalanceId,
+      raw.leaveBalanceId,
       'parseLeaveTransaction.leaveBalanceId'
     ),
-    leaveTypeName: json.leaveTypeName ?? json.leaveBalance?.leaveTypeName,
-    transactionType: json.transactionType ?? TransactionType.ADJUSTMENT,
-    days: json.days ?? 0,
-    balanceBefore: json.balanceBefore ?? 0,
-    balanceAfter: json.balanceAfter ?? 0,
-    leaveRequestId: json.leaveRequestId,
-    reason: json.reason,
-    transactionDate: parseUTCDate(json.transactionDate) ?? new Date(),
-    createdById: json.createdById,
-    createdAt: parseUTCDate(json.createdAt) ?? undefined,
+    leaveTypeName:
+      raw.leaveTypeName ?? raw.leaveBalance?.leaveTypeName ?? undefined,
+    transactionType:
+      (raw.transactionType as TransactionType) ?? TransactionType.ADJUSTMENT,
+    days: raw.days ?? 0,
+    balanceBefore: raw.balanceBefore ?? 0,
+    balanceAfter: raw.balanceAfter ?? 0,
+    leaveRequestId: raw.leaveRequestId ?? undefined,
+    reason: raw.reason ?? undefined,
+    transactionDate: parseUTCDate(raw.transactionDate) ?? new Date(),
+    createdById: raw.createdById ?? undefined,
+    createdAt: parseUTCDate(raw.createdAt) ?? undefined,
   };
 }

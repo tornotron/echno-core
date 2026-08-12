@@ -16,7 +16,16 @@
  * - `currentUses` → `usedCount`
  */
 
+import { z } from 'zod';
 import { parseUTCDate } from '../../lib/utils/date-helpers';
+import {
+  backendDate,
+  money,
+  nullableBoolean,
+  nullableNumber,
+  nullableString,
+  optionalNumericId,
+} from '../../lib/validation/backend-schema';
 
 /**
  * Normalized invitation status derived from `isActive`, `expiryDate`, and
@@ -68,6 +77,32 @@ export interface Invitation {
   organizationName?: string;
 }
 
+const EmployeeDetailsResponseSchema = z.object({
+  department: nullableString,
+  designation: nullableString,
+  email: nullableString,
+  employeeId: nullableString,
+  employeeName: nullableString,
+  joiningDate: backendDate,
+  phone: nullableString,
+  managerId: optionalNumericId,
+  salary: money,
+  shiftTiming: nullableString,
+  status: nullableString,
+});
+
+const InvitationResponseSchema = z.object({
+  id: optionalNumericId,
+  code: nullableString,
+  expiryDate: backendDate,
+  maxUses: nullableNumber,
+  currentUses: nullableNumber,
+  employeeDetails: EmployeeDetailsResponseSchema.nullish(),
+  active: nullableBoolean,
+  organizationId: optionalNumericId,
+  organizationName: nullableString,
+});
+
 /**
  * Parses a raw backend payload into a typed {@link Invitation}.
  *
@@ -77,35 +112,36 @@ export interface Invitation {
  * @param json - The untyped JSON object received from the backend.
  * @returns A validated `Invitation` domain object.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function parseInvitation(json: any): Invitation {
+export function parseInvitation(json: unknown): Invitation {
+  const raw = InvitationResponseSchema.parse(json);
+
   const employeeDetails: EmployeeDetails = {
-    department: json.employeeDetails?.department ?? '',
-    designation: json.employeeDetails?.designation ?? '',
-    email: json.employeeDetails?.email ?? undefined,
-    employeeId: json.employeeDetails?.employeeId ?? undefined,
-    employeeName: json.employeeDetails?.employeeName ?? undefined,
-    joiningDate: parseUTCDate(json.employeeDetails?.joiningDate) ?? undefined,
-    phone: json.employeeDetails?.phone ?? undefined,
-    managerId: json.employeeDetails?.managerId ?? undefined,
+    department: raw.employeeDetails?.department ?? '',
+    designation: raw.employeeDetails?.designation ?? '',
+    email: raw.employeeDetails?.email ?? undefined,
+    employeeId: raw.employeeDetails?.employeeId ?? undefined,
+    employeeName: raw.employeeDetails?.employeeName ?? undefined,
+    joiningDate: parseUTCDate(raw.employeeDetails?.joiningDate) ?? undefined,
+    phone: raw.employeeDetails?.phone ?? undefined,
+    managerId: raw.employeeDetails?.managerId ?? undefined,
     salary:
-      json.employeeDetails?.salary == null
+      raw.employeeDetails?.salary == null
         ? undefined
-        : Number(json.employeeDetails.salary),
-    shiftTiming: json.employeeDetails?.shiftTiming ?? undefined,
-    status: json.employeeDetails?.status ?? undefined,
+        : Number(raw.employeeDetails?.salary),
+    shiftTiming: raw.employeeDetails?.shiftTiming ?? undefined,
+    status: raw.employeeDetails?.status ?? undefined,
   };
 
   return {
-    id: json.id ?? undefined,
-    inviteCode: json.code == null ? '' : String(json.code),
-    expiryDate: parseUTCDate(json.expiryDate) ?? undefined,
-    maxUses: json.maxUses ?? undefined,
-    usedCount: json.currentUses ?? 0,
+    id: raw.id ?? undefined,
+    inviteCode: raw.code == null ? '' : String(raw.code),
+    expiryDate: parseUTCDate(raw.expiryDate) ?? undefined,
+    maxUses: raw.maxUses ?? undefined,
+    usedCount: raw.currentUses ?? 0,
     employeeDetails,
-    isActive: json.active ?? true,
-    organizationId: json.organizationId ?? undefined,
-    organizationName: json.organizationName ?? undefined,
+    isActive: raw.active ?? true,
+    organizationId: raw.organizationId ?? undefined,
+    organizationName: raw.organizationName ?? undefined,
   };
 }
 

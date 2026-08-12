@@ -9,9 +9,31 @@
  */
 import { parsePositiveInt } from "../../lib/utils/parse-id";
 import { parseUTCDate } from "../../lib/utils/date-helpers";
+import { z } from "zod";
+import {
+  backendDate,
+  money,
+  nullableNumber,
+  nullableString,
+  opaque,
+  optionalNumericId,
+} from "../../lib/validation/backend-schema";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type Raw = any;
+const WbsElementResponseSchema = z.object({
+  id: opaque,
+  projectId: opaque,
+  name: nullableString,
+  code: nullableString,
+  description: nullableString,
+  parentElementId: optionalNumericId,
+  plannedStartDate: backendDate,
+  plannedEndDate: backendDate,
+  status: nullableString,
+  progress: nullableNumber,
+  allocatedBudget: money,
+  priority: nullableString,
+  children: z.array(z.unknown()).nullish(),
+});
 
 /**
  * A single node in a project's WBS hierarchy. The same shape is
@@ -87,13 +109,14 @@ export interface WbsElement {
  * distinguish "tree response with no children" from "flat-list
  * response".
  *
- * @param raw - The raw JSON object from the backend.
+ * @param json - The raw JSON object from the backend.
  * @returns The parsed {@link WbsElement} (recursively parsed for any
  *   nested children).
  * @throws {TypeError} When `raw.id` or `raw.projectId` is missing or
  *   non-positive (propagated from {@link parsePositiveInt}).
  */
-export function parseWbsElement(raw: Raw): WbsElement {
+export function parseWbsElement(json: unknown): WbsElement {
+  const raw = WbsElementResponseSchema.parse(json);
   return {
     id: parsePositiveInt(raw.id, 'parseWbsElement.id'),
     projectId: parsePositiveInt(raw.projectId, 'parseWbsElement.projectId'),
@@ -108,7 +131,7 @@ export function parseWbsElement(raw: Raw): WbsElement {
     allocatedBudget: raw.allocatedBudget ?? undefined,
     priority: raw.priority ?? undefined,
     children: Array.isArray(raw.children)
-      ? (raw.children as Raw[]).map((child: Raw) => parseWbsElement(child))
+      ? raw.children.map((child) => parseWbsElement(child))
       : undefined,
   };
 }

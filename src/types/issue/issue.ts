@@ -5,6 +5,7 @@
  * defect, or coordination item that may optionally belong to a {@link Task}
  * and always belongs to a project.
  */
+import { z } from 'zod';
 import { IssueType, issueTypeFromString } from './issue-type';
 import { IssueStatus, issueStatusFromString } from './issue-status';
 import { IssueComment, parseIssueComment } from './issue-comment';
@@ -12,6 +13,34 @@ import { Attachment, parseAttachment } from '../attachment';
 import { parsePositiveInt } from '../../lib/utils/parse-id';
 import { Employee } from '../employee/employee';
 import { parseUTCDate } from '../../lib/utils/date-helpers';
+import {
+  backendDate,
+  nullableString,
+  opaque,
+  optionalNumericId,
+} from '../../lib/validation/backend-schema';
+
+/**
+ * Shape of the backend issue payload at the parse boundary. `type` and
+ * `status` are required strings — they feed the `fromString` mappers, which
+ * already reject anything unknown. Nested arrays are handed to their own
+ * parsers; the joined `creator` / `assignee` never appear on the payload.
+ */
+const IssueResponseSchema = z.object({
+  id: opaque,
+  taskId: optionalNumericId,
+  taskName: nullableString,
+  title: nullableString,
+  description: nullableString,
+  type: z.string(),
+  status: z.string(),
+  createdAt: backendDate,
+  updatedAt: backendDate,
+  createdById: optionalNumericId,
+  assignedToId: optionalNumericId,
+  issueComments: z.array(z.unknown()).nullish(),
+  attachments: z.array(z.unknown()).nullish(),
+});
 
 /**
  * Represents a single issue.
@@ -81,29 +110,29 @@ export interface Issue {
  * @throws {TypeError} If `id` is missing or not a positive integer.
  * @throws {Error} If `type` or `status` cannot be mapped to a known enum member.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function parseIssue(json: any): Issue {
-  const id = parsePositiveInt(json.id, 'parseIssue.id');
+export function parseIssue(json: unknown): Issue {
+  const raw = IssueResponseSchema.parse(json);
+  const id = parsePositiveInt(raw.id, 'parseIssue.id');
 
   return {
     id,
-    taskId: json.taskId ?? undefined,
-    taskName: json.taskName ?? undefined,
-    title: json.title ?? '',
-    description: json.description ?? undefined,
-    type: issueTypeFromString(json.type),
-    status: issueStatusFromString(json.status),
-    createdAt: parseUTCDate(json.createdAt) ?? new Date(),
-    updatedAt: json.updatedAt
-      ? (parseUTCDate(json.updatedAt) ?? undefined)
+    taskId: raw.taskId ?? undefined,
+    taskName: raw.taskName ?? undefined,
+    title: raw.title ?? '',
+    description: raw.description ?? undefined,
+    type: issueTypeFromString(raw.type),
+    status: issueStatusFromString(raw.status),
+    createdAt: parseUTCDate(raw.createdAt) ?? new Date(),
+    updatedAt: raw.updatedAt
+      ? (parseUTCDate(raw.updatedAt) ?? undefined)
       : undefined,
-    creatorId: json.createdById ?? undefined,
-    assigneeId: json.assignedToId ?? undefined,
-    comments: json.issueComments
-      ? (json.issueComments as unknown[]).map((c) => parseIssueComment(c))
+    creatorId: raw.createdById ?? undefined,
+    assigneeId: raw.assignedToId ?? undefined,
+    comments: raw.issueComments
+      ? raw.issueComments.map((c) => parseIssueComment(c))
       : [],
-    attachments: json.attachments
-      ? (json.attachments as unknown[]).map((a) => parseAttachment(a))
+    attachments: raw.attachments
+      ? raw.attachments.map((a) => parseAttachment(a))
       : [],
   };
 }

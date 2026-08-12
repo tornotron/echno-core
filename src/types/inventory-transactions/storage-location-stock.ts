@@ -7,8 +7,34 @@
  * `GET /inventory-transactions/web/storage-location/{storageLocationId}/stock`.
  */
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type Raw = any;
+import { z } from 'zod';
+import {
+  money,
+  nullableNumber,
+  nullableString,
+} from '../../lib/validation/backend-schema';
+
+/**
+ * Shape of the backend storage-location-stock payload at the parse boundary.
+ * Numeric fields stay nullish so the parser's `?? 0` defaults still apply;
+ * stock quantities and values coerce string BigDecimals through `money`.
+ */
+const LocationMaterialStockSchema = z.object({
+  materialId: nullableNumber,
+  materialName: nullableString,
+  unit: nullableString,
+  stock: money,
+  stockValue: money,
+});
+
+const StorageLocationStockResponseSchema = z.object({
+  storageLocationId: nullableNumber,
+  storageLocationName: nullableString,
+  projectId: nullableNumber,
+  materialStock: z.array(LocationMaterialStockSchema).nullish(),
+  totalStock: money,
+  totalStockValue: money,
+});
 
 /**
  * Stock for one material at the parent storage location. Stock value
@@ -61,32 +87,30 @@ export interface StorageLocationStock {
  * Parses a raw storage-location-stock payload into a typed
  * {@link StorageLocationStock}.
  *
- * Tolerant of malformed inputs — any non-object `raw` is treated as
- * empty, numeric fields default to `0`, and an absent or non-array
- * `materialStock` resolves to `[]`. Never throws.
+ * Numeric fields default to `0` and an absent or non-array `materialStock`
+ * resolves to `[]`. A structurally invalid payload fails fast at the schema
+ * boundary rather than flowing through as fabricated values.
  *
- * @param raw - The raw JSON object from the backend.
+ * @param json - The raw JSON object from the backend.
  * @returns The parsed {@link StorageLocationStock}.
+ * @throws {Error} When the payload is not a structurally valid object.
  */
-export function parseStorageLocationStock(raw: Raw): StorageLocationStock {
-  const safeRaw = raw != null && typeof raw === 'object' ? raw : {};
+export function parseStorageLocationStock(json: unknown): StorageLocationStock {
+  const raw = StorageLocationStockResponseSchema.parse(json);
   return {
-    storageLocationId: safeRaw.storageLocationId ?? 0,
-    storageLocationName: safeRaw.storageLocationName ?? '',
-    projectId: safeRaw.projectId ?? 0,
-    materialStock: Array.isArray(safeRaw.materialStock)
-      ? safeRaw.materialStock.map((ms: Raw) => {
-          const safeMs = ms != null && typeof ms === 'object' ? ms : {};
-          return {
-            materialId: safeMs.materialId ?? 0,
-            materialName: safeMs.materialName ?? '',
-            unit: safeMs.unit ?? '',
-            stock: safeMs.stock ?? 0,
-            stockValue: safeMs.stockValue ?? 0,
-          };
-        })
+    storageLocationId: raw.storageLocationId ?? 0,
+    storageLocationName: raw.storageLocationName ?? '',
+    projectId: raw.projectId ?? 0,
+    materialStock: Array.isArray(raw.materialStock)
+      ? raw.materialStock.map((ms) => ({
+          materialId: ms.materialId ?? 0,
+          materialName: ms.materialName ?? '',
+          unit: ms.unit ?? '',
+          stock: ms.stock ?? 0,
+          stockValue: ms.stockValue ?? 0,
+        }))
       : [],
-    totalStock: safeRaw.totalStock ?? 0,
-    totalStockValue: safeRaw.totalStockValue ?? 0,
+    totalStock: raw.totalStock ?? 0,
+    totalStockValue: raw.totalStockValue ?? 0,
   };
 }

@@ -8,9 +8,13 @@
  * surrogate id, so no id validation is applied.
  */
 
+import { z } from 'zod';
 import { AccountType, parseAccountType } from './finance-enums';
-
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import {
+  money,
+  nullableBoolean,
+  nullableString,
+} from '../../lib/validation/backend-schema';
 
 /** One account's contribution to a P&L or balance-sheet section. */
 export interface AccountLine {
@@ -22,12 +26,19 @@ export interface AccountLine {
   amount: number;
 }
 
+const AccountLineResponseSchema = z.object({
+  accountCode: nullableString,
+  accountName: nullableString,
+  amount: money,
+});
+
 /** Parses a raw account-line payload into a typed {@link AccountLine}. */
-export function parseAccountLine(json: any): AccountLine {
+export function parseAccountLine(json: unknown): AccountLine {
+  const raw = AccountLineResponseSchema.parse(json);
   return {
-    accountCode: json.accountCode ?? '',
-    accountName: json.accountName ?? '',
-    amount: json.amount ?? 0,
+    accountCode: raw.accountCode ?? '',
+    accountName: raw.accountName ?? '',
+    amount: raw.amount ?? 0,
   };
 }
 
@@ -49,16 +60,27 @@ export interface TrialBalanceRow {
   creditBalance: number;
 }
 
+const TrialBalanceRowResponseSchema = z.object({
+  accountCode: nullableString,
+  accountName: nullableString,
+  type: nullableString,
+  totalDebit: money,
+  totalCredit: money,
+  debitBalance: money,
+  creditBalance: money,
+});
+
 /** Parses a raw trial-balance row into a typed {@link TrialBalanceRow}. */
-export function parseTrialBalanceRow(json: any): TrialBalanceRow {
+export function parseTrialBalanceRow(json: unknown): TrialBalanceRow {
+  const raw = TrialBalanceRowResponseSchema.parse(json);
   return {
-    accountCode: json.accountCode ?? '',
-    accountName: json.accountName ?? '',
-    type: parseAccountType(json.type),
-    totalDebit: json.totalDebit ?? 0,
-    totalCredit: json.totalCredit ?? 0,
-    debitBalance: json.debitBalance ?? 0,
-    creditBalance: json.creditBalance ?? 0,
+    accountCode: raw.accountCode ?? '',
+    accountName: raw.accountName ?? '',
+    type: parseAccountType(raw.type),
+    totalDebit: raw.totalDebit ?? 0,
+    totalCredit: raw.totalCredit ?? 0,
+    debitBalance: raw.debitBalance ?? 0,
+    creditBalance: raw.creditBalance ?? 0,
   };
 }
 
@@ -76,16 +98,25 @@ export interface TrialBalanceReport {
   balanced: boolean;
 }
 
+const TrialBalanceReportResponseSchema = z.object({
+  asOfDate: nullableString,
+  rows: z.array(z.unknown()).nullish(),
+  totalDebit: money,
+  totalCredit: money,
+  balanced: nullableBoolean,
+});
+
 /** Parses a raw trial-balance payload into a typed {@link TrialBalanceReport}. */
-export function parseTrialBalanceReport(json: any): TrialBalanceReport {
+export function parseTrialBalanceReport(json: unknown): TrialBalanceReport {
+  const raw = TrialBalanceReportResponseSchema.parse(json);
   return {
-    asOfDate: json.asOfDate ?? undefined,
-    rows: Array.isArray(json.rows)
-      ? json.rows.map((r: any) => parseTrialBalanceRow(r))
+    asOfDate: raw.asOfDate ?? undefined,
+    rows: Array.isArray(raw.rows)
+      ? raw.rows.map((r) => parseTrialBalanceRow(r))
       : [],
-    totalDebit: json.totalDebit ?? 0,
-    totalCredit: json.totalCredit ?? 0,
-    balanced: json.balanced ?? false,
+    totalDebit: raw.totalDebit ?? 0,
+    totalCredit: raw.totalCredit ?? 0,
+    balanced: raw.balanced ?? false,
   };
 }
 
@@ -107,20 +138,31 @@ export interface ProfitAndLossReport {
   netProfit: number;
 }
 
+const ProfitAndLossReportResponseSchema = z.object({
+  fromDate: nullableString,
+  toDate: nullableString,
+  income: z.array(z.unknown()).nullish(),
+  totalIncome: money,
+  expense: z.array(z.unknown()).nullish(),
+  totalExpense: money,
+  netProfit: money,
+});
+
 /** Parses a raw P&L payload into a typed {@link ProfitAndLossReport}. */
-export function parseProfitAndLossReport(json: any): ProfitAndLossReport {
+export function parseProfitAndLossReport(json: unknown): ProfitAndLossReport {
+  const raw = ProfitAndLossReportResponseSchema.parse(json);
   return {
-    fromDate: json.fromDate ?? undefined,
-    toDate: json.toDate ?? undefined,
-    income: Array.isArray(json.income)
-      ? json.income.map((l: any) => parseAccountLine(l))
+    fromDate: raw.fromDate ?? undefined,
+    toDate: raw.toDate ?? undefined,
+    income: Array.isArray(raw.income)
+      ? raw.income.map((l) => parseAccountLine(l))
       : [],
-    totalIncome: json.totalIncome ?? 0,
-    expense: Array.isArray(json.expense)
-      ? json.expense.map((l: any) => parseAccountLine(l))
+    totalIncome: raw.totalIncome ?? 0,
+    expense: Array.isArray(raw.expense)
+      ? raw.expense.map((l) => parseAccountLine(l))
       : [],
-    totalExpense: json.totalExpense ?? 0,
-    netProfit: json.netProfit ?? 0,
+    totalExpense: raw.totalExpense ?? 0,
+    netProfit: raw.netProfit ?? 0,
   };
 }
 
@@ -148,24 +190,38 @@ export interface BalanceSheetReport {
   balanced: boolean;
 }
 
+const BalanceSheetReportResponseSchema = z.object({
+  asOfDate: nullableString,
+  assets: z.array(z.unknown()).nullish(),
+  totalAssets: money,
+  liabilities: z.array(z.unknown()).nullish(),
+  totalLiabilities: money,
+  equity: z.array(z.unknown()).nullish(),
+  totalEquity: money,
+  retainedEarningsForPeriod: money,
+  totalLiabilitiesAndEquity: money,
+  balanced: nullableBoolean,
+});
+
 /** Parses a raw balance-sheet payload into a typed {@link BalanceSheetReport}. */
-export function parseBalanceSheetReport(json: any): BalanceSheetReport {
+export function parseBalanceSheetReport(json: unknown): BalanceSheetReport {
+  const raw = BalanceSheetReportResponseSchema.parse(json);
   return {
-    asOfDate: json.asOfDate ?? undefined,
-    assets: Array.isArray(json.assets)
-      ? json.assets.map((l: any) => parseAccountLine(l))
+    asOfDate: raw.asOfDate ?? undefined,
+    assets: Array.isArray(raw.assets)
+      ? raw.assets.map((l) => parseAccountLine(l))
       : [],
-    totalAssets: json.totalAssets ?? 0,
-    liabilities: Array.isArray(json.liabilities)
-      ? json.liabilities.map((l: any) => parseAccountLine(l))
+    totalAssets: raw.totalAssets ?? 0,
+    liabilities: Array.isArray(raw.liabilities)
+      ? raw.liabilities.map((l) => parseAccountLine(l))
       : [],
-    totalLiabilities: json.totalLiabilities ?? 0,
-    equity: Array.isArray(json.equity)
-      ? json.equity.map((l: any) => parseAccountLine(l))
+    totalLiabilities: raw.totalLiabilities ?? 0,
+    equity: Array.isArray(raw.equity)
+      ? raw.equity.map((l) => parseAccountLine(l))
       : [],
-    totalEquity: json.totalEquity ?? 0,
-    retainedEarningsForPeriod: json.retainedEarningsForPeriod ?? 0,
-    totalLiabilitiesAndEquity: json.totalLiabilitiesAndEquity ?? 0,
-    balanced: json.balanced ?? false,
+    totalEquity: raw.totalEquity ?? 0,
+    retainedEarningsForPeriod: raw.retainedEarningsForPeriod ?? 0,
+    totalLiabilitiesAndEquity: raw.totalLiabilitiesAndEquity ?? 0,
+    balanced: raw.balanced ?? false,
   };
 }

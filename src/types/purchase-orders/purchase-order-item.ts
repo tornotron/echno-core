@@ -11,10 +11,27 @@
  *   creating items inline as part of a new PO payload (see
  *   {@link CreatePurchaseOrderRequest}).
  */
+import { z } from 'zod';
 import { parsePositiveInt } from '../../lib/utils/parse-id';
+import {
+  money,
+  nullableString,
+  numericId,
+  opaque,
+  optionalNumericId,
+} from '../../lib/validation/backend-schema';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type Raw = any;
+const PurchaseOrderItemResponseSchema = z.object({
+  id: opaque,
+  materialId: numericId,
+  materialName: nullableString,
+  indentItemId: optionalNumericId,
+  orderedQuantity: money,
+  receivedQuantity: money,
+  unitPrice: money,
+  totalPrice: money,
+  remarks: nullableString,
+});
 
 /**
  * A single line item on a {@link PurchaseOrder}. `materialName` is
@@ -86,18 +103,19 @@ export interface InlinePurchaseOrderItemInput {
  * `materialName` defaults to `''` when absent; `receivedQuantity` defaults
  * to `0`.
  *
- * @param raw - The raw JSON object from the backend.
+ * @param json - The raw JSON object from the backend.
  * @returns The parsed {@link PurchaseOrderItem}.
- * @throws {TypeError} When `raw.id` is missing or non-positive (propagated
- *   from {@link parsePositiveInt}).
+ * @throws {TypeError} When `id` is missing or non-positive (propagated from
+ *   {@link parsePositiveInt}), or `materialId` is not a positive integer.
  */
-export function parsePurchaseOrderItem(raw: Raw): PurchaseOrderItem {
+export function parsePurchaseOrderItem(json: unknown): PurchaseOrderItem {
+  const raw = PurchaseOrderItemResponseSchema.parse(json);
   return {
     id: parsePositiveInt(raw.id, 'parsePurchaseOrderItem.id'),
     materialId: raw.materialId,
     materialName: raw.materialName ?? '',
     indentItemId: raw.indentItemId ?? undefined,
-    orderedQuantity: raw.orderedQuantity,
+    orderedQuantity: raw.orderedQuantity ?? 0,
     receivedQuantity: raw.receivedQuantity ?? 0,
     unitPrice: raw.unitPrice ?? undefined,
     totalPrice: raw.totalPrice ?? undefined,

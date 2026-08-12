@@ -6,10 +6,28 @@
  * embedded under {@link CreateSiteTransferRequest.items}; the
  * server-resolved shape is what comes back as part of `SiteTransfer.items`.
  */
-import { parsePositiveInt } from "../../lib/utils/parse-id";
+import { z } from 'zod';
+import { parsePositiveInt } from '../../lib/utils/parse-id';
+import {
+  money,
+  nullableString,
+  optionalNumericId,
+  opaque,
+} from '../../lib/validation/backend-schema';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type Raw = any;
+/**
+ * Shape of the backend site-transfer line-item payload at the parse boundary.
+ * `id` stays `opaque` (validated by `parsePositiveInt`); `sentQuantity` and
+ * `transferValue` coerce string BigDecimals through `money`.
+ */
+const SiteTransferItemResponseSchema = z.object({
+  id: opaque,
+  materialId: optionalNumericId,
+  materialName: nullableString,
+  sentQuantity: money,
+  transferValue: money,
+  remarks: nullableString,
+});
 
 /**
  * A single line item on a {@link SiteTransfer}, as returned by the
@@ -82,12 +100,13 @@ export function createSiteTransferItemToJson(
  * Numeric/string fields fall back to safe defaults (`0` / `''`) when
  * absent; optional fields resolve to `undefined`.
  *
- * @param raw - The raw JSON object from the backend.
+ * @param json - The raw JSON object from the backend.
  * @returns The parsed {@link SiteTransferItem}.
  * @throws {TypeError} When `raw.id` is missing or non-positive
  *   (propagated from {@link parsePositiveInt}).
  */
-export function parseSiteTransferItem(raw: Raw): SiteTransferItem {
+export function parseSiteTransferItem(json: unknown): SiteTransferItem {
+  const raw = SiteTransferItemResponseSchema.parse(json);
   const id = parsePositiveInt(raw.id, 'parseSiteTransferItem.id');
   return {
     id,

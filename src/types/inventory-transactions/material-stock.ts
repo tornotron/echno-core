@@ -7,8 +7,34 @@
  * `GET /inventory-transactions/web/material/{materialId}/stock`.
  */
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type Raw = any;
+import { z } from 'zod';
+import {
+  money,
+  nullableString,
+  numericId,
+} from '../../lib/validation/backend-schema';
+
+/**
+ * Shape of the backend material-stock payload at the parse boundary. Surrogate
+ * ids are validated as positive integers; stock quantities and values coerce
+ * string BigDecimals through `money`.
+ */
+const LocationStockSchema = z.object({
+  storageLocationId: numericId,
+  storageLocationName: nullableString,
+  projectId: numericId,
+  projectName: nullableString,
+  stock: money,
+  stockValue: money,
+});
+
+const MaterialStockResponseSchema = z.object({
+  materialId: numericId,
+  materialName: nullableString,
+  locationStock: z.array(LocationStockSchema).nullish(),
+  totalStock: money,
+  totalStockValue: money,
+});
 
 /**
  * Stock the material currently holds at one storage location, scoped
@@ -63,19 +89,17 @@ export interface MaterialStock {
  * Numeric fields fall back to `0` when absent. An absent or non-array
  * `locationStock` resolves to `[]`.
  *
- * @param raw - The raw JSON object from the backend.
+ * @param json - The raw JSON object from the backend.
  * @returns The parsed {@link MaterialStock}.
- * @throws {Error} When `raw` is not an object.
+ * @throws {Error} When the payload is not a structurally valid object.
  */
-export function parseMaterialStock(raw: Raw): MaterialStock {
-  if (raw === null || typeof raw !== 'object') {
-    throw new Error(`parseMaterialStock: expected object, got ${typeof raw}`);
-  }
+export function parseMaterialStock(json: unknown): MaterialStock {
+  const raw = MaterialStockResponseSchema.parse(json);
   return {
     materialId: Number(raw.materialId),
     materialName: raw.materialName ?? '',
     locationStock: Array.isArray(raw.locationStock)
-      ? raw.locationStock.map((ls: Raw) => ({
+      ? raw.locationStock.map((ls) => ({
           storageLocationId: Number(ls.storageLocationId),
           storageLocationName: ls.storageLocationName ?? '',
           projectId: Number(ls.projectId),

@@ -5,12 +5,36 @@
  * Line items carry the requested material, quantities, and a flag
  * indicating whether the line has been converted into a purchase order.
  */
-import { parsePositiveInt } from "../../lib/utils/parse-id";
-import { Material } from "../materials";
+import { z } from 'zod';
+import { parsePositiveInt } from '../../lib/utils/parse-id';
+import {
+  money,
+  nullableBoolean,
+  nullableString,
+  opaque,
+} from '../../lib/validation/backend-schema';
+import { Material } from '../materials';
 
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type Raw = any;
+const IndentItemResponseSchema = z.object({
+  id: opaque,
+  material: z
+    .object({
+      id: opaque,
+      sku: nullableString,
+      materialName: nullableString,
+      unit: nullableString,
+    })
+    .nullish(),
+  materialId: opaque,
+  materialName: nullableString,
+  unit: nullableString,
+  additionalSpecifications: nullableString,
+  requestedQuantity: money,
+  orderedQuantity: money,
+  remarks: nullableString,
+  convertedToPurchaseOrder: nullableBoolean,
+  linkedPurchaseOrderNumber: nullableString,
+});
 
 /**
  * A single line item on an {@link Indent}. The embedded
@@ -54,12 +78,13 @@ export interface IndentItem {
  * otherwise falls back to flat `materialId` / `materialName` / `unit`
  * fields. `convertedToPurchaseOrder` defaults to `false` when absent.
  *
- * @param raw - The raw JSON object from the backend.
+ * @param json - The raw JSON object from the backend.
  * @returns The parsed {@link IndentItem}.
- * @throws {TypeError} When `raw.id` or the resolved material id is missing
- *   or non-positive (propagated from {@link parsePositiveInt}).
+ * @throws {TypeError} When `id` or the resolved material id is missing or
+ *   non-positive (propagated from {@link parsePositiveInt}).
  */
-export function parseIndentItem(raw: Raw): IndentItem {
+export function parseIndentItem(json: unknown): IndentItem {
+  const raw = IndentItemResponseSchema.parse(json);
   return {
     id: parsePositiveInt(raw.id, 'parseIndentItem.id'),
     material: {
@@ -72,7 +97,7 @@ export function parseIndentItem(raw: Raw): IndentItem {
       unit: raw.material?.unit ?? raw.unit ?? '',
     },
     additionalSpecifications: raw.additionalSpecifications ?? undefined,
-    requestedQuantity: raw.requestedQuantity,
+    requestedQuantity: raw.requestedQuantity ?? 0,
     orderedQuantity: raw.orderedQuantity ?? undefined,
     remarks: raw.remarks ?? undefined,
     convertedToPurchaseOrder: raw.convertedToPurchaseOrder ?? false,

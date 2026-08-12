@@ -10,9 +10,32 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+import { z } from 'zod';
 import { parsePositiveInt } from '../../lib/utils/parse-id';
 import { parseUTCDate } from '../../lib/utils/date-helpers';
 import { ApprovalAction } from './leave-enums';
+import {
+  backendDate,
+  nullableNumber,
+  nullableString,
+  opaque,
+  optionalNumericId,
+} from '../../lib/validation/backend-schema';
+
+const LeaveApprovalResponseSchema = z.object({
+  id: opaque,
+  leaveRequestId: opaque,
+  approverId: opaque,
+  approverName: nullableString,
+  approverDesignation: nullableString,
+  approvalLevel: nullableNumber,
+  action: nullableString,
+  comments: nullableString,
+  delegatedFromId: optionalNumericId,
+  delegatedFromName: nullableString,
+  actionAt: backendDate,
+  createdAt: backendDate,
+});
 
 /** One recorded step in a leave request's approval chain. */
 export interface LeaveApproval {
@@ -80,26 +103,27 @@ export interface CanApproveResponse {
  * @throws {Error} If `id`, `leaveRequestId`, or `approverId` is missing or not a
  *   positive int.
  */
-export function parseLeaveApproval(json: any): LeaveApproval {
+export function parseLeaveApproval(json: unknown): LeaveApproval {
+  const raw = LeaveApprovalResponseSchema.parse(json);
   return {
-    id: parsePositiveInt(json.id, 'parseLeaveApproval.id'),
+    id: parsePositiveInt(raw.id, 'parseLeaveApproval.id'),
     leaveRequestId: parsePositiveInt(
-      json.leaveRequestId,
+      raw.leaveRequestId,
       'parseLeaveApproval.leaveRequestId'
     ),
     approverId: parsePositiveInt(
-      json.approverId,
+      raw.approverId,
       'parseLeaveApproval.approverId'
     ),
-    approverName: json.approverName,
-    approverDesignation: json.approverDesignation,
-    approvalLevel: json.approvalLevel ?? 0,
-    action: (json.action as ApprovalAction) ?? ApprovalAction.PENDING,
-    comments: json.comments,
-    delegatedFromId: json.delegatedFromId,
-    delegatedFromName: json.delegatedFromName,
-    actionAt: parseUTCDate(json.actionAt) ?? undefined,
-    createdAt: parseUTCDate(json.createdAt) ?? undefined,
+    approverName: raw.approverName ?? undefined,
+    approverDesignation: raw.approverDesignation ?? undefined,
+    approvalLevel: raw.approvalLevel ?? 0,
+    action: (raw.action as ApprovalAction) ?? ApprovalAction.PENDING,
+    comments: raw.comments ?? undefined,
+    delegatedFromId: raw.delegatedFromId ?? undefined,
+    delegatedFromName: raw.delegatedFromName ?? undefined,
+    actionAt: parseUTCDate(raw.actionAt) ?? undefined,
+    createdAt: parseUTCDate(raw.createdAt) ?? undefined,
   };
 }
 

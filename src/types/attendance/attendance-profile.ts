@@ -9,7 +9,40 @@
  * `attendance-profile-update.ts` for the write payloads.
  */
 
+import { z } from "zod";
 import { parsePositiveInt } from "../../lib/utils/parse-id";
+import {
+  nullableString,
+  opaque,
+  optionalNumericId,
+} from "../../lib/validation/backend-schema";
+
+/**
+ * Shape of the backend attendance-profile payload at the parse boundary. The
+ * rule fields are required (the profile is meaningless without them) so a
+ * malformed response fails fast instead of fabricating an `undefined` rule.
+ */
+const AttendanceProfileResponseSchema = z.object({
+  id: opaque,
+  organizationId: optionalNumericId,
+  settingName: z.string(),
+  projectId: optionalNumericId,
+  projectName: nullableString,
+  checkInOutCycles: z.number(),
+  photoRequiredOnCheckIn: z.boolean(),
+  photoRequiredOnCheckOut: z.boolean(),
+  geolocationRequired: z.boolean(),
+  geofenceRadiusMeters: z.number(),
+  movementTrackingEnabled: z.boolean(),
+  movementPhotoRequired: z.boolean(),
+  movementGeolocationRequired: z.boolean(),
+  autoMarkAbsentAfterHours: z.number(),
+  allowSelfRegularization: z.boolean(),
+  regularizationApprovalRequired: z.boolean(),
+  maxRegularizationDaysPerMonth: z.number(),
+  defaultShiftId: optionalNumericId,
+  isActive: z.boolean(),
+});
 
 
 /** A resolved bundle of attendance rules for an org or a project. */
@@ -63,29 +96,30 @@ export interface AttendanceProfile {
  *
  * @param data - The untyped JSON object received from the backend.
  * @returns A validated `AttendanceProfile` domain object.
- * @throws {Error} If `id` is missing or not a positive int.
+ * @throws {Error} If `id` is missing or not a positive int, or a required rule
+ *   field is missing or of the wrong type.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function parseAttendanceProfile(data: any): AttendanceProfile {
+export function parseAttendanceProfile(data: unknown): AttendanceProfile {
+  const raw = AttendanceProfileResponseSchema.parse(data);
   return {
-    id: parsePositiveInt(data.id, 'parseAttendanceProfile.id'),
-    organizationId: data.organizationId ?? undefined,
-    settingName: data.settingName,
-    projectId: data.projectId ?? undefined,
-    projectName: data.projectName ?? undefined,
-    checkInOutCycles: data.checkInOutCycles,
-    photoRequiredOnCheckIn: data.photoRequiredOnCheckIn,
-    photoRequiredOnCheckOut: data.photoRequiredOnCheckOut,
-    geolocationRequired: data.geolocationRequired,
-    geofenceRadiusMeters: data.geofenceRadiusMeters,
-    movementTrackingEnabled: data.movementTrackingEnabled,
-    movementPhotoRequired: data.movementPhotoRequired,
-    movementGeolocationRequired: data.movementGeolocationRequired,
-    autoMarkAbsentAfterHours: data.autoMarkAbsentAfterHours,
-    allowSelfRegularization: data.allowSelfRegularization,
-    regularizationApprovalRequired: data.regularizationApprovalRequired,
-    maxRegularizationDaysPerMonth: data.maxRegularizationDaysPerMonth,
-    defaultShiftId: data.defaultShiftId ?? undefined,
-    isActive: data.isActive,
+    id: parsePositiveInt(raw.id, 'parseAttendanceProfile.id'),
+    organizationId: raw.organizationId ?? undefined,
+    settingName: raw.settingName,
+    projectId: raw.projectId ?? undefined,
+    projectName: raw.projectName ?? undefined,
+    checkInOutCycles: raw.checkInOutCycles,
+    photoRequiredOnCheckIn: raw.photoRequiredOnCheckIn,
+    photoRequiredOnCheckOut: raw.photoRequiredOnCheckOut,
+    geolocationRequired: raw.geolocationRequired,
+    geofenceRadiusMeters: raw.geofenceRadiusMeters,
+    movementTrackingEnabled: raw.movementTrackingEnabled,
+    movementPhotoRequired: raw.movementPhotoRequired,
+    movementGeolocationRequired: raw.movementGeolocationRequired,
+    autoMarkAbsentAfterHours: raw.autoMarkAbsentAfterHours,
+    allowSelfRegularization: raw.allowSelfRegularization,
+    regularizationApprovalRequired: raw.regularizationApprovalRequired,
+    maxRegularizationDaysPerMonth: raw.maxRegularizationDaysPerMonth,
+    defaultShiftId: raw.defaultShiftId ?? undefined,
+    isActive: raw.isActive,
   };
 }

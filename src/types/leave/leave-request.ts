@@ -8,12 +8,57 @@
  * `leave-request-update.ts` for the write payloads (re-exported here).
  */
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
+import { z } from 'zod';
 import { LeaveStatus, HalfDayType } from './leave-enums';
 import { LeaveApproval, parseLeaveApproval } from './leave-approval';
 import { parsePositiveInt } from '../../lib/utils/parse-id';
 import { parseUTCDate } from '../../lib/utils/date-helpers';
+import {
+  backendDate,
+  nullableNumber,
+  nullableString,
+  opaque,
+  optionalNumericId,
+} from '../../lib/validation/backend-schema';
+
+const LeaveRequestResponseSchema = z.object({
+  id: opaque,
+  requestNumber: nullableString,
+  employeeId: opaque,
+  employeeName: nullableString,
+  department: nullableString,
+  organizationId: optionalNumericId,
+  leavePolicyId: opaque,
+  leavePolicy: z
+    .object({ id: opaque, leaveTypeName: nullableString })
+    .nullish(),
+  leaveTypeName: nullableString,
+  startDate: backendDate,
+  startHalfDayType: nullableString,
+  endDate: backendDate,
+  endHalfDayType: nullableString,
+  totalDays: nullableNumber,
+  reason: nullableString,
+  contactDuringLeave: nullableString,
+  handoverToId: optionalNumericId,
+  handoverToName: nullableString,
+  handoverTo: z.object({ name: nullableString }).nullish(),
+  handoverNotes: nullableString,
+  status: nullableString,
+  currentApproverId: optionalNumericId,
+  currentApproverName: nullableString,
+  currentApprovalLevel: nullableNumber,
+  maxApprovalLevel: nullableNumber,
+  cancellationReason: nullableString,
+  approvals: z.array(z.unknown()).nullish(),
+  createdAt: backendDate,
+  updatedAt: backendDate,
+  submittedAt: backendDate,
+  approvedAt: backendDate,
+  rejectedAt: backendDate,
+  cancelledAt: backendDate,
+  withdrawnAt: backendDate,
+});
 
 /** An employee's request for leave over a date range. */
 export interface LeaveRequest {
@@ -122,48 +167,50 @@ export interface ConflictCheckResponse {
  * @throws {Error} If `id`, `employeeId`, or the resolved policy id is missing or
  *   not a positive int.
  */
-export function parseLeaveRequest(json: any): LeaveRequest {
+export function parseLeaveRequest(json: unknown): LeaveRequest {
+  const raw = LeaveRequestResponseSchema.parse(json);
   return {
-    id: parsePositiveInt(json.id, 'parseLeaveRequest.id'),
-    requestNumber: json.requestNumber ?? '',
+    id: parsePositiveInt(raw.id, 'parseLeaveRequest.id'),
+    requestNumber: raw.requestNumber ?? '',
     employeeId: parsePositiveInt(
-      json.employeeId,
+      raw.employeeId,
       'parseLeaveRequest.employeeId'
     ),
-    employeeName: json.employeeName,
-    department: json.department,
-    organizationId: json.organizationId,
+    employeeName: raw.employeeName ?? undefined,
+    department: raw.department ?? undefined,
+    organizationId: raw.organizationId ?? undefined,
     leavePolicyId: parsePositiveInt(
-      json.leavePolicyId ?? json.leavePolicy?.id,
+      raw.leavePolicyId ?? raw.leavePolicy?.id,
       'parseLeaveRequest.leavePolicyId'
     ),
-    leaveTypeName: json.leaveTypeName ?? json.leavePolicy?.leaveTypeName,
-    startDate: parseUTCDate(json.startDate) ?? new Date(),
-    startHalfDayType: json.startHalfDayType as HalfDayType,
-    endDate: parseUTCDate(json.endDate) ?? new Date(),
-    endHalfDayType: json.endHalfDayType as HalfDayType,
-    totalDays: json.totalDays ?? 0,
-    reason: json.reason ?? '',
-    contactDuringLeave: json.contactDuringLeave,
-    handoverToId: json.handoverToId,
-    handoverToName: json.handoverToName ?? json.handoverTo?.name,
-    handoverNotes: json.handoverNotes,
-    status: (json.status as LeaveStatus) ?? LeaveStatus.DRAFT,
-    currentApproverId: json.currentApproverId,
-    currentApproverName: json.currentApproverName,
-    currentApprovalLevel: json.currentApprovalLevel,
-    maxApprovalLevel: json.maxApprovalLevel,
-    cancellationReason: json.cancellationReason,
-    approvals: json.approvals
-      ? json.approvals.map((approval: any) => parseLeaveApproval(approval))
+    leaveTypeName:
+      raw.leaveTypeName ?? raw.leavePolicy?.leaveTypeName ?? undefined,
+    startDate: parseUTCDate(raw.startDate) ?? new Date(),
+    startHalfDayType: raw.startHalfDayType as HalfDayType,
+    endDate: parseUTCDate(raw.endDate) ?? new Date(),
+    endHalfDayType: raw.endHalfDayType as HalfDayType,
+    totalDays: raw.totalDays ?? 0,
+    reason: raw.reason ?? '',
+    contactDuringLeave: raw.contactDuringLeave ?? undefined,
+    handoverToId: raw.handoverToId ?? undefined,
+    handoverToName: raw.handoverToName ?? raw.handoverTo?.name ?? undefined,
+    handoverNotes: raw.handoverNotes ?? undefined,
+    status: (raw.status as LeaveStatus) ?? LeaveStatus.DRAFT,
+    currentApproverId: raw.currentApproverId ?? undefined,
+    currentApproverName: raw.currentApproverName ?? undefined,
+    currentApprovalLevel: raw.currentApprovalLevel ?? undefined,
+    maxApprovalLevel: raw.maxApprovalLevel ?? undefined,
+    cancellationReason: raw.cancellationReason ?? undefined,
+    approvals: raw.approvals
+      ? raw.approvals.map((approval) => parseLeaveApproval(approval))
       : undefined,
-    createdAt: parseUTCDate(json.createdAt) ?? undefined,
-    updatedAt: parseUTCDate(json.updatedAt) ?? undefined,
-    submittedAt: parseUTCDate(json.submittedAt) ?? undefined,
-    approvedAt: parseUTCDate(json.approvedAt) ?? undefined,
-    rejectedAt: parseUTCDate(json.rejectedAt) ?? undefined,
-    cancelledAt: parseUTCDate(json.cancelledAt) ?? undefined,
-    withdrawnAt: parseUTCDate(json.withdrawnAt) ?? undefined,
+    createdAt: parseUTCDate(raw.createdAt) ?? undefined,
+    updatedAt: parseUTCDate(raw.updatedAt) ?? undefined,
+    submittedAt: parseUTCDate(raw.submittedAt) ?? undefined,
+    approvedAt: parseUTCDate(raw.approvedAt) ?? undefined,
+    rejectedAt: parseUTCDate(raw.rejectedAt) ?? undefined,
+    cancelledAt: parseUTCDate(raw.cancelledAt) ?? undefined,
+    withdrawnAt: parseUTCDate(raw.withdrawnAt) ?? undefined,
   };
 }
 

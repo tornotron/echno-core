@@ -6,11 +6,15 @@
  * GET endpoints and `LabourSimpleDto` from the create response — into a
  * single canonical {@link Labour} object.
  */
+import { z } from 'zod';
 import { parsePositiveInt } from '../../lib/utils/parse-id';
+import {
+  money,
+  nullableString,
+  opaque,
+  optionalNumericId,
+} from '../../lib/validation/backend-schema';
 import { EmploymentType, SkillLevel, LabourStatus } from './enums';
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type Raw = any;
 
 /**
  * A labour worker record. Every field except `id` is optional because the
@@ -136,6 +140,34 @@ function parseLabourStatus(raw: unknown): LabourStatus | undefined {
     : undefined;
 }
 
+const LabourResponseSchema = z.object({
+  id: opaque,
+  labourId: nullableString,
+  labourID: nullableString,
+  organizationId: optionalNumericId,
+  organizationName: nullableString,
+  fullName: nullableString,
+  email: nullableString,
+  address: nullableString,
+  phoneNumber: nullableString,
+  emergencyContactName: nullableString,
+  emergencyContactNumber: nullableString,
+  emergencyContactPhone: nullableString,
+  specialization: nullableString,
+  employmentType: nullableString,
+  skillLevel: nullableString,
+  status: nullableString,
+  joiningDate: nullableString,
+  currentProjectName: nullableString,
+  currentProjectId: optionalNumericId,
+  dailyRate: money,
+  overTimeRate: money,
+  bankAccountNumber: nullableString,
+  bankName: nullableString,
+  ifscCode: nullableString,
+  additionalNotes: nullableString,
+});
+
 /**
  * Parses a raw labour payload into a typed {@link Labour} domain object.
  *
@@ -148,38 +180,40 @@ function parseLabourStatus(raw: unknown): LabourStatus | undefined {
  * value isn't a recognised member of {@link EmploymentType},
  * {@link SkillLevel}, or {@link LabourStatus}.
  *
- * @param raw - The untyped JSON object received from the backend.
+ * @param json - The untyped JSON object received from the backend.
  * @returns A canonical {@link Labour} domain object.
  * @throws {TypeError} If `raw.id` is missing or not a positive integer.
  */
-export function parseLabour(raw: Raw): Labour {
+export function parseLabour(json: unknown): Labour {
+  const raw = LabourResponseSchema.parse(json);
+
   return {
     id: parsePositiveInt(raw.id, 'parseLabour.id'),
     // LabourDto uses "labourID" (uppercase); LabourSimpleDto uses "labourId"
-    labourId: raw.labourId ?? raw.labourID,
-    organizationId: raw.organizationId,
-    organizationName: raw.organizationName,
-    fullName: raw.fullName,
-    email: raw.email,
-    address: raw.address,
-    phoneNumber: raw.phoneNumber,
-    emergencyContactName: raw.emergencyContactName,
+    labourId: raw.labourId ?? raw.labourID ?? undefined,
+    organizationId: raw.organizationId ?? undefined,
+    organizationName: raw.organizationName ?? undefined,
+    fullName: raw.fullName ?? undefined,
+    email: raw.email ?? undefined,
+    address: raw.address ?? undefined,
+    phoneNumber: raw.phoneNumber ?? undefined,
+    emergencyContactName: raw.emergencyContactName ?? undefined,
     // LabourDto uses "emergencyContactNumber"; LabourCreationDto uses "emergencyContactPhone"
     emergencyContactNumber:
-      raw.emergencyContactNumber ?? raw.emergencyContactPhone,
-    specialization: raw.specialization,
+      raw.emergencyContactNumber ?? raw.emergencyContactPhone ?? undefined,
+    specialization: raw.specialization ?? undefined,
     employmentType: parseEmploymentType(raw.employmentType),
     skillLevel: parseSkillLevel(raw.skillLevel),
     status: parseLabourStatus(raw.status),
-    joiningDate: raw.joiningDate,
-    currentProjectName: raw.currentProjectName,
+    joiningDate: raw.joiningDate ?? undefined,
+    currentProjectName: raw.currentProjectName ?? undefined,
     currentProjectId:
       raw.currentProjectId == null ? undefined : Number(raw.currentProjectId),
-    dailyRate: raw.dailyRate,
-    overTimeRate: raw.overTimeRate,
-    bankAccountNumber: raw.bankAccountNumber,
-    bankName: raw.bankName,
-    ifscCode: raw.ifscCode,
-    additionalNotes: raw.additionalNotes,
+    dailyRate: raw.dailyRate ?? undefined,
+    overTimeRate: raw.overTimeRate ?? undefined,
+    bankAccountNumber: raw.bankAccountNumber ?? undefined,
+    bankName: raw.bankName ?? undefined,
+    ifscCode: raw.ifscCode ?? undefined,
+    additionalNotes: raw.additionalNotes ?? undefined,
   };
 }

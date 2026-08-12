@@ -16,7 +16,9 @@
  * serializers append `:00` on the way out.
  */
 
-import { parsePositiveInt } from "../../lib/utils/parse-id";
+import { z } from 'zod';
+import { parsePositiveInt } from '../../lib/utils/parse-id';
+import { opaque } from '../../lib/validation/backend-schema';
 
 
 /**
@@ -54,16 +56,30 @@ export interface ShiftTiming {
   overtimeThreshold: number;
 }
 
+const ShiftTimingResponseSchema = z.object({
+  id: opaque,
+  shiftName: z.string(),
+  startTime: z.string(),
+  endTime: z.string(),
+  lunchBreakStart: z.string(),
+  lunchBreakEnd: z.string(),
+  gracePeriodMinutes: z.number(),
+  minimumWorkHours: z.number(),
+  halfDayWorkHours: z.number(),
+  overtimeThreshold: z.number(),
+});
+
 /**
  * Parses a raw API payload into a typed {@link ShiftTiming}.
  *
- * @param raw - The untyped JSON object received from the backend.
+ * @param json - The untyped JSON object received from the backend.
  * @returns A validated `ShiftTiming` domain object.
  * @throws {Error} If `id` is missing or not a positive integer (via
  *   {@link parsePositiveInt}).
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function parseShiftTiming(raw: any): ShiftTiming {
+export function parseShiftTiming(json: unknown): ShiftTiming {
+  const raw = ShiftTimingResponseSchema.parse(json);
+
   return {
     id: parsePositiveInt(raw.id, 'parseShiftTiming.id'),
     shiftName: raw.shiftName,

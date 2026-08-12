@@ -7,9 +7,49 @@
  * `./movement-type.ts`.
  */
 
+import { z } from "zod";
 import { parsePositiveInt } from "../../lib/utils/parse-id";
 import { parseUTCDate } from "../../lib/utils/date-helpers";
 import { MovementType } from "./movement-type";
+import {
+  backendDate,
+  nullableBoolean,
+  nullableNumber,
+  nullableString,
+  opaque,
+  optionalNumericId,
+} from "../../lib/validation/backend-schema";
+
+/**
+ * Shape of the backend movement payload at the parse boundary. Only `id` is
+ * required; the rest pass through once their types are validated. `attachments`
+ * is a list of URL strings (not a nested entity), so it stays a string array.
+ */
+const MovementRecordResponseSchema = z.object({
+  id: opaque,
+  attendanceId: optionalNumericId,
+  employeeId: optionalNumericId,
+  employeeName: nullableString,
+  movementType: nullableString,
+  fromLocation: nullableString,
+  toLocation: nullableString,
+  startTime: backendDate,
+  endTime: backendDate,
+  durationMinutes: nullableNumber,
+  distance: nullableNumber,
+  purpose: nullableString,
+  remarks: nullableString,
+  startLatitude: nullableNumber,
+  startLongitude: nullableNumber,
+  endLatitude: nullableNumber,
+  endLongitude: nullableNumber,
+  verifiedBy: nullableString,
+  verifiedAt: backendDate,
+  isVerified: nullableBoolean,
+  attachments: z.array(z.string()).nullish(),
+  createdAt: backendDate,
+  updatedAt: backendDate,
+});
 
 
 /** A single off-site movement logged against an attendance day. */
@@ -76,17 +116,17 @@ export interface MovementRecord {
  * @param data - The untyped JSON object received from the backend.
  * @returns A `MovementRecord` with date fields hydrated.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function parseMovementRecord(data: any): MovementRecord {
+export function parseMovementRecord(data: unknown): MovementRecord {
+  const raw = MovementRecordResponseSchema.parse(data);
   return {
-    ...data,
-    id: parsePositiveInt(data.id, 'parseMovementRecord.id'),
-    startTime: parseUTCDate(data.startTime) ?? new Date(data.startTime),
-    endTime: parseUTCDate(data.endTime) ?? undefined,
-    verifiedAt: parseUTCDate(data.verifiedAt) ?? undefined,
-    createdAt: parseUTCDate(data.createdAt) ?? new Date(data.createdAt),
-    updatedAt: parseUTCDate(data.updatedAt) ?? new Date(data.updatedAt),
-  };
+    ...raw,
+    id: parsePositiveInt(raw.id, 'parseMovementRecord.id'),
+    startTime: parseUTCDate(raw.startTime) ?? new Date(raw.startTime as string),
+    endTime: parseUTCDate(raw.endTime) ?? undefined,
+    verifiedAt: parseUTCDate(raw.verifiedAt) ?? undefined,
+    createdAt: parseUTCDate(raw.createdAt) ?? new Date(raw.createdAt as string),
+    updatedAt: parseUTCDate(raw.updatedAt) ?? new Date(raw.updatedAt as string),
+  } as MovementRecord;
 }
 
 /** Per-day aggregation of an employee's movement records. */

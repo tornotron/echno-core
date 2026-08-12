@@ -5,10 +5,30 @@
  * payloads live in `customer-create.ts` / `customer-update.ts` (re-exported).
  */
 
+import { z } from 'zod';
 import { parseUuid } from '../../lib/utils/parse-id';
 import { Address, parseAddress } from './address';
+import {
+  money,
+  nullableBoolean,
+  nullableNumber,
+  nullableString,
+  opaque,
+} from '../../lib/validation/backend-schema';
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
+const CustomerResponseSchema = z.object({
+  id: z.string().nullish(),
+  code: nullableString,
+  name: nullableString,
+  gstin: nullableString,
+  pan: nullableString,
+  email: nullableString,
+  phone: nullableString,
+  billingAddress: opaque,
+  creditLimit: money,
+  paymentTermsDays: nullableNumber,
+  active: nullableBoolean,
+});
 
 /** An accounts-receivable customer. */
 export interface Customer {
@@ -43,19 +63,20 @@ export interface Customer {
  * @returns A validated `Customer`.
  * @throws {TypeError} If `id` is missing or not a non-empty string.
  */
-export function parseCustomer(json: any): Customer {
+export function parseCustomer(json: unknown): Customer {
+  const raw = CustomerResponseSchema.parse(json);
   return {
-    id: parseUuid(json.id, 'parseCustomer.id'),
-    code: json.code ?? '',
-    name: json.name ?? '',
-    gstin: json.gstin ?? undefined,
-    pan: json.pan ?? undefined,
-    email: json.email ?? undefined,
-    phone: json.phone ?? undefined,
-    billingAddress: parseAddress(json.billingAddress),
-    creditLimit: json.creditLimit ?? undefined,
-    paymentTermsDays: json.paymentTermsDays ?? undefined,
-    active: json.active ?? true,
+    id: parseUuid(raw.id, 'parseCustomer.id'),
+    code: raw.code ?? '',
+    name: raw.name ?? '',
+    gstin: raw.gstin ?? undefined,
+    pan: raw.pan ?? undefined,
+    email: raw.email ?? undefined,
+    phone: raw.phone ?? undefined,
+    billingAddress: parseAddress(raw.billingAddress),
+    creditLimit: raw.creditLimit ?? undefined,
+    paymentTermsDays: raw.paymentTermsDays ?? undefined,
+    active: raw.active ?? true,
   };
 }
 

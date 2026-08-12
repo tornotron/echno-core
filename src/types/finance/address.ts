@@ -5,7 +5,18 @@
  * billing address, plus its parser and serializer. All fields are optional.
  */
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import { z } from 'zod';
+import { nullableString } from '../../lib/validation/backend-schema';
+
+const AddressResponseSchema = z.object({
+  line1: nullableString,
+  line2: nullableString,
+  city: nullableString,
+  state: nullableString,
+  stateCode: nullableString,
+  postalCode: nullableString,
+  country: nullableString,
+});
 
 /** A postal address. Mirrors the backend `AddressDto`; every field is optional. */
 export interface Address {
@@ -28,21 +39,22 @@ export interface Address {
 /**
  * Parses a raw address payload into a typed {@link Address}. Returns
  * `undefined` when the input is null/absent so callers can leave the field
- * unset. Never throws.
+ * unset; a present-but-malformed field fails validation.
  *
  * @param json - The untyped JSON object (or null) from the backend.
  * @returns The parsed `Address`, or `undefined` when absent.
  */
-export function parseAddress(json: any): Address | undefined {
+export function parseAddress(json: unknown): Address | undefined {
   if (json == null || typeof json !== 'object') return undefined;
+  const raw = AddressResponseSchema.parse(json);
   return {
-    line1: json.line1 ?? undefined,
-    line2: json.line2 ?? undefined,
-    city: json.city ?? undefined,
-    state: json.state ?? undefined,
-    stateCode: json.stateCode ?? undefined,
-    postalCode: json.postalCode ?? undefined,
-    country: json.country ?? undefined,
+    line1: raw.line1 ?? undefined,
+    line2: raw.line2 ?? undefined,
+    city: raw.city ?? undefined,
+    state: raw.state ?? undefined,
+    stateCode: raw.stateCode ?? undefined,
+    postalCode: raw.postalCode ?? undefined,
+    country: raw.country ?? undefined,
   };
 }
 

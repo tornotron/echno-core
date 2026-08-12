@@ -5,10 +5,14 @@
  * record that a quantity of a material was used from stock or transferred
  * out of a storage location.
  */
+import { z } from 'zod';
 import { parsePositiveInt } from '../../lib/utils/parse-id';
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type Raw = any;
+import {
+  nullableString,
+  numericId,
+  opaque,
+  optionalNumericId,
+} from '../../lib/validation/backend-schema';
 
 /**
  * Mechanism by which a material left inventory.
@@ -82,6 +86,30 @@ export interface MaterialConsumption {
 }
 
 /**
+ * Shape of the backend consumption payload at the parse boundary. Ids stay
+ * `opaque`/`numericId`; `consumptionType` is cast to the domain enum by the
+ * parser; `quantity` coerces a string BigDecimal to a number.
+ */
+const MaterialConsumptionResponseSchema = z.object({
+  id: opaque,
+  consumptionDate: z.string(),
+  materialId: numericId,
+  materialName: z.string(),
+  quantity: z.coerce.number(),
+  consumptionType: opaque,
+  details: nullableString,
+  projectId: optionalNumericId,
+  projectName: nullableString,
+  storageLocationId: optionalNumericId,
+  storageLocationName: nullableString,
+  taskId: optionalNumericId,
+  taskTitle: nullableString,
+  createdBy: z
+    .object({ id: opaque, employeeName: nullableString, name: nullableString })
+    .nullish(),
+});
+
+/**
  * Parses a raw consumption payload into a typed {@link MaterialConsumption}.
  *
  * Unknown `consumptionType` values default to
@@ -92,12 +120,13 @@ export interface MaterialConsumption {
  * `name`, mirroring how the backend serialises the actor in some
  * envelopes.
  *
- * @param raw - The raw JSON object from the backend.
+ * @param json - The raw JSON object from the backend.
  * @returns The parsed {@link MaterialConsumption}.
  * @throws {TypeError} When `raw.id` or `raw.createdBy.id` is missing or
  *   non-positive (propagated from {@link parsePositiveInt}).
  */
-export function parseMaterialConsumption(raw: Raw): MaterialConsumption {
+export function parseMaterialConsumption(json: unknown): MaterialConsumption {
+  const raw = MaterialConsumptionResponseSchema.parse(json);
   return {
     id: parsePositiveInt(raw.id, 'parseMaterialConsumption.id'),
     consumptionDate: raw.consumptionDate,
@@ -105,7 +134,7 @@ export function parseMaterialConsumption(raw: Raw): MaterialConsumption {
     materialName: raw.materialName,
     quantity: raw.quantity,
     consumptionType: Object.values(ConsumptionType).includes(
-      raw.consumptionType
+      raw.consumptionType as ConsumptionType
     )
       ? (raw.consumptionType as ConsumptionType)
       : ConsumptionType.usedFromStock,

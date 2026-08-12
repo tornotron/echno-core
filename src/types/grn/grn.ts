@@ -11,11 +11,42 @@
  * {@link GoodsReceivedNote} shape and tolerates two `receivedBy`
  * field names (`employeeName` vs `name`) for backwards compatibility.
  */
+import { z } from 'zod';
 import { parsePositiveInt } from '../../lib/utils/parse-id';
+import {
+  backendDate,
+  money,
+  nullableString,
+  numericId,
+  opaque,
+  optionalNumericId,
+} from '../../lib/validation/backend-schema';
 import { GrnItem, parseGrnItem } from './grn-item';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type Raw = any;
+const GoodsReceivedNoteResponseSchema = z.object({
+  id: opaque,
+  grnNumber: nullableString,
+  receivedOn: backendDate,
+  receivedBy: z
+    .object({
+      id: opaque,
+      employeeName: nullableString,
+      name: nullableString,
+    })
+    .nullish(),
+  vendorId: numericId,
+  vendorName: nullableString,
+  purchaseOrderId: optionalNumericId,
+  purchaseOrderNumber: nullableString,
+  projectId: optionalNumericId,
+  projectName: nullableString,
+  storageLocationId: optionalNumericId,
+  storageLocationName: nullableString,
+  deliveryChallanNumber: nullableString,
+  invoiceNumber: nullableString,
+  invoiceAmount: money,
+  items: z.array(z.unknown()).nullish(),
+});
 
 /**
  * A Goods Received Note acknowledging delivery from a vendor. Carries
@@ -88,16 +119,18 @@ export interface GoodsReceivedNote {
  * resolve to `undefined`; an absent or non-array `items` resolves to
  * `[]`.
  *
- * @param raw - The raw JSON object from the backend.
+ * @param json - The raw JSON object from the backend.
  * @returns The parsed {@link GoodsReceivedNote}.
- * @throws {TypeError} When `raw.id` or `raw.receivedBy.id` is missing
- *   or non-positive (propagated from {@link parsePositiveInt}).
+ * @throws {TypeError} When `id` or `receivedBy.id` is missing or non-positive
+ *   (propagated from {@link parsePositiveInt}), or `vendorId` is not a
+ *   positive integer.
  */
-export function parseGoodsReceivedNote(raw: Raw): GoodsReceivedNote {
+export function parseGoodsReceivedNote(json: unknown): GoodsReceivedNote {
+  const raw = GoodsReceivedNoteResponseSchema.parse(json);
   return {
     id: parsePositiveInt(raw.id, 'parseGoodsReceivedNote.id'),
-    grnNumber: raw.grnNumber,
-    receivedOn: raw.receivedOn,
+    grnNumber: raw.grnNumber ?? '',
+    receivedOn: raw.receivedOn ?? '',
     receivedBy: {
       id: parsePositiveInt(
         raw.receivedBy?.id,
@@ -117,7 +150,7 @@ export function parseGoodsReceivedNote(raw: Raw): GoodsReceivedNote {
     invoiceNumber: raw.invoiceNumber ?? undefined,
     invoiceAmount: raw.invoiceAmount ?? undefined,
     items: Array.isArray(raw.items)
-      ? (raw.items as Raw[]).map((item) => parseGrnItem(item))
+      ? raw.items.map((item) => parseGrnItem(item))
       : [],
   };
 }

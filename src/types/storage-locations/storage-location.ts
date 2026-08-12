@@ -9,9 +9,15 @@
  * enum and its display-label map, and the {@link parseStorageLocation} parser
  * that converts a raw backend payload into a typed domain object.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type Raw = any;
+import { z } from 'zod';
 import { parsePositiveInt } from '../../lib/utils/parse-id';
+import {
+  nullableBoolean,
+  nullableNumber,
+  nullableString,
+  opaque,
+  optionalNumericId,
+} from '../../lib/validation/backend-schema';
 
 /**
  * Classification of a storage location's physical role.
@@ -100,6 +106,20 @@ export interface StorageLocation {
   active: boolean;
 }
 
+const StorageLocationResponseSchema = z.object({
+  id: opaque,
+  locationName: nullableString,
+  locationType: nullableString,
+  address: nullableString,
+  projectId: optionalNumericId,
+  projectName: nullableString,
+  capacity: nullableNumber,
+  latitude: nullableNumber,
+  longitude: nullableNumber,
+  storageItemsCount: nullableNumber,
+  active: nullableBoolean,
+});
+
 /**
  * Parses a raw API payload into a typed {@link StorageLocation}.
  *
@@ -107,11 +127,13 @@ export interface StorageLocation {
  * `true` when absent. The `id` is validated as a positive integer via
  * {@link parsePositiveInt}.
  *
- * @param raw - The untyped JSON object received from the backend.
+ * @param json - The untyped JSON object received from the backend.
  * @returns A validated `StorageLocation` domain object.
  * @throws {TypeError} If `id` is missing or not a positive integer.
  */
-export function parseStorageLocation(raw: Raw): StorageLocation {
+export function parseStorageLocation(json: unknown): StorageLocation {
+  const raw = StorageLocationResponseSchema.parse(json);
+
   const id = parsePositiveInt(raw.id, 'parseStorageLocation.id');
   return {
     id,

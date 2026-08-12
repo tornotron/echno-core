@@ -8,15 +8,48 @@
  * (string display name OR `{ id, employeeName }` object) for backwards
  * compatibility with older payloads.
  */
+import { z } from 'zod';
 import { parsePositiveInt } from '../../lib/utils/parse-id';
+import {
+  backendDate,
+  money,
+  nullableString,
+  numericId,
+  opaque,
+  optionalNumericId,
+} from '../../lib/validation/backend-schema';
 import { PurchaseOrderStatus } from './enums';
 import type { PurchaseOrderItem } from './purchase-order-item';
 import { parsePurchaseOrderItem } from './purchase-order-item';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type Raw = any;
-
 const VALID_PO_STATUSES = new Set<string>(Object.values(PurchaseOrderStatus));
+
+const PurchaseOrderResponseSchema = z.object({
+  id: opaque,
+  poNumber: nullableString,
+  vendorId: numericId,
+  vendorName: nullableString,
+  indentId: optionalNumericId,
+  indentNumber: nullableString,
+  projectId: optionalNumericId,
+  projectName: nullableString,
+  status: nullableString,
+  createdAt: backendDate,
+  createdBy: z
+    .union([
+      z.string(),
+      z.object({
+        id: opaque,
+        employeeName: nullableString,
+        name: nullableString,
+      }),
+    ])
+    .nullish(),
+  expectedDeliveryDate: backendDate,
+  remarks: nullableString,
+  totalAmount: money,
+  items: z.array(z.unknown()).nullish(),
+});
 
 /**
  * A purchase order issued to a vendor. Carries denormalised display
@@ -86,26 +119,28 @@ export interface PurchaseOrder {
  * {@link PurchaseOrderStatus.draft} so an unexpected backend value
  * doesn't break list rendering.
  *
- * @param raw - The raw JSON object from the backend.
+ * @param json - The raw JSON object from the backend.
  * @returns The parsed {@link PurchaseOrder}.
- * @throws {TypeError} When `raw.id` is missing or non-positive, or when
- *   the object form of `createdBy` is missing `id` (propagated from
- *   {@link parsePositiveInt}).
+ * @throws {TypeError} When `id` is missing or non-positive, when `vendorId`
+ *   is not a positive integer, or when the object form of `createdBy` is
+ *   missing `id` (propagated from {@link parsePositiveInt}).
  */
-export function parsePurchaseOrder(raw: Raw): PurchaseOrder {
+export function parsePurchaseOrder(json: unknown): PurchaseOrder {
+  const raw = PurchaseOrderResponseSchema.parse(json);
   return {
     id: parsePositiveInt(raw.id, 'parsePurchaseOrder.id'),
-    poNumber: raw.poNumber,
+    poNumber: raw.poNumber ?? '',
     vendorId: raw.vendorId,
     vendorName: raw.vendorName ?? '',
     indentId: raw.indentId ?? undefined,
     indentNumber: raw.indentNumber ?? undefined,
     projectId: raw.projectId ?? undefined,
     projectName: raw.projectName ?? undefined,
-    status: VALID_PO_STATUSES.has(raw.status)
-      ? (raw.status as PurchaseOrderStatus)
-      : PurchaseOrderStatus.draft,
-    createdAt: raw.createdAt,
+    status:
+      typeof raw.status === 'string' && VALID_PO_STATUSES.has(raw.status)
+        ? (raw.status as PurchaseOrderStatus)
+        : PurchaseOrderStatus.draft,
+    createdAt: raw.createdAt ?? '',
     createdBy:
       typeof raw.createdBy === 'string'
         ? { id: 0, name: raw.createdBy }
@@ -120,7 +155,7 @@ export function parsePurchaseOrder(raw: Raw): PurchaseOrder {
     remarks: raw.remarks ?? undefined,
     totalAmount: raw.totalAmount ?? undefined,
     items: Array.isArray(raw.items)
-      ? (raw.items as Raw[]).map((item) => parsePurchaseOrderItem(item))
+      ? raw.items.map((item) => parsePurchaseOrderItem(item))
       : [],
   };
 }

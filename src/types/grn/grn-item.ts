@@ -6,11 +6,23 @@
  * the originally ordered quantity, the quantity actually received, and
  * the per-unit cost (where the backend has a cost basis).
  */
-import { parsePositiveInt } from "../../lib/utils/parse-id";
+import { z } from 'zod';
+import { parsePositiveInt } from '../../lib/utils/parse-id';
+import {
+  money,
+  nullableString,
+  numericId,
+  opaque,
+} from '../../lib/validation/backend-schema';
 
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type Raw = any;
+const GrnItemResponseSchema = z.object({
+  id: opaque,
+  materialId: numericId,
+  materialName: nullableString,
+  orderedQuantity: money,
+  receivedQuantity: money,
+  unitCost: money,
+});
 
 /**
  * A single line item on a {@link GoodsReceivedNote}. `materialName` is
@@ -47,18 +59,19 @@ export interface GrnItem {
  * `materialName` defaults to `''` when absent; `unitCost` falls back to
  * `undefined`.
  *
- * @param raw - The raw JSON object from the backend.
+ * @param json - The raw JSON object from the backend.
  * @returns The parsed {@link GrnItem}.
- * @throws {TypeError} When `raw.id` is missing or non-positive
- *   (propagated from {@link parsePositiveInt}).
+ * @throws {TypeError} When `id` is missing or non-positive (propagated from
+ *   {@link parsePositiveInt}), or `materialId` is not a positive integer.
  */
-export function parseGrnItem(raw: Raw): GrnItem {
+export function parseGrnItem(json: unknown): GrnItem {
+  const raw = GrnItemResponseSchema.parse(json);
   return {
     id: parsePositiveInt(raw.id, 'parseGrnItem.id'),
     materialId: raw.materialId,
     materialName: raw.materialName ?? '',
-    orderedQuantity: raw.orderedQuantity,
-    receivedQuantity: raw.receivedQuantity,
+    orderedQuantity: raw.orderedQuantity ?? 0,
+    receivedQuantity: raw.receivedQuantity ?? 0,
     unitCost: raw.unitCost ?? undefined,
   };
 }

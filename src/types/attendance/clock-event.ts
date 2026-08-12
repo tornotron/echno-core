@@ -6,8 +6,40 @@
  * distance helpers, and the parser / serializer.
  */
 
+import { z } from "zod";
 import { parsePositiveInt } from "../../lib/utils/parse-id";
 import { parseUTCDate } from "../../lib/utils/date-helpers";
+import {
+  backendDate,
+  nullableBoolean,
+  nullableNumber,
+  nullableString,
+  opaque,
+  optionalNumericId,
+} from "../../lib/validation/backend-schema";
+
+/**
+ * Shape of the backend clock-event payload at the parse boundary. Only `id` is
+ * required; every other field may be absent on a partial punch, so the parser
+ * validates the types it does receive and leaves the rest to pass through.
+ */
+const ClockEventResponseSchema = z.object({
+  id: opaque,
+  eventType: nullableString,
+  timestamp: backendDate,
+  location: opaque,
+  photoUrl: nullableString,
+  projectId: optionalNumericId,
+  projectName: nullableString,
+  deviceInfo: opaque,
+  isWithinGeofence: nullableBoolean,
+  distanceFromProject: nullableNumber,
+  remarks: nullableString,
+  verifiedBy: nullableString,
+  verifiedAt: backendDate,
+  isRegularized: nullableBoolean,
+  regularizationReason: nullableString,
+});
 
 
 /** The four punch points that make up an attendance day. */
@@ -162,14 +194,14 @@ export function isWithinGeofence(
  * @param data - The untyped JSON object received from the backend.
  * @returns A `ClockEvent` with date fields hydrated.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function parseClockEvent(data: any): ClockEvent {
+export function parseClockEvent(data: unknown): ClockEvent {
+  const raw = ClockEventResponseSchema.parse(data);
   return {
-    ...data,
-    id: parsePositiveInt(data.id, 'parseClockEvent.id'),
-    timestamp: parseUTCDate(data.timestamp) ?? new Date(data.timestamp),
-    verifiedAt: parseUTCDate(data.verifiedAt) ?? undefined,
-  };
+    ...raw,
+    id: parsePositiveInt(raw.id, 'parseClockEvent.id'),
+    timestamp: parseUTCDate(raw.timestamp) ?? new Date(raw.timestamp as string),
+    verifiedAt: parseUTCDate(raw.verifiedAt) ?? undefined,
+  } as ClockEvent;
 }
 
 /**

@@ -16,9 +16,61 @@ import { VendorContact } from './contacts';
 import { VendorTaxIdentifier } from './tax-identifiers';
 import { VendorBankAccount } from './bank-accounts';
 import { VendorPaymentTermsDetails } from './payment-terms';
+import { z } from 'zod';
+import {
+  backendDate,
+  money,
+  nullableNumber,
+  nullableString,
+  opaque,
+} from '../../lib/validation/backend-schema';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type Raw = any;
+const VendorResponseSchema = z.object({
+  id: opaque,
+  vendorName: nullableString,
+  name: nullableString,
+  vendorEmail: nullableString,
+  email: nullableString,
+  contacts: z.array(z.unknown()).nullish(),
+  taxIdentifiers: z.array(z.unknown()).nullish(),
+  bankAccounts: z.array(z.unknown()).nullish(),
+  paymentTerms: opaque,
+  vendorAddress: nullableString,
+  address: nullableString,
+  website: nullableString,
+  city: nullableString,
+  state: nullableString,
+  pinCode: nullableString,
+  pincode: nullableString,
+  country: nullableString,
+  type: nullableString,
+  status: nullableString,
+  notes: nullableString,
+  contactPerson: nullableString,
+  phone: nullableString,
+  alternatePhone: nullableString,
+  gstNumber: nullableString,
+  panNumber: nullableString,
+  bankName: nullableString,
+  accountNumber: nullableString,
+  ifscCode: nullableString,
+  accountHolderName: nullableString,
+  swift: nullableString,
+  creditLimit: money,
+  creditDays: nullableNumber,
+  totalPurchaseValue: money,
+  totalPaid: money,
+  totalOutstanding: money,
+  lastPaymentDate: backendDate,
+  lastPaymentAmount: money,
+  totalOrders: nullableNumber,
+  pendingOrders: nullableNumber,
+  completedOrders: nullableNumber,
+  cancelledOrders: nullableNumber,
+  attachments: z.array(z.unknown()).nullish(),
+  createdAt: backendDate,
+  updatedAt: backendDate,
+});
 
 /**
  * A supplier the organisation purchases from. The interface mixes scalar
@@ -163,12 +215,13 @@ export interface Vendor {
  * `raw` are honoured as a fallback when the sub-resource array is empty
  * or missing.
  *
- * @param raw - The untyped JSON object received from the backend.
+ * @param json - The untyped JSON object received from the backend.
  * @returns A canonical {@link Vendor} domain object.
  * @throws {Error} If `raw.id` is missing or not a positive integer.
  * @throws {Error} If the vendor has neither `vendorName` nor `name`.
  */
-export function parseVendor(raw: Raw): Vendor {
+export function parseVendor(json: unknown): Vendor {
+  const raw = VendorResponseSchema.parse(json);
   const id = parsePositiveInt(raw.id, 'parseVendor.id');
   const name = raw.vendorName ?? raw.name ?? '';
   const email = raw.vendorEmail ?? raw.email ?? '';
@@ -176,59 +229,62 @@ export function parseVendor(raw: Raw): Vendor {
     throw new Error(`parseVendor: vendor id=${id} has no name`);
   }
 
-  const contacts: VendorContact[] = raw.contacts ?? [];
+  const contacts = (raw.contacts ?? []) as VendorContact[];
   const contact = contacts.find((c) => c.primary) ?? contacts[0];
 
-  const taxIds: VendorTaxIdentifier[] = raw.taxIdentifiers ?? [];
-  const bankAccounts: VendorBankAccount[] = raw.bankAccounts ?? [];
+  const taxIds = (raw.taxIdentifiers ?? []) as VendorTaxIdentifier[];
+  const bankAccounts = (raw.bankAccounts ?? []) as VendorBankAccount[];
   const bank = bankAccounts.find((b) => b.default) ?? bankAccounts[0];
 
   const pt: VendorPaymentTermsDetails | null =
     raw.paymentTerms && typeof raw.paymentTerms === 'object'
-      ? raw.paymentTerms
+      ? (raw.paymentTerms as VendorPaymentTermsDetails)
       : null;
 
   return {
     id,
     name,
     email,
-    address: raw.vendorAddress ?? raw.address,
-    website: raw.website,
-    city: raw.city,
-    state: raw.state,
-    pincode: raw.pinCode ?? raw.pincode,
-    country: raw.country,
+    address: raw.vendorAddress ?? raw.address ?? undefined,
+    website: raw.website ?? undefined,
+    city: raw.city ?? undefined,
+    state: raw.state ?? undefined,
+    pincode: raw.pinCode ?? raw.pincode ?? undefined,
+    country: raw.country ?? undefined,
     type: raw.type as VendorType | undefined,
     status: raw.status as VendorStatus | undefined,
-    notes: raw.notes,
+    notes: raw.notes ?? undefined,
 
-    contactPerson: contact?.contactPerson ?? raw.contactPerson,
-    phone: contact?.phone ?? raw.phone,
-    alternatePhone: contact?.alternatePhone ?? raw.alternatePhone,
+    contactPerson: contact?.contactPerson ?? raw.contactPerson ?? undefined,
+    phone: contact?.phone ?? raw.phone ?? undefined,
+    alternatePhone: contact?.alternatePhone ?? raw.alternatePhone ?? undefined,
 
-    gstNumber: taxIds.find((t) => t.type === 'GST')?.value ?? raw.gstNumber,
-    panNumber: taxIds.find((t) => t.type === 'PAN')?.value ?? raw.panNumber,
+    gstNumber:
+      taxIds.find((t) => t.type === 'GST')?.value ?? raw.gstNumber ?? undefined,
+    panNumber:
+      taxIds.find((t) => t.type === 'PAN')?.value ?? raw.panNumber ?? undefined,
 
-    bankName: bank?.bankName ?? raw.bankName,
-    accountNumber: bank?.accountNumber ?? raw.accountNumber,
-    ifscCode: bank?.ifscCode ?? raw.ifscCode,
-    accountHolderName: bank?.accountHolderName ?? raw.accountHolderName,
-    swift: bank?.swift ?? raw.swift,
+    bankName: bank?.bankName ?? raw.bankName ?? undefined,
+    accountNumber: bank?.accountNumber ?? raw.accountNumber ?? undefined,
+    ifscCode: bank?.ifscCode ?? raw.ifscCode ?? undefined,
+    accountHolderName:
+      bank?.accountHolderName ?? raw.accountHolderName ?? undefined,
+    swift: bank?.swift ?? raw.swift ?? undefined,
 
     paymentTerms: pt?.paymentTerms as PaymentTerms | undefined,
-    creditLimit: pt?.creditLimit ?? raw.creditLimit,
-    creditDays: pt?.creditDays ?? raw.creditDays,
+    creditLimit: pt?.creditLimit ?? raw.creditLimit ?? undefined,
+    creditDays: pt?.creditDays ?? raw.creditDays ?? undefined,
 
-    totalPurchaseValue: raw.totalPurchaseValue,
-    totalPaid: raw.totalPaid,
-    totalOutstanding: raw.totalOutstanding,
+    totalPurchaseValue: raw.totalPurchaseValue ?? undefined,
+    totalPaid: raw.totalPaid ?? undefined,
+    totalOutstanding: raw.totalOutstanding ?? undefined,
     lastPaymentDate: parseUTCDate(raw.lastPaymentDate) ?? undefined,
-    lastPaymentAmount: raw.lastPaymentAmount,
-    totalOrders: raw.totalOrders,
-    pendingOrders: raw.pendingOrders,
-    completedOrders: raw.completedOrders,
-    cancelledOrders: raw.cancelledOrders,
-    attachments: raw.attachments,
+    lastPaymentAmount: raw.lastPaymentAmount ?? undefined,
+    totalOrders: raw.totalOrders ?? undefined,
+    pendingOrders: raw.pendingOrders ?? undefined,
+    completedOrders: raw.completedOrders ?? undefined,
+    cancelledOrders: raw.cancelledOrders ?? undefined,
+    attachments: raw.attachments as Attachment[] | undefined,
     createdAt: parseUTCDate(raw.createdAt) ?? undefined,
     updatedAt: parseUTCDate(raw.updatedAt) ?? undefined,
   };

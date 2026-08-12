@@ -6,13 +6,35 @@
  * {@link IndentItem} lines. The parser normalises the backend's wire
  * format into the canonical {@link Indent} shape.
  */
+import { z } from 'zod';
 import { parsePositiveInt } from '../../lib/utils/parse-id';
+import {
+  backendDate,
+  nullableString,
+  opaque,
+  optionalNumericId,
+} from '../../lib/validation/backend-schema';
 import type { IndentStatus } from './enums';
 import type { IndentItem } from './indent-item';
 import { parseIndentItem } from './indent-item';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type Raw = any;
+const IndentResponseSchema = z.object({
+  id: opaque,
+  indentNumber: nullableString,
+  createdAt: backendDate,
+  createdBy: z
+    .object({
+      id: opaque,
+      employeeName: nullableString,
+    })
+    .nullish(),
+  status: nullableString,
+  expectedOn: backendDate,
+  remarks: nullableString,
+  projectId: optionalNumericId,
+  projectName: nullableString,
+  items: z.array(z.unknown()).nullish(),
+});
 
 /**
  * A material requisition raised against a project. Carries denormalised
@@ -61,16 +83,17 @@ export interface Indent {
  * Optional fields fall back to `undefined`; an absent or non-array
  * `items` resolves to `[]`.
  *
- * @param raw - The raw JSON object from the backend.
+ * @param json - The raw JSON object from the backend.
  * @returns The parsed {@link Indent}.
- * @throws {TypeError} When `raw.id` or `raw.createdBy.id` is missing or
- *   non-positive (propagated from {@link parsePositiveInt}).
+ * @throws {TypeError} When `id` or `createdBy.id` is missing or non-positive
+ *   (propagated from {@link parsePositiveInt}).
  */
-export function parseIndent(raw: Raw): Indent {
+export function parseIndent(json: unknown): Indent {
+  const raw = IndentResponseSchema.parse(json);
   return {
     id: parsePositiveInt(raw.id, 'parseIndent.id'),
     indentNumber: raw.indentNumber ?? '',
-    createdAt: raw.createdAt,
+    createdAt: raw.createdAt ?? '',
     createdBy: {
       id: parsePositiveInt(raw.createdBy?.id, 'parseIndent.createdBy.id'),
       name: raw.createdBy?.employeeName ?? '',
@@ -81,7 +104,7 @@ export function parseIndent(raw: Raw): Indent {
     projectId: raw.projectId ?? undefined,
     projectName: raw.projectName ?? undefined,
     items: Array.isArray(raw.items)
-      ? (raw.items as Raw[]).map((item) => parseIndentItem(item))
+      ? raw.items.map((item) => parseIndentItem(item))
       : [],
   };
 }
