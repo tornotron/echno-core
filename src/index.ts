@@ -161,3 +161,7 @@ export * from './services/finance-construction-payment-service';
 export * from './services/finance-journal-service';
 export * from './services/finance-reports-service';
 export * from './hooks/finance';
+
+// Inspection
+export * from './types/inspection';
+export * from './services/inspection-service';
