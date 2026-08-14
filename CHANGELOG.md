@@ -2,6 +2,55 @@
 
 All notable changes to `@tornotron/echno-core` will be documented in this file.
 
+From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
+[docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
+
+## [v1.0.0] - 2026-08-14
+
+First stable release. The public API is now the set of entry points in the `exports` map,
+covered by semantic versioning and guarded by a snapshot check in CI.
+
+### Added
+
+- API stability policy in `docs/API-STABILITY.md` defining the public surface, the meaning of
+  each version bump, and the deprecation lifecycle.
+- Generated public-API snapshot `etc/public-api.md` and `scripts/api-snapshot.ts`, with
+  `api:snapshot` (regenerate) and `api:check` (verify) scripts. CI runs `api:check` on every
+  pull request so any change to the exported surface must be reviewed and committed.
+- Root barrel exports for the `movement`, `indent-items`, and `purchase-order-items` modules
+  and for the `material-consumption` types, so the root barrel matches the modules already
+  reachable through the subpath exports.
+
+### Changed
+
+- Adopted semantic versioning. Package version bumped to `1.0.0`.
+
+## [v0.29.0] - 2026-08-13
+
+### Added
+
+- Inspection domain types and parsers for work inspections, check items, and defects.
+- Inspection service methods for inspection CRUD and check-item/defect operations.
+- Public package exports for the inspection types and service.
+
+### Changed
+
+- Package version bumped to `0.29.0`.
+
+## [v0.28.0] - 2026-08-12
+
+### Added
+
+- Construction-finance domain types and parsers for construction invoices and payments,
+  including line items and the construction invoice/payment status enums.
+- Construction invoice and payment services and their TanStack Query hooks and query-key
+  factories.
+- Public package exports for the construction-finance types, services, and hooks.
+
+### Changed
+
+- Package version bumped to `0.28.0`.
+
 ## [v0.27.1] - 2026-08-03
 
 ### Added
