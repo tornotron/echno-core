@@ -435,7 +435,12 @@ This package follows [Semantic Versioning](https://semver.org):
 | New export, backward-compatible addition | `MINOR` (1.x.0) | Add a new service, add optional fields to a type |
 | Breaking change | `MAJOR` (x.0.0) | Rename an exported function, change a type's shape, remove an export |
 
-Always pin consuming apps to an exact tag (`#v1.2.3`). Never point to a branch (`#main`) — branch tips change and will break reproducible builds.
+Always pin consuming apps to an exact tag (`#v1.2.3`). Never point to a branch (`#main`); branch tips change and will break reproducible builds.
+
+The public API is the set of entry points in the `exports` map, recorded in
+[`etc/public-api.md`](etc/public-api.md) and enforced in CI by `bun run api:check`. Any change
+to the exported surface shows up as a diff in that snapshot. See
+[docs/API-STABILITY.md](docs/API-STABILITY.md) for the full policy.
 
 ---
 

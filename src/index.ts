@@ -90,6 +90,7 @@ export * from './services/materials-service';
 export * from './hooks/materials';
 
 // Material Consumption
+export * from './types/material-consumption';
 export * from './services/material-consumption-service';
 export * from './hooks/material-consumption';
 
@@ -98,10 +99,20 @@ export * from './types/purchase-orders';
 export * from './services/purchase-orders-service';
 export * from './hooks/purchase-orders';
 
+// Purchase Order Items
+export * from './types/purchase-order-items';
+export * from './services/purchase-order-items-service';
+export * from './hooks/purchase-order-items';
+
 // Indent
 export * from './types/indents';
 export * from './services/indents-service';
 export * from './hooks/indents';
+
+// Indent Items
+export * from './types/indent-items';
+export * from './services/indent-items-service';
+export * from './hooks/indent-items';
 
 // Inventory Transactions
 export * from './types/inventory-transactions';
@@ -140,6 +151,10 @@ export * from './hooks/attendance';
 // Attendance Regularization
 export * from './services/attendance-regularization-service';
 export * from './hooks/attendance-regularization';
+
+// Movement
+export * from './services/movement-service';
+export * from './hooks/movement';
 
 // Attendance Settings
 export * from './services/attendance-settings-service';
