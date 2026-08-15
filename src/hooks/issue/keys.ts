@@ -29,6 +29,13 @@ export const issueKeys = {
   /** Query key for the full issue list. */
   lists: () => [...issueKeys.all, 'list'] as const,
 
+  /** Invalidation prefix for every paginated issue-list cache entry. */
+  pages: () => [...issueKeys.all, 'page'] as const,
+
+  /** Query key for a single page of the issue list. */
+  page: (page: number, size: number) =>
+    [...issueKeys.all, 'page', page, size] as const,
+
   /** Query key for a single issue by ID. */
   detail: (id: number) => [...issueKeys.all, id] as const,
 

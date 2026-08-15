@@ -90,6 +90,54 @@ function safeParseIssues(data: ApiResponse[]): Issue[] {
 }
 
 /**
+ * A parsed page of issues, mirroring the Spring `Page<IssueDto>` envelope.
+ */
+export interface PagedIssue {
+  /** The issues on this page. */
+  content: Issue[];
+  /** Total issues across all pages. */
+  totalElements: number;
+  /** Total number of pages. */
+  totalPages: number;
+  /** 0-based page index. */
+  number: number;
+  /** Page size. */
+  size: number;
+}
+
+/** Paging options for the paginated issue list. */
+export interface IssuePageParams {
+  /** 0-based page index. Defaults to 0 on the backend. */
+  page?: number;
+  /** Page size. Defaults to 10 on the backend. */
+  size?: number;
+}
+
+/**
+ * Normalizes a Spring `Page<IssueDto>` body (or a bare array, for resilience)
+ * into a {@link PagedIssue} so callers always receive page metadata.
+ */
+function safeParseIssuePage(data: ApiResponse, params: IssuePageParams): PagedIssue {
+  if (Array.isArray(data)) {
+    const content = safeParseIssues(data);
+    return {
+      content,
+      totalElements: content.length,
+      totalPages: 1,
+      number: 0,
+      size: params.size ?? content.length,
+    };
+  }
+  return {
+    content: safeParseIssues(data?.content ?? []),
+    totalElements: data?.totalElements ?? 0,
+    totalPages: data?.totalPages ?? 0,
+    number: data?.number ?? 0,
+    size: data?.size ?? params.size ?? 10,
+  };
+}
+
+/**
  * Thin wrapper around the backend issue REST endpoints.
  */
 export const issueService = {
@@ -104,6 +152,26 @@ export const issueService = {
   async getAll(): Promise<Issue[]> {
     const data = await api.get<ApiResponse[]>('/issues/web');
     return safeParseIssues(data);
+  },
+
+  /**
+   * Fetches one page of issues, newest first.
+   *
+   * `GET /issues/web/paginated` → `Page<IssueDto>`. The Spring page envelope is
+   * normalized to {@link PagedIssue}, preserving the pagination metadata the
+   * table needs. Use {@link getAll} where the full set is required (counts,
+   * lookups).
+   *
+   * @param params - 0-based `page` and `size` (both optional).
+   * @returns A {@link PagedIssue} page of issues.
+   * @throws {ApiError} On non-2xx response or unparseable payload.
+   */
+  async getPage(params: IssuePageParams = {}): Promise<PagedIssue> {
+    const query: Record<string, number> = {};
+    if (params.page !== undefined) query.pageNo = params.page;
+    if (params.size !== undefined) query.pageSize = params.size;
+    const data = await api.get<ApiResponse>('/issues/web/paginated', query);
+    return safeParseIssuePage(data, params);
   },
 
   /**

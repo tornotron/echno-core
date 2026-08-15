@@ -40,7 +40,15 @@ function isEmployeeListCache(query: {
   queryKey: ReadonlyArray<unknown>;
 }): boolean {
   const key = query.queryKey;
-  return Array.isArray(key) && key[0] === 'employees' && key[1] !== 'detail';
+  // Paginated caches (`['employees', 'page', n, size]`) hold a PagedEmployee
+  // envelope, not a flat Employee[]; the optimistic array patches would break
+  // on them. They are refetch-driven, invalidated via employeeKeys.pages().
+  return (
+    Array.isArray(key) &&
+    key[0] === 'employees' &&
+    key[1] !== 'detail' &&
+    key[1] !== 'page'
+  );
 }
 
 /**
@@ -130,6 +138,8 @@ export function useUpdateEmployee() {
         queryClient.invalidateQueries({ queryKey: employeeKeys.detail(id) });
         queryClient.invalidateQueries({ predicate: isEmployeeListCache });
       }
+      // Paginated table caches are refetch-driven, not optimistically patched.
+      queryClient.invalidateQueries({ queryKey: employeeKeys.pages() });
 
       const displayName =
         (data && typeof data.id === 'number'
@@ -173,6 +183,8 @@ export function useDeleteEmployee() {
       // change if the deleted employee was the user's own. Invalidate
       // userKeys.all conservatively.
       queryClient.invalidateQueries({ queryKey: userKeys.all });
+      // Refetch the paginated table (a removed row shifts page boundaries).
+      queryClient.invalidateQueries({ queryKey: employeeKeys.pages() });
     },
   });
 }
@@ -224,6 +236,8 @@ export function useJoinOrganization() {
       queryClient.invalidateQueries({ queryKey: userKeys.all });
       queryClient.invalidateQueries({ queryKey: userKeys.employees() });
       queryClient.invalidateQueries({ queryKey: organizationKeys.all });
+      // Refetch the paginated table (a new row shifts page boundaries).
+      queryClient.invalidateQueries({ queryKey: employeeKeys.pages() });
     },
   });
 }
