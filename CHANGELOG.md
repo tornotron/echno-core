@@ -5,6 +5,25 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
+## [v1.1.0] - 2026-08-15
+
+### Added
+
+- Server-paginated read layer for the issue and employee tables, alongside the existing
+  full-list methods (which back dropdowns, badges, and name resolution): `issueService.getPage` /
+  `employeeService.getPage` returning `PagedIssue` / `PagedEmployee`, and the `useIssuesPage` /
+  `useEmployeesPage` hooks (with `keepPreviousData`).
+- Server-side filters on those hooks: `projectId` / `search` / `status` / `type` for issues,
+  `search` / `status` / `department` for employees.
+- `issueService.getStats` / `useIssueStats` and the `IssueStats` type for the issues dashboard
+  cards, so the per-status counts stay accurate under server pagination.
+
+### Changed
+
+- Issue and employee create/update/delete mutations now invalidate the paginated and stats
+  caches (`issueKeys.pages()` / `issueKeys.statsAll()` / `employeeKeys.pages()`), which are
+  refetch-driven rather than optimistically patched.
+
 ## [v1.0.0] - 2026-08-14
 
 First stable release. The public API is now the set of entry points in the `exports` map,
