@@ -32,9 +32,16 @@ export const issueKeys = {
   /** Invalidation prefix for every paginated issue-list cache entry. */
   pages: () => [...issueKeys.all, 'page'] as const,
 
-  /** Query key for a single page of the issue list. */
-  page: (page: number, size: number) =>
-    [...issueKeys.all, 'page', page, size] as const,
+  /** Query key for a single page of the issue list, keyed by page + filters. */
+  page: (params: object) =>
+    [...issueKeys.all, 'page', params] as const,
+
+  /** Invalidation prefix for every issue-stats cache entry. */
+  statsAll: () => [...issueKeys.all, 'stats'] as const,
+
+  /** Query key for the issue stats aggregate, keyed by its filters. */
+  stats: (params: object) =>
+    [...issueKeys.all, 'stats', params] as const,
 
   /** Query key for a single issue by ID. */
   detail: (id: number) => [...issueKeys.all, id] as const,

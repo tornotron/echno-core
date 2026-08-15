@@ -81,12 +81,18 @@ export interface PagedEmployee {
   size: number;
 }
 
-/** Paging options for the paginated employee list. */
+/** Paging + filter options for the paginated employee list. */
 export interface EmployeePageParams {
   /** 0-based page index. Defaults to 0 on the backend. */
   page?: number;
   /** Page size. Defaults to 10 on the backend. */
   size?: number;
+  /** Case-insensitive match on name, email, phone, or employee id. */
+  search?: string;
+  /** An `EmployeeStatus` value (e.g. `'active'`). */
+  status?: string;
+  /** Exact department name. */
+  department?: string;
 }
 
 /**
@@ -146,9 +152,12 @@ export const employeeService = {
    * @throws {ApiError} On non-2xx transport responses or parse failures (status 422).
    */
   async getPage(params: EmployeePageParams = {}): Promise<PagedEmployee> {
-    const query: Record<string, number> = {};
+    const query: Record<string, string | number> = {};
     if (params.page !== undefined) query.pageNo = params.page;
     if (params.size !== undefined) query.pageSize = params.size;
+    if (params.search) query.search = params.search;
+    if (params.status) query.status = params.status;
+    if (params.department) query.department = params.department;
     const data = await api.get<ApiResponse>('/employee/web/paginated', query);
     return safeParseEmployeePage(data, params);
   },

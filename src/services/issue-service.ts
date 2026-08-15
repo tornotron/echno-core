@@ -105,12 +105,32 @@ export interface PagedIssue {
   size: number;
 }
 
-/** Paging options for the paginated issue list. */
-export interface IssuePageParams {
+/** Filters shared by the paginated issue list and the issue stats endpoint. */
+export interface IssueFilterParams {
+  /** Restrict to a single project. */
+  projectId?: number;
+  /** Case-insensitive match on title, description, or creator name. */
+  search?: string;
+  /** An `IssueType` value (e.g. `'safety'`). */
+  type?: string;
+}
+
+/** Paging + filter options for the paginated issue list. */
+export interface IssuePageParams extends IssueFilterParams {
   /** 0-based page index. Defaults to 0 on the backend. */
   page?: number;
   /** Page size. Defaults to 10 on the backend. */
   size?: number;
+  /** An `IssueStatus` value (e.g. `'open'`). Stats ignore this by design. */
+  status?: string;
+}
+
+/** Per-status issue counts for the dashboard, under the active filters. */
+export interface IssueStats {
+  /** Total matching issues across every status. */
+  total: number;
+  /** Count per `IssueStatus` name; absent statuses default to zero. */
+  byStatus: Record<string, number>;
 }
 
 /**
@@ -167,11 +187,42 @@ export const issueService = {
    * @throws {ApiError} On non-2xx response or unparseable payload.
    */
   async getPage(params: IssuePageParams = {}): Promise<PagedIssue> {
-    const query: Record<string, number> = {};
+    const query: Record<string, string | number> = {};
     if (params.page !== undefined) query.pageNo = params.page;
     if (params.size !== undefined) query.pageSize = params.size;
+    if (params.projectId !== undefined) query.projectId = params.projectId;
+    if (params.search) query.search = params.search;
+    if (params.status) query.status = params.status;
+    if (params.type) query.type = params.type;
     const data = await api.get<ApiResponse>('/issues/web/paginated', query);
     return safeParseIssuePage(data, params);
+  },
+
+  /**
+   * Fetches per-status issue counts for the dashboard cards.
+   *
+   * `GET /issues/web/stats` → `{ total, byStatus }` under the same
+   * `projectId`/`search`/`type` filters as {@link getPage} (status excluded, so
+   * the breakdown always spans every status). This keeps the dashboard totals
+   * correct when the table only holds one page.
+   *
+   * @param params - Optional `projectId` / `search` / `type` filters.
+   * @returns The {@link IssueStats} aggregate.
+   * @throws {ApiError} On non-2xx response.
+   */
+  async getStats(params: IssueFilterParams = {}): Promise<IssueStats> {
+    const query: Record<string, string | number> = {};
+    if (params.projectId !== undefined) query.projectId = params.projectId;
+    if (params.search) query.search = params.search;
+    if (params.type) query.type = params.type;
+    const data = await api.get<ApiResponse>('/issues/web/stats', query);
+    return {
+      total: typeof data?.total === 'number' ? data.total : 0,
+      byStatus:
+        data?.byStatus && typeof data.byStatus === 'object'
+          ? (data.byStatus as Record<string, number>)
+          : {},
+    };
   },
 
   /**

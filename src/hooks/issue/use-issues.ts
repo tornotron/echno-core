@@ -12,7 +12,12 @@
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { issueService } from '../../services/issue-service';
-import type { PagedIssue } from '../../services/issue-service';
+import type {
+  PagedIssue,
+  IssuePageParams,
+  IssueFilterParams,
+  IssueStats,
+} from '../../services/issue-service';
 import { useEmployees } from '../employee/use-employee';
 import { useUserEmployees } from '../user/use-user';
 import { Issue } from '../../types/issue/issue';
@@ -95,15 +100,15 @@ export function useIssues() {
  * with page metadata. `keepPreviousData` keeps the current page visible while
  * the next loads.
  *
- * @param page - 0-based page index.
- * @param size - Page size.
+ * @param params - Page, size, and optional `projectId` / `search` / `status` /
+ *   `type` filters (all resolved server-side).
  * @returns A TanStack `UseQueryResult` wrapping {@link PagedIssue} with joined
  *   fields populated on `content`.
  */
-export function useIssuesPage(page: number, size: number) {
+export function useIssuesPage(params: IssuePageParams) {
   const issuesQuery = useQuery<PagedIssue>({
-    queryKey: issueKeys.page(page, size),
-    queryFn: () => issueService.getPage({ page, size }),
+    queryKey: issueKeys.page(params),
+    queryFn: () => issueService.getPage(params),
     placeholderData: keepPreviousData,
     staleTime: 5 * 60 * 1000,
     retry: shouldRetry,
@@ -133,6 +138,26 @@ export function useIssuesPage(page: number, size: number) {
   );
 
   return { ...issuesQuery, data };
+}
+
+/**
+ * Fetches the per-status issue counts for the dashboard cards under the given
+ * filters. Kept separate from {@link useIssuesPage} so the totals stay correct
+ * when only one page of rows is loaded.
+ *
+ * @param params - Optional `projectId` / `search` / `type` filters (status is
+ *   excluded by design, so the breakdown always spans every status).
+ * @returns A TanStack `UseQueryResult` wrapping {@link IssueStats}.
+ */
+export function useIssueStats(params: IssueFilterParams = {}) {
+  return useQuery<IssueStats>({
+    queryKey: issueKeys.stats(params),
+    queryFn: () => issueService.getStats(params),
+    placeholderData: keepPreviousData,
+    staleTime: 5 * 60 * 1000,
+    retry: shouldRetry,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30_000),
+  });
 }
 
 /**

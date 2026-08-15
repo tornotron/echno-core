@@ -304,9 +304,11 @@ Entry points: 127
 - issueCommentKeys
 - issueCommentToJson
 - IssueFiles
+- IssueFilterParams
 - issueKeys
 - IssuePageParams
 - issueService
+- IssueStats
 - IssueStatus
 - issueStatusFromString
 - issueToJson
@@ -727,6 +729,7 @@ Entry points: 127
 - useIssuesByProject
 - useIssuesByTask
 - useIssuesPage
+- useIssueStats
 - useJoinOrganization
 - useJournalEntries
 - useJournalEntry
@@ -1490,6 +1493,7 @@ Entry points: 127
 - useIssuesByProject
 - useIssuesByTask
 - useIssuesPage
+- useIssueStats
 - usePrefetchIssue
 - useUpdateIssue
 - useUpdateIssueComment  [internal]
@@ -1501,8 +1505,10 @@ Entry points: 127
 
 ## `@tornotron/echno-core/issue/services`
 
+- IssueFilterParams
 - IssuePageParams
 - issueService
+- IssueStats
 - PagedIssue
 
 ## `@tornotron/echno-core/issue/types`
