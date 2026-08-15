@@ -18,7 +18,10 @@
 
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { employeeService } from '../../services/employee-service';
-import type { PagedEmployee } from '../../services/employee-service';
+import type {
+  PagedEmployee,
+  EmployeePageParams,
+} from '../../services/employee-service';
 import { useUser, useUserEmployees } from '../user/use-user';
 
 import { useMemo } from 'react';
@@ -51,14 +54,14 @@ export function useEmployees() {
  * the current page visible while the next one loads, avoiding a flash of empty
  * table on page changes.
  *
- * @param page - 0-based page index.
- * @param size - Page size.
+ * @param params - Page, size, and optional `search` / `status` / `department`
+ *   filters (all resolved server-side).
  * @returns A TanStack `UseQueryResult` wrapping {@link PagedEmployee}.
  */
-export function useEmployeesPage(page: number, size: number) {
+export function useEmployeesPage(params: EmployeePageParams) {
   return useQuery<PagedEmployee>({
-    queryKey: employeeKeys.page(page, size),
-    queryFn: () => employeeService.getPage({ page, size }),
+    queryKey: employeeKeys.page(params),
+    queryFn: () => employeeService.getPage(params),
     placeholderData: keepPreviousData,
     ...standardQueryOptions,
     retry: shouldRetry,
