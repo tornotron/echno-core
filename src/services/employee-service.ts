@@ -65,6 +65,58 @@ function safeParseEmployees(data: ApiResponse[]): Employee[] {
   }
 }
 
+/**
+ * A parsed page of employees, mirroring the Spring `Page<EmployeeDto>` envelope.
+ */
+export interface PagedEmployee {
+  /** The employees on this page. */
+  content: Employee[];
+  /** Total employees across all pages. */
+  totalElements: number;
+  /** Total number of pages. */
+  totalPages: number;
+  /** 0-based page index. */
+  number: number;
+  /** Page size. */
+  size: number;
+}
+
+/** Paging options for the paginated employee list. */
+export interface EmployeePageParams {
+  /** 0-based page index. Defaults to 0 on the backend. */
+  page?: number;
+  /** Page size. Defaults to 10 on the backend. */
+  size?: number;
+}
+
+/**
+ * Normalizes a Spring `Page<EmployeeDto>` body (or a bare array, for
+ * resilience) into a {@link PagedEmployee} so callers always receive page
+ * metadata.
+ */
+function safeParseEmployeePage(
+  data: ApiResponse,
+  params: EmployeePageParams
+): PagedEmployee {
+  if (Array.isArray(data)) {
+    const content = safeParseEmployees(data);
+    return {
+      content,
+      totalElements: content.length,
+      totalPages: 1,
+      number: 0,
+      size: params.size ?? content.length,
+    };
+  }
+  return {
+    content: safeParseEmployees(data?.content ?? []),
+    totalElements: data?.totalElements ?? 0,
+    totalPages: data?.totalPages ?? 0,
+    number: data?.number ?? 0,
+    size: data?.size ?? params.size ?? 10,
+  };
+}
+
 export const employeeService = {
   /**
    * Fetches every employee record visible to the caller.
@@ -80,6 +132,25 @@ export const employeeService = {
   async getAll(): Promise<Employee[]> {
     const data = await api.get<ApiResponse[]>('/employee/web');
     return safeParseEmployees(data);
+  },
+
+  /**
+   * Fetches one page of employees, ordered alphabetically by name.
+   *
+   * `GET /employee/web/paginated` → `Page<EmployeeDto>`. The Spring page
+   * envelope is normalized to {@link PagedEmployee}. Use {@link getAll} where
+   * the full set is required (dropdowns, name resolution).
+   *
+   * @param params - 0-based `page` and `size` (both optional).
+   * @returns A {@link PagedEmployee} page of employees.
+   * @throws {ApiError} On non-2xx transport responses or parse failures (status 422).
+   */
+  async getPage(params: EmployeePageParams = {}): Promise<PagedEmployee> {
+    const query: Record<string, number> = {};
+    if (params.page !== undefined) query.pageNo = params.page;
+    if (params.size !== undefined) query.pageSize = params.size;
+    const data = await api.get<ApiResponse>('/employee/web/paginated', query);
+    return safeParseEmployeePage(data, params);
   },
 
   /**

@@ -9,9 +9,10 @@
  * Mutations live in {@link useCreateIssue}, {@link useUpdateIssue}, and
  * {@link useDeleteIssue}.
  */
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { issueService } from '../../services/issue-service';
+import type { PagedIssue } from '../../services/issue-service';
 import { useEmployees } from '../employee/use-employee';
 import { useUserEmployees } from '../user/use-user';
 import { Issue } from '../../types/issue/issue';
@@ -78,6 +79,55 @@ export function useIssues() {
     () =>
       issuesQuery.data
         ? resolveEmployees(issuesQuery.data, employees)
+        : issuesQuery.data,
+    [issuesQuery.data, employees]
+  );
+
+  return { ...issuesQuery, data };
+}
+
+/**
+ * Fetches one page of issues for a server-paginated table, with `creator`,
+ * `assignee`, and comment authors resolved against the full employee list.
+ *
+ * Unlike {@link useIssues} (which returns every issue for counts and badges),
+ * this hits the paginated endpoint and returns a {@link PagedIssue} envelope
+ * with page metadata. `keepPreviousData` keeps the current page visible while
+ * the next loads.
+ *
+ * @param page - 0-based page index.
+ * @param size - Page size.
+ * @returns A TanStack `UseQueryResult` wrapping {@link PagedIssue} with joined
+ *   fields populated on `content`.
+ */
+export function useIssuesPage(page: number, size: number) {
+  const issuesQuery = useQuery<PagedIssue>({
+    queryKey: issueKeys.page(page, size),
+    queryFn: () => issueService.getPage({ page, size }),
+    placeholderData: keepPreviousData,
+    staleTime: 5 * 60 * 1000,
+    retry: shouldRetry,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30_000),
+  });
+
+  const { data: allEmployees = [] } = useEmployees();
+  const { data: userEmployees = [] } = useUserEmployees();
+
+  const employees = useMemo(() => {
+    const map = new Map<number, Employee>();
+    for (const e of [...allEmployees, ...userEmployees]) {
+      if (e.id !== undefined) map.set(e.id, e);
+    }
+    return [...map.values()];
+  }, [allEmployees, userEmployees]);
+
+  const data = useMemo(
+    () =>
+      issuesQuery.data
+        ? {
+            ...issuesQuery.data,
+            content: resolveEmployees(issuesQuery.data.content, employees),
+          }
         : issuesQuery.data,
     [issuesQuery.data, employees]
   );

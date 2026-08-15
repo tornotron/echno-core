@@ -43,7 +43,11 @@ function isIssueListCache(query: {
     Array.isArray(key) &&
     key[0] === 'issues' &&
     key.length > 1 &&
-    typeof key[1] !== 'number'
+    typeof key[1] !== 'number' &&
+    // Paginated caches (`['issues', 'page', n, size]`) hold a PagedIssue
+    // envelope, not a flat Issue[]; the optimistic array patches would break
+    // on them. They are refetch-driven, invalidated via issueKeys.pages().
+    key[1] !== 'page'
   );
 }
 
@@ -89,6 +93,9 @@ export function useCreateIssue() {
       queryClient.invalidateQueries({
         queryKey: issueKeys.detail(newIssue.id),
       });
+      // Paginated table caches are refetch-driven (a new row shifts pages), so
+      // invalidate the whole page prefix rather than optimistically patching.
+      queryClient.invalidateQueries({ queryKey: issueKeys.pages() });
 
       // Append to scoped lists only if they're already in cache. Functional
       // updater returns undefined for absent entries, avoiding spurious caches.
@@ -221,6 +228,7 @@ export function useUpdateIssue() {
       );
       queryClient.invalidateQueries({ queryKey: issueKeys.detail(id) });
       queryClient.invalidateQueries({ predicate: isIssueListCache });
+      queryClient.invalidateQueries({ queryKey: issueKeys.pages() });
 
       // Cross-namespace: task detail caches `issues: Issue[]` nested. Patch
       // the parent's issues array so consumers update instantly; invalidate
@@ -335,6 +343,8 @@ export function useDeleteIssue() {
           queryKey: taskKeys.detail(context.previousDetail.taskId),
         });
       }
+      // Refetch the paginated table (a removed row shifts page boundaries).
+      queryClient.invalidateQueries({ queryKey: issueKeys.pages() });
     },
     onError: (error, id, context) => {
       // Restore list caches from snapshot.

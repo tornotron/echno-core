@@ -16,8 +16,9 @@
  * canonical {@link shouldRetry} policy.
  */
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { employeeService } from '../../services/employee-service';
+import type { PagedEmployee } from '../../services/employee-service';
 import { useUser, useUserEmployees } from '../user/use-user';
 
 import { useMemo } from 'react';
@@ -36,6 +37,29 @@ export function useEmployees() {
   return useQuery({
     queryKey: employeeKeys.lists(),
     queryFn: () => employeeService.getAll(),
+    ...standardQueryOptions,
+    retry: shouldRetry,
+  });
+}
+
+/**
+ * Fetches one page of employees for a server-paginated table.
+ *
+ * Unlike {@link useEmployees} (which returns the full set for dropdowns and
+ * name resolution), this hits the paginated endpoint and returns a
+ * {@link PagedEmployee} envelope with page metadata. `keepPreviousData` keeps
+ * the current page visible while the next one loads, avoiding a flash of empty
+ * table on page changes.
+ *
+ * @param page - 0-based page index.
+ * @param size - Page size.
+ * @returns A TanStack `UseQueryResult` wrapping {@link PagedEmployee}.
+ */
+export function useEmployeesPage(page: number, size: number) {
+  return useQuery<PagedEmployee>({
+    queryKey: employeeKeys.page(page, size),
+    queryFn: () => employeeService.getPage({ page, size }),
+    placeholderData: keepPreviousData,
     ...standardQueryOptions,
     retry: shouldRetry,
   });
