@@ -176,6 +176,7 @@ Entry points: 127
 - Employee
 - EmployeeDetails
 - employeeKeys
+- EmployeePageParams
 - employeeService
 - EmployeeStatus
 - employeeStatusFromString
@@ -304,6 +305,7 @@ Entry points: 127
 - issueCommentToJson
 - IssueFiles
 - issueKeys
+- IssuePageParams
 - issueService
 - IssueStatus
 - issueStatusFromString
@@ -367,6 +369,8 @@ Entry points: 127
 - OrgRole
 - orgRoleFromString
 - PagedAttendance
+- PagedEmployee
+- PagedIssue
 - parseAccount
 - parseAccountLine
 - parseAccountTree
@@ -682,6 +686,7 @@ Entry points: 127
 - useEmployeeRoles
 - useEmployees
 - useEmployeesByProject
+- useEmployeesPage
 - useFinanceAccount
 - useFinanceAccountByCode
 - useFinanceAccounts
@@ -721,6 +726,7 @@ Entry points: 127
 - useIssues
 - useIssuesByProject
 - useIssuesByTask
+- useIssuesPage
 - useJoinOrganization
 - useJournalEntries
 - useJournalEntry
@@ -1051,6 +1057,7 @@ Entry points: 127
 - useEmployee
 - useEmployeeRoles
 - useEmployees
+- useEmployeesPage
 - useJoinOrganization
 - useManagerName
 - useManagerNames
@@ -1065,7 +1072,9 @@ Entry points: 127
 
 ## `@tornotron/echno-core/employee/services`
 
+- EmployeePageParams
 - employeeService
+- PagedEmployee
 
 ## `@tornotron/echno-core/employee/types`
 
@@ -1480,6 +1489,7 @@ Entry points: 127
 - useIssues
 - useIssuesByProject
 - useIssuesByTask
+- useIssuesPage
 - usePrefetchIssue
 - useUpdateIssue
 - useUpdateIssueComment  [internal]
@@ -1491,7 +1501,9 @@ Entry points: 127
 
 ## `@tornotron/echno-core/issue/services`
 
+- IssuePageParams
 - issueService
+- PagedIssue
 
 ## `@tornotron/echno-core/issue/types`
 
