@@ -23,6 +23,7 @@
 export const employeeKeys = {
   all: ['employees'] as const,
   lists: () => [...employeeKeys.all, 'list'] as const,
+  lookup: () => [...employeeKeys.all, 'lookup'] as const,
   pages: () => [...employeeKeys.all, 'page'] as const,
   page: (params: object) =>
     [...employeeKeys.all, 'page', params] as const,

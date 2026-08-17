@@ -176,6 +176,7 @@ Entry points: 127
 - Employee
 - EmployeeDetails
 - employeeKeys
+- EmployeeLookup
 - EmployeePageParams
 - employeeService
 - EmployeeStatus
@@ -399,6 +400,7 @@ Entry points: 127
 - parseConstructionPaymentVoucherStatus
 - parseCustomer
 - parseEmployee
+- parseEmployeeLookup
 - parseGoodsReceivedNote
 - parseGrnItem
 - parseGroupedLeaveCalendarEntry
@@ -682,6 +684,7 @@ Entry points: 127
 - useEmployeeBalances
 - useEmployeeBalanceSummary
 - useEmployeeCalendar
+- useEmployeeLookup
 - useEmployeePolicyBalance
 - useEmployeeRequests
 - useEmployeeRequestsByStatus
@@ -1058,6 +1061,7 @@ Entry points: 127
 - useCurrentUserEmployee
 - useDeleteEmployee
 - useEmployee
+- useEmployeeLookup
 - useEmployeeRoles
 - useEmployees
 - useEmployeesPage
@@ -1086,6 +1090,7 @@ Entry points: 127
 - createEmployeeToJson
 - Department
 - Employee
+- EmployeeLookup
 - EmployeeStatus
 - employeeStatusFromString
 - employeeToJson
@@ -1108,6 +1113,7 @@ Entry points: 127
 - OrgRole
 - orgRoleFromString
 - parseEmployee
+- parseEmployeeLookup
 - SUPERVISOR_ROLES
 - UpdateEmployeeRequest
 - updateEmployeeToJson
