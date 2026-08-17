@@ -13,6 +13,7 @@
 import { z } from 'zod';
 import { nullableString, opaque } from '../../lib/validation/backend-schema';
 import { parsePositiveInt } from '../../lib/utils/parse-id';
+import { EmployeeStatus, employeeStatusFromString } from './employee-status';
 
 /** Shape of the backend `EmployeeLookupDto` at the parse boundary. */
 const EmployeeLookupResponseSchema = z.object({
@@ -20,6 +21,7 @@ const EmployeeLookupResponseSchema = z.object({
   employeeId: nullableString,
   employeeName: nullableString,
   designation: nullableString,
+  status: nullableString,
   organizationId: opaque,
 });
 
@@ -28,6 +30,7 @@ export interface EmployeeLookup {
   employeeId: string;
   name: string;
   designation: string;
+  status: EmployeeStatus;
   organizationId: number;
 }
 
@@ -44,6 +47,7 @@ export function parseEmployeeLookup(json: unknown): EmployeeLookup {
     employeeId: raw.employeeId ?? String(id),
     name: raw.employeeName ?? '',
     designation: raw.designation ?? '',
+    status: employeeStatusFromString(raw.status ?? 'active'),
     organizationId: parsePositiveInt(
       raw.organizationId,
       'parseEmployeeLookup.organizationId'
