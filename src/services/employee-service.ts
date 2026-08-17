@@ -27,6 +27,10 @@ import { api, ApiError } from '../lib/api/api-client';
 import { logger } from '../lib/logger';
 import { Employee, parseEmployee } from '../types/employee/employee';
 import {
+  EmployeeLookup,
+  parseEmployeeLookup,
+} from '../types/employee/employee-lookup';
+import {
   CreateEmployeeRequest,
   createEmployeeToJson,
 } from '../types/employee/employee-create';
@@ -138,6 +142,32 @@ export const employeeService = {
   async getAll(): Promise<Employee[]> {
     const data = await api.get<ApiResponse[]>('/employee/web');
     return safeParseEmployees(data);
+  },
+
+  /**
+   * Fetches the minimal employee lookup list for pickers (id, employee id, name,
+   * designation). Readable by any tenant member, unlike {@link getAll}.
+   *
+   * `GET /employee/web/lookup` → `EmployeeLookupDto[]`.
+   *
+   * @returns Parsed {@link EmployeeLookup} records (empty array when the payload
+   * is not an array).
+   * @throws {ApiError} On non-2xx transport responses or parse failures (status 422).
+   */
+  async getLookup(): Promise<EmployeeLookup[]> {
+    const data = await api.get<ApiResponse[]>('/employee/web/lookup');
+    if (!Array.isArray(data)) {
+      return [];
+    }
+    try {
+      return data.map((item) => parseEmployeeLookup(item));
+    } catch (error) {
+      logger.error('Failed to parse employee lookup data:', error);
+      throw new ApiError(
+        'Failed to process employee lookup data. Please try again.',
+        422
+      );
+    }
   },
 
   /**

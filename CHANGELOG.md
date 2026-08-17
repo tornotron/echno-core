@@ -5,6 +5,15 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
+## [v1.2.0] - 2026-08-17
+
+### Added
+
+- `employeeService.getLookup` and the `useEmployeeLookup` hook, returning the minimal
+  `EmployeeLookup` projection (id, employee id, name, designation) for pickers. It reads a
+  member-accessible endpoint, so it can replace `useEmployees` (the full, now management-only
+  read) anywhere only an id-and-name list is needed.
+
 ## [v1.1.0] - 2026-08-15
 
 ### Added

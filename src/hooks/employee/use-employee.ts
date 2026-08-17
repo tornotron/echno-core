@@ -46,6 +46,23 @@ export function useEmployees() {
 }
 
 /**
+ * Fetches the minimal employee lookup list for pickers (id, employee id, name,
+ * designation). Prefer this over {@link useEmployees} anywhere only an
+ * id-and-name list is needed: it carries no contact details or personal data and
+ * is readable by any tenant member, whereas the full list is management-only.
+ *
+ * @returns A TanStack `UseQueryResult` wrapping `EmployeeLookup[]`.
+ */
+export function useEmployeeLookup() {
+  return useQuery({
+    queryKey: employeeKeys.lookup(),
+    queryFn: () => employeeService.getLookup(),
+    ...standardQueryOptions,
+    retry: shouldRetry,
+  });
+}
+
+/**
  * Fetches one page of employees for a server-paginated table.
  *
  * Unlike {@link useEmployees} (which returns the full set for dropdowns and
