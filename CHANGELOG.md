@@ -5,6 +5,13 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
+## [v1.2.1] - 2026-08-17
+
+### Added
+
+- `EmployeeLookup.status` (and the backend `EmployeeLookupDto` field behind it), so pickers can
+  filter to active employees and member-facing counts do not need the full, management-only read.
+
 ## [v1.2.0] - 2026-08-17
 
 ### Added
