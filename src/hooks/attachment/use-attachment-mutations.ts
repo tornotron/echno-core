@@ -22,7 +22,12 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { attachmentService } from '../../services/attachment-service';
-import { Attachment, UploadAttachmentRequest } from '../../types/attachment';
+import {
+  Attachment,
+  DirectUploadResult,
+  UploadAttachmentRequest,
+  UploadProgressCallback,
+} from '../../types/attachment';
 import {
   attachmentKeys,
   ATTACHMENT_PARENT_NAMESPACES,
@@ -140,6 +145,61 @@ export function useUploadAttachment() {
       queryClient.setQueryData<Attachment[]>(
         attachmentKeys.listByEntity(variables.entityId, variables.entityType),
         (old) => (old ? [...old, attachment] : undefined)
+      );
+    },
+  });
+}
+
+/** Variables for {@link useUploadAttachmentsDirect}. */
+export type UploadAttachmentsDirectVariables = UploadAttachmentRequest & {
+  /** Optional per-file progress callback (progress, fileIndex). */
+  onProgress?: UploadProgressCallback;
+};
+
+/**
+ * Hook to upload one or more attachments via the presigned direct-to-storage
+ * flow (presign → PUT each file straight to object storage → register the
+ * keys whose PUT succeeded). Unlike {@link useUploadAttachment}, the bytes
+ * never stream through the API, so this path is not bound by the edge's
+ * per-request size/time ceilings and can report upload progress.
+ *
+ * Returns a {@link DirectUploadResult}: `attachments` for the files that
+ * registered and `errors` for any that failed, so a partial batch is a normal
+ * (non-throwing) outcome the caller renders per file.
+ *
+ * On success the registered attachments are appended to the list-attachment
+ * cache (`useAttachmentsByEntity` consumers) with the same cache discipline as
+ * {@link useUploadAttachment}: the functional updater returns `undefined` when
+ * no cache exists, so a single upload never seeds the array as source of truth.
+ *
+ * @example
+ * ```tsx
+ * const uploadDirect = useUploadAttachmentsDirect();
+ *
+ * const { attachments, errors } = await uploadDirect.mutateAsync({
+ *   entityId: issueId,
+ *   entityType: 'ISSUE_ATTACHMENTS',
+ *   files,
+ *   onProgress: (p, i) => setPercent(i, p.percent ?? 0),
+ * });
+ * ```
+ */
+export function useUploadAttachmentsDirect() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      onProgress,
+      ...request
+    }: UploadAttachmentsDirectVariables) =>
+      attachmentService.uploadDirect(request, onProgress),
+    onSuccess: (result: DirectUploadResult, variables) => {
+      if (result.attachments.length === 0) return;
+      // Append the newly registered attachments to the list cache
+      // (`useAttachmentsByEntity` consumers like task/issue file lists).
+      queryClient.setQueryData<Attachment[]>(
+        attachmentKeys.listByEntity(variables.entityId, variables.entityType),
+        (old) => (old ? [...old, ...result.attachments] : undefined)
       );
     },
   });
