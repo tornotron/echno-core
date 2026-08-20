@@ -167,4 +167,81 @@ export const financeConstructionInvoiceService = {
     );
     return safeParseConstructionInvoice(data);
   },
+
+  /**
+   * Submits a draft invoice for approval (`DRAFT` → `PENDING`).
+   *
+   * `POST /finance/construction-invoices/web/{id}/submit` →
+   * `ConstructionInvoiceDto` (full). No request body.
+   *
+   * @param id - UUID of the invoice.
+   * @returns The submitted {@link ConstructionInvoice}.
+   * @throws {ApiError} On non-2xx responses or if the response fails to parse.
+   */
+  async submit(id: string): Promise<ConstructionInvoice> {
+    const data = await api.post<ApiResponse>(`${BASE}/${id}/submit`, {});
+    return safeParseConstructionInvoice(data);
+  },
+
+  /**
+   * Approves a pending invoice (`PENDING` → `APPROVED`), posting its ledger
+   * journal entry.
+   *
+   * `POST /finance/construction-invoices/web/{id}/approve` →
+   * `ConstructionInvoiceDto` (full). No request body.
+   *
+   * @param id - UUID of the invoice.
+   * @returns The approved {@link ConstructionInvoice}.
+   * @throws {ApiError} On non-2xx responses or if the response fails to parse.
+   */
+  async approve(id: string): Promise<ConstructionInvoice> {
+    const data = await api.post<ApiResponse>(`${BASE}/${id}/approve`, {});
+    return safeParseConstructionInvoice(data);
+  },
+
+  /**
+   * Cancels an invoice (status `CANCELLED`), reversing the posted journal entry.
+   *
+   * `POST /finance/construction-invoices/web/{id}/cancel?reason={reason}` →
+   * `ConstructionInvoiceDto` (full). `reason` is required and sent as a query
+   * param (the backend binds it with `@RequestParam`).
+   *
+   * @param id - UUID of the invoice.
+   * @param reason - Cancellation reason (required by the backend).
+   * @returns The cancelled {@link ConstructionInvoice}.
+   * @throws {ApiError} On non-2xx responses or if the response fails to parse.
+   */
+  async cancel(id: string, reason: string): Promise<ConstructionInvoice> {
+    const data = await api.post<ApiResponse>(
+      `${BASE}/${id}/cancel`,
+      {},
+      { reason }
+    );
+    return safeParseConstructionInvoice(data);
+  },
+
+  /**
+   * Records a payment against the invoice, advancing `paidAmount` and the
+   * payment status.
+   *
+   * `POST /finance/construction-invoices/web/{id}/record-payment?amount={amount}`
+   * → `ConstructionInvoiceDto` (full). `amount` is sent as a query param (the
+   * backend binds it with `@RequestParam BigDecimal`).
+   *
+   * @param id - UUID of the invoice.
+   * @param amount - Payment amount to record.
+   * @returns The updated {@link ConstructionInvoice}.
+   * @throws {ApiError} On non-2xx responses or if the response fails to parse.
+   */
+  async recordPayment(
+    id: string,
+    amount: number
+  ): Promise<ConstructionInvoice> {
+    const data = await api.post<ApiResponse>(
+      `${BASE}/${id}/record-payment`,
+      {},
+      { amount }
+    );
+    return safeParseConstructionInvoice(data);
+  },
 };

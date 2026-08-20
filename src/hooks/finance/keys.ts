@@ -18,6 +18,7 @@
  */
 
 import type { CustomerListParams } from '../../services/finance-customer-service';
+import type { ConstructionInvoiceListParams } from '../../services/finance-construction-invoice-service';
 
 export const financeKeys = {
   all: ['finance'] as const,
@@ -51,6 +52,14 @@ export const financeKeys = {
   // Payments
   payments: () => [...financeKeys.all, 'payments'] as const,
   payment: (id: string) => [...financeKeys.payments(), 'detail', id] as const,
+
+  // Construction invoices
+  constructionInvoices: () =>
+    [...financeKeys.all, 'construction-invoices'] as const,
+  constructionInvoicesList: (params?: ConstructionInvoiceListParams) =>
+    [...financeKeys.constructionInvoices(), 'list', params ?? {}] as const,
+  constructionInvoice: (id: string) =>
+    [...financeKeys.constructionInvoices(), 'detail', id] as const,
 
   // Journal entries
   journalEntries: () => [...financeKeys.all, 'journal-entries'] as const,

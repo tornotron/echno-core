@@ -37,6 +37,7 @@ export enum ConstructionInvoiceType {
 export enum ConstructionInvoiceStatus {
   DRAFT = 'DRAFT',
   PENDING = 'PENDING',
+  APPROVED = 'APPROVED',
   SENT = 'SENT',
   PARTIALLY_PAID = 'PARTIALLY_PAID',
   PAID = 'PAID',
@@ -135,6 +136,13 @@ const ConstructionInvoiceSchema = z.object({
   taxType: nullableString,
   notes: nullableString,
   termsAndConditions: nullableString,
+  submittedBy: optionalNumericId,
+  submittedAt: backendDate,
+  approvedBy: optionalNumericId,
+  approvedAt: backendDate,
+  paymentRecordedBy: optionalNumericId,
+  journalEntryId: nullableString,
+  reversalJournalEntryId: nullableString,
   lines: z.array(z.unknown()).nullish(),
 });
 
@@ -220,6 +228,20 @@ export interface ConstructionInvoice {
   notes?: string;
   /** Terms and conditions. */
   termsAndConditions?: string;
+  /** Id of the user who submitted the invoice for approval (server-set). */
+  submittedBy?: number;
+  /** Timestamp the invoice was submitted, ISO-8601 (server-set). */
+  submittedAt?: string;
+  /** Id of the user who approved the invoice (server-set). */
+  approvedBy?: number;
+  /** Timestamp the invoice was approved, ISO-8601 (server-set). */
+  approvedAt?: string;
+  /** Id of the user who recorded the latest payment (server-set). */
+  paymentRecordedBy?: number;
+  /** UUID of the ledger journal entry posted on approval (server-set). */
+  journalEntryId?: string;
+  /** UUID of the reversal journal entry posted on cancellation (server-set). */
+  reversalJournalEntryId?: string;
   /** Invoice lines. */
   lines: ConstructionInvoiceLine[];
 }
@@ -285,6 +307,13 @@ export function parseConstructionInvoice(json: unknown): ConstructionInvoice {
     taxType: raw.taxType ?? undefined,
     notes: raw.notes ?? undefined,
     termsAndConditions: raw.termsAndConditions ?? undefined,
+    submittedBy: raw.submittedBy ?? undefined,
+    submittedAt: raw.submittedAt ?? undefined,
+    approvedBy: raw.approvedBy ?? undefined,
+    approvedAt: raw.approvedAt ?? undefined,
+    paymentRecordedBy: raw.paymentRecordedBy ?? undefined,
+    journalEntryId: raw.journalEntryId ?? undefined,
+    reversalJournalEntryId: raw.reversalJournalEntryId ?? undefined,
     lines: Array.isArray(raw.lines)
       ? raw.lines.map((line) => parseConstructionInvoiceLine(line))
       : [],
