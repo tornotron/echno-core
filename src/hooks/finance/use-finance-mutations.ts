@@ -25,6 +25,7 @@ import { financeCustomerService } from '../../services/finance-customer-service'
 import { financeInvoiceService } from '../../services/finance-invoice-service';
 import { financePaymentService } from '../../services/finance-payment-service';
 import { financeJournalService } from '../../services/finance-journal-service';
+import { financeConstructionInvoiceService } from '../../services/finance-construction-invoice-service';
 import type {
   CreateAccountRequest,
   CreateCompanyBankAccountRequest,
@@ -380,6 +381,175 @@ export const useRecordPayment = () => {
       queryClient.invalidateQueries({ queryKey: financeKeys.reports() });
     },
     onError: (error) => logger.error('Failed to record payment:', error),
+  });
+};
+
+// ==================== Construction Invoices ====================
+
+/**
+ * Submits a draft construction invoice for approval (`DRAFT` to `PENDING`).
+ *
+ * Backend response: `ConstructionInvoiceDto` (full).
+ *
+ * On success:
+ * - `setQueryData(financeKeys.constructionInvoice(id), invoice)` seeds the
+ *   detail cache with the submitted invoice.
+ * - `invalidateQueries(financeKeys.constructionInvoices())` is kept: list caches
+ *   are keyed by filters that include status and cannot be spliced.
+ *
+ * No reports invalidation: submitting posts no journal entry.
+ *
+ * @returns A TanStack `UseMutationResult` whose mutate function accepts the
+ *   invoice UUID.
+ */
+export const useSubmitConstructionInvoice = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => financeConstructionInvoiceService.submit(id),
+    // POST /finance/construction-invoices/web/{id}/submit -> ConstructionInvoiceDto (full)
+    onSuccess: (invoice) => {
+      queryClient.setQueryData(
+        financeKeys.constructionInvoice(invoice.id),
+        invoice
+      );
+      queryClient.invalidateQueries({
+        queryKey: financeKeys.constructionInvoices(),
+      });
+    },
+    onError: (error) =>
+      logger.error('Failed to submit construction invoice:', error),
+  });
+};
+
+/**
+ * Approves a pending construction invoice (`PENDING` to `APPROVED`), posting its
+ * ledger journal entry.
+ *
+ * Backend response: `ConstructionInvoiceDto` (full).
+ *
+ * On success:
+ * - `setQueryData(financeKeys.constructionInvoice(id), invoice)` seeds the
+ *   detail cache with the approved invoice.
+ * - `invalidateQueries(financeKeys.constructionInvoices())` is kept: status-keyed
+ *   list caches are now stale.
+ * - `invalidateQueries(financeKeys.reports())` is kept: approval posts a journal
+ *   entry, so ledger reports are recomputed server-side.
+ *
+ * @returns A TanStack `UseMutationResult` whose mutate function accepts the
+ *   invoice UUID.
+ */
+export const useApproveConstructionInvoice = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => financeConstructionInvoiceService.approve(id),
+    // POST /finance/construction-invoices/web/{id}/approve -> ConstructionInvoiceDto (full)
+    onSuccess: (invoice) => {
+      queryClient.setQueryData(
+        financeKeys.constructionInvoice(invoice.id),
+        invoice
+      );
+      queryClient.invalidateQueries({
+        queryKey: financeKeys.constructionInvoices(),
+      });
+      // Approval posts a journal entry, so ledger reports are now stale.
+      queryClient.invalidateQueries({ queryKey: financeKeys.reports() });
+    },
+    onError: (error) =>
+      logger.error('Failed to approve construction invoice:', error),
+  });
+};
+
+/** Arguments for {@link useCancelConstructionInvoice}. */
+export interface CancelConstructionInvoiceArgs {
+  /** UUID of the invoice to cancel. */
+  id: string;
+  /** Cancellation reason (required by the backend). */
+  reason: string;
+}
+
+/**
+ * Cancels a construction invoice (status `CANCELLED`), reversing the posted
+ * journal entry.
+ *
+ * Backend response: `ConstructionInvoiceDto` (full).
+ *
+ * On success:
+ * - `setQueryData(financeKeys.constructionInvoice(id), invoice)` seeds the
+ *   detail cache with the cancelled invoice.
+ * - `invalidateQueries(financeKeys.constructionInvoices())` is kept: status-keyed
+ *   list caches are now stale.
+ * - `invalidateQueries(financeKeys.reports())` is kept: cancellation posts a
+ *   reversal journal entry, so ledger reports are recomputed server-side.
+ *
+ * @returns A TanStack `UseMutationResult` whose mutate function accepts
+ *   {@link CancelConstructionInvoiceArgs}.
+ */
+export const useCancelConstructionInvoice = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, reason }: CancelConstructionInvoiceArgs) =>
+      financeConstructionInvoiceService.cancel(id, reason),
+    // POST /finance/construction-invoices/web/{id}/cancel?reason -> ConstructionInvoiceDto (full)
+    onSuccess: (invoice) => {
+      queryClient.setQueryData(
+        financeKeys.constructionInvoice(invoice.id),
+        invoice
+      );
+      queryClient.invalidateQueries({
+        queryKey: financeKeys.constructionInvoices(),
+      });
+      // Cancellation posts a reversal journal entry, so reports are stale.
+      queryClient.invalidateQueries({ queryKey: financeKeys.reports() });
+    },
+    onError: (error) =>
+      logger.error('Failed to cancel construction invoice:', error),
+  });
+};
+
+/** Arguments for {@link useRecordConstructionInvoicePayment}. */
+export interface RecordConstructionInvoicePaymentArgs {
+  /** UUID of the invoice to record a payment against. */
+  id: string;
+  /** Payment amount to record. */
+  amount: number;
+}
+
+/**
+ * Records a payment against a construction invoice, advancing `paidAmount` and
+ * the payment status.
+ *
+ * Backend response: `ConstructionInvoiceDto` (full).
+ *
+ * On success:
+ * - `setQueryData(financeKeys.constructionInvoice(id), invoice)` seeds the
+ *   detail cache with the updated invoice.
+ * - `invalidateQueries(financeKeys.constructionInvoices())` is kept: payment-status
+ *   filtered list caches are now stale.
+ * - `invalidateQueries(financeKeys.reports())` is kept: recording a payment posts
+ *   a journal entry, so ledger reports are recomputed server-side.
+ *
+ * @returns A TanStack `UseMutationResult` whose mutate function accepts
+ *   {@link RecordConstructionInvoicePaymentArgs}.
+ */
+export const useRecordConstructionInvoicePayment = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, amount }: RecordConstructionInvoicePaymentArgs) =>
+      financeConstructionInvoiceService.recordPayment(id, amount),
+    // POST /finance/construction-invoices/web/{id}/record-payment?amount -> ConstructionInvoiceDto (full)
+    onSuccess: (invoice) => {
+      queryClient.setQueryData(
+        financeKeys.constructionInvoice(invoice.id),
+        invoice
+      );
+      queryClient.invalidateQueries({
+        queryKey: financeKeys.constructionInvoices(),
+      });
+      // Recording a payment posts a journal entry, so reports are stale.
+      queryClient.invalidateQueries({ queryKey: financeKeys.reports() });
+    },
+    onError: (error) =>
+      logger.error('Failed to record construction invoice payment:', error),
   });
 };
 
