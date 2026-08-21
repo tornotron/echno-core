@@ -54,6 +54,39 @@ export enum InspectionStatus {
   PASSED = 'passed',
   PASSED_WITH_REMARKS = 'passed-with-remarks',
   CANCELLED = 'cancelled',
+  /** Proposed by the AI compliance generation flow, awaiting review. */
+  SUGGESTED = 'suggested',
+}
+
+/**
+ * How an inspection came to exist: entered by a user (`MANUAL`) or produced by
+ * the AI compliance generation flow (`AI_GENERATED`). The backend defaults it
+ * to `MANUAL`.
+ */
+export enum InspectionOrigin {
+  MANUAL = 'manual',
+  AI_GENERATED = 'ai-generated',
+}
+
+/**
+ * Risk severity attached to a compliance-type inspection. Set only on
+ * compliance inspections; unset on ordinary ones.
+ */
+export enum ComplianceRiskLevel {
+  LOW = 'low',
+  MEDIUM = 'medium',
+  HIGH = 'high',
+  CRITICAL = 'critical',
+}
+
+/**
+ * Stage of the construction lifecycle a compliance applies to. Set only on
+ * compliance inspections; unset on ordinary ones.
+ */
+export enum CompliancePhase {
+  PRE_CONSTRUCTION = 'pre-construction',
+  ONGOING = 'ongoing',
+  POST_CONSTRUCTION = 'post-construction',
 }
 
 /** Outcome of a completed inspection (unset until it is concluded). */
@@ -92,6 +125,46 @@ export function parseInspectionStatus(raw: unknown): InspectionStatus {
     (Object.values(InspectionStatus) as string[]).includes(raw)
     ? (raw as InspectionStatus)
     : InspectionStatus.SCHEDULED;
+}
+
+/**
+ * Narrows an untyped backend string to {@link InspectionOrigin}, defaulting to
+ * `MANUAL` when the value is absent or unrecognized (mirroring the backend
+ * entity default).
+ */
+export function parseInspectionOrigin(raw: unknown): InspectionOrigin {
+  return typeof raw === 'string' &&
+    (Object.values(InspectionOrigin) as string[]).includes(raw)
+    ? (raw as InspectionOrigin)
+    : InspectionOrigin.MANUAL;
+}
+
+/**
+ * Narrows an untyped backend string to {@link ComplianceRiskLevel}, or
+ * `undefined` when the value is absent or unrecognized. Only compliance
+ * inspections carry a risk level, so a missing value is preserved as unset.
+ */
+export function parseComplianceRiskLevel(
+  raw: unknown
+): ComplianceRiskLevel | undefined {
+  return typeof raw === 'string' &&
+    (Object.values(ComplianceRiskLevel) as string[]).includes(raw)
+    ? (raw as ComplianceRiskLevel)
+    : undefined;
+}
+
+/**
+ * Narrows an untyped backend string to {@link CompliancePhase}, or `undefined`
+ * when the value is absent or unrecognized. Only compliance inspections carry a
+ * phase, so a missing value is preserved as unset.
+ */
+export function parseCompliancePhase(
+  raw: unknown
+): CompliancePhase | undefined {
+  return typeof raw === 'string' &&
+    (Object.values(CompliancePhase) as string[]).includes(raw)
+    ? (raw as CompliancePhase)
+    : undefined;
 }
 
 /**
@@ -172,6 +245,12 @@ const InspectionSchema = z.object({
   passedCheckPoints: nullableNumber,
   failedCheckPoints: nullableNumber,
   defectsFound: nullableNumber,
+  origin: opaque,
+  compliancePhase: opaque,
+  riskLevel: opaque,
+  resolutionOptions: nullableString,
+  complianceRuleRef: nullableString,
+  aiRationale: nullableString,
   checkItems: z.array(z.unknown()).nullish(),
   defects: z.array(z.unknown()).nullish(),
   createdAt: backendDate,
@@ -282,6 +361,36 @@ export interface Inspection {
   failedCheckPoints: number;
   /** Number of defects found (server-computed). */
   defectsFound: number;
+  /**
+   * How the inspection came to exist. Defaults to `MANUAL`; compliance
+   * inspections produced by the AI flow are `AI_GENERATED`. Read-only.
+   */
+  origin: InspectionOrigin;
+  /**
+   * Construction-lifecycle phase the compliance applies to. Set only on
+   * compliance inspections. Read-only.
+   */
+  compliancePhase?: CompliancePhase;
+  /**
+   * Risk severity of the compliance. Set only on compliance inspections.
+   * Read-only.
+   */
+  riskLevel?: ComplianceRiskLevel;
+  /**
+   * Suggested ways to resolve the compliance (free text). Set only on
+   * compliance inspections. Read-only.
+   */
+  resolutionOptions?: string;
+  /**
+   * Reference to the compliance rule the inspection was generated from. Set
+   * only on compliance inspections. Read-only.
+   */
+  complianceRuleRef?: string;
+  /**
+   * The AI's rationale for suggesting the compliance (free text). Set only on
+   * compliance inspections. Read-only.
+   */
+  aiRationale?: string;
   /** The check points evaluated. */
   checkItems: InspectionCheckItem[];
   /** The defects recorded. */
@@ -368,6 +477,12 @@ export function parseInspection(json: unknown): Inspection {
     passedCheckPoints: raw.passedCheckPoints ?? 0,
     failedCheckPoints: raw.failedCheckPoints ?? 0,
     defectsFound: raw.defectsFound ?? 0,
+    origin: parseInspectionOrigin(raw.origin),
+    compliancePhase: parseCompliancePhase(raw.compliancePhase),
+    riskLevel: parseComplianceRiskLevel(raw.riskLevel),
+    resolutionOptions: raw.resolutionOptions ?? undefined,
+    complianceRuleRef: raw.complianceRuleRef ?? undefined,
+    aiRationale: raw.aiRationale ?? undefined,
     checkItems: Array.isArray(raw.checkItems)
       ? raw.checkItems.map((item) => parseInspectionCheckItem(item))
       : [],

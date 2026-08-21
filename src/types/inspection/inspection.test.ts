@@ -4,6 +4,9 @@ import {
   InspectionType,
   InspectionStatus,
   InspectionResult,
+  InspectionOrigin,
+  ComplianceRiskLevel,
+  CompliancePhase,
   CheckItemStatus,
 } from './inspection';
 
@@ -92,5 +95,47 @@ describe('parseInspection', () => {
 
   test('rejects a blank id', () => {
     expect(() => parseInspection({ id: '   ', inspectorId: 1 })).toThrow();
+  });
+
+  test('parses an AI-generated compliance inspection with its fields', () => {
+    const inspection = parseInspection({
+      id: UUID,
+      inspectorId: 1,
+      status: 'suggested',
+      origin: 'ai-generated',
+      compliancePhase: 'pre-construction',
+      riskLevel: 'critical',
+      resolutionOptions: 'Obtain the fire NOC before excavation.',
+      complianceRuleRef: 'TN-FIRE-2019-3.2',
+      aiRationale: 'High-rise residential in Tamil Nadu requires a fire NOC.',
+    });
+    expect(inspection.status).toBe(InspectionStatus.SUGGESTED);
+    expect(inspection.origin).toBe(InspectionOrigin.AI_GENERATED);
+    expect(inspection.compliancePhase).toBe(CompliancePhase.PRE_CONSTRUCTION);
+    expect(inspection.riskLevel).toBe(ComplianceRiskLevel.CRITICAL);
+    expect(inspection.resolutionOptions).toBe(
+      'Obtain the fire NOC before excavation.'
+    );
+    expect(inspection.complianceRuleRef).toBe('TN-FIRE-2019-3.2');
+    expect(inspection.aiRationale).toBe(
+      'High-rise residential in Tamil Nadu requires a fire NOC.'
+    );
+  });
+
+  test('defaults origin to MANUAL and leaves compliance fields unset', () => {
+    const inspection = parseInspection({ id: UUID, inspectorId: 1 });
+    expect(inspection.origin).toBe(InspectionOrigin.MANUAL);
+    expect(inspection.compliancePhase).toBeUndefined();
+    expect(inspection.riskLevel).toBeUndefined();
+    expect(inspection.resolutionOptions).toBeUndefined();
+    expect(inspection.complianceRuleRef).toBeUndefined();
+    expect(inspection.aiRationale).toBeUndefined();
+  });
+
+  test('round-trips the compliance enum wire values', () => {
+    expect(String(InspectionStatus.SUGGESTED)).toBe('suggested');
+    expect(String(InspectionOrigin.AI_GENERATED)).toBe('ai-generated');
+    expect(String(ComplianceRiskLevel.MEDIUM)).toBe('medium');
+    expect(String(CompliancePhase.POST_CONSTRUCTION)).toBe('post-construction');
   });
 });
