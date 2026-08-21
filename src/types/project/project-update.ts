@@ -6,6 +6,7 @@
  * only the keys they want to change.
  */
 import { ProjectStatus } from './project-status';
+import { ProjectType } from './project-type';
 
 /**
  * Partial update payload for an existing {@link Project}.
@@ -45,6 +46,9 @@ export interface UpdateProjectRequest {
 
   /** New planned end date. Serialized to ISO-8601. */
   endDate?: Date;
+
+  /** New project category used for compliance analysis and reporting. */
+  projectType?: ProjectType;
 
   /**
    * Replacement member list. Serialized under the backend field name
@@ -89,6 +93,7 @@ export function updateProjectToJson(
       startDate: dto.startDate.toISOString(),
     }),
     ...(dto.endDate !== undefined && { endDate: dto.endDate.toISOString() }),
+    ...(dto.projectType !== undefined && { projectType: dto.projectType }),
     ...(dto.memberIds !== undefined && { employees: dto.memberIds }),
   };
 }

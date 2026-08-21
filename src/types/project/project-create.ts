@@ -6,6 +6,7 @@
  * serializer renames `memberIds` to the backend field `employees`.
  */
 import { ProjectStatus } from './project-status';
+import { ProjectType } from './project-type';
 
 /**
  * Fields accepted by the backend when creating a new {@link Project}.
@@ -48,6 +49,9 @@ export interface CreateProjectRequest {
   /** Planned end date. Serialized to ISO-8601. */
   endDate?: Date;
 
+  /** Project category used for compliance analysis and reporting. Optional. */
+  projectType?: ProjectType;
+
   /**
    * Employee IDs to add as initial members. Serialized under the
    * backend field name `employees`.
@@ -87,6 +91,7 @@ export function createProjectToJson(
       startDate: dto.startDate.toISOString(),
     }),
     ...(dto.endDate !== undefined && { endDate: dto.endDate.toISOString() }),
+    ...(dto.projectType !== undefined && { projectType: dto.projectType }),
     ...(dto.memberIds !== undefined && { employees: dto.memberIds }),
   };
 }
