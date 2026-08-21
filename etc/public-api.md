@@ -74,6 +74,8 @@ Entry points: 127
 - clockEventToJson
 - ClockEventType
 - CompanyBankAccount
+- CompliancePhase
+- ComplianceRiskLevel
 - ConflictCheckResponse
 - ConstructionInvoice
 - ConstructionInvoiceLine
@@ -270,6 +272,7 @@ Entry points: 127
 - InspectionDefect
 - InspectionDefectRequest
 - InspectionListParams
+- InspectionOrigin
 - InspectionResult
 - inspectionService
 - InspectionStatus
@@ -389,6 +392,8 @@ Entry points: 127
 - parseCheckItemStatus
 - parseClockEvent
 - parseCompanyBankAccount
+- parseCompliancePhase
+- parseComplianceRiskLevel
 - parseConstructionInvoice
 - parseConstructionInvoiceLine
 - parseConstructionInvoicePaymentStatus
@@ -410,6 +415,7 @@ Entry points: 127
 - parseInspection
 - parseInspectionCheckItem
 - parseInspectionDefect
+- parseInspectionOrigin
 - parseInspectionResult
 - parseInspectionStatus
 - parseInspectionType
@@ -442,6 +448,7 @@ Entry points: 127
 - parsePositiveInt
 - parseProfitAndLossReport
 - parseProject
+- parseProjectType
 - parsePurchaseOrder
 - parsePurchaseOrderItem
 - parseShiftTiming
@@ -473,6 +480,7 @@ Entry points: 127
 - projectService
 - ProjectStatus
 - projectToJson
+- ProjectType
 - PurchaseOrder
 - PurchaseOrderItem
 - purchaseOrderItemsService
@@ -1400,6 +1408,8 @@ Entry points: 127
 ## `@tornotron/echno-core/inspection/types`
 
 - CheckItemStatus
+- CompliancePhase
+- ComplianceRiskLevel
 - CreateInspectionRequest
 - createInspectionToJson
 - Inspection
@@ -1407,13 +1417,17 @@ Entry points: 127
 - InspectionCheckItemRequest
 - InspectionDefect
 - InspectionDefectRequest
+- InspectionOrigin
 - InspectionResult
 - InspectionStatus
 - InspectionType
 - parseCheckItemStatus
+- parseCompliancePhase
+- parseComplianceRiskLevel
 - parseInspection
 - parseInspectionCheckItem
 - parseInspectionDefect
+- parseInspectionOrigin
 - parseInspectionResult
 - parseInspectionStatus
 - parseInspectionType
@@ -1839,10 +1853,12 @@ Entry points: 127
 - getProjectStatusLabel
 - getProjectStatusName
 - parseProject
+- parseProjectType
 - Project
 - ProjectFiles
 - ProjectStatus
 - projectToJson
+- ProjectType
 - removeMember
 - UpdateProjectRequest
 - updateProjectToJson

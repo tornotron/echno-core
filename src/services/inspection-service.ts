@@ -154,4 +154,26 @@ export const inspectionService = {
     );
     return safeParseInspection(data);
   },
+
+  /**
+   * Re-runs AI compliance generation for a project, returning the compliance
+   * inspections it created.
+   *
+   * `POST /inspections/web/compliance/regenerate?projectId={projectId}` →
+   * `InspectionDto[]`. `projectId` is sent as a query param (the backend binds
+   * it with `@RequestParam Long`). Generation is idempotent, so a re-run only
+   * adds compliances that do not already exist.
+   *
+   * @param projectId - Numeric id of the project to generate compliances for.
+   * @returns The generated compliance {@link Inspection} rows.
+   * @throws {ApiError} On non-2xx responses or if a row fails to parse.
+   */
+  async regenerateCompliance(projectId: number): Promise<Inspection[]> {
+    const data = await api.post<ApiResponse>(
+      `${BASE}/compliance/regenerate`,
+      {},
+      { projectId }
+    );
+    return safeParseInspections(data);
+  },
 };

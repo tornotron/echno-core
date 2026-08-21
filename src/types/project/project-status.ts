@@ -21,6 +21,9 @@ export enum ProjectStatus {
   /** Project is planned but has not yet started. */
   upcoming = 'upcoming',
 
+  /** Project has been approved; AI compliance generation runs on this transition. */
+  approved = 'approved',
+
   /** Project finished successfully. */
   completed = 'completed',
 
@@ -45,6 +48,7 @@ export function getProjectStatusLabel(status: ProjectStatus): string {
     [ProjectStatus.open]: 'Open',
     [ProjectStatus.closed]: 'Closed',
     [ProjectStatus.upcoming]: 'Upcoming',
+    [ProjectStatus.approved]: 'Approved',
     [ProjectStatus.completed]: 'Completed',
     [ProjectStatus.onHold]: 'On Hold',
     [ProjectStatus.cancelled]: 'Cancelled',
@@ -67,6 +71,7 @@ export function getProjectStatusColor(status: ProjectStatus): string {
     [ProjectStatus.open]: '#4CAF50', // Green
     [ProjectStatus.closed]: '#2A5797', // Blue
     [ProjectStatus.upcoming]: '#2196F3', // Blue
+    [ProjectStatus.approved]: '#009688', // Teal
     [ProjectStatus.completed]: '#9C27B0', // Purple
     [ProjectStatus.onHold]: '#FF9800', // Orange
     [ProjectStatus.cancelled]: '#9E9E9E', // Grey
@@ -87,6 +92,7 @@ export function getProjectStatusColor(status: ProjectStatus): string {
 export function getProjectStatusBackground(status: ProjectStatus): string {
   const map: Record<ProjectStatus, string> = {
     [ProjectStatus.upcoming]: '#EF6C00', // Orange 600
+    [ProjectStatus.approved]: '#00796B', // Teal 700
     [ProjectStatus.open]: '#388E3C', // Green 600
     [ProjectStatus.completed]: '#2E7D32', // Green 700
     [ProjectStatus.closed]: '#616161', // Grey 600
@@ -114,6 +120,9 @@ export function getProjectStatus(str?: string): ProjectStatus | null {
   switch (lower) {
     case 'upcoming': {
       return ProjectStatus.upcoming;
+    }
+    case 'approved': {
+      return ProjectStatus.approved;
     }
     case 'ongoing':
     case 'open': {

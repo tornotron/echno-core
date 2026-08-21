@@ -1,6 +1,6 @@
 {
   "name": "@tornotron/echno-core",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "private": false,
   "description": "Shared core library for Echno: API client, RBAC, utilities, types, services, and React Query hooks.",
   "license": "MIT",

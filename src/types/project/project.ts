@@ -16,6 +16,7 @@ import { Employee, parseEmployee, employeeToJson } from '../employee';
 import { parseUTCDate } from '../../lib/utils/date-helpers';
 import { Task, parseTask } from '../task';
 import { ProjectStatus, getProjectStatus } from './project-status';
+import { ProjectType, parseProjectType } from './project-type';
 import type { Attachment } from '../attachment';
 import { parseAttachment, attachmentToJson } from '../attachment';
 import { parsePositiveInt } from '../../lib/utils/parse-id';
@@ -47,6 +48,12 @@ export interface Project {
 
   /** Current lifecycle state. */
   status: ProjectStatus;
+
+  /**
+   * Broad construction category, when set. Drives which statutory compliances
+   * the AI generation flow considers.
+   */
+  projectType?: ProjectType;
 
   /** Site longitude in decimal degrees. */
   projectLongitude: number;
@@ -129,6 +136,7 @@ const ProjectResponseSchema = z.object({
   projectName: nullableString,
   projectAddress: nullableString,
   status: nullableString,
+  projectType: nullableString,
   organizationId: optionalNumericId,
   projectLongitude: nullableNumber,
   projectLatitude: nullableNumber,
@@ -160,6 +168,7 @@ export function parseProject(json: unknown): Project {
     projectName: raw.projectName ?? '',
     projectAddress: raw.projectAddress ?? '',
     status: getProjectStatus(raw.status ?? undefined) ?? ProjectStatus.upcoming,
+    projectType: parseProjectType(raw.projectType),
     organizationId: raw.organizationId
       ? Number(raw.organizationId)
       : undefined,
@@ -197,6 +206,7 @@ export function projectToJson(project: Project): Record<string, unknown> {
     projectName: project.projectName,
     projectAddress: project.projectAddress,
     status: project.status,
+    projectType: project.projectType,
     projectLongitude: project.projectLongitude,
     projectLatitude: project.projectLatitude,
     startDate: project.startDate?.toISOString(),
