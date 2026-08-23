@@ -23,6 +23,11 @@ export enum AttendanceRole {
   ADMIN = 'admin',
 }
 
+/**
+ * Resolved attendance role for a user together with the derived permission
+ * flags and the roles available for dashboard switching. Produced by
+ * {@link resolveAttendanceRole} and consumed by the attendance UI.
+ */
 export interface AttendanceRoleContext {
   /** Primary role for the user. */
   role: AttendanceRole;

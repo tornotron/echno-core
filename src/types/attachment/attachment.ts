@@ -9,6 +9,11 @@ import {
   opaque,
 } from '../../lib/validation/backend-schema';
 
+/**
+ * Coarse file category for an {@link Attachment}, derived from the file's MIME
+ * type by {@link getFileTypeFromMimeType}. Drives the icon and colour helpers
+ * rather than mapping one-to-one to a file extension.
+ */
 export enum AttachmentType {
   image = 'image',
   pdf = 'pdf',
@@ -18,6 +23,14 @@ export enum AttachmentType {
   other = 'other',
 }
 
+/**
+ * A file stored against a domain entity (profile picture, CV, organization
+ * logo, document, and so on). This is the normalized domain shape produced by
+ * {@link parseAttachment}; the backend's raw payload uses several alternate
+ * field names for the file URL and timestamps, which the parser collapses into
+ * this form. `entityType` records what the file is attached to (for example
+ * `'USER_PROFILE_PICTURE'`, `'USER_CV'`, `'ORGANIZATION_LOGO'`).
+ */
 export interface Attachment {
   id: number;
   fileName: string;
