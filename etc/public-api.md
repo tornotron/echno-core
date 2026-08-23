@@ -174,6 +174,9 @@ Entry points: 127
 - DailyMovementSummary
 - Department
 - determineAttendanceStatus
+- DirectUploadError
+- DirectUploadResult
+- DirectUploadStage
 - emailBody
 - emailSubject
 - Employee
@@ -446,6 +449,7 @@ Entry points: 127
 - parseOrganization
 - parsePayment
 - parsePositiveInt
+- parsePresignedUpload
 - parseProfitAndLossReport
 - parseProject
 - parseProjectType
@@ -472,6 +476,7 @@ Entry points: 127
 - poKeys
 - PostJournalRequest
 - postJournalToJson
+- PresignedUpload
 - ProfitAndLossReport
 - Project
 - ProjectAttendanceSummary
@@ -493,6 +498,7 @@ Entry points: 127
 - RecordPaymentArgs
 - RecordPaymentRequest
 - recordPaymentToJson
+- RegisterUploadRequest
 - RegularizationDetail
 - removeMember
 - resolveAttendanceRole
@@ -592,6 +598,10 @@ Entry points: 127
 - UpdateWorkCategoryRequest
 - updateWorkCategoryToJson
 - UploadAttachmentRequest
+- UploadAttachmentsDirectVariables
+- UploadProgress
+- UploadProgressCallback
+- UploadRequest
 - useActivateLeavePolicy
 - useAddEmployeeToProject
 - useAddVendorBankAccount
@@ -876,6 +886,7 @@ Entry points: 127
 - useUpdateVendorTaxIdentifier
 - useUpdateWbsElement
 - useUploadAttachment
+- useUploadAttachmentsDirect
 - useUser
 - useUserEmployees
 - useValidateInviteCode
@@ -926,11 +937,13 @@ Entry points: 127
 
 - ATTACHMENT_PARENT_NAMESPACES
 - attachmentKeys
+- UploadAttachmentsDirectVariables
 - useAttachmentByEntity
 - useAttachmentsByEntity
 - useDeleteAttachment
 - useDownloadAttachment
 - useUploadAttachment
+- useUploadAttachmentsDirect
 
 ## `@tornotron/echno-core/attachment/hooks/keys`
 
@@ -946,13 +959,22 @@ Entry points: 127
 - Attachment
 - attachmentToJson
 - AttachmentType
+- DirectUploadError
+- DirectUploadResult
+- DirectUploadStage
 - formatFileSize
 - getFileExtension
 - getFileTypeColor
 - getFileTypeFromMimeType
 - getFileTypeIcon
 - parseAttachment
+- parsePresignedUpload
+- PresignedUpload
+- RegisterUploadRequest
 - UploadAttachmentRequest
+- UploadProgress
+- UploadProgressCallback
+- UploadRequest
 
 ## `@tornotron/echno-core/attendance-regularization/hooks`
 
