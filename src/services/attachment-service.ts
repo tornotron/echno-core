@@ -198,6 +198,11 @@ export const attachmentService = {
     return new Promise<void>((resolve, reject) => {
       const xhr = new XMLHttpRequest();
       xhr.open('PUT', url, true);
+      // Cap the PUT at the signed url's lifetime (the backend signs for 15
+      // minutes): once the url expires the transfer can no longer succeed, so
+      // a stalled connection is failed here rather than hanging indefinitely.
+      // Without an explicit timeout the `timeout` handler below never fires.
+      xhr.timeout = 15 * 60 * 1000;
       // No cookies/credentials to the storage origin — the signed url is the
       // only authorization it needs, and sending cookies can trip CORS.
       xhr.withCredentials = false;
