@@ -423,6 +423,20 @@ Run `bun install` after changing the path. Revert to the git tag reference befor
 4. Re-export from `src/index.ts`.
 5. Build and fix any errors, then tag a new version.
 
+### API reference
+
+A full, browsable Markdown reference for every exported symbol (types, services,
+hooks, and utilities) is generated from the source and its TSDoc comments with
+[TypeDoc](https://typedoc.org):
+
+```bash
+bun run docs:api
+```
+
+The output lands in `docs/api/` (start at `docs/api/README.md`). This tree is
+generated and gitignored, so regenerate it locally whenever you want to read the
+current API surface. Configuration lives in `typedoc.json`.
+
 ---
 
 ## Versioning
