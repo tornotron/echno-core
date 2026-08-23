@@ -25,6 +25,12 @@ const EmployeeLookupResponseSchema = z.object({
   organizationId: opaque,
 });
 
+/**
+ * Minimal, non-sensitive employee projection used to populate pickers. Holds
+ * only id, employee id, display name, designation, status, and organization id;
+ * `name` mirrors the field on the full {@link Employee} type so the two are
+ * interchangeable at picker call sites.
+ */
 export interface EmployeeLookup {
   id: number;
   employeeId: string;
