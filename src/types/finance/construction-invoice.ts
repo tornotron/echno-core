@@ -109,6 +109,8 @@ const ConstructionInvoiceLineSchema = z.object({
   inventoryItemId: optionalNumericId,
   assetId: optionalNumericId,
   taskId: optionalNumericId,
+  costCategoryId: nullableString,
+  costCategoryName: nullableString,
 });
 
 const ConstructionInvoiceSchema = z.object({
@@ -176,6 +178,10 @@ export interface ConstructionInvoiceLine {
   assetId?: number;
   /** Linked task id. */
   taskId?: number;
+  /** UUID of the cost category tagged on the line, if any. */
+  costCategoryId?: string | null;
+  /** Name of the cost category tagged on the line, if any. */
+  costCategoryName?: string | null;
 }
 
 /** A construction invoice (purchase, sales, expense, or service). */
@@ -269,6 +275,8 @@ export function parseConstructionInvoiceLine(
     inventoryItemId: raw.inventoryItemId ?? undefined,
     assetId: raw.assetId ?? undefined,
     taskId: raw.taskId ?? undefined,
+    costCategoryId: raw.costCategoryId ?? null,
+    costCategoryName: raw.costCategoryName ?? null,
   };
 }
 
@@ -344,6 +352,8 @@ export interface ConstructionInvoiceLineRequest {
   assetId?: number;
   /** Linked task id. */
   taskId?: number;
+  /** UUID of the cost category to tag the line with. */
+  costCategoryId?: string | null;
 }
 
 /** Fields for creating a construction invoice. */
@@ -438,6 +448,8 @@ function constructionInvoiceLineToJson(
     json.inventoryItemId = line.inventoryItemId;
   if (line.assetId !== undefined) json.assetId = line.assetId;
   if (line.taskId !== undefined) json.taskId = line.taskId;
+  if (line.costCategoryId !== undefined)
+    json.costCategoryId = line.costCategoryId;
   return json;
 }
 

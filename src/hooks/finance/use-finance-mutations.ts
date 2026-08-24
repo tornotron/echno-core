@@ -27,6 +27,8 @@ import { financePaymentService } from '../../services/finance-payment-service';
 import { financeJournalService } from '../../services/finance-journal-service';
 import { financeConstructionInvoiceService } from '../../services/finance-construction-invoice-service';
 import { financePostingAccountService } from '../../services/finance-posting-account-service';
+import { financeCostCategoryService } from '../../services/finance-cost-category-service';
+import { financeProjectBudgetService } from '../../services/finance-project-budget-service';
 import { financeSettingsService } from '../../services/finance-settings-service';
 import type {
   CreateAccountRequest,
@@ -40,6 +42,9 @@ import type {
   ReverseJournalRequest,
   PostingRole,
   UpsertPostingAccountMappingRequest,
+  CreateCostCategoryRequest,
+  UpdateCostCategoryRequest,
+  UpsertBudgetAllocationRequest,
   UpdateFinanceSettingsRequest,
 } from '../../types/finance';
 
@@ -771,6 +776,221 @@ export const useDeletePostingAccountMapping = () => {
     },
     onError: (error) =>
       logger.error('Failed to delete posting-account mapping:', error),
+  });
+};
+
+// ==================== Cost Categories ====================
+
+/**
+ * Creates a cost category.
+ *
+ * Backend response: `CostCategoryDto` (full).
+ *
+ * On success:
+ * - `setQueryData(financeKeys.costCategory(id), category)` — seeds the detail
+ *   cache from the returned DTO.
+ * - `invalidateQueries(financeKeys.costCategories())` — kept: `activeOnly` list
+ *   caches cannot be spliced deterministically.
+ *
+ * @returns A TanStack `UseMutationResult` whose mutate function accepts a
+ *   {@link CreateCostCategoryRequest}.
+ */
+export const useCreateCostCategory = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (dto: CreateCostCategoryRequest) =>
+      financeCostCategoryService.create(dto),
+    // POST /finance/cost-categories/web → CostCategoryDto (full)
+    onSuccess: (category) => {
+      queryClient.setQueryData(financeKeys.costCategory(category.id), category);
+      queryClient.invalidateQueries({
+        queryKey: financeKeys.costCategories(),
+      });
+    },
+    onError: (error) => logger.error('Failed to create cost category:', error),
+  });
+};
+
+/** Arguments for {@link useUpdateCostCategory}. */
+export interface UpdateCostCategoryArgs {
+  /** UUID of the cost category to update. */
+  id: string;
+  /** The updated cost-category fields. */
+  data: UpdateCostCategoryRequest;
+}
+
+/**
+ * Updates a cost category (full replacement).
+ *
+ * Backend response: `CostCategoryDto` (full).
+ *
+ * On success:
+ * - `setQueryData(financeKeys.costCategory(id), category)` — replaces the detail
+ *   cache with the returned DTO.
+ * - `invalidateQueries(financeKeys.costCategories())` — kept: `activeOnly` list
+ *   caches may now reflect a changed name/code/active state.
+ *
+ * @returns A TanStack `UseMutationResult` whose mutate function accepts
+ *   {@link UpdateCostCategoryArgs}.
+ */
+export const useUpdateCostCategory = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: UpdateCostCategoryArgs) =>
+      financeCostCategoryService.update(id, data),
+    // PUT /finance/cost-categories/web/{id} → CostCategoryDto (full)
+    onSuccess: (category) => {
+      queryClient.setQueryData(financeKeys.costCategory(category.id), category);
+      queryClient.invalidateQueries({
+        queryKey: financeKeys.costCategories(),
+      });
+    },
+    onError: (error) => logger.error('Failed to update cost category:', error),
+  });
+};
+
+/**
+ * Deactivates a cost category.
+ *
+ * Backend response: `CostCategoryDto` (full).
+ *
+ * On success:
+ * - `setQueryData(financeKeys.costCategory(id), category)` — seeds the detail
+ *   cache with the updated (deactivated) DTO.
+ * - `invalidateQueries(financeKeys.costCategories())` — kept: `activeOnly` list
+ *   caches now exclude this category.
+ *
+ * @returns A TanStack `UseMutationResult` whose mutate function accepts the
+ *   cost-category UUID.
+ */
+export const useDeactivateCostCategory = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => financeCostCategoryService.deactivate(id),
+    // POST /finance/cost-categories/web/{id}/deactivate → CostCategoryDto (full)
+    onSuccess: (category) => {
+      queryClient.setQueryData(financeKeys.costCategory(category.id), category);
+      queryClient.invalidateQueries({
+        queryKey: financeKeys.costCategories(),
+      });
+    },
+    onError: (error) =>
+      logger.error('Failed to deactivate cost category:', error),
+  });
+};
+
+/**
+ * Seeds the built-in default cost categories.
+ *
+ * Backend response: `{ created: number }` — a count, not a DTO, so there is no
+ * detail cache to seed.
+ *
+ * On success:
+ * - `invalidateQueries(financeKeys.costCategories())` — kept: seeding may have
+ *   created any number of categories, so every list cache is stale.
+ *
+ * @returns A TanStack `UseMutationResult` whose mutate function takes no
+ *   arguments.
+ */
+export const useSeedDefaultCostCategories = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => financeCostCategoryService.seedDefaults(),
+    // POST /finance/cost-categories/web/seed-defaults → { created: number }
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: financeKeys.costCategories(),
+      });
+    },
+    onError: (error) =>
+      logger.error('Failed to seed default cost categories:', error),
+  });
+};
+
+// ==================== Project Budget ====================
+
+/** Arguments for {@link useUpsertBudgetAllocation}. */
+export interface UpsertBudgetAllocationArgs {
+  /** Numeric id of the project. */
+  projectId: number;
+  /** UUID of the cost category to allocate to. */
+  costCategoryId: string;
+  /** The allocated amount. */
+  data: UpsertBudgetAllocationRequest;
+}
+
+/**
+ * Creates or updates a project's budget allocation for a cost category.
+ *
+ * Backend response: `BudgetAllocationDto` (full).
+ *
+ * On success:
+ * - `invalidateQueries(financeKeys.projectBudget(projectId))` — kept: the
+ *   project's allocation list gained or changed a row and cannot be spliced
+ *   deterministically.
+ * - `invalidateQueries(financeKeys.projectCostControl(projectId))` — kept: the
+ *   cost-control report's allocated / remaining figures are recomputed server-side.
+ *
+ * @returns A TanStack `UseMutationResult` whose mutate function accepts
+ *   {@link UpsertBudgetAllocationArgs}.
+ */
+export const useUpsertBudgetAllocation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ projectId, costCategoryId, data }: UpsertBudgetAllocationArgs) =>
+      financeProjectBudgetService.upsertAllocation(projectId, costCategoryId, data),
+    // PUT /finance/projects/{projectId}/budget/web/{costCategoryId} → BudgetAllocationDto (full)
+    onSuccess: (_allocation, { projectId }) => {
+      queryClient.invalidateQueries({
+        queryKey: financeKeys.projectBudget(projectId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: financeKeys.projectCostControl(projectId),
+      });
+    },
+    onError: (error) =>
+      logger.error('Failed to upsert budget allocation:', error),
+  });
+};
+
+/** Arguments for {@link useDeleteBudgetAllocation}. */
+export interface DeleteBudgetAllocationArgs {
+  /** Numeric id of the project. */
+  projectId: number;
+  /** UUID of the cost category whose allocation is removed. */
+  costCategoryId: string;
+}
+
+/**
+ * Deletes a project's budget allocation for a cost category.
+ *
+ * Backend response: `204 No Content` (no body).
+ *
+ * On success:
+ * - `invalidateQueries(financeKeys.projectBudget(projectId))` — kept: the
+ *   allocation list no longer contains this category.
+ * - `invalidateQueries(financeKeys.projectCostControl(projectId))` — kept: the
+ *   cost-control report's allocated / remaining figures are recomputed server-side.
+ *
+ * @returns A TanStack `UseMutationResult` whose mutate function accepts
+ *   {@link DeleteBudgetAllocationArgs}.
+ */
+export const useDeleteBudgetAllocation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ projectId, costCategoryId }: DeleteBudgetAllocationArgs) =>
+      financeProjectBudgetService.deleteAllocation(projectId, costCategoryId),
+    // DELETE /finance/projects/{projectId}/budget/web/{costCategoryId} → 204 No Content
+    onSuccess: (_data, { projectId }) => {
+      queryClient.invalidateQueries({
+        queryKey: financeKeys.projectBudget(projectId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: financeKeys.projectCostControl(projectId),
+      });
+    },
+    onError: (error) =>
+      logger.error('Failed to delete budget allocation:', error),
   });
 };
 

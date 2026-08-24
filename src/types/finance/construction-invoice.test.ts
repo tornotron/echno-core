@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import {
   parseConstructionInvoice,
+  createConstructionInvoiceToJson,
   ConstructionInvoiceType,
   ConstructionInvoiceStatus,
 } from './construction-invoice';
@@ -115,5 +116,75 @@ describe('parseConstructionInvoice', () => {
     expect(invoice.paymentRecordedBy).toBeUndefined();
     expect(invoice.journalEntryId).toBeUndefined();
     expect(invoice.reversalJournalEntryId).toBeUndefined();
+  });
+
+  test('parses the cost-category tag on a line', () => {
+    const categoryId = '99999999-9999-9999-9999-999999999999';
+    const invoice = parseConstructionInvoice({
+      id: UUID,
+      projectId: 1,
+      lines: [
+        {
+          id: '22222222-2222-2222-2222-222222222222',
+          description: 'Cement',
+          costCategoryId: categoryId,
+          costCategoryName: 'Materials',
+        },
+      ],
+    });
+    expect(invoice.lines[0]!.costCategoryId).toBe(categoryId);
+    expect(invoice.lines[0]!.costCategoryName).toBe('Materials');
+  });
+
+  test('defaults a line cost-category tag to null when absent', () => {
+    const invoice = parseConstructionInvoice({
+      id: UUID,
+      projectId: 1,
+      lines: [
+        {
+          id: '22222222-2222-2222-2222-222222222222',
+          description: 'Cement',
+        },
+      ],
+    });
+    expect(invoice.lines[0]!.costCategoryId).toBeNull();
+    expect(invoice.lines[0]!.costCategoryName).toBeNull();
+  });
+});
+
+describe('constructionInvoiceLineToJson (via createConstructionInvoiceToJson)', () => {
+  test('carries costCategoryId through the create line payload', () => {
+    const categoryId = '99999999-9999-9999-9999-999999999999';
+    const json = createConstructionInvoiceToJson({
+      type: ConstructionInvoiceType.PURCHASE,
+      projectId: 1,
+      issueDate: '2026-08-24',
+      dueDate: '2026-09-24',
+      lines: [
+        {
+          description: 'Cement',
+          quantity: 10,
+          unit: 'bag',
+          unitPrice: 250,
+          costCategoryId: categoryId,
+        },
+      ],
+    });
+    const lines = json.lines as Array<Record<string, unknown>>;
+    expect(lines[0]!.costCategoryId).toBe(categoryId);
+  });
+
+  test('omits costCategoryId when unset', () => {
+    const json = createConstructionInvoiceToJson({
+      type: ConstructionInvoiceType.PURCHASE,
+      projectId: 1,
+      issueDate: '2026-08-24',
+      dueDate: '2026-09-24',
+      lines: [
+        { description: 'Cement', quantity: 10, unit: 'bag', unitPrice: 250 },
+      ],
+    });
+    const lines = json.lines as Array<Record<string, unknown>>;
+    expect('costCategoryId' in lines[0]!).toBe(false);
   });
 });

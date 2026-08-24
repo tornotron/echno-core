@@ -176,6 +176,8 @@ export * from './services/finance-construction-payment-service';
 export * from './services/finance-journal-service';
 export * from './services/finance-reports-service';
 export * from './services/finance-posting-account-service';
+export * from './services/finance-cost-category-service';
+export * from './services/finance-project-budget-service';
 export * from './services/finance-settings-service';
 export * from './hooks/finance';
 
