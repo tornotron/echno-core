@@ -14,7 +14,7 @@ import { EmployeeStatus } from './employee-status';
 /**
  * Partial update payload for an existing {@link Employee}.
  *
- * `joiningDate`, `salary`, and `shiftTiming` accept `null` to explicitly
+ * `joiningDate`, `salary`, and `shiftTimingId` accept `null` to explicitly
  * clear the field; `undefined` leaves it untouched.
  */
 export interface UpdateEmployeeRequest {
@@ -66,10 +66,10 @@ export interface UpdateEmployeeRequest {
   managerId?: number;
 
   /**
-   * New default shift code. Pass `null` to clear; `undefined` to leave
-   * unchanged.
+   * Surrogate ID of the newly-assigned {@link ShiftTiming}. Pass `null` to
+   * clear; `undefined` to leave unchanged.
    */
-  shiftTiming?: string | null;
+  shiftTimingId?: number | null;
 
   /** New employment {@link EmployeeStatus}. */
   status?: EmployeeStatus;
@@ -122,7 +122,7 @@ export function updateEmployeeToJson(
         : Number.parseFloat(Number(dto.salary).toFixed(1));
   }
   if (dto.managerId !== undefined) payload.managerId = dto.managerId;
-  if (dto.shiftTiming !== undefined) payload.shiftTiming = dto.shiftTiming;
+  if (dto.shiftTimingId !== undefined) payload.shiftTimingId = dto.shiftTimingId;
   if (dto.status !== undefined) payload.status = dto.status;
   if (dto.skills !== undefined) payload.skills = dto.skills;
   if (dto.experience !== undefined) payload.experience = dto.experience;

@@ -26,6 +26,7 @@ import { Project, parseProject, projectToJson } from '../project';
 import { EmployeeStatus, employeeStatusFromString } from './employee-status';
 import { Department } from './departments';
 import { OrgRole, orgRoleFromString } from './org-role';
+import { ShiftTiming, parseShiftTiming } from '../shift-timing';
 import { parsePositiveInt } from '../../lib/utils/parse-id';
 import {
   backendDate,
@@ -65,7 +66,8 @@ const EmployeeResponseSchema = z.object({
   salary: money,
   managerId: optionalNumericId,
   managerName: nullableString,
-  shiftTiming: nullableString,
+  shiftTimingId: optionalNumericId,
+  shiftTiming: opaque,
   status: nullableString,
   certifications: z.array(z.string()).nullish(),
   currentProjects: z.array(z.unknown()).nullish(),
@@ -167,8 +169,15 @@ export interface Employee {
   /** Denormalised manager display name. */
   managerName?: string;
 
-  /** Default shift code (e.g. `'morning'`); `null` when cleared. */
-  shiftTiming?: string | null;
+  /** Surrogate ID of the assigned {@link ShiftTiming}; `null` when unassigned. */
+  shiftTimingId?: number | null;
+
+  /**
+   * Resolved {@link ShiftTiming} the employee is assigned to; `null` when
+   * unassigned. Read-only — derived by the backend from
+   * {@link Employee.shiftTimingId} and not sent back on writes.
+   */
+  shiftTiming?: ShiftTiming | null;
 
   /** Current employment {@link EmployeeStatus}. */
   status: EmployeeStatus;
@@ -278,7 +287,8 @@ export function parseEmployee(json: unknown): Employee {
     salary: raw.salary ?? undefined,
     managerId: raw.managerId ?? undefined,
     managerName: raw.managerName ?? undefined,
-    shiftTiming: raw.shiftTiming ?? undefined,
+    shiftTimingId: raw.shiftTimingId ?? undefined,
+    shiftTiming: raw.shiftTiming ? parseShiftTiming(raw.shiftTiming) : null,
     status: employeeStatusFromString(raw.status ?? 'active'),
     certifications: raw.certifications ? [...raw.certifications] : undefined,
     currentProjects: raw.currentProjects
@@ -342,7 +352,9 @@ export function employeeToJson(
   }
   if (emp.managerId !== undefined) result.managerId = emp.managerId;
   if (emp.managerName !== undefined) result.managerName = emp.managerName;
-  if (emp.shiftTiming !== undefined) result.shiftTiming = emp.shiftTiming;
+  // `shiftTiming` is a read-only resolved object on responses; only the id is
+  // written back.
+  if (emp.shiftTimingId !== undefined) result.shiftTimingId = emp.shiftTimingId;
   if (emp.status !== undefined) result.status = emp.status;
   if (emp.certifications !== undefined)
     result.certifications = emp.certifications;
