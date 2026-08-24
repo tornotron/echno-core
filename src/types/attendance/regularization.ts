@@ -22,10 +22,14 @@ export interface AttendanceRegularization {
   reason: string;
   /** Name/identifier of the requesting employee. */
   requestedBy: string;
+  /** Numeric id of the requesting employee, when returned by the backend. */
+  requestedById?: number;
   /** When the request was raised. */
   requestedAt: Date;
   /** Name of the approver, once decided. */
   approvedBy?: string;
+  /** Numeric id of the approver, when returned by the backend. */
+  approvedById?: number;
   /** When the decision was made. */
   approvedAt?: Date;
   /** Current decision state. */
@@ -73,8 +77,10 @@ export function parseAttendanceRegularization(
     ),
     reason: data.reason,
     requestedBy: data.requestedBy,
+    requestedById: data.requestedById ?? undefined,
     requestedAt: parseUTCDate(data.requestedAt) ?? new Date(data.requestedAt),
     approvedBy: data.approvedBy ?? undefined,
+    approvedById: data.approvedById ?? undefined,
     approvedAt: parseUTCDate(data.approvedAt) ?? undefined,
     status: data.status,
     rejectionReason: data.rejectionReason ?? undefined,
