@@ -33,8 +33,10 @@ function parseRegularizationDetail(raw: any): RegularizationDetail {
     ),
     reason: raw.reason ?? '',
     requestedBy: raw.requestedBy ?? '',
+    requestedById: raw.requestedById ?? undefined,
     requestedAt: new Date(raw.requestedAt),
     approvedBy: raw.approvedBy ?? undefined,
+    approvedById: raw.approvedById ?? undefined,
     approvedAt: raw.approvedAt ? new Date(raw.approvedAt) : undefined,
     status: (raw.status?.toLowerCase() ?? 'pending') as
       | 'pending'

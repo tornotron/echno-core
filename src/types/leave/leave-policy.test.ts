@@ -10,6 +10,20 @@ describe('parseLeavePolicy', () => {
     expect(policy.isActive).toBe(true);
   });
 
+  test('defaults multiLevelApprovalEnabled to true when absent', () => {
+    const policy = parseLeavePolicy({ id: 1, organizationId: 2 });
+    expect(policy.multiLevelApprovalEnabled).toBe(true);
+  });
+
+  test('honours an explicit multiLevelApprovalEnabled of false', () => {
+    const policy = parseLeavePolicy({
+      id: 1,
+      organizationId: 2,
+      multiLevelApprovalEnabled: false,
+    });
+    expect(policy.multiLevelApprovalEnabled).toBe(false);
+  });
+
   test('throws when organizationId is missing', () => {
     expect(() => parseLeavePolicy({ id: 1 })).toThrow();
   });

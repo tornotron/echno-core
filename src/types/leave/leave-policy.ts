@@ -39,6 +39,7 @@ const LeavePolicyResponseSchema = z.object({
   isPaid: nullableBoolean,
   displayOrder: nullableNumber,
   isActive: nullableBoolean,
+  multiLevelApprovalEnabled: nullableBoolean,
   createdAt: backendDate,
   updatedAt: backendDate,
 });
@@ -85,6 +86,11 @@ export interface LeavePolicy {
   displayOrder: number;
   /** Whether the policy is currently active. */
   isActive: boolean;
+  /**
+   * Whether requests under this policy go through multi-level approval.
+   * Defaults to `true` to match the backend default when the field is absent.
+   */
+  multiLevelApprovalEnabled: boolean;
   /** Policy creation timestamp. */
   createdAt?: Date;
   /** Policy last-modified timestamp. */
@@ -128,6 +134,7 @@ export function parseLeavePolicy(json: unknown): LeavePolicy {
     isPaid: raw.isPaid ?? true,
     displayOrder: raw.displayOrder ?? 0,
     isActive: raw.isActive ?? true,
+    multiLevelApprovalEnabled: raw.multiLevelApprovalEnabled ?? true,
     createdAt: parseUTCDate(raw.createdAt) ?? undefined,
     updatedAt: parseUTCDate(raw.updatedAt) ?? undefined,
   };
