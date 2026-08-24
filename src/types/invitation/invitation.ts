@@ -56,7 +56,8 @@ export interface EmployeeDetails {
   phone?: string;
   managerId?: number;
   salary?: number;
-  shiftTiming?: string;
+  /** Surrogate ID of the assigned {@link ShiftTiming}; `null` when unassigned. */
+  shiftTimingId?: number | null;
   status?: string;
 }
 
@@ -87,7 +88,7 @@ const EmployeeDetailsResponseSchema = z.object({
   phone: nullableString,
   managerId: optionalNumericId,
   salary: money,
-  shiftTiming: nullableString,
+  shiftTimingId: optionalNumericId,
   status: nullableString,
 });
 
@@ -128,7 +129,7 @@ export function parseInvitation(json: unknown): Invitation {
       raw.employeeDetails?.salary == null
         ? undefined
         : Number(raw.employeeDetails?.salary),
-    shiftTiming: raw.employeeDetails?.shiftTiming ?? undefined,
+    shiftTimingId: raw.employeeDetails?.shiftTimingId ?? undefined,
     status: raw.employeeDetails?.status ?? undefined,
   };
 
@@ -168,7 +169,7 @@ export function invitationToJson(inv: Invitation): Record<string, unknown> {
       phone: inv.employeeDetails.phone,
       managerId: inv.employeeDetails.managerId,
       salary: inv.employeeDetails.salary,
-      shiftTiming: inv.employeeDetails.shiftTiming,
+      shiftTimingId: inv.employeeDetails.shiftTimingId,
       status: inv.employeeDetails.status,
     },
     active: inv.isActive,
@@ -235,9 +236,6 @@ export function whatsappMessage(
       `*Start Date*: ${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`
     );
   }
-  if (inv.employeeDetails.shiftTiming)
-    lines.push(`*Shift Timing*: ${inv.employeeDetails.shiftTiming}`);
-
   lines.push(
     '',
     `*Invite Code*: *${inv.inviteCode}*`,
@@ -281,9 +279,6 @@ export function emailBody(inv: Invitation, organizationName?: string): string {
       `- Start Date: ${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`
     );
   }
-  if (inv.employeeDetails.shiftTiming)
-    lines.push(`- Shift Timing: ${inv.employeeDetails.shiftTiming}`);
-
   lines.push(
     '',
     `Your invitation code is: ${inv.inviteCode}`,

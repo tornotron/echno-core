@@ -19,8 +19,12 @@ export interface AttendanceCheckInRequest {
   employeeId: number;
   /** Project the check-in is logged against. */
   projectId: number;
-  /** Shift the day is measured against. */
-  shiftTimingId: number;
+  /**
+   * Shift the day is measured against. Optional: the backend prefers the
+   * employee's assigned {@link ShiftTiming} and falls back to this id only
+   * when the employee has none.
+   */
+  shiftTimingId?: number | null;
   /** When the check-in occurred. */
   eventTimestamp: Date;
   /** Where the check-in occurred, if captured. */

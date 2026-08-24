@@ -63,8 +63,8 @@ export interface CreateEmployeeRequest {
   /** Surrogate ID of the reporting manager, if any. */
   managerId?: number;
 
-  /** Default shift code (e.g. `'morning'`). */
-  shiftTiming?: string;
+  /** Surrogate ID of the assigned {@link ShiftTiming}; `null` to leave unassigned. */
+  shiftTimingId?: number | null;
 
   /** Self-reported skills. */
   skills?: string[];
@@ -104,7 +104,7 @@ export function createEmployeeToJson(
   if (dto.salary !== undefined)
     payload.salary = Number.parseFloat(Number(dto.salary).toFixed(1));
   if (dto.managerId !== undefined) payload.managerId = dto.managerId;
-  if (dto.shiftTiming !== undefined) payload.shiftTiming = dto.shiftTiming;
+  if (dto.shiftTimingId !== undefined) payload.shiftTimingId = dto.shiftTimingId;
   if (dto.skills !== undefined) payload.skills = dto.skills;
   if (dto.experience !== undefined) payload.experience = dto.experience;
 

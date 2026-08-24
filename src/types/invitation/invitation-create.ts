@@ -23,7 +23,7 @@ export interface GenerateInviteCodeRequest {
   joiningDate?: Date;
   salary?: number;
   managerId?: number;
-  shiftTiming?: string;
+  shiftTimingId?: number | null;
   status?: string;
   validityDays?: number;
   maxUses?: number;
@@ -55,7 +55,8 @@ export function generateInviteCodeToJson(
     payload.joiningDate = request.joiningDate.toISOString();
   if (request.salary !== undefined) payload.salary = request.salary;
   if (request.managerId !== undefined) payload.managerId = request.managerId;
-  if (request.shiftTiming) payload.shiftTiming = request.shiftTiming;
+  if (request.shiftTimingId !== undefined)
+    payload.shiftTimingId = request.shiftTimingId;
   if (request.validityDays !== undefined)
     payload.validityDays = request.validityDays;
   if (request.maxUses !== undefined) payload.maxUses = request.maxUses;
