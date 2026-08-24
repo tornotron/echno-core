@@ -15,6 +15,11 @@
  * - `['finance', 'invoices', …]` — detail (`invoice`).
  * - `['finance', 'payments', …]` — detail (`payment`).
  * - `['finance', 'posting-accounts', …]` — mappings list (`postingAccountsList`).
+ * - `['finance', 'cost-categories', …]` — list (`costCategoriesList`),
+ *   detail (`costCategory`).
+ * - `['finance', 'project-budgets', …]` — a project's allocations (`projectBudget`).
+ * - `['finance', 'project-cost-control', …]` — a project's cost-control report
+ *   (`projectCostControl`).
  * - `['finance', 'settings']` — finance settings (`settings`).
  * - `['finance', 'reports', …]` — trial balance, P&L, balance sheet.
  */
@@ -74,6 +79,24 @@ export const financeKeys = {
   postingAccounts: () => [...financeKeys.all, 'posting-accounts'] as const,
   postingAccountsList: () =>
     [...financeKeys.postingAccounts(), 'list'] as const,
+
+  // Cost categories
+  costCategories: () => [...financeKeys.all, 'cost-categories'] as const,
+  costCategoriesList: (activeOnly?: boolean) =>
+    [...financeKeys.costCategories(), 'list', { activeOnly }] as const,
+  costCategory: (id: string) =>
+    [...financeKeys.costCategories(), 'detail', id] as const,
+
+  // Project budget allocations
+  projectBudgets: () => [...financeKeys.all, 'project-budgets'] as const,
+  projectBudget: (projectId: number) =>
+    [...financeKeys.projectBudgets(), projectId] as const,
+
+  // Project cost-control reports
+  projectCostControls: () =>
+    [...financeKeys.all, 'project-cost-control'] as const,
+  projectCostControl: (projectId: number) =>
+    [...financeKeys.projectCostControls(), projectId] as const,
 
   // Finance settings
   settings: () => [...financeKeys.all, 'settings'] as const,

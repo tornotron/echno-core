@@ -4,7 +4,7 @@
      Run `bun run api:snapshot` after an intended public-API change and commit the diff.
      See docs/API-STABILITY.md. -->
 
-Entry points: 129
+Entry points: 131
 
 ## `@tornotron/echno-core`
 
@@ -59,6 +59,7 @@ Entry points: 129
 - AttendanceSummary
 - attendanceToJson
 - BalanceSheetReport
+- BudgetAllocation
 - BulkCreateWbsElementsRequest
 - bulkCreateWbsElementsToJson
 - CalculateDays
@@ -96,6 +97,7 @@ Entry points: 129
 - copyIssue
 - copyTask
 - CorrectedClockEvent
+- CostCategory
 - CreateAccountRequest
 - createAccountToJson
 - CreateAttendanceProfileRequest
@@ -108,6 +110,8 @@ Entry points: 129
 - createConstructionInvoiceToJson
 - CreateConstructionPaymentRequest
 - createConstructionPaymentToJson
+- CreateCostCategoryRequest
+- createCostCategoryToJson
 - CreateCustomerRequest
 - createCustomerToJson
 - CreateEmployeeRequest
@@ -173,6 +177,7 @@ Entry points: 129
 - Customer
 - CustomerListParams
 - DailyMovementSummary
+- DeleteBudgetAllocationArgs
 - DeletePostingAccountMappingArgs
 - Department
 - determineAttendanceStatus
@@ -196,12 +201,14 @@ Entry points: 129
 - financeBankAccountService
 - financeConstructionInvoiceService
 - financeConstructionPaymentService
+- financeCostCategoryService
 - financeCustomerService
 - financeInvoiceService
 - financeJournalService
 - financeKeys
 - financePaymentService
 - financePostingAccountService
+- financeProjectBudgetService
 - financeReportsService
 - FinanceSettings
 - financeSettingsService
@@ -400,6 +407,7 @@ Entry points: 129
 - parseAttendanceProfile
 - parseAttendanceRegularization
 - parseBalanceSheetReport
+- parseBudgetAllocation
 - parseCheckItemStatus
 - parseClockEvent
 - parseCoaImportSummary
@@ -416,6 +424,7 @@ Entry points: 129
 - parseConstructionPaymentMethod
 - parseConstructionPaymentType
 - parseConstructionPaymentVoucherStatus
+- parseCostCategory
 - parseCustomer
 - parseEmployee
 - parseEmployeeLookup
@@ -466,6 +475,8 @@ Entry points: 129
 - parsePresignedUpload
 - parseProfitAndLossReport
 - parseProject
+- parseProjectCostControl
+- parseProjectCostControlLine
 - parseProjectType
 - parsePurchaseOrder
 - parsePurchaseOrderItem
@@ -498,6 +509,8 @@ Entry points: 129
 - ProfitAndLossReport
 - Project
 - ProjectAttendanceSummary
+- ProjectCostControl
+- ProjectCostControlLine
 - ProjectFiles
 - projectKeys
 - projectService
@@ -523,6 +536,7 @@ Entry points: 129
 - ReverseJournalArgs
 - ReverseJournalRequest
 - roleManagementService
+- SeedCostCategoriesResult
 - SetVendorPaymentTermsRequest
 - setVendorPaymentTermsToJson
 - ShiftTiming
@@ -568,6 +582,9 @@ Entry points: 129
 - updateConstructionInvoiceToJson
 - UpdateConstructionPaymentRequest
 - updateConstructionPaymentToJson
+- UpdateCostCategoryArgs
+- UpdateCostCategoryRequest
+- updateCostCategoryToJson
 - UpdateCustomerRequest
 - updateCustomerToJson
 - UpdateEmployeeRequest
@@ -625,6 +642,9 @@ Entry points: 129
 - UploadProgress
 - UploadProgressCallback
 - UploadRequest
+- UpsertBudgetAllocationArgs
+- UpsertBudgetAllocationRequest
+- upsertBudgetAllocationToJson
 - UpsertPostingAccountMappingArgs
 - UpsertPostingAccountMappingRequest
 - upsertPostingAccountMappingToJson
@@ -665,10 +685,13 @@ Entry points: 129
 - useConsumptionsByMaterial
 - useConsumptionsByTask
 - useConsumptionsByType
+- useCostCategories
+- useCostCategory
 - useCreateAccount
 - useCreateAttendanceProfile
 - useCreateBankAccount
 - useCreateConsumption
+- useCreateCostCategory
 - useCreateCustomer
 - useCreateDraftInvoice
 - useCreateEmployee  [deprecated]
@@ -696,11 +719,13 @@ Entry points: 129
 - useCurrentUserEmployee
 - useDeactivateAccount
 - useDeactivateBankAccount
+- useDeactivateCostCategory
 - useDeactivateCustomer
 - useDelegateApproval
 - useDeleteAttachment
 - useDeleteAttendance
 - useDeleteAttendanceProfile
+- useDeleteBudgetAllocation
 - useDeleteEmployee
 - useDeleteGRN  [deprecated]
 - useDeleteIndent
@@ -836,6 +861,8 @@ Entry points: 129
 - useProcessRegularization
 - useProfitAndLoss
 - useProject
+- useProjectBudget
+- useProjectCostControl
 - useProjects
 - useProjectsByEmployee
 - useProjectsByOrganization
@@ -863,6 +890,7 @@ Entry points: 129
 - userRoleFromString
 - userService
 - userToJson
+- useSeedDefaultCostCategories
 - useSetVendorPaymentTerms
 - useShift
 - useShifts
@@ -889,6 +917,7 @@ Entry points: 129
 - useUnreadNotificationsCount
 - useUpdateAccount
 - useUpdateAttendanceProfile
+- useUpdateCostCategory
 - useUpdateCustomer
 - useUpdateEmployee
 - useUpdateFinanceSettings
@@ -921,6 +950,7 @@ Entry points: 129
 - useUpdateWbsElement
 - useUploadAttachment
 - useUploadAttachmentsDirect
+- useUpsertBudgetAllocation
 - useUpsertMaterialLocationThreshold
 - useUpsertPostingAccountMapping
 - useUser
@@ -1208,6 +1238,11 @@ Entry points: 129
 - ConstructionPaymentListParams
 - financeConstructionPaymentService
 
+## `@tornotron/echno-core/finance-cost-category/services`
+
+- financeCostCategoryService
+- SeedCostCategoriesResult
+
 ## `@tornotron/echno-core/finance-customer/services`
 
 - CustomerListParams
@@ -1229,6 +1264,10 @@ Entry points: 129
 
 - financePostingAccountService
 
+## `@tornotron/echno-core/finance-project-budget/services`
+
+- financeProjectBudgetService
+
 ## `@tornotron/echno-core/finance-reports/services`
 
 - financeReportsService
@@ -1240,24 +1279,32 @@ Entry points: 129
 ## `@tornotron/echno-core/finance/hooks`
 
 - CancelConstructionInvoiceArgs
+- DeleteBudgetAllocationArgs
 - DeletePostingAccountMappingArgs
 - financeKeys
 - RecordConstructionInvoicePaymentArgs
 - RecordPaymentArgs
 - ReverseJournalArgs
 - UpdateAccountArgs
+- UpdateCostCategoryArgs
+- UpsertBudgetAllocationArgs
 - UpsertPostingAccountMappingArgs
 - useApproveConstructionInvoice
 - useBalanceSheet
 - useCancelConstructionInvoice
 - useCancelInvoice
+- useCostCategories
+- useCostCategory
 - useCreateAccount
 - useCreateBankAccount
+- useCreateCostCategory
 - useCreateCustomer
 - useCreateDraftInvoice
 - useDeactivateAccount
 - useDeactivateBankAccount
+- useDeactivateCostCategory
 - useDeactivateCustomer
+- useDeleteBudgetAllocation
 - useDeletePostingAccountMapping
 - useFinanceAccount
 - useFinanceAccountByCode
@@ -1277,14 +1324,19 @@ Entry points: 129
 - usePostingAccountMappings
 - usePostJournalEntry
 - useProfitAndLoss
+- useProjectBudget
+- useProjectCostControl
 - useRecordConstructionInvoicePayment
 - useRecordPayment
 - useReverseJournalEntry
+- useSeedDefaultCostCategories
 - useSubmitConstructionInvoice
 - useTrialBalance
 - useUpdateAccount
+- useUpdateCostCategory
 - useUpdateCustomer
 - useUpdateFinanceSettings
+- useUpsertBudgetAllocation
 - useUpsertPostingAccountMapping
 
 ## `@tornotron/echno-core/finance/hooks/keys`
@@ -1302,6 +1354,7 @@ Entry points: 129
 - Allocation
 - AllocationRequest
 - BalanceSheetReport
+- BudgetAllocation
 - CoaImportSummary
 - CompanyBankAccount
 - ConstructionInvoice
@@ -1315,6 +1368,7 @@ Entry points: 129
 - ConstructionPaymentMethod
 - ConstructionPaymentType
 - ConstructionPaymentVoucherStatus
+- CostCategory
 - CreateAccountRequest
 - createAccountToJson
 - CreateCompanyBankAccountRequest
@@ -1323,6 +1377,8 @@ Entry points: 129
 - createConstructionInvoiceToJson
 - CreateConstructionPaymentRequest
 - createConstructionPaymentToJson
+- CreateCostCategoryRequest
+- createCostCategoryToJson
 - CreateCustomerRequest
 - createCustomerToJson
 - CreateInvoiceRequest
@@ -1344,6 +1400,7 @@ Entry points: 129
 - parseAddress
 - parseAllocation
 - parseBalanceSheetReport
+- parseBudgetAllocation
 - parseCoaImportSummary
 - parseCompanyBankAccount
 - parseConstructionInvoice
@@ -1356,6 +1413,7 @@ Entry points: 129
 - parseConstructionPaymentMethod
 - parseConstructionPaymentType
 - parseConstructionPaymentVoucherStatus
+- parseCostCategory
 - parseCustomer
 - parseFinanceSettings
 - parseInvoice
@@ -1369,6 +1427,8 @@ Entry points: 129
 - parsePostingAccountSource
 - parsePostingRole
 - parseProfitAndLossReport
+- parseProjectCostControl
+- parseProjectCostControlLine
 - parseTrialBalanceReport
 - parseTrialBalanceRow
 - Payment
@@ -1379,6 +1439,8 @@ Entry points: 129
 - PostJournalRequest
 - postJournalToJson
 - ProfitAndLossReport
+- ProjectCostControl
+- ProjectCostControlLine
 - RecordPaymentRequest
 - recordPaymentToJson
 - ReverseJournalRequest
@@ -1390,10 +1452,14 @@ Entry points: 129
 - updateConstructionInvoiceToJson
 - UpdateConstructionPaymentRequest
 - updateConstructionPaymentToJson
+- UpdateCostCategoryRequest
+- updateCostCategoryToJson
 - UpdateCustomerRequest
 - updateCustomerToJson
 - UpdateFinanceSettingsRequest
 - updateFinanceSettingsToJson
+- UpsertBudgetAllocationRequest
+- upsertBudgetAllocationToJson
 - UpsertPostingAccountMappingRequest
 - upsertPostingAccountMappingToJson
 

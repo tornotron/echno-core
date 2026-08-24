@@ -20,6 +20,8 @@ import { financePaymentService } from '../../services/finance-payment-service';
 import { financeJournalService } from '../../services/finance-journal-service';
 import { financeReportsService } from '../../services/finance-reports-service';
 import { financePostingAccountService } from '../../services/finance-posting-account-service';
+import { financeCostCategoryService } from '../../services/finance-cost-category-service';
+import { financeProjectBudgetService } from '../../services/finance-project-budget-service';
 import { financeSettingsService } from '../../services/finance-settings-service';
 import {
   standardQueryOptions,
@@ -247,6 +249,79 @@ export const usePostingAccountMappings = () =>
   useQuery({
     queryKey: financeKeys.postingAccountsList(),
     queryFn: () => financePostingAccountService.list(),
+    ...standardQueryOptions,
+  });
+
+// ==================== Cost Categories ====================
+
+/**
+ * Lists cost categories.
+ *
+ * Uses the **standard** query profile (`staleTime` 60 s, `gcTime` 5 min).
+ *
+ * @param activeOnly - When true, restrict to active categories.
+ * @returns A TanStack `UseQueryResult` wrapping `CostCategory[]`.
+ */
+export const useCostCategories = (activeOnly?: boolean) =>
+  useQuery({
+    queryKey: financeKeys.costCategoriesList(activeOnly),
+    queryFn: () => financeCostCategoryService.list(activeOnly),
+    ...standardQueryOptions,
+  });
+
+/**
+ * Fetches a single cost category by id.
+ *
+ * Uses the **standard** query profile (`staleTime` 60 s, `gcTime` 5 min).
+ * Disabled until `id` is truthy.
+ *
+ * @param id - UUID of the cost category.
+ * @returns A TanStack `UseQueryResult` wrapping `CostCategory`.
+ */
+export const useCostCategory = (id: string) =>
+  useQuery({
+    queryKey: financeKeys.costCategory(id),
+    queryFn: () => financeCostCategoryService.getById(id),
+    enabled: !!id,
+    ...standardQueryOptions,
+  });
+
+// ==================== Project Budget ====================
+
+/**
+ * Lists a project's budget allocations (one per allocated cost category).
+ *
+ * Uses the **standard** query profile (`staleTime` 60 s, `gcTime` 5 min).
+ * Disabled until `projectId` is truthy.
+ *
+ * @param projectId - Numeric id of the project.
+ * @returns A TanStack `UseQueryResult` wrapping `BudgetAllocation[]`.
+ */
+export const useProjectBudget = (projectId: number) =>
+  useQuery({
+    queryKey: financeKeys.projectBudget(projectId),
+    queryFn: () => financeProjectBudgetService.getBudget(projectId),
+    enabled: !!projectId,
+    ...standardQueryOptions,
+  });
+
+// ==================== Project Cost Control ====================
+
+/**
+ * Fetches the cost-control report for a project (allocated vs committed vs
+ * spent, with per-category rows and a totals row).
+ *
+ * Uses the **standard** query profile (`staleTime` 60 s, `gcTime` 5 min).
+ * Disabled until `projectId` is truthy.
+ *
+ * @param projectId - Numeric id of the project.
+ * @returns A TanStack `UseQueryResult` wrapping `ProjectCostControl`.
+ */
+export const useProjectCostControl = (projectId: number) =>
+  useQuery({
+    queryKey: financeKeys.projectCostControl(projectId),
+    queryFn: () => financeProjectBudgetService.getCostControl(projectId),
+    enabled: !!projectId,
     ...standardQueryOptions,
   });
 
