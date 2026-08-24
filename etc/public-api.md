@@ -4,7 +4,7 @@
      Run `bun run api:snapshot` after an intended public-API change and commit the diff.
      See docs/API-STABILITY.md. -->
 
-Entry points: 127
+Entry points: 129
 
 ## `@tornotron/echno-core`
 
@@ -73,6 +73,7 @@ Entry points: 127
 - ClockEvent
 - clockEventToJson
 - ClockEventType
+- CoaImportSummary
 - CompanyBankAccount
 - CompliancePhase
 - ComplianceRiskLevel
@@ -172,6 +173,7 @@ Entry points: 127
 - Customer
 - CustomerListParams
 - DailyMovementSummary
+- DeletePostingAccountMappingArgs
 - Department
 - determineAttendanceStatus
 - DirectUploadError
@@ -199,7 +201,10 @@ Entry points: 127
 - financeJournalService
 - financeKeys
 - financePaymentService
+- financePostingAccountService
 - financeReportsService
+- FinanceSettings
+- financeSettingsService
 - formatDateForBackend
 - formatFileSize
 - GenerateInviteCodeRequest
@@ -397,6 +402,7 @@ Entry points: 127
 - parseBalanceSheetReport
 - parseCheckItemStatus
 - parseClockEvent
+- parseCoaImportSummary
 - parseCompanyBankAccount
 - parseCompliancePhase
 - parseComplianceRiskLevel
@@ -413,6 +419,7 @@ Entry points: 127
 - parseCustomer
 - parseEmployee
 - parseEmployeeLookup
+- parseFinanceSettings
 - parseGoodsReceivedNote
 - parseGrnItem
 - parseGroupedLeaveCalendarEntry
@@ -453,6 +460,9 @@ Entry points: 127
 - parseOrganization
 - parsePayment
 - parsePositiveInt
+- parsePostingAccountMapping
+- parsePostingAccountSource
+- parsePostingRole
 - parsePresignedUpload
 - parseProfitAndLossReport
 - parseProject
@@ -478,6 +488,10 @@ Entry points: 127
 - PaymentTerms
 - poItemKeys
 - poKeys
+- PostingAccountMapping
+- PostingAccountSource
+- PostingRole
+- postingRoleLabels
 - PostJournalRequest
 - postJournalToJson
 - PresignedUpload
@@ -545,6 +559,9 @@ Entry points: 127
 - TransactionType
 - TrialBalanceReport
 - TrialBalanceRow
+- UpdateAccountArgs
+- UpdateAccountRequest
+- updateAccountToJson
 - UpdateAttendanceProfileRequest
 - updateAttendanceProfileToJson
 - UpdateConstructionInvoiceRequest
@@ -555,6 +572,8 @@ Entry points: 127
 - updateCustomerToJson
 - UpdateEmployeeRequest
 - updateEmployeeToJson
+- UpdateFinanceSettingsRequest
+- updateFinanceSettingsToJson
 - UpdateGrnRequest
 - updateGrnToJson
 - UpdateIndentItemRequest
@@ -606,6 +625,9 @@ Entry points: 127
 - UploadProgress
 - UploadProgressCallback
 - UploadRequest
+- UpsertPostingAccountMappingArgs
+- UpsertPostingAccountMappingRequest
+- upsertPostingAccountMappingToJson
 - useActivateLeavePolicy
 - useAddEmployeeToProject
 - useAddVendorBankAccount
@@ -691,6 +713,7 @@ Entry points: 127
 - useDeleteMaterialLocationThreshold
 - useDeleteOrganization
 - useDeletePOItem
+- useDeletePostingAccountMapping
 - useDeleteProject
 - useDeletePurchaseOrder  [deprecated]
 - useDeleteShift
@@ -729,6 +752,7 @@ Entry points: 127
 - useFinanceCustomers
 - useFinanceInvoice
 - useFinancePayment
+- useFinanceSettings
 - useGenerateInviteCode
 - useGRN
 - useGRNs
@@ -736,6 +760,7 @@ Entry points: 127
 - useGRNsByVendor
 - useGRNsPaginated
 - useGroupedCalendar
+- useImportChartOfAccounts
 - useIndent
 - useIndentItem
 - useIndentItems
@@ -803,6 +828,7 @@ Entry points: 127
 - usePOsByIndent
 - usePOsByStatus
 - usePOsByVendor
+- usePostingAccountMappings
 - usePostJournalEntry
 - usePrefetchIssue
 - usePrefetchProject
@@ -861,9 +887,11 @@ Entry points: 127
 - useUnassignRole
 - useUnreadNotifications
 - useUnreadNotificationsCount
+- useUpdateAccount
 - useUpdateAttendanceProfile
 - useUpdateCustomer
 - useUpdateEmployee
+- useUpdateFinanceSettings
 - useUpdateGRN
 - useUpdateIndent
 - useUpdateIndentItem
@@ -894,6 +922,7 @@ Entry points: 127
 - useUploadAttachment
 - useUploadAttachmentsDirect
 - useUpsertMaterialLocationThreshold
+- useUpsertPostingAccountMapping
 - useUser
 - useUserEmployees
 - useValidateInviteCode
@@ -1196,17 +1225,28 @@ Entry points: 127
 
 - financePaymentService
 
+## `@tornotron/echno-core/finance-posting-account/services`
+
+- financePostingAccountService
+
 ## `@tornotron/echno-core/finance-reports/services`
 
 - financeReportsService
 
+## `@tornotron/echno-core/finance-settings/services`
+
+- financeSettingsService
+
 ## `@tornotron/echno-core/finance/hooks`
 
 - CancelConstructionInvoiceArgs
+- DeletePostingAccountMappingArgs
 - financeKeys
 - RecordConstructionInvoicePaymentArgs
 - RecordPaymentArgs
 - ReverseJournalArgs
+- UpdateAccountArgs
+- UpsertPostingAccountMappingArgs
 - useApproveConstructionInvoice
 - useBalanceSheet
 - useCancelConstructionInvoice
@@ -1218,6 +1258,7 @@ Entry points: 127
 - useDeactivateAccount
 - useDeactivateBankAccount
 - useDeactivateCustomer
+- useDeletePostingAccountMapping
 - useFinanceAccount
 - useFinanceAccountByCode
 - useFinanceAccounts
@@ -1228,9 +1269,12 @@ Entry points: 127
 - useFinanceCustomers
 - useFinanceInvoice
 - useFinancePayment
+- useFinanceSettings
+- useImportChartOfAccounts
 - useIssueInvoice
 - useJournalEntries
 - useJournalEntry
+- usePostingAccountMappings
 - usePostJournalEntry
 - useProfitAndLoss
 - useRecordConstructionInvoicePayment
@@ -1238,7 +1282,10 @@ Entry points: 127
 - useReverseJournalEntry
 - useSubmitConstructionInvoice
 - useTrialBalance
+- useUpdateAccount
 - useUpdateCustomer
+- useUpdateFinanceSettings
+- useUpsertPostingAccountMapping
 
 ## `@tornotron/echno-core/finance/hooks/keys`
 
@@ -1255,6 +1302,7 @@ Entry points: 127
 - Allocation
 - AllocationRequest
 - BalanceSheetReport
+- CoaImportSummary
 - CompanyBankAccount
 - ConstructionInvoice
 - ConstructionInvoiceLine
@@ -1280,6 +1328,7 @@ Entry points: 127
 - CreateInvoiceRequest
 - createInvoiceToJson
 - Customer
+- FinanceSettings
 - Invoice
 - InvoiceLine
 - InvoiceLineRequest
@@ -1295,6 +1344,7 @@ Entry points: 127
 - parseAddress
 - parseAllocation
 - parseBalanceSheetReport
+- parseCoaImportSummary
 - parseCompanyBankAccount
 - parseConstructionInvoice
 - parseConstructionInvoiceLine
@@ -1307,6 +1357,7 @@ Entry points: 127
 - parseConstructionPaymentType
 - parseConstructionPaymentVoucherStatus
 - parseCustomer
+- parseFinanceSettings
 - parseInvoice
 - parseInvoiceLine
 - parseInvoiceStatus
@@ -1314,10 +1365,17 @@ Entry points: 127
 - parseJournalEntryLine
 - parseJournalEntryStatus
 - parsePayment
+- parsePostingAccountMapping
+- parsePostingAccountSource
+- parsePostingRole
 - parseProfitAndLossReport
 - parseTrialBalanceReport
 - parseTrialBalanceRow
 - Payment
+- PostingAccountMapping
+- PostingAccountSource
+- PostingRole
+- postingRoleLabels
 - PostJournalRequest
 - postJournalToJson
 - ProfitAndLossReport
@@ -1326,12 +1384,18 @@ Entry points: 127
 - ReverseJournalRequest
 - TrialBalanceReport
 - TrialBalanceRow
+- UpdateAccountRequest
+- updateAccountToJson
 - UpdateConstructionInvoiceRequest
 - updateConstructionInvoiceToJson
 - UpdateConstructionPaymentRequest
 - updateConstructionPaymentToJson
 - UpdateCustomerRequest
 - updateCustomerToJson
+- UpdateFinanceSettingsRequest
+- updateFinanceSettingsToJson
+- UpsertPostingAccountMappingRequest
+- upsertPostingAccountMappingToJson
 
 ## `@tornotron/echno-core/grn/hooks`
 

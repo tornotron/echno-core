@@ -9,6 +9,7 @@
  * - `GET  /finance/journal-entries/web?id={id}`    → `JournalEntryDto`   (query; single)
  * - `GET  /finance/journal-entries/web/all`        → `JournalEntryDto[]` (query; paged)
  * - `POST /finance/journal-entries/web/reverse?id` → `JournalEntryDto`   (full; the reversal entry)
+ * - `GET  /finance/journal/web/export[?from][&to]` → CSV file            (`text/csv` blob)
  *
  * NOTE: single-fetch takes the id as a **query param** (`?id=`). Reverse also
  * takes `?id=` plus a `{ reason }` body and returns the newly-created reversal
@@ -30,6 +31,12 @@ import {
 type ApiResponse = any;
 
 const BASE = '/finance/journal-entries/web';
+
+/**
+ * Export lives under a distinct base path (`/finance/journal/web`) from the
+ * journal-entries CRUD endpoints (`/finance/journal-entries/web`).
+ */
+const EXPORT_BASE = '/finance/journal/web';
 
 /** Safely parse a journal entry, converting parse failures into a 422 ApiError. */
 function safeParseJournalEntry(data: ApiResponse): JournalEntry {
@@ -133,5 +140,28 @@ export const financeJournalService = {
       dto.reason === undefined ? {} : { reason: dto.reason };
     const data = await api.post<ApiResponse>(`${BASE}/reverse`, body, { id });
     return safeParseJournalEntry(data);
+  },
+
+  /**
+   * Exports journal entries as a CSV file, optionally bounded by a date range.
+   *
+   * `GET /finance/journal/web/export[?from={from}][&to={to}]` → `text/csv`.
+   *
+   * @param params - Optional `from`/`to` ISO date strings (`YYYY-MM-DD`); both
+   *   are optional and omitted from the query when absent.
+   * @returns The CSV payload as a {@link Blob} (the caller triggers the download).
+   * @throws {ApiError} On non-2xx responses or network failure.
+   */
+  async exportJournalEntries(params?: {
+    from?: string;
+    to?: string;
+  }): Promise<Blob> {
+    const query: Record<string, string> = {};
+    if (params?.from !== undefined) query.from = params.from;
+    if (params?.to !== undefined) query.to = params.to;
+    return api.getBlob(
+      `${EXPORT_BASE}/export`,
+      Object.keys(query).length > 0 ? query : undefined
+    );
   },
 };

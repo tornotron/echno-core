@@ -14,6 +14,8 @@
  * - `['finance', 'customers', …]` — list (`customersList`), detail (`customer`).
  * - `['finance', 'invoices', …]` — detail (`invoice`).
  * - `['finance', 'payments', …]` — detail (`payment`).
+ * - `['finance', 'posting-accounts', …]` — mappings list (`postingAccountsList`).
+ * - `['finance', 'settings']` — finance settings (`settings`).
  * - `['finance', 'reports', …]` — trial balance, P&L, balance sheet.
  */
 
@@ -67,6 +69,14 @@ export const financeKeys = {
     [...financeKeys.journalEntries(), 'list', { pageNo, pageSize }] as const,
   journalEntry: (id: string) =>
     [...financeKeys.journalEntries(), 'detail', id] as const,
+
+  // Posting-account mappings
+  postingAccounts: () => [...financeKeys.all, 'posting-accounts'] as const,
+  postingAccountsList: () =>
+    [...financeKeys.postingAccounts(), 'list'] as const,
+
+  // Finance settings
+  settings: () => [...financeKeys.all, 'settings'] as const,
 
   // Reports
   reports: () => [...financeKeys.all, 'reports'] as const,

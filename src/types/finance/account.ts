@@ -67,3 +67,8 @@ export {
   type CreateAccountRequest,
   createAccountToJson,
 } from './account-create';
+
+export {
+  type UpdateAccountRequest,
+  updateAccountToJson,
+} from './account-update';

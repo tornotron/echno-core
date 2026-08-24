@@ -362,6 +362,51 @@ class ApiClient {
   }
 
   /**
+   * Issues a GET request and returns the raw response body as a `Blob`.
+   *
+   * Use for non-JSON downloads (e.g. a `text/csv` export) where the caller
+   * needs the bytes rather than parsed JSON. Errors are still surfaced as
+   * {@link ApiError} by inspecting the response status before reading the body.
+   *
+   * @param endpoint - Path appended to `baseURL`. Must begin with `'/'`.
+   * @param params - Optional query-string parameters appended to the URL.
+   * @param options - Per-request timeout and retry overrides.
+   * @returns The response body as a `Blob`.
+   * @throws {ApiError} On non-2xx HTTP responses or network failure.
+   * @throws {TypeError} When `baseURL` is relative and no browser origin is available
+   *   (see {@link buildUrl}).
+   */
+  async getBlob(
+    endpoint: string,
+    params?: Record<string, string | number | boolean>,
+    options?: RequestOptions
+  ): Promise<Blob> {
+    const url = this.buildUrl(endpoint, params);
+
+    const response = await this.fetchWithRetry(
+      url.toString(),
+      { method: 'GET', headers: { ...this.headers, ...options?.headers } },
+      options
+    );
+
+    if (!response.ok) {
+      const errorData: ApiErrorData = await response.json().catch(() => ({
+        message: this.getDefaultErrorMessage(response.status),
+        status: response.status,
+      }));
+
+      throw new ApiError(
+        errorData.message || this.getDefaultErrorMessage(response.status),
+        response.status,
+        errorData.details,
+        errorData.errors
+      );
+    }
+
+    return response.blob();
+  }
+
+  /**
    * Issues a POST request with a JSON body.
    *
    * @param endpoint - Path appended to `baseURL`. Must begin with `'/'`.
@@ -650,6 +695,7 @@ export const apiClient = new ApiClient();
  */
 export const api = {
   get: apiClient.get.bind(apiClient),
+  getBlob: apiClient.getBlob.bind(apiClient),
   post: apiClient.post.bind(apiClient),
   put: apiClient.put.bind(apiClient),
   patch: apiClient.patch.bind(apiClient),

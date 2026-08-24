@@ -19,6 +19,8 @@ import { financeInvoiceService } from '../../services/finance-invoice-service';
 import { financePaymentService } from '../../services/finance-payment-service';
 import { financeJournalService } from '../../services/finance-journal-service';
 import { financeReportsService } from '../../services/finance-reports-service';
+import { financePostingAccountService } from '../../services/finance-posting-account-service';
+import { financeSettingsService } from '../../services/finance-settings-service';
 import {
   standardQueryOptions,
   staticQueryOptions,
@@ -229,6 +231,38 @@ export const useJournalEntry = (id: string) =>
     queryKey: financeKeys.journalEntry(id),
     queryFn: () => financeJournalService.getById(id),
     enabled: !!id,
+    ...standardQueryOptions,
+  });
+
+// ==================== Posting-Account Mappings ====================
+
+/**
+ * Lists the posting-account mappings (one per resolved posting role).
+ *
+ * Uses the **standard** query profile (`staleTime` 60 s, `gcTime` 5 min).
+ *
+ * @returns A TanStack `UseQueryResult` wrapping `PostingAccountMapping[]`.
+ */
+export const usePostingAccountMappings = () =>
+  useQuery({
+    queryKey: financeKeys.postingAccountsList(),
+    queryFn: () => financePostingAccountService.list(),
+    ...standardQueryOptions,
+  });
+
+// ==================== Finance Settings ====================
+
+/**
+ * Fetches the organisation-level finance settings.
+ *
+ * Uses the **standard** query profile (`staleTime` 60 s, `gcTime` 5 min).
+ *
+ * @returns A TanStack `UseQueryResult` wrapping `FinanceSettings`.
+ */
+export const useFinanceSettings = () =>
+  useQuery({
+    queryKey: financeKeys.settings(),
+    queryFn: () => financeSettingsService.get(),
     ...standardQueryOptions,
   });
 

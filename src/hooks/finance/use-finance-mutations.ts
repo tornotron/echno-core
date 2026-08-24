@@ -26,8 +26,11 @@ import { financeInvoiceService } from '../../services/finance-invoice-service';
 import { financePaymentService } from '../../services/finance-payment-service';
 import { financeJournalService } from '../../services/finance-journal-service';
 import { financeConstructionInvoiceService } from '../../services/finance-construction-invoice-service';
+import { financePostingAccountService } from '../../services/finance-posting-account-service';
+import { financeSettingsService } from '../../services/finance-settings-service';
 import type {
   CreateAccountRequest,
+  UpdateAccountRequest,
   CreateCompanyBankAccountRequest,
   CreateCustomerRequest,
   UpdateCustomerRequest,
@@ -35,6 +38,9 @@ import type {
   RecordPaymentRequest,
   PostJournalRequest,
   ReverseJournalRequest,
+  PostingRole,
+  UpsertPostingAccountMappingRequest,
+  UpdateFinanceSettingsRequest,
 } from '../../types/finance';
 
 // ==================== Accounts ====================
@@ -93,6 +99,71 @@ export const useDeactivateAccount = () => {
       queryClient.invalidateQueries({ queryKey: financeKeys.accounts() });
     },
     onError: (error) => logger.error('Failed to deactivate account:', error),
+  });
+};
+
+/** Arguments for {@link useUpdateAccount}. */
+export interface UpdateAccountArgs {
+  /** UUID of the account to update. */
+  id: string;
+  /** The updated account fields. */
+  data: UpdateAccountRequest;
+}
+
+/**
+ * Updates a ledger account.
+ *
+ * Backend response: `AccountDto` (full).
+ *
+ * On success:
+ * - `setQueryData(financeKeys.account(id), account)` — replaces the detail
+ *   cache with the returned DTO.
+ * - `invalidateQueries(financeKeys.accounts())` — kept: `activeOnly` list caches
+ *   and the tree may now reflect a changed code/name/parent/active state and
+ *   cannot be spliced deterministically.
+ *
+ * @returns A TanStack `UseMutationResult` whose mutate function accepts
+ *   {@link UpdateAccountArgs}.
+ */
+export const useUpdateAccount = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: UpdateAccountArgs) =>
+      financeAccountService.update(id, data),
+    // PUT /finance/accounts/web/{id} → AccountDto (full)
+    onSuccess: (account) => {
+      queryClient.setQueryData(financeKeys.account(account.id), account);
+      queryClient.invalidateQueries({ queryKey: financeKeys.accounts() });
+    },
+    onError: (error) => logger.error('Failed to update account:', error),
+  });
+};
+
+/**
+ * Imports a chart-of-accounts CSV file.
+ *
+ * Backend response: `CoaImportSummary` (created/updated counts + per-row errors)
+ * — not an account DTO, so there is no detail cache to seed.
+ *
+ * On success:
+ * - `invalidateQueries(financeKeys.accounts())` — kept: the import may have
+ *   created or updated any number of accounts, so every list and the tree are
+ *   stale and must be refetched.
+ *
+ * @returns A TanStack `UseMutationResult` whose mutate function accepts the CSV
+ *   `File` to import.
+ */
+export const useImportChartOfAccounts = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (file: File) =>
+      financeAccountService.importChartOfAccounts(file),
+    // POST /finance/accounts/web/import (multipart file) → CoaImportSummary
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: financeKeys.accounts() });
+    },
+    onError: (error) =>
+      logger.error('Failed to import chart of accounts:', error),
   });
 };
 
@@ -625,5 +696,110 @@ export const useReverseJournalEntry = () => {
       queryClient.invalidateQueries({ queryKey: financeKeys.reports() });
     },
     onError: (error) => logger.error('Failed to reverse journal entry:', error),
+  });
+};
+
+// ==================== Posting-Account Mappings ====================
+
+/** Arguments for {@link useUpsertPostingAccountMapping}. */
+export interface UpsertPostingAccountMappingArgs {
+  /** The posting role to bind. */
+  role: PostingRole;
+  /** The account to bind to the role. */
+  data: UpsertPostingAccountMappingRequest;
+}
+
+/**
+ * Creates or updates the mapping for a posting role.
+ *
+ * Backend response: `PostingAccountMappingDto` (full).
+ *
+ * On success:
+ * - `invalidateQueries(financeKeys.postingAccounts())` — kept: the mappings list
+ *   is a single collection keyed by role and the changed row cannot be spliced
+ *   deterministically (a `DEFAULT` source may flip to `MAPPED`).
+ *
+ * @returns A TanStack `UseMutationResult` whose mutate function accepts
+ *   {@link UpsertPostingAccountMappingArgs}.
+ */
+export const useUpsertPostingAccountMapping = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ role, data }: UpsertPostingAccountMappingArgs) =>
+      financePostingAccountService.upsert(role, data),
+    // PUT /finance/posting-accounts/web/{role} → PostingAccountMappingDto (full)
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: financeKeys.postingAccounts(),
+      });
+    },
+    onError: (error) =>
+      logger.error('Failed to upsert posting-account mapping:', error),
+  });
+};
+
+/** Arguments for {@link useDeletePostingAccountMapping}. */
+export interface DeletePostingAccountMappingArgs {
+  /** The posting role whose explicit mapping is removed (reverts to default). */
+  role: PostingRole;
+}
+
+/**
+ * Deletes the explicit mapping for a posting role, reverting it to the built-in
+ * default account.
+ *
+ * Backend response: `PostingAccountMappingDto` (full; the resulting
+ * `DEFAULT`-source binding).
+ *
+ * On success:
+ * - `invalidateQueries(financeKeys.postingAccounts())` — kept: the role's row in
+ *   the mappings list now reflects the default account.
+ *
+ * @returns A TanStack `UseMutationResult` whose mutate function accepts
+ *   {@link DeletePostingAccountMappingArgs}.
+ */
+export const useDeletePostingAccountMapping = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ role }: DeletePostingAccountMappingArgs) =>
+      financePostingAccountService.remove(role),
+    // DELETE /finance/posting-accounts/web/{role} → PostingAccountMappingDto (full)
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: financeKeys.postingAccounts(),
+      });
+    },
+    onError: (error) =>
+      logger.error('Failed to delete posting-account mapping:', error),
+  });
+};
+
+// ==================== Finance Settings ====================
+
+/**
+ * Updates the organisation-level finance settings.
+ *
+ * Backend response: `FinanceSettingsDto` (full).
+ *
+ * On success:
+ * - `setQueryData(financeKeys.settings(), settings)` — seeds the settings cache
+ *   with the returned DTO for an immediate read.
+ * - `invalidateQueries(financeKeys.settings())` — kept: refetches the settings
+ *   query so any consumer stays consistent with the server.
+ *
+ * @returns A TanStack `UseMutationResult` whose mutate function accepts an
+ *   {@link UpdateFinanceSettingsRequest}.
+ */
+export const useUpdateFinanceSettings = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (dto: UpdateFinanceSettingsRequest) =>
+      financeSettingsService.update(dto),
+    // PUT /finance/settings/web → FinanceSettingsDto (full)
+    onSuccess: (settings) => {
+      queryClient.setQueryData(financeKeys.settings(), settings);
+      queryClient.invalidateQueries({ queryKey: financeKeys.settings() });
+    },
+    onError: (error) => logger.error('Failed to update finance settings:', error),
   });
 };
