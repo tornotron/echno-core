@@ -19,6 +19,10 @@ import {
   createMaterialToJson,
   UpdateMaterialRequest,
   updateMaterialToJson,
+  MaterialLocationThreshold,
+  parseMaterialLocationThreshold,
+  MaterialLocationThresholdUpsert,
+  materialLocationThresholdToJson,
 } from '../types/materials';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -35,6 +39,9 @@ type Raw = any;
  *   GET    /materials/web/{id}/stock                   → MaterialWithStockDto    (full + non-null currentStock)
  *   PATCH  /materials/web/{id}                         → MaterialDto             (full)
  *   DELETE /materials/web/{id}                         → ApiResponse             (ack only)
+ *   GET    /materials/web/{id}/location-thresholds     → MaterialLocationThresholdDto[]
+ *   PUT    /materials/web/{id}/location-thresholds/{loc} → MaterialLocationThresholdDto
+ *   DELETE /materials/web/{id}/location-thresholds/{loc} → ApiResponse           (ack only)
  *
  * Every mutation endpoint returns the full {@link Material} (or an ack on
  * delete), so the mutation hooks can patch caches directly without a
@@ -115,6 +122,43 @@ function safeParseMaterialWithStock(data: Raw): MaterialWithStock {
   } catch (error) {
     logger.error('Failed to parse material with stock:', error);
     throw new ApiError('Failed to process material stock data.', 422);
+  }
+}
+
+/**
+ * Parses a single per-location threshold payload, wrapping parser failures
+ * in {@link ApiError}.
+ *
+ * @param data - The raw JSON object from the backend.
+ * @returns The parsed {@link MaterialLocationThreshold}.
+ * @throws {ApiError} When parsing fails (HTTP 422).
+ */
+function safeParseLocationThreshold(data: Raw): MaterialLocationThreshold {
+  try {
+    return parseMaterialLocationThreshold(data);
+  } catch (error) {
+    logger.error('Failed to parse material location threshold:', error);
+    throw new ApiError('Failed to process material threshold data.', 422);
+  }
+}
+
+/**
+ * Parses an array of per-location threshold payloads. Accepts either a raw
+ * array or a paged `{ content: [...] }` envelope and yields `[]` for an
+ * empty input.
+ *
+ * @param data - The raw JSON array or paged envelope from the backend.
+ * @returns An array of parsed {@link MaterialLocationThreshold} objects.
+ * @throws {ApiError} When any item fails parsing (HTTP 422).
+ */
+function safeParseLocationThresholds(data: Raw): MaterialLocationThreshold[] {
+  const items = extractArray(data);
+  if (items.length === 0) return [];
+  try {
+    return items.map((item) => parseMaterialLocationThreshold(item));
+  } catch (error) {
+    logger.error('Failed to parse material location thresholds:', error);
+    throw new ApiError('Failed to process material thresholds data.', 422);
   }
 }
 
@@ -241,5 +285,71 @@ export const materialsService = {
    */
   async delete(id: number): Promise<void> {
     await api.delete(`/materials/web/${id}`);
+  },
+
+  /**
+   * Fetches the per-storage-location threshold overrides for a material.
+   *
+   * `GET /materials/web/{materialId}/location-thresholds` →
+   * `MaterialLocationThresholdDto[]`.
+   *
+   * @param materialId - Surrogate ID of the material.
+   * @returns An array of {@link MaterialLocationThreshold} objects.
+   * @throws {ApiError} On non-2xx HTTP responses or parser failure.
+   */
+  async getLocationThresholds(
+    materialId: number
+  ): Promise<MaterialLocationThreshold[]> {
+    const data = await api.get<Raw>(
+      `/materials/web/${materialId}/location-thresholds`
+    );
+    return safeParseLocationThresholds(data);
+  },
+
+  /**
+   * Creates or updates the threshold override for one storage location.
+   * The backend returns the full override row so the mutation hook can
+   * patch caches directly.
+   *
+   * `PUT /materials/web/{materialId}/location-thresholds/{storageLocationId}`
+   * → `MaterialLocationThresholdDto`.
+   *
+   * @param materialId - Surrogate ID of the material.
+   * @param storageLocationId - Surrogate ID of the storage location.
+   * @param dto - Threshold fields to set; only set fields are sent.
+   * @returns The upserted {@link MaterialLocationThreshold}.
+   * @throws {ApiError} On non-2xx HTTP responses or parser failure.
+   */
+  async upsertLocationThreshold(
+    materialId: number,
+    storageLocationId: number,
+    dto: MaterialLocationThresholdUpsert
+  ): Promise<MaterialLocationThreshold> {
+    const data = await api.put<Raw>(
+      `/materials/web/${materialId}/location-thresholds/${storageLocationId}`,
+      materialLocationThresholdToJson(dto)
+    );
+    return safeParseLocationThreshold(data);
+  },
+
+  /**
+   * Deletes the threshold override for one storage location, reverting it
+   * to the material-level defaults. The backend returns only an
+   * acknowledgement.
+   *
+   * `DELETE /materials/web/{materialId}/location-thresholds/{storageLocationId}`
+   * → `ApiResponse` (ack only).
+   *
+   * @param materialId - Surrogate ID of the material.
+   * @param storageLocationId - Surrogate ID of the storage location.
+   * @throws {ApiError} On non-2xx HTTP responses.
+   */
+  async deleteLocationThreshold(
+    materialId: number,
+    storageLocationId: number
+  ): Promise<void> {
+    await api.delete(
+      `/materials/web/${materialId}/location-thresholds/${storageLocationId}`
+    );
   },
 };

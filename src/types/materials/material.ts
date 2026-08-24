@@ -30,6 +30,7 @@ const MaterialResponseSchema = z.object({
   unit: z.string(),
   description: nullableString,
   hsn: nullableString,
+  gstRate: nullableNumber,
   currentStock: money,
   stockValue: money,
   openingStock: money,
@@ -71,6 +72,9 @@ export interface Material {
 
   /** Harmonised System of Nomenclature code (tax classification). */
   hsn?: string;
+
+  /** Applicable GST rate as a percentage (e.g. `18.00`). */
+  gstRate?: number;
 
   /** Current on-hand quantity at the resolved storage location. */
   currentStock?: number;
@@ -148,6 +152,7 @@ export function parseMaterial(json: unknown): Material {
     unit: raw.unit,
     description: raw.description ?? undefined,
     hsn: raw.hsn ?? undefined,
+    gstRate: raw.gstRate ?? undefined,
     currentStock: raw.currentStock ?? undefined,
     stockValue: raw.stockValue ?? undefined,
     openingStock: raw.openingStock ?? undefined,

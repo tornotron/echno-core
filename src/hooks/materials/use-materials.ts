@@ -83,4 +83,20 @@ export const useMaterialWithStock = (id: number) =>
     enabled: !!id,
   });
 
+/**
+ * Fetches the per-storage-location threshold overrides for a material. The
+ * query is disabled until `materialId` is truthy.
+ *
+ * @param materialId - Surrogate ID of the material. Pass `0` (or any falsy
+ *   value) to defer the query until the ID is available.
+ * @returns A TanStack `UseQueryResult` wrapping
+ *   `MaterialLocationThreshold[]`.
+ */
+export const useMaterialLocationThresholds = (materialId: number) =>
+  useQuery({
+    queryKey: materialsKeys.locationThresholds(materialId),
+    queryFn: () => materialsService.getLocationThresholds(materialId),
+    enabled: !!materialId,
+  });
+
 export { materialsKeys } from './keys';

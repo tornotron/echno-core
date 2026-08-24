@@ -357,6 +357,9 @@ Entry points: 127
 - MaterialConsumption
 - materialConsumptionService
 - materialConsumptionsKeys
+- MaterialLocationThreshold
+- materialLocationThresholdToJson
+- MaterialLocationThresholdUpsert
 - materialsKeys
 - materialsService
 - MaterialStatus
@@ -443,6 +446,7 @@ Entry points: 127
 - parseLeaveTransaction
 - parseMaterial
 - parseMaterialConsumption
+- parseMaterialLocationThreshold
 - parseMaterialStock
 - parseMaterialWithStock
 - parseMovementRecord
@@ -684,6 +688,7 @@ Entry points: 127
 - useDeleteLabour
 - useDeleteLeavePolicy
 - useDeleteMaterial
+- useDeleteMaterialLocationThreshold
 - useDeleteOrganization
 - useDeletePOItem
 - useDeleteProject
@@ -776,6 +781,7 @@ Entry points: 127
 - useMaterial
 - useMaterialConsumption
 - useMaterialConsumptionsPaginated
+- useMaterialLocationThresholds
 - useMaterials
 - useMaterialSearch
 - useMaterialsPaginated
@@ -887,6 +893,7 @@ Entry points: 127
 - useUpdateWbsElement
 - useUploadAttachment
 - useUploadAttachmentsDirect
+- useUpsertMaterialLocationThreshold
 - useUser
 - useUserEmployees
 - useValidateInviteCode
@@ -1761,12 +1768,15 @@ Entry points: 127
 - materialsKeys
 - useCreateMaterial
 - useDeleteMaterial
+- useDeleteMaterialLocationThreshold
 - useMaterial
+- useMaterialLocationThresholds
 - useMaterials
 - useMaterialSearch
 - useMaterialsPaginated
 - useMaterialWithStock
 - useUpdateMaterial
+- useUpsertMaterialLocationThreshold
 
 ## `@tornotron/echno-core/materials/hooks/keys`
 
@@ -1786,10 +1796,14 @@ Entry points: 127
 - createMaterialToJson
 - Material
 - MaterialConsumption
+- MaterialLocationThreshold
+- materialLocationThresholdToJson
+- MaterialLocationThresholdUpsert
 - MaterialStatus
 - MaterialWithStock
 - parseMaterial
 - parseMaterialConsumption
+- parseMaterialLocationThreshold
 - parseMaterialWithStock
 - UpdateMaterialRequest
 - updateMaterialToJson

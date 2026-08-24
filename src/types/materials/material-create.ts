@@ -29,6 +29,9 @@ export interface CreateMaterialRequest {
   /** Harmonised System of Nomenclature code. */
   hsn?: string;
 
+  /** Applicable GST rate as a percentage (e.g. `18.00`). */
+  gstRate?: number | null;
+
   /** Initial on-hand quantity at creation time. */
   openingStock?: number | null;
 
@@ -88,6 +91,7 @@ export function createMaterialToJson(
     ...(dto.sku !== undefined && { sku: dto.sku }),
     ...(dto.description !== undefined && { description: dto.description }),
     ...(dto.hsn !== undefined && { hsn: dto.hsn }),
+    ...(dto.gstRate !== undefined && { gstRate: dto.gstRate }),
     ...(dto.openingStock !== undefined && { openingStock: dto.openingStock }),
     ...(dto.storageLocationId !== undefined && {
       storageLocationId: dto.storageLocationId,

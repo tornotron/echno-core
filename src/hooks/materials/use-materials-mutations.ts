@@ -2,9 +2,10 @@
  * @module use-materials-mutations
  *
  * TanStack mutation hooks for the materials domain — create, update, and
- * delete. Read-side hooks live in {@link useMaterials},
- * {@link useMaterialsPaginated}, {@link useMaterialSearch},
- * {@link useMaterial}, and {@link useMaterialWithStock}.
+ * delete, plus per-location threshold upsert and delete. Read-side hooks
+ * live in {@link useMaterials}, {@link useMaterialsPaginated},
+ * {@link useMaterialSearch}, {@link useMaterial},
+ * {@link useMaterialWithStock}, and {@link useMaterialLocationThresholds}.
  */
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { materialsService } from '../../services/materials-service';
@@ -13,6 +14,8 @@ import {
   CreateMaterialRequest,
   UpdateMaterialRequest,
   Material,
+  MaterialLocationThreshold,
+  MaterialLocationThresholdUpsert,
 } from '../../types/materials';
 import { logger } from '../../lib/logger';
 
@@ -24,7 +27,9 @@ import { logger } from '../../lib/logger';
  * predicate covers them.
  *
  * Excludes single-material caches `detail(id)` (Material) and `stock(id)`
- * (MaterialWithStock), which the mutations address by their own key shapes.
+ * (MaterialWithStock), and the `location-thresholds` cache
+ * (MaterialLocationThreshold[], a different row shape), all of which the
+ * mutations address by their own key shapes.
  *
  * @param query - The TanStack query whose key is being tested.
  * @returns `true` when the key belongs to a material list cache.
@@ -37,7 +42,8 @@ function isMaterialListCache(query: {
     Array.isArray(key) &&
     key[0] === 'materials' &&
     key[1] !== 'detail' &&
-    key[1] !== 'stock'
+    key[1] !== 'stock' &&
+    key[1] !== 'location-thresholds'
   );
 }
 
@@ -171,6 +177,117 @@ export const useDeleteMaterial = () => {
     },
     onError: (error) => {
       logger.error('Failed to delete material:', error);
+    },
+  });
+};
+
+/**
+ * Creates or updates the threshold override for one storage location.
+ *
+ * Backend response: `MaterialLocationThresholdDto` (full row).
+ *
+ * On success:
+ * - `setQueryData(materialsKeys.locationThresholds(materialId), upsert)` —
+ *   replaces the row for the returned `storageLocationId` in the cached
+ *   list, or appends it when no row for that location was present yet, so
+ *   both create and update land without a refetch.
+ * - `invalidateQueries(materialsKeys.stock(materialId))` — an edited
+ *   threshold can change the material's stock-availability status, which
+ *   the stock view derives.
+ *
+ * @returns A TanStack `UseMutationResult` where the mutate function accepts
+ *   `{ materialId: number; storageLocationId: number; data: MaterialLocationThresholdUpsert }`.
+ */
+export const useUpsertMaterialLocationThreshold = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      materialId,
+      storageLocationId,
+      data,
+    }: {
+      materialId: number;
+      storageLocationId: number;
+      data: MaterialLocationThresholdUpsert;
+    }) =>
+      materialsService.upsertLocationThreshold(
+        materialId,
+        storageLocationId,
+        data
+      ),
+    onSuccess: (upserted, { materialId }) => {
+      // PUT /materials/web/{materialId}/location-thresholds/{storageLocationId}
+      // → MaterialLocationThresholdDto (full row). Upsert into the cached
+      // list (replace matching storageLocationId or append). Invalidate the
+      // stock view — a threshold change can shift stock-availability status.
+      queryClient.setQueryData<MaterialLocationThreshold[]>(
+        materialsKeys.locationThresholds(materialId),
+        (old) => {
+          if (!old) return [upserted];
+          const exists = old.some(
+            (t) => t.storageLocationId === upserted.storageLocationId
+          );
+          return exists
+            ? old.map((t) =>
+                t.storageLocationId === upserted.storageLocationId
+                  ? upserted
+                  : t
+              )
+            : [...old, upserted];
+        }
+      );
+      queryClient.invalidateQueries({
+        queryKey: materialsKeys.stock(materialId),
+      });
+    },
+    onError: (error) => {
+      logger.error('Failed to upsert material location threshold:', error);
+    },
+  });
+};
+
+/**
+ * Deletes the threshold override for one storage location, reverting it to
+ * the material-level defaults.
+ *
+ * Backend response: `ApiResponse` (ack only).
+ *
+ * On success:
+ * - `setQueryData(materialsKeys.locationThresholds(materialId), filter)` —
+ *   drops the row for the deleted `storageLocationId` from the cached list
+ *   without a refetch.
+ * - `invalidateQueries(materialsKeys.stock(materialId))` — removing an
+ *   override reverts the location to material defaults, which can shift the
+ *   stock-availability status the stock view derives.
+ *
+ * @returns A TanStack `UseMutationResult` where the mutate function accepts
+ *   `{ materialId: number; storageLocationId: number }`.
+ */
+export const useDeleteMaterialLocationThreshold = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      materialId,
+      storageLocationId,
+    }: {
+      materialId: number;
+      storageLocationId: number;
+    }) =>
+      materialsService.deleteLocationThreshold(materialId, storageLocationId),
+    onSuccess: (_data, { materialId, storageLocationId }) => {
+      // DELETE /materials/web/{materialId}/location-thresholds/{storageLocationId}
+      // → ApiResponse (ack). Filter the row from the cached list; invalidate
+      // the stock view since reverting to defaults can shift status.
+      queryClient.setQueryData<MaterialLocationThreshold[]>(
+        materialsKeys.locationThresholds(materialId),
+        (old) => old?.filter((t) => t.storageLocationId !== storageLocationId)
+      );
+      queryClient.invalidateQueries({
+        queryKey: materialsKeys.stock(materialId),
+      });
+    },
+    onError: (error) => {
+      logger.error('Failed to delete material location threshold:', error);
     },
   });
 };
