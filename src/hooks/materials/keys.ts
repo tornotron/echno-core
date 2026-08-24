@@ -16,11 +16,16 @@
  *   by {@link useMaterialSearch}.
  * - `['materials', 'paginated', { pageNo, pageSize }]` — paginated list,
  *   consumed by {@link useMaterialsPaginated}.
+ * - `['materials', 'location-thresholds', materialId]` — per-storage-location
+ *   threshold overrides for a material, consumed by
+ *   {@link useMaterialLocationThresholds}. Holds
+ *   `MaterialLocationThreshold[]`, not `Material[]`.
  *
  * The mutation file's `isMaterialListCache` predicate matches every
  * `Material[]` list cache (`list`, `search`, `paginated`) but excludes
- * single-material caches (`detail`, `stock`) — see the mutation hooks for
- * the cache-strategy details.
+ * single-material caches (`detail`, `stock`) and the
+ * `location-thresholds` cache (a different row shape) — see the mutation
+ * hooks for the cache-strategy details.
  */
 export const materialsKeys = {
   /** Invalidation prefix only — pass to `invalidateQueries` to wipe every cache entry under the namespace. */
@@ -41,4 +46,8 @@ export const materialsKeys = {
   /** Query key for a paginated material list. */
   paginated: (pageNo: number, pageSize: number) =>
     [...materialsKeys.all, 'paginated', { pageNo, pageSize }] as const,
+
+  /** Query key for a material's per-location threshold overrides. */
+  locationThresholds: (materialId: number) =>
+    [...materialsKeys.all, 'location-thresholds', materialId] as const,
 };
