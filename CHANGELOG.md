@@ -5,6 +5,21 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
+## [v1.13.0] - 2026-08-25
+
+### Added
+
+- Receipt domain layer for the `/receipts/web` backend endpoints: the `Receipt` type with the
+  `ReceiptType` (payment / advance / deposit / refund / other) and `ReceiptStatus` (draft / issued /
+  cancelled) enums, `parseReceipt` (coerces the money amount and tax figures and the `receiptDate` /
+  `createdAt` / `updatedAt` timestamps, narrows the enums with a sensible default), the
+  `CreateReceiptRequest` / `UpdateReceiptRequest` payloads and their serializers, and the
+  `PagedReceipt` envelope.
+- `financeReceiptService` (`getAll`, `getPage`, `getById`, `create`, `update`, `remove`), the
+  `useReceipts` / `useReceiptsPage` / `useReceipt` query hooks and the `useCreateReceipt` /
+  `useUpdateReceipt` / `useDeleteReceipt` mutation hooks, with the `receipts` / `receiptsList` /
+  `receiptsPage` / `receipt` query keys under `financeKeys`.
+
 ## [v1.12.0] - 2026-08-25
 
 ### Added
