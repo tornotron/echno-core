@@ -26,6 +26,15 @@ export const numericId = z.coerce.number().int().positive();
 /** An optional surrogate id: positive integer or nullish. */
 export const optionalNumericId = z.coerce.number().int().positive().nullish();
 
+/**
+ * A surrogate id that may be unassigned. Unlike {@link optionalNumericId}, this
+ * accepts `0`: the backend uses `0` (or null / an omitted field) as the sentinel
+ * for "no id assigned yet", so a non-negative integer or nullish all parse
+ * through instead of throwing. Used where a reference is genuinely optional at
+ * the record level (e.g. an inspection with no inspector assigned).
+ */
+export const unassignedNumericId = z.coerce.number().int().nonnegative().nullish();
+
 /** A string the backend may send as null or omit entirely. */
 export const nullableString = z.string().nullish();
 

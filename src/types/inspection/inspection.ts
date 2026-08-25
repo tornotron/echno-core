@@ -27,8 +27,8 @@ import {
   nullableBoolean,
   nullableNumber,
   nullableString,
-  numericId,
   optionalNumericId,
+  unassignedNumericId,
   opaque,
 } from '../../lib/validation/backend-schema';
 
@@ -235,7 +235,7 @@ const InspectionSchema = z.object({
   actualStartTime: backendDate,
   actualEndTime: backendDate,
   duration: nullableNumber,
-  inspectorId: numericId,
+  inspectorId: unassignedNumericId,
   contractorId: optionalNumericId,
   clientRepresentative: nullableString,
   attendees: z.array(z.string()).nullish(),
@@ -341,8 +341,10 @@ export interface Inspection {
   actualEndTime?: string;
   /** Duration in minutes. */
   duration?: number;
-  /** Inspector (employee id). */
-  inspectorId: number;
+  /** Inspector (employee id). Unset when the inspection has no inspector
+   *  assigned (e.g. an AI-generated compliance inspection); the backend sends
+   *  `0` or null in that case. */
+  inspectorId?: number | null;
   /** Contractor id. */
   contractorId?: number;
   /** Client representative present. */
@@ -467,7 +469,9 @@ export function parseInspection(json: unknown): Inspection {
     actualStartTime: raw.actualStartTime ?? undefined,
     actualEndTime: raw.actualEndTime ?? undefined,
     duration: raw.duration ?? undefined,
-    inspectorId: raw.inspectorId,
+    // `0` (the backend's "unassigned" sentinel), null and an omitted field all
+    // normalize to null so downstream code has a single "no inspector" check.
+    inspectorId: raw.inspectorId || null,
     contractorId: raw.contractorId ?? undefined,
     clientRepresentative: raw.clientRepresentative ?? undefined,
     attendees: raw.attendees ?? [],

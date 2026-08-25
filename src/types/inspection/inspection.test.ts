@@ -62,6 +62,21 @@ describe('parseInspection', () => {
     expect(inspection.defects[0]!.description).toBe('Honeycombing at edge');
   });
 
+  test('parses an unassigned inspector sent as 0 (no inspector) as null', () => {
+    const inspection = parseInspection({ id: UUID, inspectorId: 0 });
+    expect(inspection.inspectorId).toBeNull();
+  });
+
+  test('parses a null inspectorId as null', () => {
+    const inspection = parseInspection({ id: UUID, inspectorId: null });
+    expect(inspection.inspectorId).toBeNull();
+  });
+
+  test('parses an omitted inspectorId as null', () => {
+    const inspection = parseInspection({ id: UUID });
+    expect(inspection.inspectorId).toBeNull();
+  });
+
   test('round-trips the hyphenated wire values back out', () => {
     const inspection = parseInspection({
       id: UUID,
