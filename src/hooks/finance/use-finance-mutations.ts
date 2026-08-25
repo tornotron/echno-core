@@ -27,6 +27,7 @@ import { financePaymentService } from '../../services/finance-payment-service';
 import { financeJournalService } from '../../services/finance-journal-service';
 import { financeConstructionInvoiceService } from '../../services/finance-construction-invoice-service';
 import { financeExpenseService } from '../../services/finance-expense-service';
+import { financeReceiptService } from '../../services/finance-receipt-service';
 import { financePostingAccountService } from '../../services/finance-posting-account-service';
 import { financeCostCategoryService } from '../../services/finance-cost-category-service';
 import { financeProjectBudgetService } from '../../services/finance-project-budget-service';
@@ -49,6 +50,8 @@ import type {
   UpdateFinanceSettingsRequest,
   CreateExpenseRequest,
   UpdateExpenseRequest,
+  CreateReceiptRequest,
+  UpdateReceiptRequest,
 } from '../../types/finance';
 
 // ==================== Accounts ====================
@@ -725,6 +728,102 @@ export const useDeleteExpense = () => {
       queryClient.invalidateQueries({ queryKey: financeKeys.expenses() });
     },
     onError: (error) => logger.error('Failed to delete expense:', error),
+  });
+};
+
+// ==================== Receipts ====================
+
+/**
+ * Creates a receipt.
+ *
+ * Backend response: `ReceiptDto` (full).
+ *
+ * On success:
+ * - `setQueryData(financeKeys.receipt(id), receipt)` — seeds the detail cache
+ *   from the returned DTO for an instant read.
+ * - `invalidateQueries(financeKeys.receipts())` — kept: this covers the full
+ *   list (`receiptsList`) and every paginated cache (`receiptsPage`, keyed by
+ *   page + filters). Those caches cannot be spliced deterministically, and the
+ *   page envelope is a `PagedReceipt` object (not a `Receipt[]`), so it is
+ *   refetch-driven rather than optimistically array-patched.
+ *
+ * @returns A TanStack `UseMutationResult` whose mutate function accepts a
+ *   {@link CreateReceiptRequest}.
+ */
+export const useCreateReceipt = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (dto: CreateReceiptRequest) => financeReceiptService.create(dto),
+    // POST /receipts/web → ReceiptDto (full)
+    onSuccess: (receipt) => {
+      queryClient.setQueryData(financeKeys.receipt(receipt.id), receipt);
+      queryClient.invalidateQueries({ queryKey: financeKeys.receipts() });
+    },
+    onError: (error) => logger.error('Failed to create receipt:', error),
+  });
+};
+
+/** Arguments for {@link useUpdateReceipt}. */
+export interface UpdateReceiptArgs {
+  /** Numeric id of the receipt to update. */
+  id: number;
+  /** The updated receipt fields. */
+  data: UpdateReceiptRequest;
+}
+
+/**
+ * Updates a receipt (full replacement of its editable details).
+ *
+ * Backend response: `ReceiptDto` (full).
+ *
+ * On success:
+ * - `setQueryData(financeKeys.receipt(id), receipt)` — replaces the detail cache
+ *   with the returned DTO.
+ * - `invalidateQueries(financeKeys.receipts())` — kept: list and page caches may
+ *   now reflect a changed status / amount / type and cannot be spliced
+ *   deterministically.
+ *
+ * @returns A TanStack `UseMutationResult` whose mutate function accepts
+ *   {@link UpdateReceiptArgs}.
+ */
+export const useUpdateReceipt = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: UpdateReceiptArgs) =>
+      financeReceiptService.update(id, data),
+    // PUT /receipts/web/{id} → ReceiptDto (full)
+    onSuccess: (receipt) => {
+      queryClient.setQueryData(financeKeys.receipt(receipt.id), receipt);
+      queryClient.invalidateQueries({ queryKey: financeKeys.receipts() });
+    },
+    onError: (error) => logger.error('Failed to update receipt:', error),
+  });
+};
+
+/**
+ * Deletes a receipt by id.
+ *
+ * Backend response: `ApiResponse` (ack only — no body).
+ *
+ * On success (no DTO to seed):
+ * - `removeQueries(financeKeys.receipt(id))` — the entity no longer exists, so
+ *   its detail cache is dropped rather than refetched.
+ * - `invalidateQueries(financeKeys.receipts())` — kept: the list and paginated
+ *   caches no longer contain this receipt and their page boundaries shifted.
+ *
+ * @returns A TanStack `UseMutationResult` whose mutate function accepts the
+ *   numeric receipt id.
+ */
+export const useDeleteReceipt = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => financeReceiptService.remove(id),
+    // DELETE /receipts/web/{id} → ApiResponse (ack)
+    onSuccess: (_data, id) => {
+      queryClient.removeQueries({ queryKey: financeKeys.receipt(id) });
+      queryClient.invalidateQueries({ queryKey: financeKeys.receipts() });
+    },
+    onError: (error) => logger.error('Failed to delete receipt:', error),
   });
 };
 

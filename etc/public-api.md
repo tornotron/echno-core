@@ -4,7 +4,7 @@
      Run `bun run api:snapshot` after an intended public-API change and commit the diff.
      See docs/API-STABILITY.md. -->
 
-Entry points: 132
+Entry points: 133
 
 ## `@tornotron/echno-core`
 
@@ -151,6 +151,8 @@ Entry points: 132
 - createPurchaseOrderItemToJson
 - CreatePurchaseOrderRequest
 - createPurchaseOrderToJson
+- CreateReceiptRequest
+- createReceiptToJson
 - CreateRegularizationRequest
 - createRegularizationToJson
 - CreateShiftTimingRequest
@@ -217,6 +219,7 @@ Entry points: 132
 - financePaymentService
 - financePostingAccountService
 - financeProjectBudgetService
+- financeReceiptService
 - financeReportsService
 - FinanceSettings
 - financeSettingsService
@@ -405,6 +408,7 @@ Entry points: 132
 - PagedEmployee
 - PagedExpense
 - PagedIssue
+- PagedReceipt
 - parseAccount
 - parseAccountLine
 - parseAccountTree
@@ -493,6 +497,9 @@ Entry points: 132
 - parseProjectType
 - parsePurchaseOrder
 - parsePurchaseOrderItem
+- parseReceipt
+- parseReceiptStatus
+- parseReceiptType
 - parseShiftTiming
 - parseSiteTransfer
 - parseSiteTransferItem
@@ -538,6 +545,10 @@ Entry points: 132
 - purchaseOrderStatusBadgeColors
 - purchaseOrderStatusLabels
 - realtimeQueryOptions
+- Receipt
+- ReceiptPageParams
+- ReceiptStatus
+- ReceiptType
 - RecordConstructionInvoicePaymentArgs
 - RecordPaymentArgs
 - RecordPaymentRequest
@@ -633,6 +644,9 @@ Entry points: 132
 - updatePurchaseOrderItemToJson
 - UpdatePurchaseOrderRequest
 - updatePurchaseOrderToJson
+- UpdateReceiptArgs
+- UpdateReceiptRequest
+- updateReceiptToJson
 - UpdateShiftTimingRequest
 - updateShiftTimingToJson
 - UpdateStorageLocationRequest
@@ -726,6 +740,7 @@ Entry points: 132
 - useCreateProject
 - useCreateProjectWithFiles
 - useCreatePurchaseOrder
+- useCreateReceipt
 - useCreateShift
 - useCreateSiteTransfer
 - useCreateStorageLocation
@@ -759,6 +774,7 @@ Entry points: 132
 - useDeletePostingAccountMapping
 - useDeleteProject
 - useDeletePurchaseOrder  [deprecated]
+- useDeleteReceipt
 - useDeleteShift
 - useDeleteSiteTransfer  [deprecated]
 - useDeleteStorageLocation
@@ -893,6 +909,9 @@ Entry points: 132
 - usePurchaseOrdersPaginated
 - User
 - useRecalculateBalances
+- useReceipt
+- useReceipts
+- useReceiptsPage
 - useRecordClockEvent
 - useRecordConstructionInvoicePayment
 - useRecordPayment
@@ -958,6 +977,7 @@ Entry points: 132
 - useUpdateProject
 - useUpdateProjectWithFiles
 - useUpdatePurchaseOrder
+- useUpdateReceipt
 - useUpdateShift
 - useUpdateSiteTransferStatus
 - useUpdateStorageLocation
@@ -1296,6 +1316,12 @@ Entry points: 132
 
 - financeProjectBudgetService
 
+## `@tornotron/echno-core/finance-receipt/services`
+
+- financeReceiptService
+- PagedReceipt
+- ReceiptPageParams
+
 ## `@tornotron/echno-core/finance-reports/services`
 
 - financeReportsService
@@ -1316,6 +1342,7 @@ Entry points: 132
 - UpdateAccountArgs
 - UpdateCostCategoryArgs
 - UpdateExpenseArgs
+- UpdateReceiptArgs
 - UpsertBudgetAllocationArgs
 - UpsertPostingAccountMappingArgs
 - useApproveConstructionInvoice
@@ -1330,6 +1357,7 @@ Entry points: 132
 - useCreateCustomer
 - useCreateDraftInvoice
 - useCreateExpense
+- useCreateReceipt
 - useDeactivateAccount
 - useDeactivateBankAccount
 - useDeactivateCostCategory
@@ -1337,6 +1365,7 @@ Entry points: 132
 - useDeleteBudgetAllocation
 - useDeleteExpense
 - useDeletePostingAccountMapping
+- useDeleteReceipt
 - useExpense
 - useExpenses
 - useExpensesPage
@@ -1360,6 +1389,9 @@ Entry points: 132
 - useProfitAndLoss
 - useProjectBudget
 - useProjectCostControl
+- useReceipt
+- useReceipts
+- useReceiptsPage
 - useRecordConstructionInvoicePayment
 - useRecordPayment
 - useReverseJournalEntry
@@ -1371,6 +1403,7 @@ Entry points: 132
 - useUpdateCustomer
 - useUpdateExpense
 - useUpdateFinanceSettings
+- useUpdateReceipt
 - useUpsertBudgetAllocation
 - useUpsertPostingAccountMapping
 
@@ -1420,6 +1453,8 @@ Entry points: 132
 - createExpenseToJson
 - CreateInvoiceRequest
 - createInvoiceToJson
+- CreateReceiptRequest
+- createReceiptToJson
 - Customer
 - Expense
 - ExpenseCategory
@@ -1474,6 +1509,9 @@ Entry points: 132
 - parseProfitAndLossReport
 - parseProjectCostControl
 - parseProjectCostControlLine
+- parseReceipt
+- parseReceiptStatus
+- parseReceiptType
 - parseTrialBalanceReport
 - parseTrialBalanceRow
 - Payment
@@ -1486,6 +1524,9 @@ Entry points: 132
 - ProfitAndLossReport
 - ProjectCostControl
 - ProjectCostControlLine
+- Receipt
+- ReceiptStatus
+- ReceiptType
 - RecordPaymentRequest
 - recordPaymentToJson
 - ReverseJournalRequest
@@ -1505,6 +1546,8 @@ Entry points: 132
 - updateExpenseToJson
 - UpdateFinanceSettingsRequest
 - updateFinanceSettingsToJson
+- UpdateReceiptRequest
+- updateReceiptToJson
 - UpsertBudgetAllocationRequest
 - upsertBudgetAllocationToJson
 - UpsertPostingAccountMappingRequest

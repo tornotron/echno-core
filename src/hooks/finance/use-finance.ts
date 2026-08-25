@@ -21,6 +21,10 @@ import {
   financeExpenseService,
   type ExpensePageParams,
 } from '../../services/finance-expense-service';
+import {
+  financeReceiptService,
+  type ReceiptPageParams,
+} from '../../services/finance-receipt-service';
 import { financeJournalService } from '../../services/finance-journal-service';
 import { financeReportsService } from '../../services/finance-reports-service';
 import { financePostingAccountService } from '../../services/finance-posting-account-service';
@@ -253,6 +257,58 @@ export const useExpense = (id: number) =>
   useQuery({
     queryKey: financeKeys.expense(id),
     queryFn: () => financeExpenseService.getById(id),
+    enabled: !!id,
+    ...standardQueryOptions,
+  });
+
+// ==================== Receipts ====================
+
+/**
+ * Lists every receipt for the current tenant (unpaginated).
+ *
+ * Uses the **standard** query profile (`staleTime` 60 s, `gcTime` 5 min).
+ * Backs totals, lookups, and dropdowns; use {@link useReceiptsPage} for the
+ * server-paginated table.
+ *
+ * @returns A TanStack `UseQueryResult` wrapping `Receipt[]`.
+ */
+export const useReceipts = () =>
+  useQuery({
+    queryKey: financeKeys.receiptsList(),
+    queryFn: () => financeReceiptService.getAll(),
+    ...standardQueryOptions,
+  });
+
+/**
+ * Fetches one page of receipts for a server-paginated table.
+ *
+ * Uses the **standard** query profile (`staleTime` 60 s, `gcTime` 5 min).
+ * `keepPreviousData` keeps the current page visible while the next loads.
+ *
+ * @param params - 0-based `page` and `size`, plus optional `search` / `status`.
+ * @returns A TanStack `UseQueryResult` wrapping a `PagedReceipt` envelope.
+ */
+export const useReceiptsPage = (params: ReceiptPageParams = {}) =>
+  useQuery({
+    queryKey: financeKeys.receiptsPage(params),
+    queryFn: () => financeReceiptService.getPage(params),
+    placeholderData: keepPreviousData,
+    ...standardQueryOptions,
+  });
+
+/**
+ * Fetches a single receipt by id.
+ *
+ * Uses the **standard** query profile (`staleTime` 60 s, `gcTime` 5 min).
+ * Disabled until `id` is truthy.
+ *
+ * @param id - Numeric id of the receipt.
+ * @returns A TanStack `UseQueryResult` wrapping `Receipt`.
+ */
+export const useReceipt = (id: number) =>
+  useQuery({
+    queryKey: financeKeys.receipt(id),
+    queryFn: () => financeReceiptService.getById(id),
     enabled: !!id,
     ...standardQueryOptions,
   });
