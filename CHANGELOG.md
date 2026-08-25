@@ -5,6 +5,20 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
+## [v1.12.0] - 2026-08-25
+
+### Added
+
+- Expense domain layer for the `/expenses/web` backend endpoints: the `Expense` type with the
+  `ExpenseType` / `ExpenseCategory` / `ExpenseStatus` enums, `parseExpense` (coerces the money
+  amount and the `expenseDate` / `createdAt` / `updatedAt` timestamps, narrows the enums with a
+  sensible default), the `CreateExpenseRequest` / `UpdateExpenseRequest` payloads and their
+  serializers, and the `PagedExpense` envelope.
+- `financeExpenseService` (`getAll`, `getPage`, `getById`, `create`, `update`, `remove`), the
+  `useExpenses` / `useExpensesPage` / `useExpense` query hooks and the `useCreateExpense` /
+  `useUpdateExpense` / `useDeleteExpense` mutation hooks, with the `expenses` / `expensesList` /
+  `expensesPage` / `expense` query keys under `financeKeys`.
+
 ## [v1.2.1] - 2026-08-17
 
 ### Added

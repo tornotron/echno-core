@@ -27,6 +27,7 @@ export * from './payment';
 export * from './payment-create';
 export * from './construction-invoice';
 export * from './construction-payment';
+export * from './expense';
 export * from './cost-category';
 export * from './budget-allocation';
 export * from './project-cost-control';

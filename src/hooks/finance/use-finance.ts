@@ -7,7 +7,7 @@
  * {@link financeKeys}.
  */
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { financeKeys } from './keys';
 import { financeAccountService } from '../../services/finance-account-service';
 import { financeBankAccountService } from '../../services/finance-bank-account-service';
@@ -17,6 +17,10 @@ import {
 } from '../../services/finance-customer-service';
 import { financeInvoiceService } from '../../services/finance-invoice-service';
 import { financePaymentService } from '../../services/finance-payment-service';
+import {
+  financeExpenseService,
+  type ExpensePageParams,
+} from '../../services/finance-expense-service';
 import { financeJournalService } from '../../services/finance-journal-service';
 import { financeReportsService } from '../../services/finance-reports-service';
 import { financePostingAccountService } from '../../services/finance-posting-account-service';
@@ -197,6 +201,58 @@ export const useFinancePayment = (id: string) =>
   useQuery({
     queryKey: financeKeys.payment(id),
     queryFn: () => financePaymentService.getById(id),
+    enabled: !!id,
+    ...standardQueryOptions,
+  });
+
+// ==================== Expenses ====================
+
+/**
+ * Lists every expense for the current tenant (unpaginated).
+ *
+ * Uses the **standard** query profile (`staleTime` 60 s, `gcTime` 5 min).
+ * Backs totals, lookups, and dropdowns; use {@link useExpensesPage} for the
+ * server-paginated table.
+ *
+ * @returns A TanStack `UseQueryResult` wrapping `Expense[]`.
+ */
+export const useExpenses = () =>
+  useQuery({
+    queryKey: financeKeys.expensesList(),
+    queryFn: () => financeExpenseService.getAll(),
+    ...standardQueryOptions,
+  });
+
+/**
+ * Fetches one page of expenses for a server-paginated table.
+ *
+ * Uses the **standard** query profile (`staleTime` 60 s, `gcTime` 5 min).
+ * `keepPreviousData` keeps the current page visible while the next loads.
+ *
+ * @param params - 0-based `page` and `size`, plus optional `search` / `status`.
+ * @returns A TanStack `UseQueryResult` wrapping a `PagedExpense` envelope.
+ */
+export const useExpensesPage = (params: ExpensePageParams = {}) =>
+  useQuery({
+    queryKey: financeKeys.expensesPage(params),
+    queryFn: () => financeExpenseService.getPage(params),
+    placeholderData: keepPreviousData,
+    ...standardQueryOptions,
+  });
+
+/**
+ * Fetches a single expense by id.
+ *
+ * Uses the **standard** query profile (`staleTime` 60 s, `gcTime` 5 min).
+ * Disabled until `id` is truthy.
+ *
+ * @param id - Numeric id of the expense.
+ * @returns A TanStack `UseQueryResult` wrapping `Expense`.
+ */
+export const useExpense = (id: number) =>
+  useQuery({
+    queryKey: financeKeys.expense(id),
+    queryFn: () => financeExpenseService.getById(id),
     enabled: !!id,
     ...standardQueryOptions,
   });
