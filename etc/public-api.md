@@ -4,7 +4,7 @@
      Run `bun run api:snapshot` after an intended public-API change and commit the diff.
      See docs/API-STABILITY.md. -->
 
-Entry points: 131
+Entry points: 132
 
 ## `@tornotron/echno-core`
 
@@ -116,6 +116,8 @@ Entry points: 131
 - createCustomerToJson
 - CreateEmployeeRequest
 - createEmployeeToJson
+- CreateExpenseRequest
+- createExpenseToJson
 - CreateGrnItemRequest
 - CreateGrnRequest
 - createGrnToJson
@@ -197,12 +199,18 @@ Entry points: 131
 - employeeToJson
 - EmploymentType
 - ENGINEERING_ROLES
+- Expense
+- ExpenseCategory
+- ExpensePageParams
+- ExpenseStatus
+- ExpenseType
 - financeAccountService
 - financeBankAccountService
 - financeConstructionInvoiceService
 - financeConstructionPaymentService
 - financeCostCategoryService
 - financeCustomerService
+- financeExpenseService
 - financeInvoiceService
 - financeJournalService
 - financeKeys
@@ -395,6 +403,7 @@ Entry points: 131
 - orgRoleFromString
 - PagedAttendance
 - PagedEmployee
+- PagedExpense
 - PagedIssue
 - parseAccount
 - parseAccountLine
@@ -428,6 +437,10 @@ Entry points: 131
 - parseCustomer
 - parseEmployee
 - parseEmployeeLookup
+- parseExpense
+- parseExpenseCategory
+- parseExpenseStatus
+- parseExpenseType
 - parseFinanceSettings
 - parseGoodsReceivedNote
 - parseGrnItem
@@ -589,6 +602,9 @@ Entry points: 131
 - updateCustomerToJson
 - UpdateEmployeeRequest
 - updateEmployeeToJson
+- UpdateExpenseArgs
+- UpdateExpenseRequest
+- updateExpenseToJson
 - UpdateFinanceSettingsRequest
 - updateFinanceSettingsToJson
 - UpdateGrnRequest
@@ -695,6 +711,7 @@ Entry points: 131
 - useCreateCustomer
 - useCreateDraftInvoice
 - useCreateEmployee  [deprecated]
+- useCreateExpense
 - useCreateGRN
 - useCreateIndent
 - useCreateIndentItem
@@ -727,6 +744,7 @@ Entry points: 131
 - useDeleteAttendanceProfile
 - useDeleteBudgetAllocation
 - useDeleteEmployee
+- useDeleteExpense
 - useDeleteGRN  [deprecated]
 - useDeleteIndent
 - useDeleteIndentItem
@@ -767,6 +785,9 @@ Entry points: 131
 - useEmployees
 - useEmployeesByProject
 - useEmployeesPage
+- useExpense
+- useExpenses
+- useExpensesPage
 - useFinanceAccount
 - useFinanceAccountByCode
 - useFinanceAccounts
@@ -920,6 +941,7 @@ Entry points: 131
 - useUpdateCostCategory
 - useUpdateCustomer
 - useUpdateEmployee
+- useUpdateExpense
 - useUpdateFinanceSettings
 - useUpdateGRN
 - useUpdateIndent
@@ -1248,6 +1270,12 @@ Entry points: 131
 - CustomerListParams
 - financeCustomerService
 
+## `@tornotron/echno-core/finance-expense/services`
+
+- ExpensePageParams
+- financeExpenseService
+- PagedExpense
+
 ## `@tornotron/echno-core/finance-invoice/services`
 
 - financeInvoiceService
@@ -1287,6 +1315,7 @@ Entry points: 131
 - ReverseJournalArgs
 - UpdateAccountArgs
 - UpdateCostCategoryArgs
+- UpdateExpenseArgs
 - UpsertBudgetAllocationArgs
 - UpsertPostingAccountMappingArgs
 - useApproveConstructionInvoice
@@ -1300,12 +1329,17 @@ Entry points: 131
 - useCreateCostCategory
 - useCreateCustomer
 - useCreateDraftInvoice
+- useCreateExpense
 - useDeactivateAccount
 - useDeactivateBankAccount
 - useDeactivateCostCategory
 - useDeactivateCustomer
 - useDeleteBudgetAllocation
+- useDeleteExpense
 - useDeletePostingAccountMapping
+- useExpense
+- useExpenses
+- useExpensesPage
 - useFinanceAccount
 - useFinanceAccountByCode
 - useFinanceAccounts
@@ -1335,6 +1369,7 @@ Entry points: 131
 - useUpdateAccount
 - useUpdateCostCategory
 - useUpdateCustomer
+- useUpdateExpense
 - useUpdateFinanceSettings
 - useUpsertBudgetAllocation
 - useUpsertPostingAccountMapping
@@ -1381,9 +1416,15 @@ Entry points: 131
 - createCostCategoryToJson
 - CreateCustomerRequest
 - createCustomerToJson
+- CreateExpenseRequest
+- createExpenseToJson
 - CreateInvoiceRequest
 - createInvoiceToJson
 - Customer
+- Expense
+- ExpenseCategory
+- ExpenseStatus
+- ExpenseType
 - FinanceSettings
 - Invoice
 - InvoiceLine
@@ -1415,6 +1456,10 @@ Entry points: 131
 - parseConstructionPaymentVoucherStatus
 - parseCostCategory
 - parseCustomer
+- parseExpense
+- parseExpenseCategory
+- parseExpenseStatus
+- parseExpenseType
 - parseFinanceSettings
 - parseInvoice
 - parseInvoiceLine
@@ -1456,6 +1501,8 @@ Entry points: 131
 - updateCostCategoryToJson
 - UpdateCustomerRequest
 - updateCustomerToJson
+- UpdateExpenseRequest
+- updateExpenseToJson
 - UpdateFinanceSettingsRequest
 - updateFinanceSettingsToJson
 - UpsertBudgetAllocationRequest

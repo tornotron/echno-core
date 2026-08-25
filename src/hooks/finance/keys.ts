@@ -14,6 +14,8 @@
  * - `['finance', 'customers', …]` — list (`customersList`), detail (`customer`).
  * - `['finance', 'invoices', …]` — detail (`invoice`).
  * - `['finance', 'payments', …]` — detail (`payment`).
+ * - `['finance', 'expenses', …]` — list (`expensesList`), page (`expensesPage`),
+ *   detail (`expense`).
  * - `['finance', 'posting-accounts', …]` — mappings list (`postingAccountsList`).
  * - `['finance', 'cost-categories', …]` — list (`costCategoriesList`),
  *   detail (`costCategory`).
@@ -26,6 +28,7 @@
 
 import type { CustomerListParams } from '../../services/finance-customer-service';
 import type { ConstructionInvoiceListParams } from '../../services/finance-construction-invoice-service';
+import type { ExpensePageParams } from '../../services/finance-expense-service';
 
 export const financeKeys = {
   all: ['finance'] as const,
@@ -67,6 +70,13 @@ export const financeKeys = {
     [...financeKeys.constructionInvoices(), 'list', params ?? {}] as const,
   constructionInvoice: (id: string) =>
     [...financeKeys.constructionInvoices(), 'detail', id] as const,
+
+  // Expenses
+  expenses: () => [...financeKeys.all, 'expenses'] as const,
+  expensesList: () => [...financeKeys.expenses(), 'list'] as const,
+  expensesPage: (params?: ExpensePageParams) =>
+    [...financeKeys.expenses(), 'page', params ?? {}] as const,
+  expense: (id: number) => [...financeKeys.expenses(), 'detail', id] as const,
 
   // Journal entries
   journalEntries: () => [...financeKeys.all, 'journal-entries'] as const,

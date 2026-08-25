@@ -26,6 +26,7 @@ import { financeInvoiceService } from '../../services/finance-invoice-service';
 import { financePaymentService } from '../../services/finance-payment-service';
 import { financeJournalService } from '../../services/finance-journal-service';
 import { financeConstructionInvoiceService } from '../../services/finance-construction-invoice-service';
+import { financeExpenseService } from '../../services/finance-expense-service';
 import { financePostingAccountService } from '../../services/finance-posting-account-service';
 import { financeCostCategoryService } from '../../services/finance-cost-category-service';
 import { financeProjectBudgetService } from '../../services/finance-project-budget-service';
@@ -46,6 +47,8 @@ import type {
   UpdateCostCategoryRequest,
   UpsertBudgetAllocationRequest,
   UpdateFinanceSettingsRequest,
+  CreateExpenseRequest,
+  UpdateExpenseRequest,
 } from '../../types/finance';
 
 // ==================== Accounts ====================
@@ -626,6 +629,102 @@ export const useRecordConstructionInvoicePayment = () => {
     },
     onError: (error) =>
       logger.error('Failed to record construction invoice payment:', error),
+  });
+};
+
+// ==================== Expenses ====================
+
+/**
+ * Creates an expense.
+ *
+ * Backend response: `ExpenseDto` (full).
+ *
+ * On success:
+ * - `setQueryData(financeKeys.expense(id), expense)` — seeds the detail cache
+ *   from the returned DTO for an instant read.
+ * - `invalidateQueries(financeKeys.expenses())` — kept: this covers the full
+ *   list (`expensesList`) and every paginated cache (`expensesPage`, keyed by
+ *   page + filters). Those caches cannot be spliced deterministically, and the
+ *   page envelope is a `PagedExpense` object (not an `Expense[]`), so it is
+ *   refetch-driven rather than optimistically array-patched.
+ *
+ * @returns A TanStack `UseMutationResult` whose mutate function accepts a
+ *   {@link CreateExpenseRequest}.
+ */
+export const useCreateExpense = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (dto: CreateExpenseRequest) => financeExpenseService.create(dto),
+    // POST /expenses/web → ExpenseDto (full)
+    onSuccess: (expense) => {
+      queryClient.setQueryData(financeKeys.expense(expense.id), expense);
+      queryClient.invalidateQueries({ queryKey: financeKeys.expenses() });
+    },
+    onError: (error) => logger.error('Failed to create expense:', error),
+  });
+};
+
+/** Arguments for {@link useUpdateExpense}. */
+export interface UpdateExpenseArgs {
+  /** Numeric id of the expense to update. */
+  id: number;
+  /** The updated expense fields. */
+  data: UpdateExpenseRequest;
+}
+
+/**
+ * Updates an expense (full replacement of its editable details).
+ *
+ * Backend response: `ExpenseDto` (full).
+ *
+ * On success:
+ * - `setQueryData(financeKeys.expense(id), expense)` — replaces the detail cache
+ *   with the returned DTO.
+ * - `invalidateQueries(financeKeys.expenses())` — kept: list and page caches may
+ *   now reflect a changed status / amount / category and cannot be spliced
+ *   deterministically.
+ *
+ * @returns A TanStack `UseMutationResult` whose mutate function accepts
+ *   {@link UpdateExpenseArgs}.
+ */
+export const useUpdateExpense = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: UpdateExpenseArgs) =>
+      financeExpenseService.update(id, data),
+    // PUT /expenses/web/{id} → ExpenseDto (full)
+    onSuccess: (expense) => {
+      queryClient.setQueryData(financeKeys.expense(expense.id), expense);
+      queryClient.invalidateQueries({ queryKey: financeKeys.expenses() });
+    },
+    onError: (error) => logger.error('Failed to update expense:', error),
+  });
+};
+
+/**
+ * Deletes an expense by id.
+ *
+ * Backend response: `ApiResponse` (ack only — no body).
+ *
+ * On success (no DTO to seed):
+ * - `removeQueries(financeKeys.expense(id))` — the entity no longer exists, so
+ *   its detail cache is dropped rather than refetched.
+ * - `invalidateQueries(financeKeys.expenses())` — kept: the list and paginated
+ *   caches no longer contain this expense and their page boundaries shifted.
+ *
+ * @returns A TanStack `UseMutationResult` whose mutate function accepts the
+ *   numeric expense id.
+ */
+export const useDeleteExpense = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => financeExpenseService.remove(id),
+    // DELETE /expenses/web/{id} → ApiResponse (ack)
+    onSuccess: (_data, id) => {
+      queryClient.removeQueries({ queryKey: financeKeys.expense(id) });
+      queryClient.invalidateQueries({ queryKey: financeKeys.expenses() });
+    },
+    onError: (error) => logger.error('Failed to delete expense:', error),
   });
 };
 
