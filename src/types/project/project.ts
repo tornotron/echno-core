@@ -43,8 +43,22 @@ export interface Project {
   /** Display name. */
   projectName: string;
 
-  /** Site address. */
+  /** Street address of the site, as one line. */
   projectAddress: string;
+
+  /** Town or city the site is in. Absent when not recorded. */
+  projectCity?: string;
+
+  /**
+   * Indian state or union territory the site is in, in its canonical
+   * spelling. Read by compliance generation, which keys its rules by state.
+   * Absent when not recorded, in which case the backend falls back to
+   * reading a state out of {@link Project.projectAddress}.
+   */
+  projectState?: string;
+
+  /** Postal (PIN) code of the site. Absent when not recorded. */
+  projectPostalCode?: string;
 
   /** Current lifecycle state. */
   status: ProjectStatus;
@@ -135,6 +149,9 @@ const ProjectResponseSchema = z.object({
   id: opaque,
   projectName: nullableString,
   projectAddress: nullableString,
+  projectCity: nullableString,
+  projectState: nullableString,
+  projectPostalCode: nullableString,
   status: nullableString,
   projectType: nullableString,
   organizationId: optionalNumericId,
@@ -167,6 +184,9 @@ export function parseProject(json: unknown): Project {
     id: parsePositiveInt(raw.id, 'parseProject.id'),
     projectName: raw.projectName ?? '',
     projectAddress: raw.projectAddress ?? '',
+    projectCity: raw.projectCity ?? undefined,
+    projectState: raw.projectState ?? undefined,
+    projectPostalCode: raw.projectPostalCode ?? undefined,
     status: getProjectStatus(raw.status ?? undefined) ?? ProjectStatus.upcoming,
     projectType: parseProjectType(raw.projectType),
     organizationId: raw.organizationId
@@ -205,6 +225,9 @@ export function projectToJson(project: Project): Record<string, unknown> {
     organizationId: project.organizationId,
     projectName: project.projectName,
     projectAddress: project.projectAddress,
+    projectCity: project.projectCity,
+    projectState: project.projectState,
+    projectPostalCode: project.projectPostalCode,
     status: project.status,
     projectType: project.projectType,
     projectLongitude: project.projectLongitude,
