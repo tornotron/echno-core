@@ -5,6 +5,7 @@
  * {@link createMovementToJson} for logging an off-site movement.
  */
 
+import { toLocalDateTimeString } from "../../lib/utils/date-helpers";
 import { MovementType } from "./movement-type";
 
 const MOVEMENT_TYPE_TO_BACKEND: Record<MovementType, string> = {
@@ -34,9 +35,15 @@ export interface CreateMovementRequest {
   fromLocation: string;
   /** Where the movement ended, if known. */
   toLocation?: string;
-  /** When the movement started. */
+  /**
+   * When the movement started, in the site's local wall-clock time.
+   *
+   * Serialized with {@link toLocalDateTimeString}, not `toISOString()`: the
+   * backend field is a `LocalDateTime` and carries no offset. The form feeds
+   * this from a `datetime-local` input, which is a local wall clock already.
+   */
   startTime: Date;
-  /** When the movement ended, if concluded. */
+  /** When the movement ended, if concluded. Local wall clock, as `startTime`. */
   endTime?: Date;
   /** Reason for the movement. */
   purpose: string;
@@ -59,8 +66,9 @@ export interface CreateMovementRequest {
 /**
  * Serializes a {@link CreateMovementRequest} into the backend request body.
  *
- * Maps `movementType` to the backend's SCREAMING_SNAKE_CASE enum and
- * ISO-encodes `startTime` / `endTime`; other fields are passed through.
+ * Maps `movementType` to the backend's SCREAMING_SNAKE_CASE enum and encodes
+ * `startTime` / `endTime` as naive local wall-clock strings; other fields are
+ * passed through.
  *
  * @param dto - The movement request to serialize.
  * @returns A plain object matching the backend's expected body shape.
@@ -73,8 +81,8 @@ export function createMovementToJson(
     movementType: MOVEMENT_TYPE_TO_BACKEND[dto.movementType],
     fromLocation: dto.fromLocation,
     toLocation: dto.toLocation,
-    startTime: dto.startTime.toISOString(),
-    endTime: dto.endTime?.toISOString(),
+    startTime: toLocalDateTimeString(dto.startTime),
+    endTime: dto.endTime && toLocalDateTimeString(dto.endTime),
     purpose: dto.purpose,
     remarks: dto.remarks,
     startLatitude: dto.startLatitude,
