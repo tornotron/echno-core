@@ -12,7 +12,7 @@
  * 5 min when the host uses the recommended setup).
  */
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { inventoryTransactionsService } from '../../services/inventory-transactions-service';
 import { InventoryTransactionType } from '../../types/inventory-transactions';
 import { inventoryTransactionKeys } from './keys';
@@ -61,6 +61,42 @@ export const useInventoryTransactionsByMaterial = (materialId: number) =>
     queryKey: inventoryTransactionKeys.byMaterial(materialId),
     queryFn: () => inventoryTransactionsService.getByMaterial(materialId),
     enabled: !!materialId,
+  });
+
+/**
+ * Fetches a page of a material's movement history, ordered oldest
+ * movement first by the server. The query is disabled until
+ * `materialId` is truthy.
+ *
+ * `keepPreviousData` keeps the movements already on screen visible
+ * while a larger page or the next page loads, so the timeline grows
+ * rather than blanking out.
+ *
+ * @param materialId - Surrogate ID of the material.
+ * @param pageNo - Zero-based page number. Defaults to `0`.
+ * @param pageSize - Number of movements per page. Defaults to `10`.
+ * @returns A TanStack `UseQueryResult` wrapping a
+ *   `PagedMaterialMovementHistory`.
+ */
+export const useMaterialMovementHistory = (
+  materialId: number,
+  pageNo = 0,
+  pageSize = 10
+) =>
+  useQuery({
+    queryKey: inventoryTransactionKeys.materialHistory(
+      materialId,
+      pageNo,
+      pageSize
+    ),
+    queryFn: () =>
+      inventoryTransactionsService.getMaterialMovementHistory(
+        materialId,
+        pageNo,
+        pageSize
+      ),
+    enabled: !!materialId,
+    placeholderData: keepPreviousData,
   });
 
 /**

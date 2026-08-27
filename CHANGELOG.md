@@ -5,6 +5,21 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
+## [v1.14.0] - 2026-08-27
+
+### Added
+
+- Material movement-history layer for the backend's
+  `GET /inventory-transactions/web/material/{materialId}/history` endpoint: the
+  `MaterialMovementHistoryEntry` type with the `StockDirection` enum (INCREASE / DECREASE / EITHER,
+  mirroring the backend `StockEffect`), `parseMaterialMovementHistoryEntry` (coerces the signed
+  quantity, defaults a missing direction to `EITHER`), and the `PagedMaterialMovementHistory`
+  envelope.
+- `inventoryTransactionsService.getMaterialMovementHistory(materialId, pageNo, pageSize)` and the
+  `useMaterialMovementHistory` query hook, with the `materialHistory` key under
+  `inventoryTransactionKeys`. The endpoint returns the movements ordered oldest first, so consumers
+  no longer sort a material's timeline client-side.
+
 ## [v1.13.0] - 2026-08-25
 
 ### Added
