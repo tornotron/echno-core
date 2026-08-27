@@ -48,7 +48,11 @@ function isTaskListCache(query: { queryKey: ReadonlyArray<unknown> }): boolean {
     Array.isArray(key) &&
     key[0] === 'tasks' &&
     key.length > 1 &&
-    typeof key[1] !== 'number'
+    typeof key[1] !== 'number' &&
+    // Paginated caches (`['tasks', 'page', params]`) hold a PagedTask envelope
+    // rather than a flat Task[], so the optimistic array patches would break on
+    // them. They are refetch-driven, invalidated via taskKeys.pages().
+    key[1] !== 'page'
   );
 }
 
@@ -127,6 +131,9 @@ export function useCreateTask() {
       queryClient.invalidateQueries({
         queryKey: projectKeys.detail(data.projectId),
       });
+      // Page caches hold a PagedTask envelope, so they are refetched rather
+      // than patched.
+      queryClient.invalidateQueries({ queryKey: taskKeys.pages() });
     },
     onError: (error) => {
       logger.error('Failed to create task:', error);
@@ -263,6 +270,7 @@ export function useUpdateTask() {
       );
       queryClient.invalidateQueries({ queryKey: taskKeys.detail(id) });
       queryClient.invalidateQueries({ predicate: isTaskListCache });
+      queryClient.invalidateQueries({ queryKey: taskKeys.pages() });
 
       // Cross-namespace: Project caches `tasks: Task[]` nested. Consumers
       // (gantt, evm s-curve, health, projects-grid) read project.tasks
@@ -403,6 +411,7 @@ export function useDeleteTask() {
           queryKey: projectKeys.detail(context.previousDetail.projectId),
         });
       }
+      queryClient.invalidateQueries({ queryKey: taskKeys.pages() });
     },
   });
 }

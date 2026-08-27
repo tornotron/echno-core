@@ -24,7 +24,8 @@ type ApiResponse = any;
 /**
  * Backend response shape audit (per local-docs/backend-api-docs.md):
  *
- *   GET    /tasks/web                           → TaskDto[]       (full)
+ *   GET    /tasks/web                           → TaskDto[]       (full, capped)
+ *   GET    /tasks/web/paginated                 → Page<TaskDto>   (full)
  *   GET    /tasks/web/{id}                      → TaskDto         (full)
  *   GET    /tasks/web/projectId/{projectId}     → TaskDto[]       (full)
  *   POST   /tasks/web                           → TaskSimpleDto   (partial — no nested)
@@ -59,17 +60,103 @@ function safeParseTasks(data: ApiResponse[]): Task[] {
   }
 }
 
+/** One page of tasks with the Spring page metadata preserved. */
+export interface PagedTask {
+  /** The tasks on this page. */
+  content: Task[];
+  /** Total tasks across all pages. */
+  totalElements: number;
+  /** Total number of pages. */
+  totalPages: number;
+  /** 0-based page index. */
+  number: number;
+  /** Page size. */
+  size: number;
+}
+
+/** Paging and filter options for the paginated task list. */
+export interface TaskPageParams {
+  /** 0-based page index. */
+  page?: number;
+  /** Rows per page. The backend clamps this to its result cap. */
+  size?: number;
+  /** Restrict to a single project. */
+  projectId?: number;
+  /** Free-text match on title and description, resolved server-side. */
+  search?: string;
+}
+
+function safeParseTaskPage(
+  data: ApiResponse,
+  params: TaskPageParams
+): PagedTask {
+  return {
+    content: safeParseTasks(data?.content ?? []),
+    totalElements: data?.totalElements ?? 0,
+    totalPages: data?.totalPages ?? 0,
+    number: data?.number ?? 0,
+    size: data?.size ?? params.size ?? 20,
+  };
+}
+
 export const taskService = {
   /**
-   * Fetches every task visible to the current user.
+   * Fetches the current tenant's tasks.
    *
    * `GET /tasks/web` → `TaskDto[]` (full — nested entities populated).
+   *
+   * The backend bounds this at 500 rows and reports the true total in
+   * `X-Total-Count`, setting `X-Result-Capped` when rows were left out. It
+   * used to page at ten by default and discard the envelope, so this method
+   * silently returned the ten lowest-id tasks in the tenant. Use
+   * {@link getPage} where a list needs to walk past the cap, and
+   * {@link getByProjectId} where only one project's tasks are wanted.
    *
    * @returns A resolved array of {@link Task} objects.
    * @throws {ApiError} On non-2xx response or unparseable payload.
    */
   async getAll(): Promise<Task[]> {
     const data = await api.get<ApiResponse[]>('/tasks/web');
+    return safeParseTasks(data);
+  },
+
+  /**
+   * Fetches one page of tasks, newest first.
+   *
+   * `GET /tasks/web/paginated` → `Page<TaskDto>`. The Spring page envelope is
+   * normalized to {@link PagedTask}, so a caller can tell a complete result
+   * from a truncated one, which is exactly what the bare list could not do.
+   *
+   * @param params - 0-based `page`, `size`, and optional `projectId` /
+   *   `search` filters (both resolved server-side).
+   * @returns A {@link PagedTask} page of tasks.
+   * @throws {ApiError} On non-2xx response or unparseable payload.
+   */
+  async getPage(params: TaskPageParams = {}): Promise<PagedTask> {
+    const query: Record<string, string | number> = {};
+    if (params.page !== undefined) query.pageNo = params.page;
+    if (params.size !== undefined) query.pageSize = params.size;
+    if (params.projectId !== undefined) query.projectId = params.projectId;
+    if (params.search) query.search = params.search;
+    const data = await api.get<ApiResponse>('/tasks/web/paginated', query);
+    return safeParseTaskPage(data, params);
+  },
+
+  /**
+   * Fetches every task belonging to one project.
+   *
+   * `GET /tasks/web/projectId/{projectId}` → `TaskDto[]` (full). The filter
+   * runs in the database over the project's own tasks, not over a page of the
+   * tenant's.
+   *
+   * @param projectId - Surrogate ID of the project.
+   * @returns A resolved array of {@link Task} objects.
+   * @throws {ApiError} On non-2xx response or unparseable payload.
+   */
+  async getByProjectId(projectId: number): Promise<Task[]> {
+    const data = await api.get<ApiResponse[]>(
+      `/tasks/web/projectId/${projectId}`
+    );
     return safeParseTasks(data);
   },
 

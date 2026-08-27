@@ -4,7 +4,7 @@
      Run `bun run api:snapshot` after an intended public-API change and commit the diff.
      See docs/API-STABILITY.md. -->
 
-Entry points: 133
+Entry points: 136
 
 ## `@tornotron/echno-core`
 
@@ -411,6 +411,7 @@ Entry points: 133
 - PagedIssue
 - PagedMaterialMovementHistory
 - PagedReceipt
+- PagedTask
 - parseAccount
 - parseAccountLine
 - parseAccountTree
@@ -564,6 +565,12 @@ Entry points: 133
 - ReverseJournalArgs
 - ReverseJournalRequest
 - roleManagementService
+- SEARCH_HIT_TYPES
+- SEARCH_MIN_TERM_LENGTH
+- SearchHit
+- SearchHitType
+- searchKeys
+- searchService
 - SeedCostCategoriesResult
 - SetVendorPaymentTermsRequest
 - setVendorPaymentTermsToJson
@@ -592,6 +599,7 @@ Entry points: 133
 - Task
 - TaskFiles
 - taskKeys
+- TaskPageParams
 - taskService
 - TaskStatus
 - taskStatusFromLabel
@@ -937,6 +945,7 @@ Entry points: 133
 - userRoleFromString
 - userService
 - userToJson
+- useSearch
 - useSeedDefaultCostCategories
 - useSetVendorPaymentTerms
 - useShift
@@ -956,6 +965,7 @@ Entry points: 133
 - useTask
 - useTasks
 - useTasksByProject
+- useTasksPage
 - useTeamCalendar
 - useTransactionHistory
 - useTrialBalance
@@ -2209,6 +2219,23 @@ Entry points: 133
 
 - roleManagementService
 
+## `@tornotron/echno-core/search/hooks`
+
+- searchKeys
+- useSearch
+
+## `@tornotron/echno-core/search/hooks/keys`
+
+- searchKeys
+
+## `@tornotron/echno-core/search/services`
+
+- SEARCH_HIT_TYPES
+- SEARCH_MIN_TERM_LENGTH
+- SearchHit
+- SearchHitType
+- searchService
+
 ## `@tornotron/echno-core/shift-timing/hooks`
 
 - shiftTimingKeys
@@ -2309,6 +2336,7 @@ Entry points: 133
 - useTask
 - useTasks
 - useTasksByProject
+- useTasksPage
 - useUpdateTask
 
 ## `@tornotron/echno-core/task/hooks/keys`
@@ -2317,6 +2345,8 @@ Entry points: 133
 
 ## `@tornotron/echno-core/task/services`
 
+- PagedTask
+- TaskPageParams
 - taskService
 
 ## `@tornotron/echno-core/task/types`

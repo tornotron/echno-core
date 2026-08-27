@@ -15,6 +15,8 @@
  *   skip detail entries when patching every list cache in one pass.
  * - `['tasks', 'project', projectId]` — tasks scoped to one project
  *   (returned by `useTasksByProject`).
+ * - `['tasks', 'page', params]` — one page of the task list, keyed by page
+ *   and filters (returned by `useTasksPage`).
  */
 export const taskKeys = {
   /** Invalidation prefix for the entire task namespace. */
@@ -32,4 +34,10 @@ export const taskKeys = {
   /** Tasks scoped to one project. */
   byProject: (projectId: number) =>
     [...taskKeys.all, 'project', projectId] as const,
+
+  /** Invalidation prefix for every paginated task cache. */
+  pages: () => [...taskKeys.all, 'page'] as const,
+
+  /** One page of the task list, keyed by page and filters. */
+  page: (params: object) => [...taskKeys.all, 'page', params] as const,
 };
