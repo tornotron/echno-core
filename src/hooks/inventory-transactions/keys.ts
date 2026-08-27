@@ -19,6 +19,9 @@
  * - `['inventory-transactions', 'material', materialId, 'stock']` —
  *   per-location stock roll-up for one material, consumed by
  *   {@link useMaterialStock}.
+ * - `['inventory-transactions', 'material', materialId, 'history',
+ *   { pageNo, pageSize }]` — a page of the material's server-ordered
+ *   movement history, consumed by {@link useMaterialMovementHistory}.
  * - `['inventory-transactions', 'storage-location', storageLocationId]` —
  *   transactions for one storage location, consumed by
  *   {@link useInventoryTransactionsByStorageLocation}.
@@ -68,6 +71,16 @@ export const inventoryTransactionKeys = {
   /** Query key for the per-location stock roll-up for one material. */
   materialStock: (materialId: number) =>
     [...inventoryTransactionKeys.all, 'material', materialId, 'stock'] as const,
+
+  /** Query key for a page of one material's server-ordered movement history. */
+  materialHistory: (materialId: number, pageNo: number, pageSize: number) =>
+    [
+      ...inventoryTransactionKeys.all,
+      'material',
+      materialId,
+      'history',
+      { pageNo, pageSize },
+    ] as const,
 
   /** Query key for transactions filtered by storage location. */
   byStorageLocation: (storageLocationId: number) =>

@@ -20,9 +20,11 @@ import { logger } from '../lib/logger';
 import {
   InventoryTransaction,
   InventoryTransactionType,
+  MaterialMovementHistoryEntry,
   MaterialStock,
   StorageLocationStock,
   parseInventoryTransaction,
+  parseMaterialMovementHistoryEntry,
   parseMaterialStock,
   parseStorageLocationStock,
 } from '../types/inventory-transactions';
@@ -36,7 +38,8 @@ type Raw = any;
  *   GET    /inventory-transactions/web                                                                                  → InventoryTransactionDto[]  (full list)
  *   GET    /inventory-transactions/web/all?pageNo&pageSize                                                              → InventoryTransactionDto[]  (paginated; returned as plain array, no envelope)
  *   GET    /inventory-transactions/web/{id}                                                                             → InventoryTransactionDto    (full)
- *   GET    /inventory-transactions/web/material/{materialId}                                                            → InventoryTransactionDto[]  (full; filtered server-side by material)
+ *   GET    /inventory-transactions/web/material/{materialId}                                                            → InventoryTransactionDto[]  (full; filtered server-side by material, unordered)
+ *   GET    /inventory-transactions/web/material/{materialId}/history?pageNo&pageSize                                    → Page<MaterialMovementHistoryDto> (timeline; ordered oldest first, paged)
  *   GET    /inventory-transactions/web/material/{materialId}/stock                                                      → MaterialStockDto           (per-location roll-up for one material)
  *   GET    /inventory-transactions/web/type/{type}                                                                      → InventoryTransactionDto[]  (full; filtered server-side by transaction type)
  *   GET    /inventory-transactions/web/date-range?startDate&endDate                                                     → InventoryTransactionDto[]  (full; filtered server-side by transactionDate range)
@@ -83,6 +86,73 @@ function safeParseAll(data: Raw[]): InventoryTransaction[] {
     logger.error('Failed to parse inventory transactions:', error);
     throw new ApiError('Failed to process inventory transactions data.', 422);
   }
+}
+
+/**
+ * A parsed page of movement-history entries, mirroring the Spring
+ * `Page<MaterialMovementHistoryDto>` envelope. Entries are ordered
+ * oldest movement first, as served.
+ */
+export interface PagedMaterialMovementHistory {
+  /** The movements on this page, oldest first. */
+  content: MaterialMovementHistoryEntry[];
+  /** Total movements recorded for the material across all pages. */
+  totalElements: number;
+  /** Total number of pages. */
+  totalPages: number;
+  /** Zero-based page index. */
+  number: number;
+  /** Page size. */
+  size: number;
+}
+
+/**
+ * Normalises a Spring `Page<MaterialMovementHistoryDto>` body (or a
+ * bare array, for resilience) into a
+ * {@link PagedMaterialMovementHistory} so callers always receive page
+ * metadata.
+ *
+ * @param data - The raw JSON body from the backend.
+ * @param pageSize - The page size that was requested, used as the
+ *   fallback for a missing `size`.
+ * @returns The parsed page.
+ * @throws {ApiError} When an entry fails parsing (HTTP 422).
+ */
+function safeParseHistoryPage(
+  data: Raw,
+  pageSize: number
+): PagedMaterialMovementHistory {
+  const parseAll = (items: Raw[]): MaterialMovementHistoryEntry[] => {
+    if (!Array.isArray(items)) return [];
+    try {
+      return items.map((item) => parseMaterialMovementHistoryEntry(item));
+    } catch (error) {
+      logger.error('Failed to parse material movement history:', error);
+      throw new ApiError(
+        'Failed to process material movement history data.',
+        422
+      );
+    }
+  };
+
+  if (Array.isArray(data)) {
+    const content = parseAll(data);
+    return {
+      content,
+      totalElements: content.length,
+      totalPages: 1,
+      number: 0,
+      size: pageSize,
+    };
+  }
+
+  return {
+    content: parseAll(data?.content ?? []),
+    totalElements: data?.totalElements ?? 0,
+    totalPages: data?.totalPages ?? 0,
+    number: data?.number ?? 0,
+    size: data?.size ?? pageSize,
+  };
 }
 
 export const inventoryTransactionsService = {
@@ -145,6 +215,36 @@ export const inventoryTransactionsService = {
       `/inventory-transactions/web/material/${materialId}`
     );
     return safeParseAll(data);
+  },
+
+  /**
+   * Fetches a page of a material's movement history
+   * (`GET /inventory-transactions/web/material/{materialId}/history`).
+   *
+   * The server orders the movements oldest first and returns them one
+   * page at a time, so the caller renders a forward-running timeline
+   * without sorting client-side. Each entry is narrower than a full
+   * {@link InventoryTransaction}: it carries the location, project,
+   * movement type and its direction, the quantity changed, the
+   * timestamp and the source reference, but no running balance, cost
+   * or actor.
+   *
+   * @param materialId - Surrogate ID of the material.
+   * @param pageNo - Zero-based page number. Defaults to `0`.
+   * @param pageSize - Number of movements per page. Defaults to `10`.
+   * @returns The requested page of movement-history entries.
+   * @throws {ApiError} On a non-2xx response or parse failure.
+   */
+  async getMaterialMovementHistory(
+    materialId: number,
+    pageNo = 0,
+    pageSize = 10
+  ): Promise<PagedMaterialMovementHistory> {
+    const data = await api.get<Raw>(
+      `/inventory-transactions/web/material/${materialId}/history`,
+      { pageNo, pageSize }
+    );
+    return safeParseHistoryPage(data, pageSize);
   },
 
   /**

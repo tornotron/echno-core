@@ -383,6 +383,7 @@ Entry points: 133
 - MaterialLocationThreshold
 - materialLocationThresholdToJson
 - MaterialLocationThresholdUpsert
+- MaterialMovementHistoryEntry
 - materialsKeys
 - materialsService
 - MaterialStatus
@@ -408,6 +409,7 @@ Entry points: 133
 - PagedEmployee
 - PagedExpense
 - PagedIssue
+- PagedMaterialMovementHistory
 - PagedReceipt
 - parseAccount
 - parseAccountLine
@@ -480,6 +482,7 @@ Entry points: 133
 - parseMaterial
 - parseMaterialConsumption
 - parseMaterialLocationThreshold
+- parseMaterialMovementHistoryEntry
 - parseMaterialStock
 - parseMaterialWithStock
 - parseMovementRecord
@@ -577,6 +580,7 @@ Entry points: 133
 - SkillLevel
 - standardQueryOptions
 - staticQueryOptions
+- StockDirection
 - STORAGE_LOCATION_TYPE_LABELS
 - StorageLocation
 - storageLocationKeys
@@ -869,6 +873,7 @@ Entry points: 133
 - useMaterialConsumption
 - useMaterialConsumptionsPaginated
 - useMaterialLocationThresholds
+- useMaterialMovementHistory
 - useMaterials
 - useMaterialSearch
 - useMaterialsPaginated
@@ -1693,6 +1698,7 @@ Entry points: 133
 - useInventoryTransactionsByStorageLocation
 - useInventoryTransactionsByStorageLocationAndMaterial
 - useInventoryTransactionsByType
+- useMaterialMovementHistory
 - useMaterialStock
 - useStorageLocationStock
 
@@ -1703,6 +1709,7 @@ Entry points: 133
 ## `@tornotron/echno-core/inventory-transactions/services`
 
 - inventoryTransactionsService
+- PagedMaterialMovementHistory
 
 ## `@tornotron/echno-core/inventory-transactions/types`
 
@@ -1712,10 +1719,13 @@ Entry points: 133
 - inventoryTransactionTypeLabels
 - LocationMaterialStock
 - LocationStock
+- MaterialMovementHistoryEntry
 - MaterialStock
 - parseInventoryTransaction
+- parseMaterialMovementHistoryEntry
 - parseMaterialStock
 - parseStorageLocationStock
+- StockDirection
 - StorageLocationStock
 
 ## `@tornotron/echno-core/invitation/hooks`
