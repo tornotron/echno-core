@@ -1,17 +1,10 @@
 import { describe, expect, test } from 'bun:test';
 import { parseClockEvent } from './clock-event';
 
-// The backend sends attendance timestamps without a timezone suffix. `new Date()`
-// reads those as local time, which shifts every clock event by the client offset
-// (a payroll-correctness bug). The parser now treats naive timestamps as UTC.
-describe('parseClockEvent timestamp handling', () => {
-  test('treats a naive timestamp as UTC, not local time', () => {
-    const event = parseClockEvent({ id: 1, timestamp: '2026-02-25T10:30:00' });
-
-    // UTC instant is fixed regardless of the machine running the test.
-    expect(event.timestamp.toISOString()).toBe('2026-02-25T10:30:00.000Z');
-  });
-
+// Timestamp-convention coverage lives in `clock-timestamp.test.ts`, which pins a
+// non-UTC zone so the assertions are not vacuous. What is left here are the parts
+// of the parser that do not depend on the client's offset.
+describe('parseClockEvent', () => {
   test('preserves an explicit UTC (Z) timestamp', () => {
     const event = parseClockEvent({ id: 1, timestamp: '2026-02-25T10:30:00Z' });
 

@@ -5,6 +5,7 @@
  * {@link attendanceCheckInToJson} for the first check-in of an attendance day.
  */
 
+import { toLocalDateTimeString } from "../../lib/utils/date-helpers";
 import { GeoLocation } from "./clock-event";
 
 /**
@@ -25,7 +26,13 @@ export interface AttendanceCheckInRequest {
    * when the employee has none.
    */
   shiftTimingId?: number | null;
-  /** When the check-in occurred. */
+  /**
+   * When the check-in occurred, in the site's local wall-clock time.
+   *
+   * Serialized with {@link toLocalDateTimeString}, not `toISOString()`: the
+   * backend field is a `LocalDateTime` and carries no offset, so a UTC value
+   * would be stored with the offset silently discarded.
+   */
   eventTimestamp: Date;
   /** Where the check-in occurred, if captured. */
   location?: GeoLocation;
@@ -48,8 +55,9 @@ export interface AttendanceCheckInRequest {
  * the `?data=` query parameter.
  *
  * Flattens `location` into `latitude` / `longitude` / `gpsAccuracy` /
- * `altitude` and ISO-encodes `eventTimestamp`; the `photo` file is not included
- * (it is sent separately in the multipart body).
+ * `altitude` and encodes `eventTimestamp` as a naive local wall-clock string;
+ * the `photo` file is not included (it is sent separately in the multipart
+ * body).
  *
  * @param dto - The check-in request to serialize.
  * @returns A plain object matching the backend's expected `data` shape.
@@ -61,7 +69,7 @@ export function attendanceCheckInToJson(
     employeeId: dto.employeeId,
     projectId: dto.projectId,
     shiftTimingId: dto.shiftTimingId,
-    eventTimestamp: dto.eventTimestamp.toISOString(),
+    eventTimestamp: toLocalDateTimeString(dto.eventTimestamp),
     latitude: dto.location?.latitude,
     longitude: dto.location?.longitude,
     gpsAccuracy: dto.location?.accuracy,

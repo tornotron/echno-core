@@ -479,6 +479,7 @@ Entry points: 133
 - parseLeavePolicy
 - parseLeaveRequest
 - parseLeaveTransaction
+- parseLocalDateTime
 - parseMaterial
 - parseMaterialConsumption
 - parseMaterialLocationThreshold
@@ -598,6 +599,7 @@ Entry points: 133
 - taskToJson
 - TaskType
 - taskTypeFromString
+- toLocalDateTimeString
 - TransactionType
 - TrialBalanceReport
 - TrialBalanceRow

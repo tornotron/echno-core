@@ -6,6 +6,7 @@
  * attendance day.
  */
 
+import { toLocalDateTimeString } from '../../lib/utils/date-helpers';
 import { ClockEventType, type GeoLocation } from './clock-event';
 
 const CLOCK_EVENT_TO_BACKEND: Record<ClockEventType, string> = {
@@ -28,7 +29,12 @@ export interface CreateClockEventRequest {
   attendanceId: number;
   /** Which punch point this event represents. */
   eventType: ClockEventType;
-  /** When the punch occurred. */
+  /**
+   * When the punch occurred, in the site's local wall-clock time.
+   *
+   * Serialized with {@link toLocalDateTimeString}, not `toISOString()`: the
+   * backend field is a `LocalDateTime` and carries no offset.
+   */
   eventTimestamp: Date;
   /** Where the punch occurred, if captured. */
   location?: GeoLocation;
@@ -52,8 +58,8 @@ export interface CreateClockEventRequest {
  *
  * Maps `eventType` to the backend's SCREAMING_SNAKE_CASE enum, flattens
  * `location` into `latitude` / `longitude` / `gpsAccuracy` / `altitude`, and
- * ISO-encodes `eventTimestamp`; the `photo` file is sent separately in the
- * multipart body.
+ * encodes `eventTimestamp` as a naive local wall-clock string; the `photo` file
+ * is sent separately in the multipart body.
  *
  * @param dto - The clock-event request to serialize.
  * @returns A plain object matching the backend's expected `data` shape.
@@ -64,7 +70,7 @@ export function createClockEventToJson(
   return {
     attendanceId: dto.attendanceId,
     eventType: CLOCK_EVENT_TO_BACKEND[dto.eventType],
-    eventTimestamp: dto.eventTimestamp.toISOString(),
+    eventTimestamp: toLocalDateTimeString(dto.eventTimestamp),
     latitude: dto.location?.latitude,
     longitude: dto.location?.longitude,
     gpsAccuracy: dto.location?.accuracy,

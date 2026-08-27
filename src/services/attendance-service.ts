@@ -34,6 +34,7 @@
 
 import { api, ApiError } from '../lib/api/api-client';
 import { logger } from '../lib/logger';
+import { parseLocalDateTime } from '../lib/utils/date-helpers';
 import {
   attendanceCheckInToJson,
   attendanceListParamsToQuery,
@@ -122,7 +123,10 @@ function parseClockEvent(raw: any): ClockEvent {
     id: raw.id ?? 0,
     eventType:
       CLOCK_FROM_BACKEND[raw.eventType] ?? ClockEventType.morningClockIn,
-    timestamp: new Date(raw.eventTimestamp),
+    // A punch time is a local wall clock, not an instant: parse it as local so it
+    // reads back as the time the employee saw when they punched.
+    timestamp:
+      parseLocalDateTime(raw.eventTimestamp) ?? new Date(raw.eventTimestamp),
     location: {
       latitude: raw.latitude ?? 0,
       longitude: raw.longitude ?? 0,

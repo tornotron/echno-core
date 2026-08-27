@@ -8,7 +8,11 @@
 
 import { z } from "zod";
 import { parsePositiveInt } from "../../lib/utils/parse-id";
-import { parseUTCDate } from "../../lib/utils/date-helpers";
+import {
+  parseLocalDateTime,
+  parseUTCDate,
+  toLocalDateTimeString,
+} from "../../lib/utils/date-helpers";
 import {
   backendDate,
   nullableBoolean,
@@ -191,6 +195,11 @@ export function isWithinGeofence(
  * passed through. Expects the SDK's camelCase shape (backend field-name
  * mapping is done in `attendance-service.ts`).
  *
+ * The two date fields use different conventions on purpose. `timestamp` is the
+ * punch time the client supplied, whose contract is a local wall clock, so a
+ * naive value is read as local. `verifiedAt` is set by the server, which runs
+ * in UTC, so a naive value there is read as UTC.
+ *
  * @param data - The untyped JSON object received from the backend.
  * @returns A `ClockEvent` with date fields hydrated.
  */
@@ -199,7 +208,8 @@ export function parseClockEvent(data: unknown): ClockEvent {
   return {
     ...raw,
     id: parsePositiveInt(raw.id, 'parseClockEvent.id'),
-    timestamp: parseUTCDate(raw.timestamp) ?? new Date(raw.timestamp as string),
+    timestamp:
+      parseLocalDateTime(raw.timestamp) ?? new Date(raw.timestamp as string),
     verifiedAt: parseUTCDate(raw.verifiedAt) ?? undefined,
   } as ClockEvent;
 }
@@ -207,16 +217,17 @@ export function parseClockEvent(data: unknown): ClockEvent {
 /**
  * Serializes a {@link ClockEvent} for transmission to the backend.
  *
- * Converts `timestamp` and `verifiedAt` to ISO 8601 strings; other fields are
- * passed through unchanged.
+ * Encodes `timestamp` as a naive local wall-clock string, matching the punch
+ * contract, and `verifiedAt` as an ISO 8601 instant; other fields are passed
+ * through unchanged.
  *
  * @param event - The clock event to serialize.
- * @returns A plain object with date fields ISO-encoded.
+ * @returns A plain object with the date fields encoded for the wire.
  */
 export function clockEventToJson(event: ClockEvent): Record<string, unknown> {
   return {
     ...event,
-    timestamp: event.timestamp.toISOString(),
+    timestamp: toLocalDateTimeString(event.timestamp),
     verifiedAt: event.verifiedAt?.toISOString(),
   };
 }
