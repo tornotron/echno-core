@@ -12,9 +12,11 @@ From `v1.0.0` the package follows [semantic versioning](https://semver.org/). Se
 - Material movement-history layer for the backend's
   `GET /inventory-transactions/web/material/{materialId}/history` endpoint: the
   `MaterialMovementHistoryEntry` type with the `StockDirection` enum (INCREASE / DECREASE / EITHER,
-  mirroring the backend `StockEffect`), `parseMaterialMovementHistoryEntry` (coerces the signed
-  quantity, defaults a missing direction to `EITHER`), and the `PagedMaterialMovementHistory`
-  envelope.
+  mirroring the backend `StockEffect`), `parseMaterialMovementHistoryEntry` (coerces the stock
+  figures, defaults a missing direction to `EITHER`, leaves an uncredited movement's
+  `createdByName` undefined), and the `PagedMaterialMovementHistory` envelope. Each entry carries
+  the location, project, movement type and direction, the running balance either side of the
+  movement, the source reference and the name of whoever booked it.
 - `inventoryTransactionsService.getMaterialMovementHistory(materialId, pageNo, pageSize)` and the
   `useMaterialMovementHistory` query hook, with the `materialHistory` key under
   `inventoryTransactionKeys`. The endpoint returns the movements ordered oldest first, so consumers
