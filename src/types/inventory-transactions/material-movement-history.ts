@@ -48,16 +48,21 @@ const MaterialMovementHistoryEntryResponseSchema = z.object({
   storageLocationName: nullableString,
   projectId: numericId,
   projectName: nullableString,
+  openingStock: money,
   quantityChanged: money,
+  closingStock: money,
   referenceNumber: nullableString,
+  createdByName: nullableString,
 });
 
 /**
  * A single movement in a material's history, condensed for a timeline.
  *
- * Unlike {@link InventoryTransaction} this entry carries no running
- * balance, cost or actor: it answers where the material was, when, in
- * what direction and by how much. Entries arrive ordered oldest first.
+ * Narrower than {@link InventoryTransaction}: it answers where the
+ * material was, when, in what direction, by how much, what the stock
+ * level was either side of the movement and who booked it, and leaves
+ * out the cost basis, remarks and task link the full ledger entry
+ * carries. Entries arrive ordered oldest first.
  */
 export interface MaterialMovementHistoryEntry {
   /** Surrogate ID of the underlying ledger entry. */
@@ -88,23 +93,38 @@ export interface MaterialMovementHistoryEntry {
   /** Project display name (denormalised from `projectId`). */
   projectName: string;
 
+  /** Stock level at the location immediately before this movement. */
+  openingStock: number;
+
   /** Signed change applied by this movement. Positive in, negative out. */
   quantityChanged: number;
+
+  /** Stock level at the location immediately after this movement. */
+  closingStock: number;
 
   /**
    * Source document reference for the movement (a GRN or challan
    * number, for example). Absent for ad-hoc adjustments.
    */
   referenceNumber?: string;
+
+  /**
+   * Display name of the employee who booked the movement. For automated
+   * movements this is the actor who triggered the source event.
+   * `undefined` when the ledger row records no creator.
+   */
+  createdByName?: string;
 }
 
 /**
  * Parses a raw movement-history payload into a typed
  * {@link MaterialMovementHistoryEntry}.
  *
- * `quantityChanged` falls back to `0` when absent; a missing
+ * The stock figures fall back to `0` when absent; a missing
  * `direction` falls back to {@link StockDirection.either} so the caller
  * derives the sign from the quantity rather than guessing a direction.
+ * `createdByName` stays `undefined` for a movement with no recorded
+ * creator, which the backend leaves null.
  *
  * @param json - The raw JSON object from the backend.
  * @returns The parsed {@link MaterialMovementHistoryEntry}.
@@ -124,7 +144,10 @@ export function parseMaterialMovementHistoryEntry(
     storageLocationName: raw.storageLocationName ?? '',
     projectId: raw.projectId,
     projectName: raw.projectName ?? '',
+    openingStock: raw.openingStock ?? 0,
     quantityChanged: raw.quantityChanged ?? 0,
+    closingStock: raw.closingStock ?? 0,
     referenceNumber: raw.referenceNumber ?? undefined,
+    createdByName: raw.createdByName ?? undefined,
   };
 }

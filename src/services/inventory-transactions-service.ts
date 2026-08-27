@@ -225,9 +225,10 @@ export const inventoryTransactionsService = {
    * page at a time, so the caller renders a forward-running timeline
    * without sorting client-side. Each entry is narrower than a full
    * {@link InventoryTransaction}: it carries the location, project,
-   * movement type and its direction, the quantity changed, the
-   * timestamp and the source reference, but no running balance, cost
-   * or actor.
+   * movement type and its direction, the quantity changed, the stock
+   * level either side of it, the timestamp, the source reference and
+   * the name of whoever booked it, but no cost basis, remarks or task
+   * link.
    *
    * @param materialId - Surrogate ID of the material.
    * @param pageNo - Zero-based page number. Defaults to `0`.
