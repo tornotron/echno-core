@@ -54,6 +54,10 @@ export * from './types/work-category';
 export * from './services/work-category-service';
 export * from './hooks/work-category';
 
+// Search
+export * from './services/search-service';
+export * from './hooks/search';
+
 // Issue
 export * from './types/issue';
 export * from './services/issue-service';
