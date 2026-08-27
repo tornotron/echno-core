@@ -8,6 +8,7 @@
 
 import { api, ApiError } from '../lib/api/api-client';
 import { logger } from '../lib/logger';
+import { parseLocalDateTime } from '../lib/utils/date-helpers';
 import {
   MovementType,
   createMovementToJson,
@@ -41,8 +42,10 @@ function parseMovement(raw: any): MovementRecord {
     movementType: MOVEMENT_FROM_BACKEND[raw.movementType] ?? MovementType.other,
     fromLocation: raw.fromLocation ?? '',
     toLocation: raw.toLocation ?? undefined,
-    startTime: new Date(raw.startTime),
-    endTime: raw.endTime ? new Date(raw.endTime) : undefined,
+    // Movement times are local wall clocks, not instants: parse them as local so
+    // they read back as the times the employee entered.
+    startTime: parseLocalDateTime(raw.startTime) ?? new Date(raw.startTime),
+    endTime: raw.endTime ? parseLocalDateTime(raw.endTime) ?? undefined : undefined,
     durationMinutes: raw.durationMinutes ?? undefined,
     distance: raw.distanceKm ?? undefined,
     purpose: raw.purpose ?? '',

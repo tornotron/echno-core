@@ -9,7 +9,10 @@
 
 import { z } from "zod";
 import { parsePositiveInt } from "../../lib/utils/parse-id";
-import { parseUTCDate } from "../../lib/utils/date-helpers";
+import {
+  parseLocalDateTime,
+  parseUTCDate,
+} from "../../lib/utils/date-helpers";
 import { MovementType } from "./movement-type";
 import {
   backendDate,
@@ -113,6 +116,11 @@ export interface MovementRecord {
  * into `Date` objects; other fields are passed through. Expects the SDK's
  * camelCase shape (backend enum/field mapping is done in the service layer).
  *
+ * The date fields split by who set them. `startTime` and `endTime` come from
+ * the client and their contract is a local wall clock, so a naive value is read
+ * as local. `verifiedAt`, `createdAt` and `updatedAt` are set by the server,
+ * which runs in UTC, so a naive value there is read as UTC.
+ *
  * @param data - The untyped JSON object received from the backend.
  * @returns A `MovementRecord` with date fields hydrated.
  */
@@ -121,8 +129,9 @@ export function parseMovementRecord(data: unknown): MovementRecord {
   return {
     ...raw,
     id: parsePositiveInt(raw.id, 'parseMovementRecord.id'),
-    startTime: parseUTCDate(raw.startTime) ?? new Date(raw.startTime as string),
-    endTime: parseUTCDate(raw.endTime) ?? undefined,
+    startTime:
+      parseLocalDateTime(raw.startTime) ?? new Date(raw.startTime as string),
+    endTime: parseLocalDateTime(raw.endTime) ?? undefined,
     verifiedAt: parseUTCDate(raw.verifiedAt) ?? undefined,
     createdAt: parseUTCDate(raw.createdAt) ?? new Date(raw.createdAt as string),
     updatedAt: parseUTCDate(raw.updatedAt) ?? new Date(raw.updatedAt as string),
