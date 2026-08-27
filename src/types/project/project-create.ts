@@ -19,8 +19,23 @@ export interface CreateProjectRequest {
   /** Display name of the project. Required. */
   projectName: string;
 
-  /** Site address shown on dashboards and detail pages. Required. */
+  /** Street address of the site, as one line. Required. */
   projectAddress: string;
+
+  /** Town or city the site is in. Optional. */
+  projectCity?: string;
+
+  /**
+   * Indian state or union territory the site is in. Optional, but it is what
+   * compliance generation keys its rules by: without it the backend falls back
+   * to reading a state out of the address, which finds nothing in an address
+   * that names only a city. The backend stores it in its canonical spelling
+   * and rejects a value that is not a state.
+   */
+  projectState?: string;
+
+  /** Postal (PIN) code of the site. Optional. */
+  projectPostalCode?: string;
 
   /** Free-text description. Optional. */
   description?: string;
@@ -76,6 +91,11 @@ export function createProjectToJson(
   return {
     projectName: dto.projectName,
     projectAddress: dto.projectAddress,
+    ...(dto.projectCity !== undefined && { projectCity: dto.projectCity }),
+    ...(dto.projectState !== undefined && { projectState: dto.projectState }),
+    ...(dto.projectPostalCode !== undefined && {
+      projectPostalCode: dto.projectPostalCode,
+    }),
     ...(dto.description !== undefined && { description: dto.description }),
     ...(dto.status !== undefined && { status: dto.status }),
     ...(dto.projectLongitude !== undefined && {

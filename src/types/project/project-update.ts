@@ -23,8 +23,21 @@ export interface UpdateProjectRequest {
   /** New display name. */
   projectName?: string;
 
-  /** New site address. */
+  /** New street address of the site, as one line. */
   projectAddress?: string;
+
+  /** New town or city the site is in. */
+  projectCity?: string;
+
+  /**
+   * New Indian state or union territory the site is in. Read by compliance
+   * generation, which keys its rules by state; the backend stores it in its
+   * canonical spelling and rejects a value that is not a state.
+   */
+  projectState?: string;
+
+  /** New postal (PIN) code of the site. */
+  projectPostalCode?: string;
 
   /** New description. */
   description?: string;
@@ -77,6 +90,11 @@ export function updateProjectToJson(
     ...(dto.projectName !== undefined && { projectName: dto.projectName }),
     ...(dto.projectAddress !== undefined && {
       projectAddress: dto.projectAddress,
+    }),
+    ...(dto.projectCity !== undefined && { projectCity: dto.projectCity }),
+    ...(dto.projectState !== undefined && { projectState: dto.projectState }),
+    ...(dto.projectPostalCode !== undefined && {
+      projectPostalCode: dto.projectPostalCode,
     }),
     ...(dto.description !== undefined && { description: dto.description }),
     ...(dto.status !== undefined && { status: dto.status }),
