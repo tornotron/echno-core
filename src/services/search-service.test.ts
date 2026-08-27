@@ -17,7 +17,7 @@ afterEach(() => {
   (api.get as unknown as { mockRestore?: () => void }).mockRestore?.();
 });
 
-describe('searchService.search — terms not worth a round trip', () => {
+describe('searchService.search: terms not worth a round trip', () => {
   test.each(['', '   ', 'a', ' b '])(
     'sends nothing for %p',
     async (term: string) => {
@@ -29,7 +29,7 @@ describe('searchService.search — terms not worth a round trip', () => {
   );
 });
 
-describe('searchService.search — the request', () => {
+describe('searchService.search: the request', () => {
   test('hits the one cross-entity endpoint with the trimmed term', async () => {
     const get = spyOn(api, 'get').mockResolvedValue([] as Raw);
 
@@ -57,7 +57,7 @@ describe('searchService.search — the request', () => {
   });
 });
 
-describe('searchService.search — the response', () => {
+describe('searchService.search: the response', () => {
   test('carries the kind, id, title and owning project of each hit', async () => {
     spyOn(api, 'get').mockResolvedValue([
       { type: 'PROJECT', id: 1, title: 'Riverside Tower', projectId: 1 },
