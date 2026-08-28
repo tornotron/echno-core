@@ -4,6 +4,7 @@
  * Request payload for `POST /tasks/web` (multipart) plus the
  * {@link TaskFiles} file-upload shape used by both create and update.
  */
+import { toLocalDateAtMidnight } from '../../lib/utils/date-helpers';
 import { TaskStatus } from './task-status';
 
 /**
@@ -90,8 +91,8 @@ export function createTaskToJson(
 
   if (dto.description !== undefined) payload.description = dto.description;
   if (dto.startDate !== undefined)
-    payload.startDate = dto.startDate.toISOString();
-  if (dto.endDate !== undefined) payload.endDate = dto.endDate.toISOString();
+    payload.startDate = toLocalDateAtMidnight(dto.startDate);
+  if (dto.endDate !== undefined) payload.endDate = toLocalDateAtMidnight(dto.endDate);
   if (dto.creatorId !== undefined) payload.creatorId = dto.creatorId;
   if (dto.categoryId !== undefined) payload.categoryId = dto.categoryId;
   if (dto.status !== undefined) payload.status = dto.status;

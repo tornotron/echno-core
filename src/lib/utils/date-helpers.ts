@@ -140,3 +140,30 @@ export function parseLocalDateTime(
   const d = new Date(value.trim());
   return Number.isNaN(d.getTime()) ? null : d;
 }
+
+/**
+ * Formats a `Date` as `YYYY-MM-DDT00:00:00` from its **local** calendar date.
+ *
+ * The shape backend fields want when the value is a calendar date but the column
+ * is a `LocalDateTime`: a date of birth, a joining date, a task's start and end,
+ * a project's start and end. All of those are entered through a
+ * `<input type="date">`, so they carry no time of day, and the backend stores the
+ * time component as zero.
+ *
+ * The local getters are the point. Reading the UTC calendar date instead returns
+ * the **previous day** for any `Date` at local midnight in a positive-offset zone,
+ * which is exactly how a date of birth ends up a day early. It is a subtle failure
+ * because it is only wrong for some inputs: a `Date` built from
+ * `new Date('2026-08-27')` is UTC midnight and reads back correctly either way,
+ * while one from a calendar picker is local midnight and does not.
+ *
+ * For a value that genuinely carries a time of day, use
+ * {@link toLocalDateTimeString} instead.
+ *
+ * @param date - The date to format.
+ * @returns The local calendar date with a zeroed time, e.g. `'2026-08-27T00:00:00'`.
+ */
+export function toLocalDateAtMidnight(date: Date): string {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T00:00:00`;
+}

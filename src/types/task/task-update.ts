@@ -4,6 +4,7 @@
  * Partial update payload for `PATCH /tasks/web/{id}` (multipart). Every
  * field is optional — callers send only the keys they want to change.
  */
+import { toLocalDateAtMidnight } from '../../lib/utils/date-helpers';
 import { TaskStatus } from './task-status';
 
 /**
@@ -76,8 +77,8 @@ export function updateTaskToJson(
   if (dto.projectId !== undefined) payload.projectId = dto.projectId;
   if (dto.description !== undefined) payload.description = dto.description;
   if (dto.startDate !== undefined)
-    payload.startDate = dto.startDate.toISOString();
-  if (dto.endDate !== undefined) payload.endDate = dto.endDate.toISOString();
+    payload.startDate = toLocalDateAtMidnight(dto.startDate);
+  if (dto.endDate !== undefined) payload.endDate = toLocalDateAtMidnight(dto.endDate);
   if (dto.creatorId !== undefined) payload.creatorId = dto.creatorId;
   if (dto.categoryId !== undefined) payload.categoryId = dto.categoryId;
   if (dto.status !== undefined) payload.status = dto.status;

@@ -5,6 +5,7 @@
  * variant `updateWithFiles`). Every field is optional — callers send
  * only the keys they want to change.
  */
+import { toLocalDateAtMidnight } from '../../lib/utils/date-helpers';
 import { ProjectStatus } from './project-status';
 import { ProjectType } from './project-type';
 
@@ -108,9 +109,9 @@ export function updateProjectToJson(
       organizationId: dto.organizationId,
     }),
     ...(dto.startDate !== undefined && {
-      startDate: dto.startDate.toISOString(),
+      startDate: toLocalDateAtMidnight(dto.startDate),
     }),
-    ...(dto.endDate !== undefined && { endDate: dto.endDate.toISOString() }),
+    ...(dto.endDate !== undefined && { endDate: toLocalDateAtMidnight(dto.endDate) }),
     ...(dto.projectType !== undefined && { projectType: dto.projectType }),
     ...(dto.memberIds !== undefined && { employees: dto.memberIds }),
   };
