@@ -9,7 +9,12 @@ import { createEmployeeToJson } from '../../types/employee/employee-create';
 // where the local and UTC calendar dates are always the same and every assertion
 // below passes against the bug it is written to catch. IST is UTC+05:30 with no
 // DST, so a Date at local midnight falls on the previous UTC day.
-const originalTimeZone = process.env.TZ;
+// Resolved rather than read straight from the environment: TZ is unset on CI,
+// and restoring an unset TZ by deleting the key freezes the zone for the rest of
+// the process in Bun, so later files can no longer pin their own. Assigning a
+// concrete zone back is the only restore that works.
+const originalTimeZone =
+  process.env.TZ ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 beforeAll(() => {
   process.env.TZ = 'Asia/Kolkata';
