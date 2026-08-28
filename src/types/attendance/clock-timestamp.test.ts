@@ -5,7 +5,12 @@ import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
 // below would pass against the bug it is written to catch. IST is UTC+05:30 and
 // has no DST, so the expected strings are stable. Restored afterwards so the
 // zone does not leak into the rest of the suite.
-const originalTimeZone = process.env.TZ;
+// Resolved rather than read straight from the environment: TZ is unset on CI,
+// and restoring an unset TZ by deleting the key freezes the zone for the rest of
+// the process in Bun, so later files can no longer pin their own. Assigning a
+// concrete zone back is the only restore that works.
+const originalTimeZone =
+  process.env.TZ ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 beforeAll(() => {
   process.env.TZ = 'Asia/Kolkata';

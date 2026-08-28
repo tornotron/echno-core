@@ -39,6 +39,9 @@ const SCANNED_DIRS = ['types', 'services'];
  */
 const EXEMPTION = 'wire-date-exempt:';
 
+/** An IANA zone name, e.g. 'Asia/Kolkata'. Used to spot a real TZ pin. */
+const ZONE_LITERAL = /['"`][A-Za-z]+\/[A-Za-z_]+['"`]/;
+
 /** The conversions a value is allowed to arrive through. */
 const SANCTIONED_PARSERS = [
   'parseUTCDate(',
@@ -236,10 +239,13 @@ describe('tests that can see a timezone bug', () => {
       if (file === import.meta.path) continue;
       const source = readFileSync(file, 'utf8');
       if (!localTimeApi.some((name) => source.includes(name))) continue;
-      // An assignment to a zone *literal*. Matching `process.env.TZ` loosely
-      // would also match the `= originalTimeZone` restore, which is what a file
-      // that has had its pin removed still contains.
-      if (/process\.env\.TZ\s*=\s*['"`]/.test(source)) continue;
+      // A pin is an assignment to process.env.TZ *and* a real zone name in the
+      // file. Matching the assignment alone would also match the
+      // `= originalTimeZone` restore, which a file whose pin was deleted still
+      // has; requiring the zone name alone would match a comment.
+      if (ZONE_LITERAL.test(source) && /process\.env\.TZ\s*=/.test(source)) {
+        continue;
+      }
       unpinned.push(relative(SRC, file));
     }
 
@@ -251,6 +257,43 @@ describe('tests that can see a timezone bug', () => {
             `indistinguishable from the bug it replaces. Pin a non-UTC zone and\n` +
             `restore it, as clock-timestamp.test.ts does.\n\n` +
             unpinned.map((f) => `  ${f}`).join('\n')
+    ).toBe('');
+  });
+
+  test('no test restores TZ by deleting it', () => {
+    // Measured on Bun 1.3.14: assigning process.env.TZ switches the zone as
+    // often as you like, but `delete process.env.TZ` freezes it for the rest of
+    // the process, and every later assignment is ignored. Since the runner
+    // shares one process across files, one delete silently disables the pin in
+    // every file that runs after it, and the failure surfaces in an unrelated
+    // test. `process.env.TZ = undefined` is just as bad by a different route: it
+    // writes the literal string 'undefined', which is not a valid zone.
+    //
+    // The restore that works is an assignment to a concrete zone, captured with
+    // `process.env.TZ ?? Intl.DateTimeFormat().resolvedOptions().timeZone` so
+    // that an originally-unset TZ still restores to something real.
+    const leaking: string[] = [];
+    const collect = (dir: string) => {
+      for (const entry of readdirSync(dir)) {
+        const full = join(dir, entry);
+        if (statSync(full).isDirectory()) collect(full);
+        else if (entry.endsWith('.test.ts')) {
+          if (full === import.meta.path) continue;
+          const source = readFileSync(full, 'utf8');
+          if (!/delete\s+process\.env\.TZ/.test(source)) continue;
+          leaking.push(relative(SRC, full));
+        }
+      }
+    };
+    collect(SRC);
+
+    expect(
+      leaking.length === 0
+        ? ''
+        : `These tests delete process.env.TZ, which freezes the timezone for the\n` +
+            `rest of the run in Bun and silently disables the pin in every file\n` +
+            `that follows. Restore by assigning a concrete zone instead.\n\n` +
+            leaking.map((f) => `  ${f}`).join('\n')
     ).toBe('');
   });
 });

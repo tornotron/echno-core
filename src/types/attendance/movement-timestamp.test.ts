@@ -8,7 +8,12 @@ import { toLocalDateTimeString } from '../../lib/utils/date-helpers';
 // runner defaults to UTC, where a UTC serializer and a local one produce the same
 // wall clock and every assertion below would pass against the bug it is written to
 // catch. IST is UTC+05:30 and has no DST, so the expected strings are stable.
-const originalTimeZone = process.env.TZ;
+// Resolved rather than read straight from the environment: TZ is unset on CI,
+// and restoring an unset TZ by deleting the key freezes the zone for the rest of
+// the process in Bun, so later files can no longer pin their own. Assigning a
+// concrete zone back is the only restore that works.
+const originalTimeZone =
+  process.env.TZ ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 beforeAll(() => {
   process.env.TZ = 'Asia/Kolkata';
