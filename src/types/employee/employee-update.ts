@@ -8,6 +8,7 @@
  * profile edits.
  */
 
+import { toLocalDateAtMidnight } from '../../lib/utils/date-helpers';
 import { Department } from './departments';
 import { EmployeeStatus } from './employee-status';
 
@@ -102,7 +103,7 @@ export function updateEmployeeToJson(
   if (dto.phone !== undefined) payload.phoneNumber = dto.phone;
   if (dto.gender !== undefined) payload.gender = dto.gender;
   if (dto.dateOfBirth !== undefined)
-    payload.dateOfBirth = dto.dateOfBirth.toISOString();
+    payload.dateOfBirth = toLocalDateAtMidnight(dto.dateOfBirth);
   if (dto.address !== undefined) payload.address = dto.address;
   if (dto.qualification !== undefined)
     payload.qualification = dto.qualification;
@@ -111,7 +112,7 @@ export function updateEmployeeToJson(
   if (dto.department !== undefined) payload.department = dto.department;
   if (dto.joiningDate !== undefined) {
     payload.joiningDate =
-      dto.joiningDate === null ? null : dto.joiningDate.toISOString();
+      dto.joiningDate === null ? null : toLocalDateAtMidnight(dto.joiningDate);
   }
   if (dto.organizationId !== undefined)
     payload.organizationId = dto.organizationId;

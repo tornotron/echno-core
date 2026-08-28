@@ -11,6 +11,7 @@
  * `useCreateEmployee` hook fails fast.
  */
 
+import { toLocalDateAtMidnight } from '../../lib/utils/date-helpers';
 import { Department } from './departments';
 
 /**
@@ -91,13 +92,13 @@ export function createEmployeeToJson(
     emailAddress: dto.email,
     phoneNumber: dto.phone,
     gender: dto.gender,
-    dateOfBirth: dto.dateOfBirth.toISOString(),
+    dateOfBirth: toLocalDateAtMidnight(dto.dateOfBirth),
     address: dto.address,
     qualification: dto.qualification,
     employeeId: dto.employeeId,
     designation: dto.designation,
     department: dto.department,
-    joiningDate: dto.joiningDate.toISOString(),
+    joiningDate: toLocalDateAtMidnight(dto.joiningDate),
     organizationId: dto.organizationId,
   };
 

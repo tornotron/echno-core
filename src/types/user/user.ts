@@ -9,6 +9,7 @@
  * `attachments` array for convenient access by UI code.
  */
 
+import { toLocalDateAtMidnight } from '../../lib/utils/date-helpers';
 import { z } from 'zod';
 import { Attachment, parseAttachment } from '../attachment';
 import { parseUTCDate } from '../../lib/utils/date-helpers';
@@ -149,18 +150,19 @@ export function userInitials(user: User): string {
 }
 
 /**
- * Formats a `Date` into the backend's expected `YYYY-MM-DDTHH:mm:ss`
- * string. The time component is always `00:00:00`; the year/month/day are
- * read in UTC.
+ * Formats a `Date` into the backend's expected `YYYY-MM-DDTHH:mm:ss` string,
+ * with the time component always `00:00:00`.
+ *
+ * Kept as the name callers already use; the implementation is
+ * {@link toLocalDateAtMidnight}. It previously read the year, month and day in
+ * **UTC**, which returns the previous day for any `Date` at local midnight in a
+ * positive-offset zone.
  *
  * @param date - The date to format.
  * @returns A date-only string with a zeroed time component.
  */
 export function formatDateForBackend(date: Date): string {
-  const year = date.getUTCFullYear();
-  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-  const day = String(date.getUTCDate()).padStart(2, '0');
-  return `${year}-${month}-${day}T00:00:00`;
+  return toLocalDateAtMidnight(date);
 }
 
 // ────── JSON Parsing & Serialization ──────

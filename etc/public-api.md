@@ -607,6 +607,7 @@ Entry points: 136
 - taskToJson
 - TaskType
 - taskTypeFromString
+- toLocalDateAtMidnight
 - toLocalDateTimeString
 - TransactionType
 - TrialBalanceReport
