@@ -474,6 +474,7 @@ Entry points: 132
 - parseLeavePolicy
 - parseLeaveRequest
 - parseLeaveTransaction
+- parseLocalDate
 - parseLocalDateTime
 - parseMaterial
 - parseMaterialConsumption

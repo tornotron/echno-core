@@ -20,7 +20,24 @@ export interface GenerateInviteCodeRequest {
   employeeName?: string;
   email?: string;
   phone?: string;
+
+  /**
+   * @deprecated Not sent, and not settable through this endpoint.
+   *
+   * `InviteCodeGenerationDto` has no such field, and Spring is configured to
+   * ignore unknown properties, so a value passed here was accepted and
+   * discarded. The joining date is not the caller's to choose: the service
+   * hardcodes `employeeDetails.put("joiningDate", LocalDateTime.now())` when
+   * the code is generated, and reads that back when it is redeemed. So the
+   * stored date is the moment the invite was created, whatever the form said.
+   *
+   * Kept on the interface rather than removed because `echno-web`'s invitation
+   * form passes it, and dropping the property would fail its build rather than
+   * its request. Removing it needs the form field to go first, or the backend
+   * to start honouring it. See the follow-up issue.
+   */
   joiningDate?: Date;
+
   salary?: number;
   managerId?: number;
   shiftTimingId?: number | null;
@@ -33,7 +50,6 @@ export interface GenerateInviteCodeRequest {
  * Serializes a {@link GenerateInviteCodeRequest} for transmission to the backend.
  *
  * Optional fields are omitted when unset. `status` defaults to `'active'`.
- * `joiningDate` is serialized to an ISO 8601 string.
  *
  * @param request - The request to serialize.
  * @returns A plain object matching the backend's request body shape.
@@ -51,8 +67,6 @@ export function generateInviteCodeToJson(
   if (request.employeeName) payload.employeeName = request.employeeName;
   if (request.email) payload.email = request.email;
   if (request.phone) payload.phone = request.phone;
-  if (request.joiningDate)
-    payload.joiningDate = request.joiningDate.toISOString();
   if (request.salary !== undefined) payload.salary = request.salary;
   if (request.managerId !== undefined) payload.managerId = request.managerId;
   if (request.shiftTimingId !== undefined)

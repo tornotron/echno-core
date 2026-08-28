@@ -22,6 +22,12 @@ import {
 import { TaskStatus, taskStatusFromString } from './task-status';
 import { Attachment, parseAttachment } from '../attachment';
 import { parsePositiveInt } from '../../lib/utils/parse-id';
+import {
+  parseLocalDateTime,
+  parseUTCDate,
+  toLocalDateAtMidnight,
+  toLocalDateTimeString,
+} from '../../lib/utils/date-helpers';
 import { z } from 'zod';
 import {
   nullableNumber,
@@ -30,8 +36,8 @@ import {
   optionalNumericId,
 } from '../../lib/validation/backend-schema';
 
-// The backend serializes date fields as ISO strings, but `parseDateTime` also
-// accepts millisecond timestamps, so both are allowed through here.
+// The backend serializes date fields as ISO strings; the parsers below also
+// accept millisecond timestamps, so both are allowed through here.
 const dateValue = z.union([z.string(), z.number()]).nullish();
 
 const TaskResponseSchema = z.object({
@@ -142,8 +148,8 @@ export function parseTask(json: unknown): Task {
     projectId: raw.projectId ?? 1,
     title: raw.title ?? 'Untitled Task',
     description: raw.description ?? undefined,
-    startDate: parseDateTime(raw.startDate),
-    endDate: parseDateTime(raw.endDate),
+    startDate: parseCalendarDate(raw.startDate),
+    endDate: parseCalendarDate(raw.endDate),
     creator: raw.creator ? parseEmployee(raw.creator) : undefined,
     assignees: raw.assignees
       ? raw.assignees.filter(Boolean).map((m) => parseEmployee(m))
@@ -151,8 +157,8 @@ export function parseTask(json: unknown): Task {
     category: raw.category ? parseWorkCategory(raw.category) : undefined,
     progress: Number(raw.progress ?? 0),
     tags: raw.tags ? (raw.tags.filter(Boolean) as string[]) : [],
-    createdAt: parseDateTime(raw.createdAt),
-    updatedAt: parseDateTime(raw.updatedAt),
+    createdAt: parseServerInstant(raw.createdAt),
+    updatedAt: parseServerInstant(raw.updatedAt),
     status: taskStatusFromString(raw.status as string),
     issues: raw.issues
       ? raw.issues.filter(Boolean).map((i) => parseIssue(i))
@@ -163,22 +169,34 @@ export function parseTask(json: unknown): Task {
   };
 }
 
-/** Tolerant `Date` parser: accepts ISO strings or millisecond timestamps. */
-function parseDateTime(value: unknown): Date | undefined {
-  if (!value) return undefined;
-  try {
-    if (typeof value === 'string') return new Date(value);
-    if (typeof value === 'number') return new Date(value);
-    return undefined;
-  } catch {
-    return undefined;
-  }
+/**
+ * Server-set instant (`createdAt`, `updatedAt`), recorded by a backend running
+ * in UTC and serialized without an offset.
+ *
+ * This replaces a local `parseDateTime` helper that was a bare `new Date(value)`
+ * and so read those timestamps as local. It was invisible to the inbound pass
+ * that fixed the shared parsers, because it shadowed them inside this module.
+ */
+function parseServerInstant(value: unknown): Date | undefined {
+  return parseUTCDate(value as string | number | null | undefined) ?? undefined;
+}
+
+/**
+ * Calendar date with no time of day (`startDate`, `endDate`), written by
+ * {@link createTaskToJson} with `toLocalDateAtMidnight`.
+ */
+function parseCalendarDate(value: unknown): Date | undefined {
+  return (
+    parseLocalDateTime(value as string | number | null | undefined) ?? undefined
+  );
 }
 
 /**
  * Serializes a {@link Task} into a JSON payload suitable for the backend.
  *
- * `Date` fields are emitted as ISO-8601 strings; nested entities use
+ * `startDate` and `endDate` are emitted as local calendar dates and the two
+ * timestamps as naive local date-times, neither carrying an offset, which is
+ * what the backend's `LocalDateTime` columns accept. Nested entities use
  * their own serializers (`employeeToJson`, `workCategoryToJson`,
  * `issueToJson`).
  *
@@ -191,15 +209,15 @@ export function taskToJson(task: Task): Record<string, unknown> {
     projectId: task.projectId,
     title: task.title,
     description: task.description,
-    startDate: task.startDate?.toISOString(),
-    endDate: task.endDate?.toISOString(),
+    startDate: task.startDate && toLocalDateAtMidnight(task.startDate),
+    endDate: task.endDate && toLocalDateAtMidnight(task.endDate),
     creator: task.creator ? employeeToJson(task.creator) : undefined,
     assignees: task.assignees?.map((e) => employeeToJson(e)),
     category: task.category ? workCategoryToJson(task.category) : undefined,
     progress: task.progress,
     tags: task.tags ?? [],
-    createdAt: task.createdAt?.toISOString(),
-    updatedAt: task.updatedAt?.toISOString(),
+    createdAt: task.createdAt && toLocalDateTimeString(task.createdAt),
+    updatedAt: task.updatedAt && toLocalDateTimeString(task.updatedAt),
     status: task.status,
     issues: task.issues?.map((i) => issueToJson(i)) ?? [],
   };

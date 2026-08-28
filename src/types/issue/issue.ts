@@ -12,7 +12,10 @@ import { IssueComment, parseIssueComment } from './issue-comment';
 import { Attachment, parseAttachment } from '../attachment';
 import { parsePositiveInt } from '../../lib/utils/parse-id';
 import { Employee } from '../employee/employee';
-import { parseUTCDate } from '../../lib/utils/date-helpers';
+import {
+  parseUTCDate,
+  toLocalDateTimeString,
+} from '../../lib/utils/date-helpers';
 import {
   backendDate,
   nullableString,
@@ -156,8 +159,8 @@ export function issueToJson(issue: Issue): Record<string, unknown> {
     description: issue.description,
     type: issue.type,
     status: issue.status,
-    createdAt: issue.createdAt.toISOString(),
-    updatedAt: issue.updatedAt?.toISOString(),
+    createdAt: toLocalDateTimeString(issue.createdAt),
+    updatedAt: issue.updatedAt && toLocalDateTimeString(issue.updatedAt),
     createdById: issue.creatorId ?? issue.creator?.id,
     assignedToId: issue.assigneeId ?? issue.assignee?.id,
   };

@@ -14,6 +14,10 @@ import { IssueStatus } from './issue-status';
  * - `issueType` ↔ backend `issueType` (matches)
  * - `creatorId` → backend `createdById`
  * - `assigneeId` → backend `assignedToId`
+ *
+ * There is deliberately no due date. `IssueCreationDto` has no such field, the
+ * `Issue` entity has no such column, and Spring ignores unknown properties, so
+ * one sent here would be accepted and discarded.
  */
 export interface CreateIssueRequest {
   /** Short human-readable summary. */
@@ -42,9 +46,6 @@ export interface CreateIssueRequest {
 
   /** Optional initial assignee. */
   assigneeId?: number;
-
-  /** Optional due date for the issue. */
-  dueDate?: Date;
 }
 
 /**
@@ -70,7 +71,6 @@ export function createIssueToJson(
   if (dto.priority !== undefined) payload.priority = dto.priority;
   if (dto.taskId !== undefined) payload.taskId = dto.taskId;
   if (dto.assigneeId !== undefined) payload.assignedToId = dto.assigneeId;
-  if (dto.dueDate !== undefined) payload.dueDate = dto.dueDate.toISOString();
 
   return payload;
 }

@@ -15,6 +15,7 @@
 
 import { api, ApiError } from '../lib/api/api-client';
 import { logger } from '../lib/logger';
+import { parseLocalDate } from '../lib/utils/date-helpers';
 import {
   LeavePolicy,
   parseLeavePolicy,
@@ -1103,7 +1104,7 @@ export const leaveService = {
       date,
     });
     return {
-      date: data.date ? new Date(data.date) : new Date(date),
+      date: parseLocalDate(data.date) ?? parseLocalDate(date) ?? new Date(),
       count: data.count ?? 0,
     };
   },

@@ -17,7 +17,12 @@
  */
 
 import { z } from 'zod';
-import { parseUTCDate } from '../../lib/utils/date-helpers';
+import {
+  parseUTCDate,
+  parseLocalDateTime,
+  toLocalDateAtMidnight,
+  toLocalDateTimeString,
+} from '../../lib/utils/date-helpers';
 import {
   backendDate,
   money,
@@ -122,7 +127,8 @@ export function parseInvitation(json: unknown): Invitation {
     email: raw.employeeDetails?.email ?? undefined,
     employeeId: raw.employeeDetails?.employeeId ?? undefined,
     employeeName: raw.employeeDetails?.employeeName ?? undefined,
-    joiningDate: parseUTCDate(raw.employeeDetails?.joiningDate) ?? undefined,
+    joiningDate:
+      parseLocalDateTime(raw.employeeDetails?.joiningDate) ?? undefined,
     phone: raw.employeeDetails?.phone ?? undefined,
     managerId: raw.employeeDetails?.managerId ?? undefined,
     salary:
@@ -156,7 +162,7 @@ export function invitationToJson(inv: Invitation): Record<string, unknown> {
   return {
     id: inv.id,
     code: inv.inviteCode,
-    expiryDate: inv.expiryDate?.toISOString(),
+    expiryDate: inv.expiryDate && toLocalDateTimeString(inv.expiryDate),
     maxUses: inv.maxUses,
     currentUses: inv.usedCount,
     employeeDetails: {
@@ -165,7 +171,9 @@ export function invitationToJson(inv: Invitation): Record<string, unknown> {
       email: inv.employeeDetails.email,
       employeeId: inv.employeeDetails.employeeId,
       employeeName: inv.employeeDetails.employeeName,
-      joiningDate: inv.employeeDetails.joiningDate?.toISOString(),
+      joiningDate:
+        inv.employeeDetails.joiningDate &&
+        toLocalDateAtMidnight(inv.employeeDetails.joiningDate),
       phone: inv.employeeDetails.phone,
       managerId: inv.employeeDetails.managerId,
       salary: inv.employeeDetails.salary,

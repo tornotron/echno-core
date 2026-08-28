@@ -217,9 +217,9 @@ export function parseClockEvent(data: unknown): ClockEvent {
 /**
  * Serializes a {@link ClockEvent} for transmission to the backend.
  *
- * Encodes `timestamp` as a naive local wall-clock string, matching the punch
- * contract, and `verifiedAt` as an ISO 8601 instant; other fields are passed
- * through unchanged.
+ * Encodes both dates as naive local date-time strings. `timestamp` is the punch
+ * contract; `verifiedAt` is server-set and response-only, and is carried here
+ * only so the object round-trips. Other fields are passed through unchanged.
  *
  * @param event - The clock event to serialize.
  * @returns A plain object with the date fields encoded for the wire.
@@ -228,6 +228,6 @@ export function clockEventToJson(event: ClockEvent): Record<string, unknown> {
   return {
     ...event,
     timestamp: toLocalDateTimeString(event.timestamp),
-    verifiedAt: event.verifiedAt?.toISOString(),
+    verifiedAt: event.verifiedAt && toLocalDateTimeString(event.verifiedAt),
   };
 }

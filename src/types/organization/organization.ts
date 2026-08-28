@@ -9,7 +9,10 @@
  */
 
 import { Employee, employeeToJson, parseEmployee } from '../employee';
-import { parseUTCDate } from '../../lib/utils/date-helpers';
+import {
+  parseUTCDate,
+  toLocalDateTimeString,
+} from '../../lib/utils/date-helpers';
 import { Project, projectToJson, parseProject } from '../project';
 import { Attachment, parseAttachment } from '../attachment';
 import { parsePositiveInt } from '../../lib/utils/parse-id';
@@ -184,7 +187,7 @@ export function organizationToJson(org: Organization): Record<string, unknown> {
     employees: org.employees?.map((e) => employeeToJson(e)),
     projects: org.projects?.map((p) => projectToJson(p)),
     creatorId: org.creatorId,
-    createdAt: org.createdAt?.toISOString(),
+    createdAt: org.createdAt && toLocalDateTimeString(org.createdAt),
     isActive: org.isActive,
   };
 }

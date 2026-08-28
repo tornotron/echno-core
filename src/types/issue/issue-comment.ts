@@ -6,7 +6,10 @@
  */
 import { z } from 'zod';
 import { Employee } from '../employee/employee';
-import { parseUTCDate } from '../../lib/utils/date-helpers';
+import {
+  parseUTCDate,
+  toLocalDateTimeString,
+} from '../../lib/utils/date-helpers';
 import { parsePositiveInt } from '../../lib/utils/parse-id';
 import {
   backendDate,
@@ -81,7 +84,7 @@ export function issueCommentToJson(
     id: comment.id,
     comment: comment.comment,
     authorId: comment.authorId ?? comment.author?.id,
-    createdAt: comment.createdAt.toISOString(),
+    createdAt: toLocalDateTimeString(comment.createdAt),
   };
 }
 
