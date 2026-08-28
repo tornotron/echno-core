@@ -35,6 +35,7 @@
 import { api, ApiError } from '../lib/api/api-client';
 import { logger } from '../lib/logger';
 import {
+  parseLocalDate,
   parseLocalDateTime,
   parseUTCDate,
 } from '../lib/utils/date-helpers';
@@ -224,7 +225,8 @@ function parseAttendance(raw: any): Attendance {
     id: raw.id ?? 0,
     employeeId: raw.employeeId ?? 0,
     employeeName: raw.employeeName ?? '',
-    date: new Date(raw.attendanceDate ?? raw.date),
+    // attendanceDate is a backend LocalDate, a bare 'YYYY-MM-DD'.
+    date: parseLocalDate(raw.attendanceDate ?? raw.date) ?? new Date(),
     projectId: raw.projectId ?? 0,
     projectName: raw.projectName ?? '',
     status:
@@ -267,9 +269,9 @@ function parseAttendance(raw: any): Attendance {
           attendanceId: reg.attendanceId ?? raw.id ?? 0,
           reason: reg.reason ?? '',
           requestedBy: reg.requestedBy ?? '',
-          requestedAt: new Date(reg.requestedAt),
+          requestedAt: parseUTCDate(reg.requestedAt) ?? new Date(),
           approvedBy: reg.approvedBy ?? undefined,
-          approvedAt: reg.approvedAt ? new Date(reg.approvedAt) : undefined,
+          approvedAt: parseUTCDate(reg.approvedAt) ?? undefined,
           status: (reg.status?.toLowerCase() ?? 'pending') as
             | 'pending'
             | 'approved'
@@ -288,10 +290,12 @@ function parseAttendance(raw: any): Attendance {
       | 'approved'
       | 'rejected',
     approvedBy: raw.approvedBy ?? undefined,
-    approvedAt: raw.approvedAt ? new Date(raw.approvedAt) : undefined,
+    // Every timestamp on this record is server-set, so UTC. Only the clock and
+    // movement times above are the employee's local wall clock.
+    approvedAt: parseUTCDate(raw.approvedAt) ?? undefined,
     remarks: raw.remarks ?? undefined,
-    createdAt: new Date(raw.createdAt ?? Date.now()),
-    updatedAt: new Date(raw.updatedAt ?? Date.now()),
+    createdAt: parseUTCDate(raw.createdAt) ?? new Date(),
+    updatedAt: parseUTCDate(raw.updatedAt) ?? new Date(),
   };
 }
 

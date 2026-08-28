@@ -21,7 +21,12 @@
 
 import { z } from 'zod';
 import { Attachment, parseAttachment } from '../attachment';
-import { parseUTCDate } from '../../lib/utils/date-helpers';
+import {
+  parseUTCDate,
+  parseLocalDateTime,
+  toLocalDateAtMidnight,
+  toLocalDateTimeString,
+} from '../../lib/utils/date-helpers';
 import { Project, parseProject, projectToJson } from '../project';
 import { EmployeeStatus, employeeStatusFromString } from './employee-status';
 import { Department } from './departments';
@@ -259,7 +264,8 @@ export function parseEmployee(json: unknown): Employee {
     email: raw.emailAddress ?? '',
     phone: raw.phoneNumber ?? '',
     gender: raw.gender ?? '',
-    dateOfBirth: parseUTCDate(raw.dateOfBirth) ?? new Date(),
+    // Calendar dates, written by createEmployeeToJson with toLocalDateAtMidnight.
+    dateOfBirth: parseLocalDateTime(raw.dateOfBirth) ?? new Date(),
     qualification: raw.qualification ?? '',
     skills: raw.skills ? [...raw.skills] : undefined,
     experience: raw.experience ?? undefined,
@@ -283,7 +289,7 @@ export function parseEmployee(json: unknown): Employee {
       raw.department && raw.department in Department
         ? Department[raw.department as keyof typeof Department]
         : undefined,
-    joiningDate: parseUTCDate(raw.joiningDate) ?? undefined,
+    joiningDate: parseLocalDateTime(raw.joiningDate) ?? undefined,
     salary: raw.salary ?? undefined,
     managerId: raw.managerId ?? undefined,
     managerName: raw.managerName ?? undefined,
@@ -324,7 +330,7 @@ export function employeeToJson(
   if (emp.bloodGroup !== undefined) result.bloodGroup = emp.bloodGroup;
   if (emp.gender !== undefined) result.gender = emp.gender;
   if (emp.dateOfBirth !== undefined)
-    result.dateOfBirth = emp.dateOfBirth.toISOString();
+    result.dateOfBirth = toLocalDateAtMidnight(emp.dateOfBirth);
   if (emp.qualification !== undefined) result.qualification = emp.qualification;
   if (emp.skills !== undefined) result.skills = emp.skills;
   if (emp.experience !== undefined) result.experience = emp.experience;
@@ -340,7 +346,7 @@ export function employeeToJson(
   if (emp.department !== undefined) result.department = emp.department;
   if (emp.joiningDate !== undefined) {
     result.joiningDate =
-      emp.joiningDate === null ? null : emp.joiningDate.toISOString();
+      emp.joiningDate === null ? null : toLocalDateAtMidnight(emp.joiningDate);
   }
   // Ensure salary is treated as a floating-point number by the backend
   if (emp.salary !== undefined) {
@@ -362,9 +368,9 @@ export function employeeToJson(
     result.currentProjects = emp.currentProjects.map((p) => projectToJson(p));
   }
   if (emp.createdAt !== undefined)
-    result.createdAt = emp.createdAt.toISOString();
+    result.createdAt = toLocalDateTimeString(emp.createdAt);
   if (emp.updatedAt !== undefined)
-    result.updatedAt = emp.updatedAt.toISOString();
+    result.updatedAt = toLocalDateTimeString(emp.updatedAt);
 
   return result;
 }

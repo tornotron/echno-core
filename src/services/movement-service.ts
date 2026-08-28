@@ -8,7 +8,10 @@
 
 import { api, ApiError } from '../lib/api/api-client';
 import { logger } from '../lib/logger';
-import { parseLocalDateTime } from '../lib/utils/date-helpers';
+import {
+  parseLocalDateTime,
+  parseUTCDate,
+} from '../lib/utils/date-helpers';
 import {
   MovementType,
   createMovementToJson,
@@ -55,11 +58,12 @@ function parseMovement(raw: any): MovementRecord {
     endLatitude: raw.endLatitude ?? undefined,
     endLongitude: raw.endLongitude ?? undefined,
     verifiedBy: raw.verifiedBy ?? undefined,
-    verifiedAt: raw.verifiedAt ? new Date(raw.verifiedAt) : undefined,
+    verifiedAt: parseUTCDate(raw.verifiedAt) ?? undefined,
     isVerified: raw.isVerified ?? false,
     attachments: Array.isArray(raw.attachments) ? raw.attachments : undefined,
-    createdAt: new Date(raw.createdAt ?? Date.now()),
-    updatedAt: new Date(raw.updatedAt ?? Date.now()),
+    // Server-set, so UTC, unlike the movement's own start and end times.
+    createdAt: parseUTCDate(raw.createdAt) ?? new Date(),
+    updatedAt: parseUTCDate(raw.updatedAt) ?? new Date(),
   };
 }
 

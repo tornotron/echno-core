@@ -12,6 +12,7 @@
  */
 import { api, ApiError } from '../lib/api/api-client';
 import { logger } from '../lib/logger';
+import { parseUTCDate } from '../lib/utils/date-helpers';
 import {
   Vendor,
   VendorContact,
@@ -312,9 +313,7 @@ export const vendorService = {
       totalPurchaseValue: data.totalPurchaseValue ?? undefined,
       totalPaid: data.totalPaid ?? undefined,
       totalOutstanding: data.totalOutstanding ?? undefined,
-      lastPaymentDate: data.lastPaymentDate
-        ? new Date(data.lastPaymentDate)
-        : undefined,
+      lastPaymentDate: parseUTCDate(data.lastPaymentDate) ?? undefined,
       lastPaymentAmount: data.lastPaymentAmount ?? undefined,
     };
   },

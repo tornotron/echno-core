@@ -13,6 +13,8 @@ import { IssueStatus } from './issue-status';
  *
  * Wire-shape mapping:
  * - `assigneeId` → backend `assignedToId` (with `null` meaning "unassign").
+ *
+ * There is deliberately no due date; see {@link CreateIssueRequest}.
  */
 export interface UpdateIssueRequest {
   /** New title, if changing. */
@@ -32,9 +34,6 @@ export interface UpdateIssueRequest {
 
   /** New assignee employee ID; pass `null` to explicitly unassign. */
   assigneeId?: number | null;
-
-  /** New due date, if changing. */
-  dueDate?: Date;
 }
 
 /**
@@ -56,7 +55,6 @@ export function updateIssueToJson(
   if (dto.status !== undefined) payload.status = dto.status;
   if (dto.priority !== undefined) payload.priority = dto.priority;
   if (dto.assigneeId !== undefined) payload.assignedToId = dto.assigneeId;
-  if (dto.dueDate !== undefined) payload.dueDate = dto.dueDate.toISOString();
 
   return payload;
 }

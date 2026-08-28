@@ -1,16 +1,41 @@
 /**
  * @module types/date-helpers
  *
- * Lightweight UTC-safe date parser used by domain parsers
- * (`parseUser`, `parseAttendance`, ...).
+ * The date conversions every request serializer and response parser in this
+ * package is expected to go through.
  *
- * Many backend APIs return ISO-like timestamps without a timezone suffix
- * (e.g. `"2026-02-25T10:30:00"`). JavaScript's `new Date()` interprets
- * those as **local time**, which causes incorrect relative-time displays
- * when the client timezone differs from the server (UTC).
+ * The problem they exist to solve is that a backend field declared
+ * `java.time.LocalDateTime` or `java.time.LocalDate` carries **no offset**, and
+ * JavaScript has no type for a value with no offset. A `Date` is always an
+ * instant. So every crossing between the two has to state, explicitly, which
+ * reading is meant. Picking the wrong one does not throw and usually does not
+ * look wrong: it shifts the value by the client's offset, and only surfaces
+ * later when something derives a calendar date or compares against a configured
+ * local time.
  *
- * This helper appends a `'Z'` when no timezone indicator is present so the
- * timestamp is correctly treated as UTC.
+ * There are three kinds of value on the wire and two directions, and the whole
+ * set is here so that a serializer never has to improvise one:
+ *
+ * | Wire value | Backend type | Write with | Read with |
+ * |---|---|---|---|
+ * | Instant the **server** recorded (`createdAt`, `updatedAt`, `verifiedAt`, `approvedAt`) | `LocalDateTime`, written in UTC | never written by the client | {@link parseUTCDate} |
+ * | Wall clock the **user** saw (a clock punch, a movement start) | `LocalDateTime` | {@link toLocalDateTimeString} | {@link parseLocalDateTime} |
+ * | Calendar date with no time of day (a date of birth, a task's start) | `LocalDateTime` at midnight, or `LocalDate` | {@link toLocalDateAtMidnight} | {@link parseLocalDateTime} for `LocalDateTime`, {@link parseLocalDate} for `LocalDate` |
+ *
+ * Two rules follow, and `date-serialization.guard.test.ts` enforces both:
+ *
+ * 1. **Never `Date.toISOString()` onto the wire.** It emits UTC with a trailing
+ *    `Z`. The backend now annotates its request DTOs
+ *    `@JsonFormat(lenient = OptBoolean.FALSE)`, so an offset-bearing value is a
+ *    400 rather than a silent truncation, but the rule predates that and does
+ *    not depend on it.
+ * 2. **Never `new Date(value)` off the wire.** It reads a naive timestamp as
+ *    local, which is right for exactly one of the three rows above.
+ *
+ * The direction that is easy to forget is that both halves have to agree. A
+ * field written with {@link toLocalDateAtMidnight} and read back with
+ * {@link parseUTCDate} round-trips correctly in a positive-offset zone and
+ * lands on the previous day in a negative-offset one.
  */
 
 /**
@@ -166,4 +191,50 @@ export function parseLocalDateTime(
 export function toLocalDateAtMidnight(date: Date): string {
   const pad = (n: number) => String(n).padStart(2, '0');
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T00:00:00`;
+}
+
+/**
+ * Parses a bare calendar date, `YYYY-MM-DD`, as **local** midnight.
+ *
+ * The read-side counterpart to {@link toLocalDateAtMidnight}, for the fields the
+ * backend declares as `java.time.LocalDate` rather than `LocalDateTime`: an
+ * attendance record's `attendanceDate`, a labour joining date. Those serialize
+ * as `'2026-08-27'`, with no time part at all.
+ *
+ * {@link parseLocalDateTime} is not the right tool for them, despite the name.
+ * A date-only string is the one form the ECMAScript spec requires `new Date()`
+ * to read as **UTC**, so `new Date('2026-08-27')` is midnight UTC, which is the
+ * previous day everywhere west of Greenwich. Building the date from its parts
+ * with the local constructor is what avoids that.
+ *
+ * A value that carries a time part is delegated to {@link parseLocalDateTime},
+ * so an endpoint that widens `LocalDate` to `LocalDateTime` does not break its
+ * callers.
+ *
+ * @param value - The raw value to parse.
+ * @returns A `Date` at local midnight on the given day, or `null`.
+ *
+ * @example
+ * ```ts
+ * // Client in America/New_York (UTC-04:00):
+ * parseLocalDate('2026-08-27');      // 27 Aug 2026, 00:00 local
+ * new Date('2026-08-27');            // 26 Aug 2026, 20:00 local  <- shifted
+ * ```
+ */
+export function parseLocalDate(
+  value: string | Date | number | null | undefined
+): Date | null {
+  if (value == null) return null;
+  if (typeof value === 'string') {
+    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value.trim());
+    if (match) {
+      const d = new Date(
+        Number(match[1]),
+        Number(match[2]) - 1,
+        Number(match[3])
+      );
+      return Number.isNaN(d.getTime()) ? null : d;
+    }
+  }
+  return parseLocalDateTime(value);
 }

@@ -12,6 +12,7 @@
 import { api, ApiError } from '../lib/api/api-client';
 import { logger } from '../lib/logger';
 import { parsePositiveInt } from '../lib/utils/parse-id';
+import { parseLocalDate, parseUTCDate } from '../lib/utils/date-helpers';
 import {
   createRegularizationToJson,
   type CreateRegularizationRequest,
@@ -34,10 +35,11 @@ function parseRegularizationDetail(raw: any): RegularizationDetail {
     reason: raw.reason ?? '',
     requestedBy: raw.requestedBy ?? '',
     requestedById: raw.requestedById ?? undefined,
-    requestedAt: new Date(raw.requestedAt),
+    // Server-set, so UTC.
+    requestedAt: parseUTCDate(raw.requestedAt) ?? new Date(),
     approvedBy: raw.approvedBy ?? undefined,
     approvedById: raw.approvedById ?? undefined,
-    approvedAt: raw.approvedAt ? new Date(raw.approvedAt) : undefined,
+    approvedAt: parseUTCDate(raw.approvedAt) ?? undefined,
     status: (raw.status?.toLowerCase() ?? 'pending') as
       | 'pending'
       | 'approved'
@@ -47,9 +49,8 @@ function parseRegularizationDetail(raw: any): RegularizationDetail {
     // Optional context fields — only present when the endpoint enriches them.
     employeeId: raw.employeeId ?? undefined,
     employeeName: raw.employeeName ?? undefined,
-    attendanceDate: raw.attendanceDate
-      ? new Date(raw.attendanceDate)
-      : undefined,
+    // A backend LocalDate, a bare 'YYYY-MM-DD'.
+    attendanceDate: parseLocalDate(raw.attendanceDate) ?? undefined,
     projectId: raw.projectId ?? undefined,
     projectName: raw.projectName ?? undefined,
   };

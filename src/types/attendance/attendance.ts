@@ -14,7 +14,12 @@
 
 import { z } from "zod";
 import { parsePositiveInt } from "../../lib/utils/parse-id";
-import { parseUTCDate } from "../../lib/utils/date-helpers";
+import {
+  parseUTCDate,
+  parseLocalDate,
+  toLocalDateAtMidnight,
+  toLocalDateTimeString,
+} from "../../lib/utils/date-helpers";
 import { parseShiftTiming, ShiftTiming } from "../shift-timing";
 import { AttendanceStatus } from "./attendance-status";
 import { ClockEvent, parseClockEvent } from "./clock-event";
@@ -231,7 +236,8 @@ export function parseAttendance(data: unknown): Attendance {
   return {
     ...raw,
     id: parsePositiveInt(raw.id, 'parseAttendance.id'),
-    date: parseUTCDate(raw.date) ?? new Date(raw.date as string),
+    // attendanceDate is a backend LocalDate, a bare 'YYYY-MM-DD'.
+    date: parseLocalDate(raw.date) ?? new Date(),
     shiftTiming: parseShiftTiming(raw.shiftTiming),
     morningClockIn: raw.morningClockIn
       ? parseClockEvent(raw.morningClockIn)
@@ -260,8 +266,10 @@ export function parseAttendance(data: unknown): Attendance {
 /**
  * Serializes an {@link Attendance} for transmission to the backend.
  *
- * Converts the `Date` fields (`date`, `createdAt`, `updatedAt`, `approvedAt`)
- * to ISO 8601 strings; all other fields are passed through unchanged.
+ * `date` is the record's calendar day (`attendanceDate`, a backend `LocalDate`)
+ * and is emitted as a local calendar date. The three timestamps are emitted as
+ * naive local date-times, the shape a `LocalDateTime` column accepts. None of
+ * them may carry an offset. All other fields are passed through unchanged.
  *
  * @param attendance - The domain object to serialize.
  * @returns A plain object with date fields ISO-encoded.
@@ -271,9 +279,10 @@ export function attendanceToJson(
 ): Record<string, unknown> {
   return {
     ...attendance,
-    date: attendance.date.toISOString(),
-    createdAt: attendance.createdAt.toISOString(),
-    updatedAt: attendance.updatedAt.toISOString(),
-    approvedAt: attendance.approvedAt?.toISOString(),
+    date: toLocalDateAtMidnight(attendance.date),
+    createdAt: toLocalDateTimeString(attendance.createdAt),
+    updatedAt: toLocalDateTimeString(attendance.updatedAt),
+    approvedAt:
+      attendance.approvedAt && toLocalDateTimeString(attendance.approvedAt),
   };
 }

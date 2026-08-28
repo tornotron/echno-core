@@ -13,7 +13,12 @@
 // types/project/project.ts
 import { z } from 'zod';
 import { Employee, parseEmployee, employeeToJson } from '../employee';
-import { parseUTCDate } from '../../lib/utils/date-helpers';
+import {
+  parseUTCDate,
+  parseLocalDateTime,
+  toLocalDateAtMidnight,
+  toLocalDateTimeString,
+} from '../../lib/utils/date-helpers';
 import { Task, parseTask } from '../task';
 import { ProjectStatus, getProjectStatus } from './project-status';
 import { ProjectType, parseProjectType } from './project-type';
@@ -194,8 +199,10 @@ export function parseProject(json: unknown): Project {
       : undefined,
     projectLongitude: Number(raw.projectLongitude ?? 0),
     projectLatitude: Number(raw.projectLatitude ?? 0),
-    startDate: parseUTCDate(raw.startDate) ?? undefined,
-    endDate: parseUTCDate(raw.endDate) ?? undefined,
+    // Calendar dates, written by createProjectToJson with toLocalDateAtMidnight.
+    // Reading them back as UTC would land on the previous day west of Greenwich.
+    startDate: parseLocalDateTime(raw.startDate) ?? undefined,
+    endDate: parseLocalDateTime(raw.endDate) ?? undefined,
     createdAt: parseUTCDate(raw.createdAt) ?? undefined,
     progress: Number(raw.progress ?? 0),
     members: raw.employees
@@ -232,10 +239,10 @@ export function projectToJson(project: Project): Record<string, unknown> {
     projectType: project.projectType,
     projectLongitude: project.projectLongitude,
     projectLatitude: project.projectLatitude,
-    startDate: project.startDate?.toISOString(),
-    endDate: project.endDate?.toISOString(),
+    startDate: project.startDate && toLocalDateAtMidnight(project.startDate),
+    endDate: project.endDate && toLocalDateAtMidnight(project.endDate),
     employees: project.members.map((e) => employeeToJson(e)),
-    createdAt: project.createdAt?.toISOString(),
+    createdAt: project.createdAt && toLocalDateTimeString(project.createdAt),
     attachments: project.attachments
       ? project.attachments.map((a) => attachmentToJson(a))
       : undefined,
