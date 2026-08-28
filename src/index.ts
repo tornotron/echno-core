@@ -133,10 +133,6 @@ export * from './types/site-transfers';
 export * from './services/site-transfers-service';
 export * from './hooks/site-transfers';
 
-// WBS Element
-export * from './types/wbs-element';
-export * from './services/wbs-element-service';
-export * from './hooks/wbs-element';
 
 // Shift Timings
 export * from './types/shift-timing';

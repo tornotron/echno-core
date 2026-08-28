@@ -4,7 +4,7 @@
      Run `bun run api:snapshot` after an intended public-API change and commit the diff.
      See docs/API-STABILITY.md. -->
 
-Entry points: 136
+Entry points: 132
 
 ## `@tornotron/echno-core`
 
@@ -60,8 +60,6 @@ Entry points: 136
 - attendanceToJson
 - BalanceSheetReport
 - BudgetAllocation
-- BulkCreateWbsElementsRequest
-- bulkCreateWbsElementsToJson
 - CalculateDays
 - CalculateDaysResponse
 - calculateDistance
@@ -173,8 +171,6 @@ Entry points: 136
 - CreateVendorTaxIdentifierRequest
 - createVendorTaxIdentifierToJson
 - createVendorToJson
-- CreateWbsElementRequest
-- createWbsElementToJson
 - CreateWorkCategoryRequest
 - createWorkCategoryToJson
 - creatorId
@@ -394,8 +390,6 @@ Entry points: 136
 - MovementRecord
 - movementService
 - MovementType
-- MoveWbsElementRequest
-- moveWbsElementToJson
 - noCacheQueryOptions
 - NORMAL_ROLES
 - Organization
@@ -517,7 +511,6 @@ Entry points: 136
 - parseUTCDate
 - parseUuid
 - parseVendor
-- parseWbsElement
 - parseWorkCategory
 - Payment
 - PAYMENT_TERMS_LABELS
@@ -678,8 +671,6 @@ Entry points: 136
 - UpdateVendorTaxIdentifierRequest
 - updateVendorTaxIdentifierToJson
 - updateVendorToJson
-- UpdateWbsElementRequest
-- updateWbsElementToJson
 - UpdateWorkCategoryRequest
 - updateWorkCategoryToJson
 - UploadAttachmentRequest
@@ -718,7 +709,6 @@ Entry points: 136
 - useAttendanceProfiles
 - useAttendanceSummary
 - useBalanceSheet
-- useBulkCreateWbsElements
 - useCalculateDays
 - useCanApprove
 - useCancelConstructionInvoice
@@ -761,7 +751,6 @@ Entry points: 136
 - useCreateStorageLocation
 - useCreateTask
 - useCreateVendor
-- useCreateWbsElement
 - useCreateWorkCategory
 - useCurrentUserEmployee
 - useDeactivateAccount
@@ -799,7 +788,6 @@ Entry points: 136
 - useDeleteVendorContact
 - useDeleteVendorPaymentTerms
 - useDeleteVendorTaxIdentifier
-- useDeleteWbsElement
 - useDeleteWorkCategory
 - useDepartmentCalendar
 - useDownloadAttachment
@@ -892,7 +880,6 @@ Entry points: 136
 - useMaterialWithStock
 - useMovementById
 - useMovementsByAttendance
-- useMoveWbsElement
 - useOrganization
 - useOrganizationCalendar
 - useOrganizationRequests
@@ -1007,7 +994,6 @@ Entry points: 136
 - useUpdateVendorBankAccount
 - useUpdateVendorContact
 - useUpdateVendorTaxIdentifier
-- useUpdateWbsElement
 - useUploadAttachment
 - useUploadAttachmentsDirect
 - useUpsertBudgetAllocation
@@ -1027,10 +1013,6 @@ Entry points: 136
 - useVendorSummary
 - useVendorTaxIdentifiers
 - useVerifyMovement
-- useWbsElement
-- useWbsElements
-- useWbsLeaves
-- useWbsTree
 - useWithdrawLeaveRequest
 - useWorkCategories
 - useWorkCategory
@@ -1049,9 +1031,6 @@ Entry points: 136
 - VendorSummary
 - VendorTaxIdentifier
 - VendorType
-- WbsElement
-- wbsElementKeys
-- wbsElementService
 - whatsappMessage
 - WorkCategory
 - workCategoryKeys
@@ -2482,40 +2461,6 @@ Entry points: 136
 - VendorSummary
 - VendorTaxIdentifier
 - VendorType
-
-## `@tornotron/echno-core/wbs-element/hooks`
-
-- useBulkCreateWbsElements
-- useCreateWbsElement
-- useDeleteWbsElement
-- useMoveWbsElement
-- useUpdateWbsElement
-- useWbsElement
-- useWbsElements
-- useWbsLeaves
-- useWbsTree
-- wbsElementKeys
-
-## `@tornotron/echno-core/wbs-element/hooks/keys`
-
-- wbsElementKeys
-
-## `@tornotron/echno-core/wbs-element/services`
-
-- wbsElementService
-
-## `@tornotron/echno-core/wbs-element/types`
-
-- BulkCreateWbsElementsRequest
-- bulkCreateWbsElementsToJson
-- CreateWbsElementRequest
-- createWbsElementToJson
-- MoveWbsElementRequest
-- moveWbsElementToJson
-- parseWbsElement
-- UpdateWbsElementRequest
-- updateWbsElementToJson
-- WbsElement
 
 ## `@tornotron/echno-core/work-category/hooks`
 

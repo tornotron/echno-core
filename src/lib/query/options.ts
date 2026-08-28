@@ -11,7 +11,7 @@
  * |---------|-----------|--------|--------------|
  * | {@link realtimeQueryOptions} | 0 | 60 s | Chat, live dashboards, notification counts |
  * | {@link standardQueryOptions} | 60 s | 5 min | Projects, tasks, issues, leave, vendors |
- * | {@link staticQueryOptions} | 10 min | 30 min | Work categories, org settings, WBS |
+ * | {@link staticQueryOptions} | 10 min | 30 min | Work categories, org settings, shifts |
  * | {@link noCacheQueryOptions} | 0 | 0 | Unread counts, one-shot reads |
  */
 import { type QueryObserverOptions } from '@tanstack/react-query';
@@ -47,7 +47,7 @@ export const standardQueryOptions = {
 
 /**
  * Reference / configuration data: work categories, org settings, shift timings,
- * storage locations, WBS structures. Changes infrequently during normal use.
+ * storage locations, shift timings. Changes infrequently during normal use.
  * Fresh for 10 min; cached for 30 min.
  */
 export const staticQueryOptions = {
