@@ -38,7 +38,7 @@ export interface CreateSiteTransferRequest {
   receivingStorageLocationId: number;
 
   /**
-   * Initial lifecycle state. `POST /site-transfers` accepts
+   * Initial lifecycle state. `POST /site-transfers/web` accepts
    * {@link SiteTransferStatus.pending} and nothing else, and defaults to
    * it when the payload names none, so this is optional and there is no
    * second value to choose from.
@@ -46,7 +46,7 @@ export interface CreateSiteTransferRequest {
    * {@link SiteTransferStatus.partiallyTransferred} and
    * {@link SiteTransferStatus.completed} are refused with a 400: both say
    * the receiving site has taken delivery, which is recorded through
-   * `PATCH /site-transfers/{id}/status` by a different authority. Stock
+   * `PATCH /site-transfers/web/{id}/status` by a different authority. Stock
    * leaves the sending location on creation whatever the status is given,
    * so a transfer issued as `COMPLETED` stood as a movement nobody at the
    * far end had confirmed. Reach the later states through
