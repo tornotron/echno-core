@@ -423,6 +423,29 @@ Run `bun install` after changing the path. Revert to the git tag reference befor
 4. Re-export from `src/index.ts`.
 5. Build and fix any errors, then tag a new version.
 
+### The request contract
+
+Nothing generates code between this package and the backend. The domain types here are written by
+hand on purpose, and so are the request bodies, so a field name that does not exist on the other
+side produces no compile error and no runtime error: the request returns 200 and the value is
+dropped. `src/services/request-contract.guard.test.ts` is what catches that.
+
+It reads every `api.post/put/patch` call in `src/services`, works out the field names each one
+sends, and checks them against the backend's published OpenAPI document. The result, including
+what it could not check, is committed at [`etc/request-contract.md`](etc/request-contract.md).
+
+```bash
+bun run contract:refresh   # re-derive etc/backend-request-fields.json from the backend document
+bun run contract:report    # regenerate etc/request-contract.md
+```
+
+`contract:refresh` reads `docs/openapi.json` from `tornotron/echno-backend` (the backend commits
+it and a CI check keeps it matching the code that serves it). Run it after a backend release, then
+`contract:report`, and commit both. Pass `--ref <tag>` for a specific version or
+`--from <path>` for a local checkout.
+
+A new entry under Findings is a bug to fix, not a file to regenerate.
+
 ### API reference
 
 A full, browsable Markdown reference for every exported symbol (types, services,

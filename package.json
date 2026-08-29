@@ -50,6 +50,9 @@
     "test:coverage": "bun test --coverage",
     "api:snapshot": "bun scripts/api-snapshot.ts",
     "api:check": "bun scripts/api-snapshot.ts --check",
+    "contract:refresh": "bun scripts/backend-contract.ts",
+    "contract:report": "bun scripts/request-contract.ts",
+    "contract:check": "bun scripts/request-contract.ts --check",
     "docs:api": "typedoc",
     "prepublishOnly": "npm run build"
   },
