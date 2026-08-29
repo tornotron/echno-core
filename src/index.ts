@@ -183,6 +183,11 @@ export * from './services/finance-project-budget-service';
 export * from './services/finance-settings-service';
 export * from './hooks/finance';
 
-// Inspection
+// Inspection — the entity, the marks drawn over its defect photographs, the
+// non-conformance reports raised from it, and the per-trade checklist templates
+// its check points are created from. All four share the `types/inspection`
+// barrel; the services are separate because each addresses its own controller.
 export * from './types/inspection';
 export * from './services/inspection-service';
+export * from './services/ncr-service';
+export * from './services/checklist-template-service';

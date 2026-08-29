@@ -4,7 +4,7 @@
      Run `bun run api:snapshot` after an intended public-API change and commit the diff.
      See docs/API-STABILITY.md. -->
 
-Entry points: 132
+Entry points: 134
 
 ## `@tornotron/echno-core`
 
@@ -20,6 +20,8 @@ Entry points: 132
 - ADMIN_ROLES
 - Allocation
 - AllocationRequest
+- AnnotationListParams
+- annotationsByPhoto
 - api
 - apiClient
 - ApiError
@@ -32,6 +34,8 @@ Entry points: 132
 - areIssueCommentsEqual
 - areIssuesEqual
 - asignees
+- AssignNcrRequest
+- assignNcrToJson
 - Attachment
 - ATTACHMENT_PARENT_NAMESPACES
 - attachmentKeys
@@ -58,6 +62,7 @@ Entry points: 132
 - AttendanceStatus
 - AttendanceSummary
 - attendanceToJson
+- availableNcrActions
 - BalanceSheetReport
 - BudgetAllocation
 - CalculateDays
@@ -69,6 +74,13 @@ Entry points: 132
 - CancelConstructionInvoiceArgs
 - categoryId
 - CheckItemStatus
+- ChecklistTemplate
+- ChecklistTemplateItem
+- ChecklistTemplateItemRequest
+- ChecklistTemplateListParams
+- ChecklistTemplateRequest
+- checklistTemplateService
+- checklistTemplateToJson
 - ClockEvent
 - clockEventToJson
 - ClockEventType
@@ -141,6 +153,8 @@ Entry points: 132
 - createMaterialToJson
 - CreateMovementRequest
 - createMovementToJson
+- CreateNcrRequest
+- createNcrToJson
 - CreateOrganizationRequest
 - createOrganizationToJson
 - CreateProjectRequest
@@ -177,6 +191,15 @@ Entry points: 132
 - Customer
 - CustomerListParams
 - DailyMovementSummary
+- defaultInspectionCategoryFor
+- DefectAnnotationShape
+- defectAnnotationShapeLabels
+- DefectPhotoAnnotation
+- DefectPhotoAnnotationRequest
+- DefectSeverity
+- defectSeverityLabels
+- DefectStatus
+- defectStatusLabels
 - DeleteBudgetAllocationArgs
 - DeletePostingAccountMappingArgs
 - Department
@@ -289,6 +312,8 @@ Entry points: 132
 - indentStatusLabels
 - InlinePurchaseOrderItemInput
 - Inspection
+- InspectionCategory
+- inspectionCategoryLabels
 - InspectionCheckItem
 - InspectionCheckItemRequest
 - InspectionDefect
@@ -298,6 +323,9 @@ Entry points: 132
 - InspectionResult
 - inspectionService
 - InspectionStatus
+- InspectionTrade
+- inspectionTradeLabels
+- inspectionTradeOrder
 - InspectionType
 - INSPECTOR_ROLES
 - InventoryTransaction
@@ -318,6 +346,7 @@ Entry points: 132
 - InvoiceStatus
 - isActive
 - isAdmin
+- isAnnotationWithinImage
 - isEarlyCheckout
 - isEngineer
 - isExpired
@@ -326,6 +355,7 @@ Entry points: 132
 - isLateArrival
 - isManager
 - isManagerOrAbove
+- isNcrOverdue
 - Issue
 - IssueComment
 - issueCommentKeys
@@ -385,11 +415,24 @@ Entry points: 132
 - MaterialStatus
 - MaterialStock
 - MaterialWithStock
+- MAX_DEFECT_ANNOTATIONS
 - mergePreservingNested
 - movementKeys
 - MovementRecord
 - movementService
 - MovementType
+- Ncr
+- NcrAction
+- ncrActionLabels
+- ncrDaysOverdue
+- NcrListParams
+- NcrRemarksRequest
+- ncrRemarksToJson
+- ncrService
+- NcrStatus
+- ncrStatusLabels
+- NcrType
+- ncrTypeLabels
 - noCacheQueryOptions
 - NORMAL_ROLES
 - Organization
@@ -419,6 +462,8 @@ Entry points: 132
 - parseBalanceSheetReport
 - parseBudgetAllocation
 - parseCheckItemStatus
+- parseChecklistTemplate
+- parseChecklistTemplateItem
 - parseClockEvent
 - parseCoaImportSummary
 - parseCompanyBankAccount
@@ -436,6 +481,10 @@ Entry points: 132
 - parseConstructionPaymentVoucherStatus
 - parseCostCategory
 - parseCustomer
+- parseDefectAnnotationShape
+- parseDefectPhotoAnnotation
+- parseDefectSeverity
+- parseDefectStatus
 - parseEmployee
 - parseEmployeeLookup
 - parseExpense
@@ -449,11 +498,13 @@ Entry points: 132
 - parseIndent
 - parseIndentItem
 - parseInspection
+- parseInspectionCategory
 - parseInspectionCheckItem
 - parseInspectionDefect
 - parseInspectionOrigin
 - parseInspectionResult
 - parseInspectionStatus
+- parseInspectionTrade
 - parseInspectionType
 - parseInventoryTransaction
 - parseInvitation
@@ -483,6 +534,9 @@ Entry points: 132
 - parseMaterialStock
 - parseMaterialWithStock
 - parseMovementRecord
+- parseNcr
+- parseNcrStatus
+- parseNcrType
 - parseOrganization
 - parsePayment
 - parsePositiveInt
@@ -503,6 +557,7 @@ Entry points: 132
 - parseShiftTiming
 - parseSiteTransfer
 - parseSiteTransferItem
+- parseStarterChecklistTemplate
 - parseStorageLocation
 - parseStorageLocationStock
 - parseTask
@@ -555,6 +610,8 @@ Entry points: 132
 - RegisterUploadRequest
 - RegularizationDetail
 - removeMember
+- ReplaceAnnotationsRequest
+- replaceAnnotationsToJson
 - resolveAttendanceRole
 - ReverseJournalArgs
 - ReverseJournalRequest
@@ -566,6 +623,7 @@ Entry points: 132
 - searchKeys
 - searchService
 - SeedCostCategoriesResult
+- SETTLED_NCR_STATUSES
 - SetVendorPaymentTermsRequest
 - setVendorPaymentTermsToJson
 - ShiftTiming
@@ -581,6 +639,7 @@ Entry points: 132
 - siteTransferStatusLabels
 - SkillLevel
 - standardQueryOptions
+- StarterChecklistTemplate
 - staticQueryOptions
 - StockDirection
 - STORAGE_LOCATION_TYPE_LABELS
@@ -1195,6 +1254,11 @@ Entry points: 132
 - updateAttendanceProfileToJson
 - WorkDuration
 
+## `@tornotron/echno-core/checklist-template/services`
+
+- ChecklistTemplateListParams
+- checklistTemplateService
+
 ## `@tornotron/echno-core/employee/hooks`
 
 - employeeKeys
@@ -1649,17 +1713,40 @@ Entry points: 132
 
 ## `@tornotron/echno-core/inspection/services`
 
+- AnnotationListParams
 - InspectionListParams
 - inspectionService
 
 ## `@tornotron/echno-core/inspection/types`
 
+- annotationsByPhoto
+- AssignNcrRequest
+- assignNcrToJson
+- availableNcrActions
 - CheckItemStatus
+- ChecklistTemplate
+- ChecklistTemplateItem
+- ChecklistTemplateItemRequest
+- ChecklistTemplateRequest
+- checklistTemplateToJson
 - CompliancePhase
 - ComplianceRiskLevel
 - CreateInspectionRequest
 - createInspectionToJson
+- CreateNcrRequest
+- createNcrToJson
+- defaultInspectionCategoryFor
+- DefectAnnotationShape
+- defectAnnotationShapeLabels
+- DefectPhotoAnnotation
+- DefectPhotoAnnotationRequest
+- DefectSeverity
+- defectSeverityLabels
+- DefectStatus
+- defectStatusLabels
 - Inspection
+- InspectionCategory
+- inspectionCategoryLabels
 - InspectionCheckItem
 - InspectionCheckItemRequest
 - InspectionDefect
@@ -1667,17 +1754,49 @@ Entry points: 132
 - InspectionOrigin
 - InspectionResult
 - InspectionStatus
+- InspectionTrade
+- inspectionTradeLabels
+- inspectionTradeOrder
 - InspectionType
+- isAnnotationWithinImage
+- isNcrOverdue
+- MAX_DEFECT_ANNOTATIONS
+- Ncr
+- NcrAction
+- ncrActionLabels
+- ncrDaysOverdue
+- NcrRemarksRequest
+- ncrRemarksToJson
+- NcrStatus
+- ncrStatusLabels
+- NcrType
+- ncrTypeLabels
 - parseCheckItemStatus
+- parseChecklistTemplate
+- parseChecklistTemplateItem
 - parseCompliancePhase
 - parseComplianceRiskLevel
+- parseDefectAnnotationShape
+- parseDefectPhotoAnnotation
+- parseDefectSeverity
+- parseDefectStatus
 - parseInspection
+- parseInspectionCategory
 - parseInspectionCheckItem
 - parseInspectionDefect
 - parseInspectionOrigin
 - parseInspectionResult
 - parseInspectionStatus
+- parseInspectionTrade
 - parseInspectionType
+- parseNcr
+- parseNcrStatus
+- parseNcrType
+- parseStarterChecklistTemplate
+- ReplaceAnnotationsRequest
+- replaceAnnotationsToJson
+- SETTLED_NCR_STATUSES
+- StarterChecklistTemplate
 - UpdateInspectionRequest
 - updateInspectionToJson
 
@@ -2046,6 +2165,11 @@ Entry points: 132
 ## `@tornotron/echno-core/movement/services`
 
 - movementService
+
+## `@tornotron/echno-core/ncr/services`
+
+- NcrListParams
+- ncrService
 
 ## `@tornotron/echno-core/organization/hooks`
 
