@@ -1,10 +1,16 @@
 import { describe, expect, test } from 'bun:test';
 import {
   parseInspection,
+  parseInspectionCheckItem,
+  createInspectionToJson,
+  updateInspectionToJson,
+  defaultInspectionCategoryFor,
   InspectionType,
   InspectionStatus,
   InspectionResult,
   InspectionOrigin,
+  InspectionCategory,
+  InspectionTrade,
   ComplianceRiskLevel,
   CompliancePhase,
   CheckItemStatus,
@@ -152,5 +158,174 @@ describe('parseInspection', () => {
     expect(String(InspectionOrigin.AI_GENERATED)).toBe('ai-generated');
     expect(String(ComplianceRiskLevel.MEDIUM)).toBe('medium');
     expect(String(CompliancePhase.POST_CONSTRUCTION)).toBe('post-construction');
+  });
+});
+
+// The taxonomy the QA/QC views filter on. The category is not nullable on the
+// backend and the trade is, which is why one falls back and the other does not.
+describe('parseInspection: category and trade', () => {
+  test('takes the category and trade the backend sent', () => {
+    const inspection = parseInspection({
+      id: UUID,
+      inspectorId: 1,
+      type: 'quality',
+      category: 'qa-qc',
+      trade: 'shuttering-formwork',
+    });
+    expect(inspection.category).toBe(InspectionCategory.QA_QC);
+    expect(inspection.trade).toBe(InspectionTrade.SHUTTERING_FORMWORK);
+  });
+
+  test('derives the category from the type when the payload omits it', () => {
+    // An older payload, or one from before the column existed. Falling back to a
+    // fixed constant would bucket every legacy safety inspection as QA/QC.
+    expect(parseInspection({ id: UUID, type: 'safety' }).category).toBe(
+      InspectionCategory.SAFETY
+    );
+    expect(parseInspection({ id: UUID, type: 'compliance' }).category).toBe(
+      InspectionCategory.COMPLIANCE
+    );
+    expect(parseInspection({ id: UUID, type: 'structural' }).category).toBe(
+      InspectionCategory.QA_QC
+    );
+  });
+
+  test('falls back rather than accepting an unrecognized category', () => {
+    const inspection = parseInspection({
+      id: UUID,
+      type: 'safety',
+      category: 'QA_QC',
+    });
+    // 'QA_QC' is the Java constant name, not the wire value; it must not parse.
+    expect(inspection.category).toBe(InspectionCategory.SAFETY);
+  });
+
+  test('leaves the trade unset when the backend omits or misspells it', () => {
+    expect(parseInspection({ id: UUID }).trade).toBeUndefined();
+    expect(
+      parseInspection({ id: UUID, trade: 'SHUTTERING_FORMWORK' }).trade
+    ).toBeUndefined();
+  });
+
+  test('defaultInspectionCategoryFor covers every inspection type', () => {
+    for (const type of Object.values(InspectionType)) {
+      expect(
+        Object.values(InspectionCategory).includes(
+          defaultInspectionCategoryFor(type)
+        )
+      ).toBe(true);
+    }
+    expect(defaultInspectionCategoryFor(undefined)).toBe(
+      InspectionCategory.OTHER
+    );
+  });
+
+  test('serializes the category and trade only when set', () => {
+    const base = {
+      title: 'Slab pour QA',
+      type: InspectionType.QUALITY,
+      scheduledDate: '2026-08-25',
+      inspectorId: 8,
+    };
+    const bare = createInspectionToJson(base);
+    expect('category' in bare).toBe(false);
+    expect('trade' in bare).toBe(false);
+
+    const full = createInspectionToJson({
+      ...base,
+      category: InspectionCategory.QA_QC,
+      trade: InspectionTrade.REINFORCEMENT,
+    });
+    expect(full.category).toBe('qa-qc');
+    expect(full.trade).toBe('reinforcement');
+
+    const updated = updateInspectionToJson({
+      ...base,
+      status: InspectionStatus.IN_PROGRESS,
+      category: InspectionCategory.OTHER,
+      trade: InspectionTrade.ALUMINIUM_UPVC,
+    });
+    expect(updated.category).toBe('other');
+    expect(updated.trade).toBe('aluminium-upvc');
+  });
+});
+
+// The four measurement fields the backend's InspectionCheckItemDto grew for the
+// QA/QC report. `deviation` is computed server-side from the measurement and the
+// expected value, so it is read here and never written.
+describe('parseInspectionCheckItem: acceptance criteria and measurement', () => {
+  test('parses the criterion, tolerance, deviation and BIM element', () => {
+    const item = parseInspectionCheckItem({
+      id: ITEM_UUID,
+      category: 'Reinforcement',
+      checkPoint: 'Main bar spacing matches the schedule',
+      status: 'failed',
+      measurement: '148',
+      expectedValue: '150',
+      acceptanceCriterion: 'Spacing measured at three locations per bay',
+      tolerance: '+/- 10 mm',
+      deviation: -2,
+      bimElementGuid: '1kTvXnbbzCWw8lcMd1dR4o',
+    });
+    expect(item.acceptanceCriterion).toBe(
+      'Spacing measured at three locations per bay'
+    );
+    expect(item.tolerance).toBe('+/- 10 mm');
+    expect(item.deviation).toBe(-2);
+    expect(item.bimElementGuid).toBe('1kTvXnbbzCWw8lcMd1dR4o');
+  });
+
+  test('coerces a deviation sent as a BigDecimal string', () => {
+    // Jackson may serialize a BigDecimal either way; a string must not become NaN
+    // and must not be dropped.
+    const item = parseInspectionCheckItem({
+      id: ITEM_UUID,
+      status: 'passed',
+      deviation: '-2.500000',
+    });
+    expect(item.deviation).toBe(-2.5);
+  });
+
+  test('keeps a zero deviation, which means exactly on target', () => {
+    const item = parseInspectionCheckItem({
+      id: ITEM_UUID,
+      status: 'passed',
+      deviation: 0,
+    });
+    expect(item.deviation).toBe(0);
+  });
+
+  test('leaves the four unset when the backend omits them', () => {
+    const item = parseInspectionCheckItem({ id: ITEM_UUID, status: 'pending' });
+    expect(item.acceptanceCriterion).toBeUndefined();
+    expect(item.tolerance).toBeUndefined();
+    expect(item.deviation).toBeUndefined();
+    expect(item.bimElementGuid).toBeUndefined();
+  });
+
+  test('sends the criterion, tolerance and BIM guid but never the deviation', () => {
+    const json = createInspectionToJson({
+      title: 'Slab pour QA',
+      type: InspectionType.QUALITY,
+      scheduledDate: '2026-08-25',
+      inspectorId: 8,
+      checkItems: [
+        {
+          category: 'Reinforcement',
+          checkPoint: 'Cover maintained',
+          status: CheckItemStatus.PASSED,
+          photosRequired: false,
+          acceptanceCriterion: 'Measured at three locations',
+          tolerance: '+/- 10 mm',
+          bimElementGuid: '1kTvXnbbzCWw8lcMd1dR4o',
+        },
+      ],
+    });
+    const item = (json.checkItems as Record<string, unknown>[])[0]!;
+    expect(item.acceptanceCriterion).toBe('Measured at three locations');
+    expect(item.tolerance).toBe('+/- 10 mm');
+    expect(item.bimElementGuid).toBe('1kTvXnbbzCWw8lcMd1dR4o');
+    // The backend computes it and its request record has no such component.
+    expect('deviation' in item).toBe(false);
   });
 });

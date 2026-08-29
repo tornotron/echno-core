@@ -5,6 +5,52 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
+## [v2.1.0] - 2026-08-29
+
+The inspection contract, which the backend had shipped and core did not carry. Purely additive:
+no export was renamed or removed, so `echno-web` picks this up without a code change.
+
+### Added
+
+- Photo annotations for the `/inspections/web/{id}/annotations` endpoints: the
+  `DefectAnnotationShape` enum (rectangle / ellipse / arrow), the `DefectPhotoAnnotation` type with
+  `parseDefectPhotoAnnotation`, the `DefectPhotoAnnotationRequest` / `ReplaceAnnotationsRequest`
+  payloads with `replaceAnnotationsToJson`, and `inspectionService.getAnnotations` /
+  `replaceAnnotations`. A mark is keyed by the **photograph reference**, not by a defect id and not
+  by a position in the defect list, because an inspection's defects are cleared and rebuilt on every
+  save; `annotationsByPhoto` is the grouping the contract supports. The four coordinates are
+  fractions of the image in `[0, 1]`, never pixels, and `isAnnotationWithinImage` catches the pixel
+  mistake before the backend answers 400. `MAX_DEFECT_ANNOTATIONS` mirrors the server cap of 400.
+- The non-conformance report, previously typed inside `echno-web`: the `Ncr` type (now including
+  `verifiedById`, which the web copy was missing) with `parseNcr`, the `NcrType` and `NcrStatus`
+  enums and their labels, the `CreateNcrRequest` / `AssignNcrRequest` / `NcrRemarksRequest` payloads
+  with serializers, the `availableNcrActions` transition table mirroring the backend's, and
+  `isNcrOverdue` / `ncrDaysOverdue`, which read the target date as a `LocalDate` rather than through
+  `new Date`. `ncrService` covers the listing (with the `open=true` punch-list filter), the single
+  fetch, create, and all six lifecycle transitions, one method each, because the backend has no
+  settable status.
+- Checklist templates, likewise previously web-side: `ChecklistTemplate`, `ChecklistTemplateItem`
+  and `StarterChecklistTemplate` with their parsers, the `ChecklistTemplateRequest` payload with
+  `checklistTemplateToJson`, and `checklistTemplateService` (`getAll`, `getById`, `create`,
+  `update`, `getStarters`, `adoptStarter`). The check points are sorted by `lineOrder` on parse: the
+  order is what the checklist means and the backend stores it as a column.
+- `InspectionCategory` and `InspectionTrade` (16 trades) with labels, `inspectionTradeOrder`, their
+  parsers, and `defaultInspectionCategoryFor`, which mirrors the backend's type-to-category fallback
+  so a payload from before the column existed still buckets correctly.
+- `category` and `trade` on `Inspection`, on `CreateInspectionRequest` / `UpdateInspectionRequest`
+  and their serializers, and as filters on `InspectionListParams`, which `inspectionService.getAll`
+  now forwards. The QA/QC views could previously filter on nothing but `InspectionType`.
+- `acceptanceCriterion`, `tolerance`, `deviation` and `bimElementGuid` on `InspectionCheckItem`.
+  `deviation` is computed server-side from the measurement and the expected value, so it is read but
+  never sent; the other three are on the request as well.
+- `DefectSeverity` and `DefectStatus` enums with labels and parsers. `InspectionDefect.severity` and
+  `.status` stay typed as free strings for now: narrowing them would break every consumer comparing
+  against a string literal, so it waits for a major release.
+- A wire-value guard test that pins every inspection enum against the Java enum it mirrors and
+  refuses any value that is not hyphenated lowercase. The failure it exists for is an enum written
+  with the Java constant name (`QA_QC` for `qa-qc`), which typechecks and then 400s on every
+  request.
+
 ## [v1.14.0] - 2026-08-27
 
 ### Added
