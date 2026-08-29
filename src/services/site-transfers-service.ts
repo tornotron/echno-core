@@ -97,6 +97,11 @@ export const siteTransfersService = {
    * stock at the sending location and writes inventory-transaction
    * ledger entries server-side.
    *
+   * A transfer is always created {@link SiteTransferStatus.pending}: the
+   * endpoint accepts no other status and defaults to it when the payload
+   * names none. The later states say the receiving site has taken delivery
+   * and are reached through {@link siteTransfersService.updateStatus}.
+   *
    * @param dto - The {@link CreateSiteTransferRequest} payload.
    * @returns The newly-created {@link SiteTransfer} with embedded
    *   items.
