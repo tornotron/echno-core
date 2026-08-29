@@ -38,10 +38,21 @@ export interface CreateSiteTransferRequest {
   receivingStorageLocationId: number;
 
   /**
-   * Initial lifecycle state — typically
-   * {@link SiteTransferStatus.pending}.
+   * Initial lifecycle state. `POST /site-transfers` accepts
+   * {@link SiteTransferStatus.pending} and nothing else, and defaults to
+   * it when the payload names none, so this is optional and there is no
+   * second value to choose from.
+   *
+   * {@link SiteTransferStatus.partiallyTransferred} and
+   * {@link SiteTransferStatus.completed} are refused with a 400: both say
+   * the receiving site has taken delivery, which is recorded through
+   * `PATCH /site-transfers/{id}/status` by a different authority. Stock
+   * leaves the sending location on creation whatever the status is given,
+   * so a transfer issued as `COMPLETED` stood as a movement nobody at the
+   * far end had confirmed. Reach the later states through
+   * {@link useUpdateSiteTransferStatus}, which still takes the full enum.
    */
-  status: SiteTransferStatus;
+  status?: SiteTransferStatus.pending;
 
   /** Line items to create alongside the transfer. */
   items: CreateSiteTransferItemRequest[];
@@ -51,6 +62,10 @@ export interface CreateSiteTransferRequest {
  * Serializes a {@link CreateSiteTransferRequest} into the backend's
  * expected request body. Items are serialized via
  * {@link createSiteTransferItemToJson}.
+ *
+ * `status` is omitted from the body when the caller names none, rather
+ * than sent as `undefined`, so the server applies its own `PENDING`
+ * default.
  *
  * @param dto - The domain request to serialize.
  * @returns A plain object matching the backend's expected JSON shape.
@@ -66,7 +81,7 @@ export function createSiteTransferToJson(
     sendingStorageLocationId: dto.sendingStorageLocationId,
     receivingProjectId: dto.receivingProjectId,
     receivingStorageLocationId: dto.receivingStorageLocationId,
-    status: dto.status,
+    ...(dto.status === undefined ? {} : { status: dto.status }),
     items: dto.items.map((item) => createSiteTransferItemToJson(item)),
   };
 }
