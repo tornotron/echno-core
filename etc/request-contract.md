@@ -19,7 +19,7 @@ Write calls in `src/services`: 136
 | endpoint not in the document | 6 |
 | not readable | 17 |
 
-## Findings (66)
+## Findings (63)
 
 - src/services/employee-service.ts:226  POST /api/v1/employee/web  is not an endpoint in the document
 - src/services/employee-service.ts:246  PATCH /api/v1/employee/web/{id}  sends "address", which is not a field of EmployeeUpdateFieldsDto (did you mean "emailAddress"?)
@@ -34,12 +34,9 @@ Write calls in `src/services`: 136
 - src/services/indents-service.ts:87  POST /api/v1/indents/web  sends "indentNumber", which is not a field of IndentCreationDto
 - src/services/issue-comment-service.ts:156  PATCH /api/v1/issues/comments/web/{}  is not an endpoint in the document
 - src/services/issue-service.ts:266  POST /api/v1/issues/web  sends "attachments", which is not a field of IssueCreationDto
-- src/services/issue-service.ts:266  POST /api/v1/issues/web  sends "issueType", which is not a field of IssueCreationDto (did you mean "type"?)
 - src/services/issue-service.ts:266  POST /api/v1/issues/web  sends "priority", which is not a field of IssueCreationDto
 - src/services/issue-service.ts:266  POST /api/v1/issues/web  sends "projectId", which is not a field of IssueCreationDto
-- src/services/issue-service.ts:266  POST /api/v1/issues/web  never sends "type", which IssueCreationDto requires
 - src/services/issue-service.ts:302  PATCH /api/v1/issues/web/{id}  sends "attachments", which is not a field of IssueUpdateFieldsDto
-- src/services/issue-service.ts:302  PATCH /api/v1/issues/web/{id}  sends "issueType", which is not a field of IssueUpdateFieldsDto (did you mean "type"?)
 - src/services/issue-service.ts:302  PATCH /api/v1/issues/web/{id}  sends "priority", which is not a field of IssueUpdateFieldsDto
 - src/services/leave-service.ts:518  POST /api/v1/leave-requests/web  sends "employeeId", which is not a field of LeaveRequestCreationDto
 - src/services/leave-service.ts:747  POST /api/v1/leave-requests/web/withdraw  is not an endpoint in the document

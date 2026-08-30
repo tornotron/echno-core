@@ -11,9 +11,17 @@ import { IssueStatus } from './issue-status';
  * Payload accepted by the issue create endpoint.
  *
  * Field-name mapping on the wire:
- * - `issueType` ↔ backend `issueType` (matches)
+ * - `issueType` → backend `type`
  * - `creatorId` → backend `createdById`
  * - `assigneeId` → backend `assignedToId`
+ *
+ * The first line used to claim `issueType` matched the backend, which was wrong twice
+ * over: the field is `type` there, and nothing had ever checked. Create worked anyway,
+ * because `IssueCreationDto` carries `@JsonAlias("issueType")` and a bean-bound body
+ * honours it. The update path takes a `Map` and switches over its keys, where there is
+ * no property for an alias to attach to, so the same name that worked here was dropped
+ * there and changing an issue's type through the product did nothing. Both paths now
+ * send the canonical name.
  *
  * There is deliberately no due date. `IssueCreationDto` has no such field, the
  * `Issue` entity has no such column, and Spring ignores unknown properties, so
@@ -61,7 +69,7 @@ export function createIssueToJson(
 ): Record<string, unknown> {
   const payload: Record<string, unknown> = {
     title: dto.title,
-    issueType: dto.issueType,
+    type: dto.issueType,
     projectId: dto.projectId,
     createdById: dto.creatorId,
   };
