@@ -3,7 +3,7 @@
     "repository": "tornotron/echno-backend",
     "ref": "development",
     "path": "docs/openapi.json",
-    "sha256": "2054bd11aadbaa03029637a828becfb5672c0802e6a7e236b8b58cf9feec1634"
+    "sha256": "325e7d469eea866e7f68a83907bba7c07698c3b3e7678c5db96d5d9aeba38b63"
   },
   "operations": {
     "POST /api/v1/assets/web": {
@@ -637,7 +637,6 @@
         "employeeName",
         "gender",
         "joiningDate",
-        "manager",
         "managerId",
         "organizationName",
         "phoneNumber",
@@ -1657,6 +1656,7 @@
       "fields": [
         "assignedToId",
         "description",
+        "issueType",
         "status",
         "title",
         "type"
@@ -1669,6 +1669,7 @@
       "fields": [
         "assignedToId",
         "description",
+        "issueType",
         "status",
         "title",
         "type"
@@ -2879,6 +2880,7 @@
       "schema": "PurchaseOrderItemUpdateDto",
       "fields": [
         "id",
+        "materialId",
         "orderedQuantity",
         "remarks",
         "unitPrice"
@@ -2910,6 +2912,7 @@
       "schema": "PurchaseOrderItemUpdateDto",
       "fields": [
         "id",
+        "materialId",
         "orderedQuantity",
         "remarks",
         "unitPrice"
@@ -2944,6 +2947,7 @@
       "fields": [
         "expectedDeliveryDate",
         "id",
+        "projectId",
         "remarks",
         "status",
         "totalAmount"
@@ -2978,6 +2982,7 @@
       "fields": [
         "expectedDeliveryDate",
         "id",
+        "projectId",
         "remarks",
         "status",
         "totalAmount"

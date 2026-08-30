@@ -12,14 +12,14 @@ Write calls in `src/services`: 136
 
 | outcome | calls |
 | --- | --- |
-| checked | 84 |
+| checked | 86 |
 | sends nothing | 29 |
 | endpoint accepts any field name | 0 |
 | endpoint documents no request body | 0 |
-| endpoint not in the document | 6 |
+| endpoint not in the document | 4 |
 | not readable | 17 |
 
-## Findings (63)
+## Findings (61)
 
 - src/services/employee-service.ts:226  POST /api/v1/employee/web  is not an endpoint in the document
 - src/services/employee-service.ts:246  PATCH /api/v1/employee/web/{id}  sends "address", which is not a field of EmployeeUpdateFieldsDto (did you mean "emailAddress"?)
@@ -69,9 +69,7 @@ Write calls in `src/services`: 136
 - src/services/project-service.ts:220  PATCH /api/v1/project/web/{id}  sends "description", which is not a field of ProjectUpdateFieldsDto
 - src/services/project-service.ts:220  PATCH /api/v1/project/web/{id}  sends "employees", which is not a field of ProjectUpdateFieldsDto
 - src/services/project-service.ts:220  PATCH /api/v1/project/web/{id}  sends "organizationId", which is not a field of ProjectUpdateFieldsDto
-- src/services/purchase-order-items-service.ts:153  PATCH /api/v1/purchase-order-items/{}  is not an endpoint in the document
 - src/services/purchase-orders-service.ts:100  POST /api/v1/purchase-orders/web  sends "poNumber", which is not a field of PurchaseOrderCreationDto
-- src/services/purchase-orders-service.ts:214  PATCH /api/v1/purchase-orders/web/{}  is not an endpoint in the document
 - src/services/site-transfers-service.ts:111  POST /api/v1/site-transfers/web  sends "transferNumber", which is not a field of SiteTransferCreationDto
 - src/services/storage-locations-service.ts:141  POST /api/v1/storage-locations/web  sends "projectName", which is not a field of StorageLocationCreationDto (did you mean "projectId"?)
 - src/services/storage-locations-service.ts:164  PATCH /api/v1/storage-locations/web/{id}  sends "active", which is not a field of StorageLocationUpdateDto (did you mean "isActive"?)

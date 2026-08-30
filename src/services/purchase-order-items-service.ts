@@ -34,11 +34,16 @@ type Raw = any;
  *   GET    /purchase-order-items/purchase-order/{purchaseOrderId}    → PurchaseOrderItemDto[]  (full; filtered by parent PO)
  *   GET    /purchase-order-items/material/{materialId}               → PurchaseOrderItemDto[]  (full; filtered by material)
  *   POST   /purchase-order-items                                     → PurchaseOrderItemDto    (full)
- *   PATCH  /purchase-order-items/{id}                                → PurchaseOrderItemDto    (full)
+ *   PATCH  /purchase-order-items/web                                 → PurchaseOrderItemDto    (full; the id is in the body)
  *   DELETE /purchase-order-items/{id}                                → ApiResponse             (ack only)
  *
  * Note the URL base (`/purchase-order-items`) differs from the parent's
- * (`/purchase-orders/web`) — the items endpoints have no `/web` segment.
+ * (`/purchase-orders/web`) — the read and create endpoints have no `/web`
+ * segment. Update is the exception: the id-less family has no PATCH at
+ * all, so it goes to `/purchase-order-items/web` with the id in the body.
+ * Addressing it as `/purchase-order-items/{id}` matched no route and made
+ * every line-item edit a 404.
+ *
  * Mutations refresh the parent PO's embedded `items` array via the
  * mutation hooks rather than maintaining a parallel item cache.
  */
@@ -137,9 +142,10 @@ export const purchaseOrderItemsService = {
   },
 
   /**
-   * Updates a line item.
+   * Updates a line item. The id travels in the body, where
+   * `PurchaseOrderItemUpdateDto` requires it, rather than in the path.
    *
-   * `PATCH /purchase-order-items/{id}` → `PurchaseOrderItemDto` (full).
+   * `PATCH /purchase-order-items/web` → `PurchaseOrderItemDto` (full).
    *
    * @param id - Surrogate ID of the line item to update.
    * @param dto - Fields to update; only set fields are sent.
@@ -151,8 +157,8 @@ export const purchaseOrderItemsService = {
     dto: UpdatePurchaseOrderItemRequest
   ): Promise<PurchaseOrderItem> {
     const data = await api.patch<Raw>(
-      `/purchase-order-items/${id}`,
-      updatePurchaseOrderItemToJson(dto)
+      '/purchase-order-items/web',
+      updatePurchaseOrderItemToJson({ ...dto, id })
     );
     return safeParsePurchaseOrderItem(data);
   },
