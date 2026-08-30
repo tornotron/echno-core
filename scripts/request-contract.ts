@@ -855,8 +855,16 @@ export function analyse(contract: {
     record('checked');
   }
 
+  // The locale is pinned because this ordering is committed: `localeCompare`
+  // with no locale follows whatever the running machine is set to, and a
+  // machine set to one that collates ASCII differently would reorder the
+  // report and fail its match against the committed copy without any real
+  // change behind it.
   findings.sort((a, b) =>
-    `${a.location}${a.kind}${a.subject}`.localeCompare(`${b.location}${b.kind}${b.subject}`)
+    `${a.location}${a.kind}${a.subject}`.localeCompare(
+      `${b.location}${b.kind}${b.subject}`,
+      'en'
+    )
   );
   return { findings, coverage, calls };
 }

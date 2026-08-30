@@ -46,7 +46,10 @@ function collectEntries(): { subpath: string; file: string }[] {
     add(`${name}/hooks/keys`, path.join(SRC, 'hooks', name, 'keys.ts'));
   }
 
-  entries.sort((a, b) => a.subpath.localeCompare(b.subpath));
+  // Locale pinned for the same reason as in request-contract.ts: the sorted
+  // output is compared against a committed copy, so the ordering must not
+  // follow the running machine's locale.
+  entries.sort((a, b) => a.subpath.localeCompare(b.subpath, 'en'));
   return entries;
 }
 
@@ -104,7 +107,7 @@ function generate(): string {
     const exported = moduleSymbol ? checker.getExportsOfModule(moduleSymbol) : [];
     const names = exported
       .map((s) => `${s.getName()}${stabilityMarker(s, checker)}`)
-      .sort((a, b) => a.localeCompare(b));
+      .sort((a, b) => a.localeCompare(b, 'en'));
 
     lines.push(`## \`@tornotron/echno-core${subpath === '.' ? '' : '/' + subpath}\``, '');
     if (names.length === 0) {
