@@ -12,6 +12,7 @@ import { IssueStatus } from './issue-status';
  * fields the caller sets are sent to the backend.
  *
  * Wire-shape mapping:
+ * - `issueType` → backend `type`.
  * - `assigneeId` → backend `assignedToId` (with `null` meaning "unassign").
  *
  * There is deliberately no due date; see {@link CreateIssueRequest}.
@@ -51,7 +52,7 @@ export function updateIssueToJson(
 
   if (dto.title !== undefined) payload.title = dto.title;
   if (dto.description !== undefined) payload.description = dto.description;
-  if (dto.issueType !== undefined) payload.issueType = dto.issueType;
+  if (dto.issueType !== undefined) payload.type = dto.issueType;
   if (dto.status !== undefined) payload.status = dto.status;
   if (dto.priority !== undefined) payload.priority = dto.priority;
   if (dto.assigneeId !== undefined) payload.assignedToId = dto.assigneeId;

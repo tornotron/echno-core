@@ -32,14 +32,16 @@
  * OpenAPI has one property name per field and springdoc publishes the canonical one. So a client
  * sending the alias is reported as sending a field that does not exist, and it works anyway.
  * There are exactly two aliases in the backend today, `IssueCreationDto.type` accepting
- * `issueType` and `AssetCreationDto.assetCondition` accepting `condition`, and only the first is
- * reached by anything here.
+ * `issueType` and `AssetCreationDto.assetCondition` accepting `condition`.
  *
+ * Neither is reached from here any more, and the way the first one stopped being is worth keeping.
  * The alias saves a bean-bound body and nothing else. A partial update takes a `Map` and switches
- * over its keys, and there is no property for an alias to attach to, so the same name that works
- * on create is dropped on update. That is the difference between the two issue entries in the
- * record, and it is the reason the false positive is left in rather than excused: the honest fix
- * is for the client to send the canonical name on both paths, at which point both entries go.
+ * over its keys, and there is no property for an alias to attach to, so the same name that worked
+ * on create was dropped on update: changing an issue's type through the product returned 200 and
+ * did nothing. That was three entries in the record, two of them false positives on create and
+ * one of them the live bug on update, and leaving the false positives in rather than excusing
+ * them is what kept the real one in view. The client now sends `type` on both paths, so all three
+ * went together. `issue-wire-name.test.ts` is what holds it there.
  *
  * ## The committed record
  *
@@ -49,10 +51,10 @@
  * rather than only in a log.
  *
  * The findings list is not empty today, and that is the point of the issue rather than a defect
- * in the check. `development` carries live drift: an endpoint whose path the backend moved, a
- * client that sends `issueType` where the DTO says `type`, and half a dozen create bodies
- * carrying fields no DTO has. Each needs its own decision, some of them on the backend, so they
- * are recorded rather than fixed here. What this test enforces is that the list does not grow.
+ * in the check. `development` carries live drift: endpoints whose paths the backend moved, and
+ * half a dozen create and update bodies carrying fields no DTO has. Each needs its own decision,
+ * some of them on the backend, so they are recorded rather than fixed here. What this test
+ * enforces is that the list does not grow, and #57 carries the triage of what is left.
  */
 import { describe, expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
