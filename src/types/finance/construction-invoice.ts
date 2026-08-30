@@ -145,6 +145,7 @@ const ConstructionInvoiceSchema = z.object({
   paymentRecordedBy: optionalNumericId,
   journalEntryId: nullableString,
   reversalJournalEntryId: nullableString,
+  arInvoiceId: nullableString,
   lines: z.array(z.unknown()).nullish(),
 });
 
@@ -248,6 +249,16 @@ export interface ConstructionInvoice {
   journalEntryId?: string;
   /** UUID of the reversal journal entry posted on cancellation (server-set). */
   reversalJournalEntryId?: string;
+  /**
+   * UUID of the accounts-receivable invoice this construction invoice raised on
+   * approval, present on a sales or service invoice only (server-set).
+   *
+   * It is the join between the two documents, and the reason a receivables
+   * screen can tell a row it must not offer to cancel: `InvoiceService.cancel`
+   * refuses an invoice a construction invoice raised, by name. Without this the
+   * screen has to offer the action and let the backend refuse.
+   */
+  arInvoiceId?: string;
   /** Invoice lines. */
   lines: ConstructionInvoiceLine[];
 }
@@ -322,6 +333,7 @@ export function parseConstructionInvoice(json: unknown): ConstructionInvoice {
     paymentRecordedBy: raw.paymentRecordedBy ?? undefined,
     journalEntryId: raw.journalEntryId ?? undefined,
     reversalJournalEntryId: raw.reversalJournalEntryId ?? undefined,
+    arInvoiceId: raw.arInvoiceId ?? undefined,
     lines: Array.isArray(raw.lines)
       ? raw.lines.map((line) => parseConstructionInvoiceLine(line))
       : [],

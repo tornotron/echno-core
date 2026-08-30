@@ -3,7 +3,7 @@
     "repository": "tornotron/echno-backend",
     "ref": "development",
     "path": "docs/openapi.json",
-    "sha256": "325e7d469eea866e7f68a83907bba7c07698c3b3e7678c5db96d5d9aeba38b63"
+    "sha256": "9f9d01824144cae69dcc0194cc314755f3c6a973f43c8f27368aa32e807e7bc7"
   },
   "operations": {
     "POST /api/v1/assets/web": {
@@ -1379,7 +1379,7 @@
     "PATCH /api/v1/indents/web/{id}": {
       "schema": "IndentUpdateDto",
       "fields": [
-        "createdByemployeeId",
+        "createdByEmployeeId",
         "expectedOn",
         "indentNumber",
         "projectId",

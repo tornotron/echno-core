@@ -15,7 +15,10 @@ import {
   financeCustomerService,
   type CustomerListParams,
 } from '../../services/finance-customer-service';
-import { financeInvoiceService } from '../../services/finance-invoice-service';
+import {
+  financeInvoiceService,
+  type InvoiceListParams,
+} from '../../services/finance-invoice-service';
 import { financePaymentService } from '../../services/finance-payment-service';
 import {
   financeExpenseService,
@@ -172,6 +175,29 @@ export const useFinanceCustomer = (id: string) =>
   });
 
 // ==================== Invoices ====================
+
+/**
+ * Lists accounts-receivable invoices for the current tenant.
+ *
+ * Uses the **standard** query profile (`staleTime` 60 s, `gcTime` 5 min). The
+ * page envelope is kept rather than unwrapped, because a receivables table
+ * pages on `totalElements`.
+ *
+ * The key includes the filters, so each page and filter combination is cached
+ * on its own and `financeKeys.invoices()` invalidates all of them. A mutation
+ * that changes an invoice has to invalidate that prefix as well as the detail
+ * key the issue and cancel mutations seed.
+ *
+ * @param params - Optional page plus `customerId` / `status` / `openOnly`
+ *   filters.
+ * @returns A TanStack `UseQueryResult` wrapping `PagedInvoice`.
+ */
+export const useFinanceInvoices = (params: InvoiceListParams = {}) =>
+  useQuery({
+    queryKey: financeKeys.invoicesList(params),
+    queryFn: () => financeInvoiceService.list(params),
+    ...standardQueryOptions,
+  });
 
 /**
  * Fetches a single invoice by id.
