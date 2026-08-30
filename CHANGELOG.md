@@ -5,6 +5,41 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
+## [v2.2.0] - 2026-08-30
+
+Both purchase-order update calls pointed at routes the backend does not serve, so editing a
+purchase order's header, its remarks, or any line item had been a 404 since those routes were
+written. Additive on the public surface: no export was renamed or removed and no field became
+required, so `echno-web` picks this up without a code change.
+
+### Fixed
+
+- `purchaseOrdersService.update` posts to `PATCH /purchase-orders/web`, not
+  `/purchase-orders/web/{id}`. The id-carrying route serves `GET` and nothing else; the PATCH is on
+  the collection with the id in the body, which the payload has always carried and a comment above
+  the call has always said. Somebody appended it to the URL as well and nothing caught it.
+- `purchaseOrderItemsService.update` posts to `PATCH /purchase-order-items/web`, not
+  `/purchase-order-items/{id}`. The id-less family has no PATCH at all. Correcting the path alone
+  would have turned the 404 into a 400, because `PurchaseOrderItemUpdateDto` requires `id` and the
+  serializer never sent it, so the two move together.
+
+### Added
+
+- `UpdatePurchaseOrderItemRequest.id`, optional on the type and filled in by
+  `purchaseOrderItemsService.update` from its own argument, so no call site passes the id twice.
+- `UpdatePurchaseOrderRequest.projectId` and `UpdatePurchaseOrderItemRequest.materialId` now reach
+  a backend that applies them (tornotron/echno-backend#591). Both were already being sent by
+  `echno-web`'s project select and material select, and both were dropped for want of a field on
+  the update DTO. A line's material can only change while nothing has been received against it.
+
+### Deprecated
+
+- `UpdatePurchaseOrderRequest.totalAmount`, `UpdatePurchaseOrderItemRequest.totalPrice` and
+  `UpdatePurchaseOrderItemRequest.purchaseOrderId` are no longer sent. The two totals are derived
+  server-side and recomputed on every line change, so a value sent for either would be overwritten
+  in the same request; a line cannot be moved between orders at all. They stay on the types for
+  this major version so no caller breaks.
+
 ## [v2.1.0] - 2026-08-29
 
 The inspection contract, which the backend had shipped and core did not carry. Purely additive:

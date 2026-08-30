@@ -35,7 +35,7 @@ type Raw = any;
  *   GET    /purchase-orders/web/vendor/{vendorId}            → PurchaseOrderDto[]  (full; filtered server-side by vendor)
  *   GET    /purchase-orders/web/indent/{indentId}            → PurchaseOrderDto[]  (full; filtered server-side by indent)
  *   GET    /purchase-orders/web/status/{status}              → PurchaseOrderDto[]  (full; filtered server-side by status)
- *   PATCH  /purchase-orders/web/{id}                         → PurchaseOrderDto    (full; UpdatePurchaseOrderRequest carries `id` in body too)
+ *   PATCH  /purchase-orders/web                              → PurchaseOrderDto    (full; the id is in the body, and there is no per-id route)
  *   PATCH  /purchase-orders/web/{id}/status?status           → ApiResponse         (ack per spec; status comes from a query-string parameter, body empty)
  *   DELETE /purchase-orders/web/{id}                         → (not implemented server-side)
  *
@@ -201,10 +201,11 @@ export const purchaseOrdersService = {
   },
 
   /**
-   * Updates a purchase order. Sends `id` in both the URL path and the
-   * request body — the backend reads it from the body.
+   * Updates a purchase order. The id travels in the body; there is no
+   * per-id PATCH route, and appending the id to the path produced a 404
+   * on every edit of a PO's header or remarks.
    *
-   * `PATCH /purchase-orders/web/{id}` → `PurchaseOrderDto` (full).
+   * `PATCH /purchase-orders/web` → `PurchaseOrderDto` (full).
    *
    * @param dto - The patch request. Must include `id`.
    * @returns The updated {@link PurchaseOrder}.
@@ -212,7 +213,7 @@ export const purchaseOrdersService = {
    */
   async update(dto: UpdatePurchaseOrderRequest): Promise<PurchaseOrder> {
     const data = await api.patch<Raw>(
-      `/purchase-orders/web/${dto.id}`,
+      '/purchase-orders/web',
       updatePurchaseOrderToJson(dto)
     );
     return safeParsePurchaseOrder(data);

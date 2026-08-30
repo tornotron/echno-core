@@ -5,9 +5,8 @@
  * {@link PurchaseOrder}.
  *
  * Unlike most update DTOs in echno-core, `id` is part of the request body
- * rather than just the URL — the backend reads it from the JSON payload.
- * {@link purchaseOrdersService.update} still places the same `id` in the
- * URL path, so both locations agree.
+ * rather than the URL — the backend reads it from the JSON payload, and
+ * serves no per-id PATCH route at all.
  */
 import { PurchaseOrderStatus } from './enums';
 
@@ -34,14 +33,22 @@ export interface UpdatePurchaseOrderRequest {
   /** Updated free-form notes. */
   remarks?: string;
 
-  /** Updated PO total. */
+  /**
+   * Not applied. The order total is the sum of its line items and is
+   * recomputed whenever one of them is added, changed or removed, so a
+   * value sent here is overwritten by the next line edit.
+   *
+   * @deprecated The value is ignored. Stop passing it.
+   */
   totalAmount?: number;
 }
 
 /**
  * Serializes an {@link UpdatePurchaseOrderRequest} into the backend's
- * expected patch body. Every field is forwarded as-is (including the
- * required `id`); the backend treats `undefined` as "leave unchanged".
+ * expected patch body. The fields the backend applies are forwarded as-is
+ * (including the required `id`) and it treats `undefined` as "leave
+ * unchanged". `totalAmount` is not forwarded: it is derived from the line
+ * items, so sending it only puts a value on the wire that nothing reads.
  *
  * @param dto - The patch request to serialize.
  * @returns A plain object matching the backend's expected JSON shape.
@@ -55,6 +62,5 @@ export function updatePurchaseOrderToJson(
     projectId: dto.projectId,
     expectedDeliveryDate: dto.expectedDeliveryDate,
     remarks: dto.remarks,
-    totalAmount: dto.totalAmount,
   };
 }
