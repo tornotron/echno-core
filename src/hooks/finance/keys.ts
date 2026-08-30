@@ -12,7 +12,7 @@
  * - `['finance', 'bank-accounts', …]` — list (`bankAccountsList`),
  *   detail (`bankAccount`).
  * - `['finance', 'customers', …]` — list (`customersList`), detail (`customer`).
- * - `['finance', 'invoices', …]` — detail (`invoice`).
+ * - `['finance', 'invoices', …]` — list (`invoicesList`), detail (`invoice`).
  * - `['finance', 'payments', …]` — detail (`payment`).
  * - `['finance', 'expenses', …]` — list (`expensesList`), page (`expensesPage`),
  *   detail (`expense`).
@@ -31,6 +31,7 @@
 import type { CustomerListParams } from '../../services/finance-customer-service';
 import type { ConstructionInvoiceListParams } from '../../services/finance-construction-invoice-service';
 import type { ExpensePageParams } from '../../services/finance-expense-service';
+import type { InvoiceListParams } from '../../services/finance-invoice-service';
 import type { ReceiptPageParams } from '../../services/finance-receipt-service';
 
 export const financeKeys = {
@@ -60,6 +61,8 @@ export const financeKeys = {
 
   // Invoices
   invoices: () => [...financeKeys.all, 'invoices'] as const,
+  invoicesList: (params?: InvoiceListParams) =>
+    [...financeKeys.invoices(), 'list', params ?? {}] as const,
   invoice: (id: string) => [...financeKeys.invoices(), 'detail', id] as const,
 
   // Payments
