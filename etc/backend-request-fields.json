@@ -3,7 +3,7 @@
     "repository": "tornotron/echno-backend",
     "ref": "development",
     "path": "docs/openapi.json",
-    "sha256": "9f9d01824144cae69dcc0194cc314755f3c6a973f43c8f27368aa32e807e7bc7"
+    "sha256": "7da6673d2af1dbf2135e42e61eea635e39b82d65f614e48b6c9109f11130e8e9"
   },
   "operations": {
     "POST /api/v1/assets/web": {
@@ -1656,7 +1656,6 @@
       "fields": [
         "assignedToId",
         "description",
-        "issueType",
         "status",
         "title",
         "type"
@@ -1669,7 +1668,6 @@
       "fields": [
         "assignedToId",
         "description",
-        "issueType",
         "status",
         "title",
         "type"
@@ -3462,6 +3460,8 @@
     "PATCH /api/v1/tasks/web/{id}": {
       "schema": "TaskUpdateFieldsDto",
       "fields": [
+        "assigneeIds",
+        "categoryId",
         "description",
         "endDate",
         "progress",
