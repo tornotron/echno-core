@@ -5,6 +5,35 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
+## [v2.3.0] - 2026-08-31
+
+The accounts-receivable invoice module had no listing and dropped the field that links a receivable
+to the construction invoice that raised it. Both gaps are closed. Additive on the public surface: no
+export was renamed or removed and no field became required, so `echno-web` picks this up on its
+`^2.2.0` range with a lockfile bump.
+
+### Added
+
+- `financeInvoiceService.list(params)` for `GET /finance/invoices/web`, with optional `customerId`,
+  `status` and `openOnly` filters. It returns a `PagedInvoice` rather than unwrapping to an array,
+  because a receivables table pages on `totalElements` and cannot recover it from a single page of
+  rows. A filter the caller leaves unset is not sent, and `openOnly` only when it is true, since an
+  absent parameter leaves that dimension unfiltered on the server.
+- `PagedInvoice`, `InvoiceListParams` and `INVOICE_PAGE_SIZE` (20, matching the other finance
+  listings rather than the server's default of 10).
+- `financeKeys.invoicesList(params)` and the `useFinanceInvoices(params)` hook.
+- `ConstructionInvoice.arInvoiceId`: the receivable a sales or service construction invoice
+  materializes when it is approved. The backend has always sent it and this package parsed it away,
+  so nothing downstream could join the two documents. It is what lets a receivables screen identify
+  the rows `InvoiceService.cancel` refuses by name, rather than offering the action and letting the
+  backend refuse.
+
+### Fixed
+
+- The module doc claiming "the spec exposes no invoice **list** endpoint ... A list endpoint is a
+  pending backend request". It landed in tornotron/echno-backend#582 and the comment went on saying
+  otherwise, which is why `echno-web` grew a screen-local client for the one call.
+
 ## [v2.2.0] - 2026-08-30
 
 Both purchase-order update calls pointed at routes the backend does not serve, so editing a
