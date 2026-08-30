@@ -31,17 +31,19 @@
  * A backend field carrying `@JsonAlias` accepts a name the document does not publish, because
  * OpenAPI has one property name per field and springdoc publishes the canonical one. So a client
  * sending the alias is reported as sending a field that does not exist, and it works anyway.
- * There are exactly two aliases in the backend today, `IssueCreationDto.type` accepting
- * `issueType` and `AssetCreationDto.assetCondition` accepting `condition`.
+ * There is exactly one alias in the backend today, `AssetCreationDto.assetCondition` accepting
+ * `condition`, and nothing here reaches it. There were two: `IssueCreationDto.type` accepted
+ * `issueType` until this package stopped sending that name and the shim came out with
+ * tornotron/echno-backend#606.
  *
- * Neither is reached from here any more, and the way the first one stopped being is worth keeping.
- * The alias saves a bean-bound body and nothing else. A partial update takes a `Map` and switches
- * over its keys, and there is no property for an alias to attach to, so the same name that worked
- * on create was dropped on update: changing an issue's type through the product returned 200 and
- * did nothing. That was three entries in the record, two of them false positives on create and
- * one of them the live bug on update, and leaving the false positives in rather than excusing
- * them is what kept the real one in view. The client now sends `type` on both paths, so all three
- * went together. `issue-wire-name.test.ts` is what holds it there.
+ * The way that one stopped being is worth keeping. The alias saves a bean-bound body and nothing
+ * else. A partial update takes a `Map` and switches over its keys, and there is no property for an
+ * alias to attach to, so the same name that worked on create was dropped on update: changing an
+ * issue's type through the product returned 200 and did nothing. That was three entries in the
+ * record, two of them false positives on create and one of them the live bug on update, and
+ * leaving the false positives in rather than excusing them is what kept the real one in view. The
+ * client now sends `type` on both paths, so all three went together.
+ * `issue-wire-name.test.ts` is what holds it there.
  *
  * ## The committed record
  *
