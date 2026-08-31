@@ -18,8 +18,16 @@ export interface CreateOrganizationRequest {
   organizationPhone: string;
   /** Optional public website URL. */
   organizationWebsite?: string;
-  /** ID of the user creating this organization. */
-  creatorId: number;
+  /**
+   * Not sent. `OrganizationCreationDto` has no creator, because the server
+   * takes the owner from the subject claim of the caller's access token.
+   * Honouring a body value would let a caller name someone else as the
+   * owner of an organization they just created, so this is one to keep off
+   * the wire rather than add to the DTO.
+   *
+   * @deprecated The value is ignored. Stop passing it.
+   */
+  creatorId?: number;
   /** Whether the organization should be active on creation. Defaults to `true` when omitted. */
   isActive?: boolean;
 }
@@ -28,6 +36,8 @@ export interface CreateOrganizationRequest {
  * Serializes a {@link CreateOrganizationRequest} for transmission to the backend.
  *
  * Optional fields are omitted from the payload when `undefined`.
+ * `creatorId` is deliberately left out: the server resolves the owner
+ * from the caller's token.
  *
  * @param dto - The creation request to serialize.
  * @returns A plain object matching the backend's request body shape.
@@ -40,7 +50,6 @@ export function createOrganizationToJson(
     organizationAddress: dto.organizationAddress,
     organizationEmail: dto.organizationEmail,
     organizationPhone: dto.organizationPhone,
-    creatorId: dto.creatorId,
   };
   if (dto.organizationWebsite !== undefined)
     payload.organizationWebsite = dto.organizationWebsite;

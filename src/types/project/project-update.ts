@@ -14,8 +14,7 @@ import { ProjectType } from './project-type';
  *
  * Every field is optional; absent fields are left unchanged on the
  * server. `Date` values are serialized to ISO-8601 strings by
- * {@link updateProjectToJson}; `memberIds` replaces the project's
- * member list and is sent under the backend field name `employees`.
+ * {@link updateProjectToJson}.
  *
  * Backend responds with `ProjectSimpleDto` (nested `attachments`,
  * `members`, and `tasks` arrays absent).
@@ -52,7 +51,16 @@ export interface UpdateProjectRequest {
   /** New site latitude in decimal degrees. */
   projectLatitude?: number;
 
-  /** Move the project under a different organization. */
+  /**
+   * Not sent, and deliberately not honoured. A project's organization is
+   * the tenant, and `ProjectService` reads that off the request context
+   * rather than the body. A backend that applied this value would let a
+   * caller move a project out of their own tenant, so the fix belongs on
+   * the client and nowhere else. There is no move-between-organizations
+   * operation.
+   *
+   * @deprecated The value is ignored. Stop passing it.
+   */
   organizationId?: number;
 
   /** New planned start date. Serialized to ISO-8601. */
@@ -65,10 +73,14 @@ export interface UpdateProjectRequest {
   projectType?: ProjectType;
 
   /**
-   * Replacement member list. Serialized under the backend field name
-   * `employees`. To add or remove individual members without sending
-   * the whole list, prefer the dedicated `addEmployee` /
-   * `removeEmployee` service calls.
+   * Not sent. `ProjectUpdateFieldsDto` has no member list, so a
+   * replacement list went out under `employees` and changed nothing.
+   * Membership is edited one member at a time through
+   * {@link projectService.addEmployee} and
+   * {@link projectService.removeEmployee}, which is what the product
+   * already uses.
+   *
+   * @deprecated The value is ignored. Stop passing it.
    */
   memberIds?: number[];
 }
@@ -79,7 +91,12 @@ export interface UpdateProjectRequest {
  *
  * Only set fields are emitted so the backend can distinguish "not set"
  * from "explicitly null". `Date` fields are converted to ISO-8601
- * strings; `memberIds` is renamed to `employees`.
+ * strings.
+ *
+ * `organizationId` and `memberIds` are deliberately left out: the tenant
+ * comes off the request context, and members are edited through
+ * {@link projectService.addEmployee} and
+ * {@link projectService.removeEmployee}.
  *
  * @param dto - The domain update request.
  * @returns A plain object matching the backend's request-body schema.
@@ -105,14 +122,10 @@ export function updateProjectToJson(
     ...(dto.projectLatitude !== undefined && {
       projectLatitude: dto.projectLatitude,
     }),
-    ...(dto.organizationId !== undefined && {
-      organizationId: dto.organizationId,
-    }),
     ...(dto.startDate !== undefined && {
       startDate: toLocalDateAtMidnight(dto.startDate),
     }),
     ...(dto.endDate !== undefined && { endDate: toLocalDateAtMidnight(dto.endDate) }),
     ...(dto.projectType !== undefined && { projectType: dto.projectType }),
-    ...(dto.memberIds !== undefined && { employees: dto.memberIds }),
   };
 }

@@ -3,7 +3,8 @@
  *
  * Request payload and serializer for updating an existing {@link Indent}.
  * All fields are optional — only those present in the payload are
- * applied server-side. Passing `items` replaces the line-item set.
+ * applied server-side. Line items are not part of this payload; they have
+ * their own routes under {@link indentItemsService}.
  */
 import type { IndentStatus } from './enums';
 import type { CreateIndentItemRequest } from './indent-item-create';
@@ -29,16 +30,26 @@ export interface UpdateIndentRequest {
   projectId?: number;
 
   /**
-   * Replacement line-item set. Each entry uses the create shape;
-   * the server treats the array as the new full set of items.
+   * Not sent. This PATCH binds `IndentUpdateDto`, which has no line-item
+   * collection, so an array here was dropped and the doc comment promising
+   * that the server took it as the new full set was a promise nothing
+   * kept. Line items genuinely are editable, one at a time, through
+   * {@link indentItemsService} against
+   * `/indents/web/{indentId}/items/{itemId}`, which is the path the
+   * product already uses.
+   *
+   * @deprecated The value is ignored. Stop passing it.
    */
   items?: CreateIndentItemRequest[];
 }
 
 /**
  * Serializes an {@link UpdateIndentRequest} into the backend's expected
- * request body. All fields are forwarded verbatim — the backend
+ * request body. Remaining fields are forwarded verbatim — the backend
  * tolerates `undefined` on optional fields.
+ *
+ * `items` is deliberately left out: `IndentUpdateDto` has no line-item
+ * collection, and each line is edited through {@link indentItemsService}.
  *
  * @param dto - The domain update to serialize.
  * @returns A plain object matching the backend's expected JSON shape.
@@ -52,6 +63,5 @@ export function updateIndentToJson(
     expectedOn: dto.expectedOn,
     remarks: dto.remarks,
     projectId: dto.projectId,
-    items: dto.items,
   };
 }

@@ -46,8 +46,16 @@ export interface CreateIssueRequest {
   /** Optional priority label (free-form string at the moment). */
   priority?: string;
 
-  /** Required project ID — issues always belong to a project. */
-  projectId: number;
+  /**
+   * Not sent. An issue hangs off a task, and the backend walks
+   * {@link taskId} to the task's project rather than reading a project
+   * from the body; `IssueCreationDto` has no such field. It stays on this
+   * interface because the client still routes on it: `useCreateIssue`
+   * reads it to append the new issue to the right project's cached list.
+   *
+   * @deprecated Not part of the request body. Used only client-side.
+   */
+  projectId?: number;
 
   /** Optional parent task ID; omit for project-scoped issues. */
   taskId?: number;
@@ -61,6 +69,9 @@ export interface CreateIssueRequest {
  * the backend. Optional fields are omitted from the payload when undefined
  * so the backend can apply its own defaults.
  *
+ * `projectId` is deliberately left out: the backend reads the project off
+ * the parent task, and the value serves the client's own cache routing.
+ *
  * @param dto - The create request to serialize.
  * @returns A plain object matching the backend's expected request body shape.
  */
@@ -70,7 +81,6 @@ export function createIssueToJson(
   const payload: Record<string, unknown> = {
     title: dto.title,
     type: dto.issueType,
-    projectId: dto.projectId,
   };
 
   if (dto.description !== undefined) payload.description = dto.description;

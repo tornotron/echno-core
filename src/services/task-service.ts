@@ -181,8 +181,12 @@ export const taskService = {
    * `POST /tasks/web` (multipart) → `TaskSimpleDto` (partial — `creator`,
    * `assignees`, `category`, `issues`, and `attachments` absent).
    *
-   * If `files.attachments` is empty, an empty `attachments` field is sent
-   * so the backend distinguishes "no upload" from "untouched".
+   * The files are their own multipart part, read from a `@RequestParam`,
+   * so the JSON body says nothing about them. An empty `attachments` key
+   * used to be added when there was nothing to upload, on the stated
+   * grounds that it separated "no upload" from "untouched"; the key is not
+   * a field of `TaskCreationDto`, so binding dropped it and both cases
+   * produced the same request.
    *
    * @param dto - Domain create request.
    * @param files - Optional files to upload alongside the request.
@@ -193,10 +197,6 @@ export const taskService = {
   async create(dto: CreateTaskRequest, files?: TaskFiles): Promise<Task> {
     const payload = createTaskToJson(dto);
     const hasFiles = files?.attachments && files.attachments.length > 0;
-
-    if (!hasFiles) {
-      payload.attachments = [];
-    }
 
     const data = await api.postMultipart<ApiResponse>(
       '/tasks/web',
@@ -214,8 +214,10 @@ export const taskService = {
    * `creator`, `assignees`, `category`, `issues`, and `attachments`
    * absent).
    *
-   * If `files.attachments` is empty, an empty `attachments` field is sent
-   * so the backend distinguishes "no upload" from "untouched".
+   * An empty `attachments` key used to be added when there was nothing to
+   * upload, on the stated grounds that it separated "no upload" from
+   * "untouched". It never did: the partial-update handler switches over
+   * the keys it was given and names `attachments` in the branch it drops.
    *
    * @param id - Surrogate ID of the task.
    * @param dto - Fields to update; only set fields are transmitted.
@@ -230,10 +232,6 @@ export const taskService = {
   ): Promise<Task> {
     const payload = updateTaskToJson(dto);
     const hasFiles = files?.attachments && files.attachments.length > 0;
-
-    if (!hasFiles) {
-      payload.attachments = [];
-    }
 
     const data = await api.patchMultipart<ApiResponse>(
       `/tasks/web/${id}`,

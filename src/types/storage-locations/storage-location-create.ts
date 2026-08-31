@@ -26,7 +26,15 @@ export interface CreateStorageLocationRequest {
   /** Owning project ID, when {@link locationType} ties the location to a project. */
   projectId?: number;
 
-  /** Denormalized project name for backend convenience. */
+  /**
+   * Not sent. This is a read-side convenience: the backend flattens the
+   * owning project's name onto the response so a list does not need a
+   * second call, and the client was echoing it back on write. The
+   * association is carried by {@link projectId}, which is sent alongside
+   * and works. Nothing here needs renaming.
+   *
+   * @deprecated The value is ignored. Stop passing it.
+   */
   projectName?: string;
 
   /** Maximum storage capacity in domain-specific units. */
@@ -52,6 +60,10 @@ export interface CreateStorageLocationRequest {
  * deserializer sees an explicit value for every column. `active` defaults
  * to `true` when the caller didn't supply it.
  *
+ * `projectName` is deliberately left out. `StorageLocationCreationDto`
+ * carries the project as an id, and the name is only ever flattened onto
+ * the response for display.
+ *
  * @param dto - The create request to serialize.
  * @returns A plain object matching the backend's expected JSON shape.
  */
@@ -63,7 +75,6 @@ export function createStorageLocationToJson(
     locationType: dto.locationType,
     address: dto.address ?? null,
     projectId: dto.projectId ?? null,
-    projectName: dto.projectName ?? null,
     capacity: dto.capacity ?? null,
     latitude: dto.latitude ?? null,
     longitude: dto.longitude ?? null,

@@ -26,7 +26,14 @@ export interface UpdateStorageLocationRequest {
   /** New owning project ID. */
   projectId?: number;
 
-  /** New denormalized project name. */
+  /**
+   * Not sent. The name is a read-side flattening of the owning project,
+   * echoed back on write; the association itself moves with
+   * {@link projectId}, which is sent alongside and applies. Renaming a
+   * project is a project operation, not a storage-location one.
+   *
+   * @deprecated The value is ignored. Stop passing it.
+   */
   projectName?: string;
 
   /** New capacity in domain-specific units. */
@@ -50,6 +57,10 @@ export interface UpdateStorageLocationRequest {
  * forwarded verbatim so a deliberate `undefined` does not flip an existing
  * active record to inactive.
  *
+ * `projectName` is deliberately left out. `StorageLocationUpdateDto`
+ * carries the project as an id, and the name only ever came back on the
+ * response.
+ *
  * @param dto - The update request to serialize.
  * @returns A plain object matching the backend's expected JSON shape.
  */
@@ -61,7 +72,6 @@ export function updateStorageLocationToJson(
     locationType: dto.locationType,
     address: dto.address ?? null,
     projectId: dto.projectId ?? null,
-    projectName: dto.projectName ?? null,
     capacity: dto.capacity ?? null,
     latitude: dto.latitude ?? null,
     longitude: dto.longitude ?? null,

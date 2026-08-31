@@ -2,8 +2,7 @@
  * @module project-create
  *
  * Request payload for `POST /project/web` (and the multipart variant
- * `createWithFiles`). Domain field names mirror {@link Project}; the
- * serializer renames `memberIds` to the backend field `employees`.
+ * `createWithFiles`). Domain field names mirror {@link Project}.
  */
 import { toLocalDateAtMidnight } from '../../lib/utils/date-helpers';
 import { ProjectStatus } from './project-status';
@@ -13,8 +12,7 @@ import { ProjectType } from './project-type';
  * Fields accepted by the backend when creating a new {@link Project}.
  *
  * `Date` values are serialized to ISO-8601 strings by
- * {@link createProjectToJson}; `memberIds` is renamed to `employees` to
- * match the backend schema.
+ * {@link createProjectToJson}.
  */
 export interface CreateProjectRequest {
   /** Display name of the project. Required. */
@@ -54,8 +52,14 @@ export interface CreateProjectRequest {
   projectLatitude?: number;
 
   /**
-   * Owning organization. When omitted, the backend infers the value from
-   * the authenticated user's primary organization.
+   * Not sent, and deliberately not honoured. `ProjectService` takes the
+   * owning organization from the tenant on the request context, which is
+   * derived from the caller's token. A backend that read this instead would
+   * let any caller file a project into an organization they are not in, so
+   * the right answer here is the client stopping rather than the server
+   * starting.
+   *
+   * @deprecated The value is ignored. Stop passing it.
    */
   organizationId?: number;
 
@@ -69,8 +73,12 @@ export interface CreateProjectRequest {
   projectType?: ProjectType;
 
   /**
-   * Employee IDs to add as initial members. Serialized under the
-   * backend field name `employees`.
+   * Not sent. `ProjectCreationDto` has no member list, so the ids used to
+   * go out under `employees` and land nowhere. Membership is its own pair
+   * of routes: add each member with
+   * {@link projectService.addEmployee} once the project exists.
+   *
+   * @deprecated The value is ignored. Stop passing it.
    */
   memberIds?: number[];
 }
@@ -81,7 +89,13 @@ export interface CreateProjectRequest {
  *
  * Only set fields are included in the payload, so the backend can
  * distinguish "not set" from "explicitly null". `Date` fields are
- * converted to ISO-8601 strings; `memberIds` is renamed to `employees`.
+ * converted to ISO-8601 strings.
+ *
+ * Two keys are deliberately left out. `organizationId` is the tenant, and
+ * the server takes that from the request context rather than the body.
+ * `memberIds` used to travel as `employees`, which `ProjectCreationDto`
+ * has no field for; members go through
+ * {@link projectService.addEmployee} instead.
  *
  * @param dto - The domain create request.
  * @returns A plain object matching the backend's request-body schema.
@@ -105,14 +119,10 @@ export function createProjectToJson(
     ...(dto.projectLatitude !== undefined && {
       projectLatitude: dto.projectLatitude,
     }),
-    ...(dto.organizationId !== undefined && {
-      organizationId: dto.organizationId,
-    }),
     ...(dto.startDate !== undefined && {
       startDate: toLocalDateAtMidnight(dto.startDate),
     }),
     ...(dto.endDate !== undefined && { endDate: toLocalDateAtMidnight(dto.endDate) }),
     ...(dto.projectType !== undefined && { projectType: dto.projectType }),
-    ...(dto.memberIds !== undefined && { employees: dto.memberIds }),
   };
 }

@@ -5,6 +5,91 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
+## [v3.2.0] - 2026-08-31
+
+Nineteen request-contract findings in one sweep, all of them the same shape: a key this package put
+on the wire that the endpoint receiving it has no field for. Spring leaves
+`FAIL_ON_UNKNOWN_PROPERTIES` off, so each one came back 200 with the value discarded, which is why
+none of them ever arrived as a bug report. Additive: nothing was renamed or removed, and nothing
+became required.
+
+Every one of them is fixed on the client rather than on the backend, and three of them are worth
+saying out loud, because the reading the tooling suggests is the wrong one.
+
+A project's `organizationId` must **not** be honoured. `ProjectService` takes the organization from
+the tenant on the request context, which comes from the caller's token. A server that read it off
+the body instead would let a caller file a project into an organization they are not in, or move
+one out of their own, so this is the one key where "the backend should gain the field" is actively
+the wrong answer.
+
+A storage location's `projectName` is **not** a misspelt `projectId`. The id is already sent
+alongside and the association works. The name is a read-side flattening, put on the response so a
+list does not need a second call, and the client was echoing it back on write.
+
+An issue's `projectId` on create is dead on the wire but alive in the browser. The backend walks
+`taskId` to the task's project; `useCreateIssue` reads `projectId` to append the new issue to the
+right project's cached list. It leaves the payload and stays on the interface.
+
+### Changed
+
+- The multipart create and update paths on projects, tasks and issues no longer add
+  `attachments: []` to the JSON half of the body when there is nothing to upload.
+
+  Three doc comments said this told the backend that no files were uploaded, or separated "no
+  upload" from "untouched". None of it was true, and the comments are corrected. Files reach these
+  endpoints as their own multipart part and the controllers read them from a `@RequestParam`, so
+  the JSON key is not something the backend looks at. On create there is no `attachments` property
+  on `ProjectCreationDto`, `TaskCreationDto` or `IssueCreationDto` for it to bind to; on update the
+  partial handler switches over the keys it was given and names `attachments` in the branch it
+  deliberately drops. The two cases the key was meant to separate were always the same request.
+
+- `createProjectToJson` and `updateProjectToJson` no longer emit `organizationId` or `employees`.
+- `createIssueToJson` no longer emits `projectId`.
+- `updateIndentToJson` no longer emits `items`.
+- `createStorageLocationToJson` and `updateStorageLocationToJson` no longer emit `projectName`.
+- `createOrganizationToJson` no longer emits `creatorId`.
+
+### Deprecated
+
+- `organizationId` and `memberIds` on `CreateProjectRequest` and `UpdateProjectRequest`.
+
+  `memberIds` travelled as `employees`, which neither project DTO declares. Membership already has
+  its own working pair of routes, `POST` and `DELETE /project/web/{projectId}/employees/{employeeId}`,
+  reached through `projectService.addEmployee` and `projectService.removeEmployee`, which is what
+  the product uses and what this package's own docs point at.
+
+- `items` on `UpdateIndentRequest`. Its doc comment promised that the server took the array as the
+  new full set of line items. That PATCH binds `IndentUpdateDto`, which has no line-item
+  collection, so the promise was never kept. Line items genuinely are editable, one at a time,
+  through `indentItemsService` against `/indents/web/{indentId}/items/{itemId}`.
+
+- `projectName` on `CreateStorageLocationRequest` and `UpdateStorageLocationRequest`.
+
+- `creatorId` on `CreateOrganizationRequest`, now optional. The server takes the owner from the
+  subject claim of the caller's access token. Honouring a body value would let a caller name
+  somebody else as the owner of an organization they just created.
+
+- `projectId` on `CreateIssueRequest`, now optional. It is not part of the request body, but a
+  caller that has it should keep passing it: the create mutation needs it to patch the right
+  project's cached issue list.
+
+### Migrating
+
+Nothing has to change to keep working. Every deprecated property is still accepted and still
+typechecks, and the two that were required are now optional, so a caller can stop supplying them at
+its own pace. A form that only ever existed to collect one of these values can come out: a project
+form's organization picker, a storage-location form's project-name field, an organization form's
+creator id.
+
+One reversed test is worth knowing about if you have a copy of it.
+`session-derived-attribution.test.ts` asserted that issue create still sent `projectId`, on the
+grounds that it was a field the caller was free to set. It never was one. That line now asserts the
+key is absent, with a comment saying why the reversal is not a regression.
+
+Findings on the contract record fall from 54 to 35. The 19 that go are the whole of this sweep; the
+35 that stay are decisions that are not this package's alone to make, or need work on the backend
+first, and they are triaged on #57.
+
 ## [v3.1.0] - 2026-08-31
 
 The four document reference numbers stop being sent. An indent, purchase order, site transfer and
