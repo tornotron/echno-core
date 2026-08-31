@@ -35,9 +35,6 @@ export interface UpdateTaskRequest {
   /** New planned end date. */
   endDate?: Date;
 
-  /** New creator employee ID. */
-  creatorId?: number;
-
   /** New work category ID. */
   categoryId?: number;
 
@@ -79,7 +76,6 @@ export function updateTaskToJson(
   if (dto.startDate !== undefined)
     payload.startDate = toLocalDateAtMidnight(dto.startDate);
   if (dto.endDate !== undefined) payload.endDate = toLocalDateAtMidnight(dto.endDate);
-  if (dto.creatorId !== undefined) payload.creatorId = dto.creatorId;
   if (dto.categoryId !== undefined) payload.categoryId = dto.categoryId;
   if (dto.status !== undefined) payload.status = dto.status;
   if (dto.progress !== undefined) payload.progress = dto.progress;
