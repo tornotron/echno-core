@@ -198,6 +198,48 @@ describe('api error shaping', () => {
     const error = (await api.get('/x').catch((error_) => error_)) as ApiError;
     expect(error.message).toBe('An error occurred (418)');
   });
+
+  test('carries the problem title through, alongside the sentence', async () => {
+    mockFetch(async () =>
+      jsonResponse(
+        {
+          type: 'about:blank',
+          title: 'Access Denied',
+          status: 403,
+          detail: 'You do not have permission for this action.',
+          message: 'You do not have permission for this action.',
+          details: 'uri=/api/v1/leave-requests/9/approve',
+          requiredOrganizationRoles: ['ORG_ADMIN'],
+        },
+        { status: 403 }
+      )
+    );
+
+    const error = (await api.get('/x').catch((error_) => error_)) as ApiError;
+    expect(error.title).toBe('Access Denied');
+    expect(error.message).toBe('You do not have permission for this action.');
+    expect(error.details).toBe('uri=/api/v1/leave-requests/9/approve');
+  });
+
+  test('drops a details payload that is not a string', async () => {
+    // The subscription endpoints answer 402 with `details` as a quota object,
+    // and `details` is typed as a string for everything downstream.
+    mockFetch(async () =>
+      jsonResponse(
+        {
+          error: 'subscription_required',
+          message: 'Your plan does not include this feature',
+          details: { reason: 'FEATURE_NOT_IN_PLAN', feature: 'AI_REPORTS' },
+        },
+        { status: 402 }
+      )
+    );
+
+    const error = (await api.get('/x').catch((error_) => error_)) as ApiError;
+    expect(error.message).toBe('Your plan does not include this feature');
+    expect(error.details).toBeUndefined();
+    expect(error.title).toBeUndefined();
+  });
 });
 
 describe('api.post / put', () => {

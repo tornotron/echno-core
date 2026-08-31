@@ -54,6 +54,65 @@ The wire rename must not reach a backend that has not deployed echno-backend#627
 the old creation DTO binds only `active`, so a payload naming `isActive` would leave its primitive
 at `false` and create the location **inactive**. That deploy went out before this release.
 
+## [v3.4.0] - 2026-08-31
+
+Error notifications stop misreading the backend's error body. Three things were wrong at once, and
+they compounded: a 403 was titled as a login problem, the sentence explaining the refusal was used
+as the title rather than the body, and the body showed the request URI.
+
+A 403 was titled "Authentication Required". `isAuthError` covers 401 and 403 together, which is
+right for the retry policy in `retry.ts` (neither is worth retrying) and wrong for anything that
+speaks to a user: a 403 means the caller is signed in and the account lacks the permission, so
+"authenticate" sends them to a login screen that will change nothing. This matters more than it
+used to, because a run of refusals moved onto stored records and session-derived actors, and every
+one of them answers 403 to a signed-in caller who needs a role rather than a session.
+
+`details` was being read as the human explanation. It is not one. Every handled failure comes back
+from the backend's `GlobalExceptionHandler` as an RFC 7807 problem whose legacy keys are filled in
+deliberately: `message` mirrors `detail` and carries the sentence, and `details` carries the
+request description, the literal string `uri=/api/v1/leave-requests/9/approve`. Because
+`getErrorMessage` preferred `details`, that URI was the description under every toast; because
+`getErrorTitle` fell through to `error.message` whenever `details` was set, and it was always set,
+the sentence became the title. The pair was inverted on every handled failure, not only on 403.
+
+The subscription endpoints made the same key worse. They answer 402 with `details` as an object
+holding the quota breakdown, so a plan-limit refusal put an object where a string was declared.
+
+### Changed
+
+- `getErrorTitle` distinguishes 401 from 403, and prefers the title the server sent.
+
+  A 401 keeps "Authentication Required". Otherwise the problem's own `title` is used when the body
+  carried one, which gives "Access Denied", "Validation Failed", "Duplicate Resource" and the rest,
+  each paired with the server's sentence as the description. A 403 with no body reads "Not
+  Permitted". Timeouts, network failures and body-less gateway errors keep their generic titles,
+  since there is nothing to read.
+
+- `getErrorMessage` returns `message`, the sentence written for the caller, and no longer prefers
+  `details`. On a refused `@PreAuthorize` that sentence names the organization role or authority
+  that was missing, which is the one thing the user needs.
+
+### Added
+
+- `ApiError.title`, the problem class from the response body, `undefined` when the body carried
+  none. `ApiErrorData.title` alongside it.
+
+### Fixed
+
+- A non-string `details` no longer reaches `ApiError.details`, which is declared as a string. The
+  402 quota object is dropped rather than passed through.
+
+### Migrating
+
+Nothing to change at a call site: `getErrorTitle` and `getErrorMessage` keep their signatures, and
+the caller's `defaultTitle` still applies wherever the server said nothing. What changes is the
+text users see, so a test that pinned the old strings needs updating. A 403 that asserted
+"Authentication Required" should assert the server's title, and anything that asserted a
+`uri=...` description was asserting the bug.
+
+`isAuthError` is unchanged and still covers both statuses. It is the right test for "do not retry"
+and the wrong one for "what do we tell the user", and its doc comment now says so.
+
 ## [v3.2.0] - 2026-08-31
 
 Nineteen request-contract findings in one sweep, all of them the same shape: a key this package put
