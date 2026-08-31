@@ -60,8 +60,9 @@ export interface CreateGrnRequest {
    * Left unset, the backend refuses such a line with a 400 naming the order,
    * the quantity ordered, the quantity already received against it and the
    * quantity this note offers, which is enough for somebody to recognise a
-   * mistyped digit. Set, the excess is recorded and the created note comes
-   * back with {@link GoodsReceivedNote.overReceiptAcknowledged} true.
+   * mistyped digit. Set to `true`, the excess is recorded and the created note
+   * comes back with {@link GoodsReceivedNote.overReceiptAcknowledged} true.
+   * `false` is the same refusal as leaving it out, sent explicitly.
    *
    * It is not a validation switch to leave on. A supplier who delivers 105
    * bags against an order for 100 has left 105 bags on the site whether the
