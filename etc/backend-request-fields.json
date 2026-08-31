@@ -3,7 +3,7 @@
     "repository": "tornotron/echno-backend",
     "ref": "development",
     "path": "docs/openapi.json",
-    "sha256": "08e0125308a55854dd7dd68f947c77f532772b928ccd20abd8048f41c8a8c709"
+    "sha256": "eec9a36255ed8161ffd1eff39d21b473168b041552ff520d5976894f82ca0490"
   },
   "operations": {
     "POST /api/v1/assets/web": {
@@ -969,9 +969,7 @@
         "subContractId",
         "transactionId",
         "type",
-        "vendorId",
-        "verifiedAt",
-        "verifiedBy"
+        "vendorId"
       ],
       "required": [
         "amount",
@@ -1007,9 +1005,7 @@
         "subContractId",
         "transactionId",
         "type",
-        "vendorId",
-        "verifiedAt",
-        "verifiedBy"
+        "vendorId"
       ],
       "required": [
         "amount",
@@ -1019,6 +1015,12 @@
         "status",
         "type"
       ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/finance/construction-payments/web/{id}/verify": {
+      "schema": null,
+      "fields": [],
+      "required": [],
       "acceptsAnyField": false
     },
     "POST /api/v1/finance/cost-categories/web": {
