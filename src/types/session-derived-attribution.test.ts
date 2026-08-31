@@ -20,6 +20,7 @@ import {
   createIssueCommentToJson,
 } from './issue/issue-create';
 import { createTaskToJson } from './task/task-create';
+import { updateTaskToJson } from './task/task-update';
 import { approvalActionToJson } from './leave/leave-approval';
 import { IssueType } from './issue/issue-type';
 
@@ -65,6 +66,20 @@ describe('payloads no longer name who is acting', () => {
     expect(payload).not.toHaveProperty('creatorId');
     expect(payload.projectId).toBe(4);
     expect(payload.assigneeIds).toEqual([7]);
+  });
+
+  // A task edit form has no creator field, so the value here was never read
+  // off the loaded task: it was the editing session's own id. `TaskUpdateFieldsDto`
+  // has no such property and never applied it, but the payload was still asking
+  // to record whoever opened the form as the creator.
+  test('task update does not ask to rewrite the creator', () => {
+    const payload = updateTaskToJson({
+      title: 'Shutter the block B slab',
+      creatorId: 5,
+    } as unknown as Parameters<typeof updateTaskToJson>[0]);
+
+    expect(payload).not.toHaveProperty('creatorId');
+    expect(payload.title).toBe('Shutter the block B slab');
   });
 
   test('a leave decision sends no approver', () => {

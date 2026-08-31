@@ -19,7 +19,7 @@ Write calls in `src/services`: 136
 | endpoint not in the document | 4 |
 | not readable | 17 |
 
-## Findings (59)
+## Findings (58)
 
 - src/services/employee-service.ts:226  POST /api/v1/employee/web  is not an endpoint in the document
 - src/services/employee-service.ts:246  PATCH /api/v1/employee/web/{id}  sends "address", which is not a field of EmployeeUpdateFieldsDto (did you mean "emailAddress"?)
@@ -77,7 +77,6 @@ Write calls in `src/services`: 136
 - src/services/task-service.ts:201  POST /api/v1/tasks/web  sends "attachments", which is not a field of TaskCreationDto
 - src/services/task-service.ts:201  POST /api/v1/tasks/web  sends "priority", which is not a field of TaskCreationDto
 - src/services/task-service.ts:238  PATCH /api/v1/tasks/web/{id}  sends "attachments", which is not a field of TaskUpdateFieldsDto
-- src/services/task-service.ts:238  PATCH /api/v1/tasks/web/{id}  sends "creatorId", which is not a field of TaskUpdateFieldsDto
 - src/services/task-service.ts:238  PATCH /api/v1/tasks/web/{id}  sends "priority", which is not a field of TaskUpdateFieldsDto
 - src/services/task-service.ts:238  PATCH /api/v1/tasks/web/{id}  sends "projectId", which is not a field of TaskUpdateFieldsDto
 

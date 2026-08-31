@@ -21,7 +21,11 @@ client stops rattling it.
 
 - `creatorId` from `CreateIssueRequest` and the `createdById` key from `createIssueToJson`.
 - `authorId` from `CreateIssueCommentRequest` and from `createIssueCommentToJson`.
-- `creatorId` from `CreateTaskRequest` and from the task create serializer.
+- `creatorId` from `CreateTaskRequest` and `UpdateTaskRequest`, and from both task serializers.
+  The update side is the sharper of the two: a task edit form has no creator field, so the value
+  a caller put there was the editing session's own id, and every edit asked to record the editor
+  as the task's creator. `TaskUpdateFieldsDto` has no such property and dropped it, so nothing was
+  corrupted, but the request was stating an intent nobody meant.
 - `approverId` from `LeaveApprovalAction` and from `approvalActionToJson`. An action with neither
   comments nor a delegate now serializes to an empty body, which is the right shape.
 
