@@ -5,6 +5,43 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
+## [v3.0.0] - 2026-08-31
+
+**Breaking.** Four request payloads no longer carry the id of whoever is acting. The backend reads
+all four from the signed-in session instead (echno-backend #598 / PR #607) and its OpenAPI document
+no longer declares them, so anything still sending one is stating an authorship the server ignores.
+
+Nothing is broken by the old behaviour: every value a client sent was the signed-in employee's own
+id anyway, and Spring discards properties it does not recognise. What the fields made possible is
+the reason they are gone. A payload with a field for "who did this" is a payload someone can put a
+colleague's id into, and only the server can tell the difference. The server closed that door; the
+client stops rattling it.
+
+### Removed
+
+- `creatorId` from `CreateIssueRequest` and the `createdById` key from `createIssueToJson`.
+- `authorId` from `CreateIssueCommentRequest` and from `createIssueCommentToJson`.
+- `creatorId` from `CreateTaskRequest` and from the task create serializer.
+- `approverId` from `LeaveApprovalAction` and from `approvalActionToJson`. An action with neither
+  comments nor a delegate now serializes to an empty body, which is the right shape.
+
+### Changed
+
+- `useApproveLeaveRequest`, `useRejectLeaveRequest` and `useDelegateApproval` take the acting
+  approver as its own mutation variable: `{ requestId, approverId, dto }`. It is not sent. The
+  pending-approvals cache is keyed by approver, so the id is still needed to patch the right list
+  when a decision lands, and reading it off the payload was the only reason the payload had it.
+
+### Migrating
+
+Drop the four fields from anything constructing these payloads, and pass `approverId` beside `dto`
+rather than inside it on the three leave-decision mutations. A caller that has no employee record in
+the current organization now gets a 403 from all four actions, where it could previously act by
+naming a colleague, so a screen that reads every 403 as a permissions failure is worth a look.
+
+- `etc/backend-request-fields.json` refreshed from the backend's committed OpenAPI document; the
+  four fields are gone from the four schemas and nothing else moved.
+
 ## [v2.4.0] - 2026-08-31
 
 A construction invoice's approval stamps carried only user ids, so the screens showing them had

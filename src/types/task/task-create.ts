@@ -10,7 +10,7 @@ import { TaskStatus } from './task-status';
 /**
  * Fields accepted by the backend when creating a new {@link Task}.
  *
- * Joined entities are referenced by ID (`creatorId`, `categoryId`,
+ * Joined entities are referenced by ID (`categoryId`,
  * `assigneeIds`) rather than nested objects; the server resolves them
  * and returns the populated entities on subsequent reads. `Date` values
  * are serialized to ISO-8601 strings by {@link createTaskToJson}.
@@ -30,9 +30,6 @@ export interface CreateTaskRequest {
 
   /** Planned end date. */
   endDate?: Date;
-
-  /** Surrogate ID of the creator employee. */
-  creatorId?: number;
 
   /** Surrogate ID of the work category. */
   categoryId?: number;
@@ -93,7 +90,6 @@ export function createTaskToJson(
   if (dto.startDate !== undefined)
     payload.startDate = toLocalDateAtMidnight(dto.startDate);
   if (dto.endDate !== undefined) payload.endDate = toLocalDateAtMidnight(dto.endDate);
-  if (dto.creatorId !== undefined) payload.creatorId = dto.creatorId;
   if (dto.categoryId !== undefined) payload.categoryId = dto.categoryId;
   if (dto.status !== undefined) payload.status = dto.status;
   if (dto.progress !== undefined) payload.progress = dto.progress;
