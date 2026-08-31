@@ -5,6 +5,34 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
+## [v3.6.0] - 2026-08-31
+
+Follows echno-backend#631 off this client. Additive: no export renamed or removed, nothing made
+required.
+
+### Changed
+
+- `createConstructionPaymentToJson` and `updateConstructionPaymentToJson` stop sending
+  **`verifiedBy` and `verifiedAt`**.
+
+  Verification is an action rather than an attribute. echno-backend#631 removed both fields from
+  `CreateConstructionPaymentRequest` and `UpdateConstructionPaymentRequest` and replaced them with
+  `POST /construction-payments/web/{id}/verify`, which stamps the verifier from the session. The
+  reason is the one that took the six identity fields out in `v3.0.0`: a payload with a slot for
+  "who checked this" lets anyone able to edit a voucher record that a named colleague checked a
+  payment, at a time of their choosing, and the audit trail then says so silently.
+
+  The timestamp goes with the id because the pair only ever moves together, so a settable
+  `verifiedAt` is a settable verification.
+
+  **Both stay on the read type**, where they are what the backend stamped, and the payment detail
+  screen renders `verifiedBy` as a link. They stay on the two request interfaces too, deprecated,
+  so no caller breaks; they come out in a later major once nothing passes one.
+
+  Four request-contract findings clear. They appeared only after the backend deployed, which is the
+  ratchet doing its job: the record is checked against the backend's current `development`, so the
+  removal surfaced here within the hour rather than as a silently dropped key.
+
 ## [v3.5.0] - 2026-08-31
 
 Eight request-contract findings that were held back as decisions rather than repairs, plus the

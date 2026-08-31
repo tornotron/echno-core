@@ -11,8 +11,8 @@
  * backend may serialize as a string, coerced to a number at the boundary.
  */
 
-import { z } from 'zod';
-import { parseUuid } from '../../lib/utils/parse-id';
+import { z } from "zod";
+import { parseUuid } from "../../lib/utils/parse-id";
 import {
   backendDate,
   money,
@@ -20,55 +20,55 @@ import {
   numericId,
   optionalNumericId,
   opaque,
-} from '../../lib/validation/backend-schema';
+} from "../../lib/validation/backend-schema";
 
 /** Nature of a construction payment voucher. */
 export enum ConstructionPaymentType {
-  INVOICE = 'INVOICE',
-  ADVANCE = 'ADVANCE',
-  REFUND = 'REFUND',
-  EXPENSE = 'EXPENSE',
-  SALARY = 'SALARY',
-  OTHER = 'OTHER',
+  INVOICE = "INVOICE",
+  ADVANCE = "ADVANCE",
+  REFUND = "REFUND",
+  EXPENSE = "EXPENSE",
+  SALARY = "SALARY",
+  OTHER = "OTHER",
 }
 
 /** Processing status of a construction payment voucher. */
 export enum ConstructionPaymentVoucherStatus {
-  PENDING = 'PENDING',
-  PROCESSING = 'PROCESSING',
-  COMPLETED = 'COMPLETED',
-  FAILED = 'FAILED',
-  CANCELLED = 'CANCELLED',
-  REFUNDED = 'REFUNDED',
+  PENDING = "PENDING",
+  PROCESSING = "PROCESSING",
+  COMPLETED = "COMPLETED",
+  FAILED = "FAILED",
+  CANCELLED = "CANCELLED",
+  REFUNDED = "REFUNDED",
 }
 
 /** Instrument used to make the payment. */
 export enum ConstructionPaymentMethod {
-  CASH = 'CASH',
-  CHEQUE = 'CHEQUE',
-  BANK_TRANSFER = 'BANK_TRANSFER',
-  UPI = 'UPI',
-  CARD = 'CARD',
-  NEFT = 'NEFT',
-  RTGS = 'RTGS',
-  IMPS = 'IMPS',
-  OTHER = 'OTHER',
+  CASH = "CASH",
+  CHEQUE = "CHEQUE",
+  BANK_TRANSFER = "BANK_TRANSFER",
+  UPI = "UPI",
+  CARD = "CARD",
+  NEFT = "NEFT",
+  RTGS = "RTGS",
+  IMPS = "IMPS",
+  OTHER = "OTHER",
 }
 
 /** Category of the party being paid. */
 export enum ConstructionPayeeType {
-  EMPLOYEE = 'EMPLOYEE',
-  VENDOR = 'VENDOR',
-  SUB_CONTRACTOR = 'SUB_CONTRACTOR',
-  LABOUR = 'LABOUR',
-  CONSULTANT = 'CONSULTANT',
-  UTILITY = 'UTILITY',
-  GOVERNMENT = 'GOVERNMENT',
-  INSURANCE = 'INSURANCE',
-  BANK = 'BANK',
-  LEGAL = 'LEGAL',
-  RENTAL = 'RENTAL',
-  OTHER = 'OTHER',
+  EMPLOYEE = "EMPLOYEE",
+  VENDOR = "VENDOR",
+  SUB_CONTRACTOR = "SUB_CONTRACTOR",
+  LABOUR = "LABOUR",
+  CONSULTANT = "CONSULTANT",
+  UTILITY = "UTILITY",
+  GOVERNMENT = "GOVERNMENT",
+  INSURANCE = "INSURANCE",
+  BANK = "BANK",
+  LEGAL = "LEGAL",
+  RENTAL = "RENTAL",
+  OTHER = "OTHER",
 }
 
 /**
@@ -76,9 +76,9 @@ export enum ConstructionPayeeType {
  * defaulting to `OTHER` when the value is absent or unrecognized.
  */
 export function parseConstructionPaymentType(
-  raw: unknown
+  raw: unknown,
 ): ConstructionPaymentType {
-  return typeof raw === 'string' &&
+  return typeof raw === "string" &&
     (Object.values(ConstructionPaymentType) as string[]).includes(raw)
     ? (raw as ConstructionPaymentType)
     : ConstructionPaymentType.OTHER;
@@ -90,9 +90,9 @@ export function parseConstructionPaymentType(
  * voucher starts pending).
  */
 export function parseConstructionPaymentVoucherStatus(
-  raw: unknown
+  raw: unknown,
 ): ConstructionPaymentVoucherStatus {
-  return typeof raw === 'string' &&
+  return typeof raw === "string" &&
     (Object.values(ConstructionPaymentVoucherStatus) as string[]).includes(raw)
     ? (raw as ConstructionPaymentVoucherStatus)
     : ConstructionPaymentVoucherStatus.PENDING;
@@ -103,9 +103,9 @@ export function parseConstructionPaymentVoucherStatus(
  * defaulting to `OTHER` when the value is absent or unrecognized.
  */
 export function parseConstructionPaymentMethod(
-  raw: unknown
+  raw: unknown,
 ): ConstructionPaymentMethod {
-  return typeof raw === 'string' &&
+  return typeof raw === "string" &&
     (Object.values(ConstructionPaymentMethod) as string[]).includes(raw)
     ? (raw as ConstructionPaymentMethod)
     : ConstructionPaymentMethod.OTHER;
@@ -116,9 +116,9 @@ export function parseConstructionPaymentMethod(
  * defaulting to `OTHER` when the value is absent or unrecognized.
  */
 export function parseConstructionPayeeType(
-  raw: unknown
+  raw: unknown,
 ): ConstructionPayeeType {
-  return typeof raw === 'string' &&
+  return typeof raw === "string" &&
     (Object.values(ConstructionPayeeType) as string[]).includes(raw)
     ? (raw as ConstructionPayeeType)
     : ConstructionPayeeType.OTHER;
@@ -223,8 +223,8 @@ export interface ConstructionPayment {
 export function parseConstructionPayment(json: unknown): ConstructionPayment {
   const raw = ConstructionPaymentSchema.parse(json);
   return {
-    id: parseUuid(raw.id, 'parseConstructionPayment.id'),
-    paymentNumber: raw.paymentNumber ?? '',
+    id: parseUuid(raw.id, "parseConstructionPayment.id"),
+    paymentNumber: raw.paymentNumber ?? "",
     type: parseConstructionPaymentType(raw.type),
     status: parseConstructionPaymentVoucherStatus(raw.status),
     method: parseConstructionPaymentMethod(raw.method),
@@ -298,9 +298,26 @@ export interface CreateConstructionPaymentRequest {
   accountNumber?: string;
   /** IFSC code (max 20). */
   ifscCode?: string;
-  /** User who verified the voucher. */
+  /**
+   * Not applied. Verification is an action rather than an attribute: the
+   * backend stamps the verifier from the session at
+   * `POST /construction-payments/web/{id}/verify`, and echno-backend#631
+   * removed both fields from this payload. A slot for "who checked this" that
+   * the caller fills in lets anyone able to edit a voucher record that a named
+   * colleague checked a payment, at a time of their choosing.
+   *
+   * Both remain on the read type, where they are what the backend stamped.
+   *
+   * @deprecated The value is ignored. Verify through the action instead.
+   */
   verifiedBy?: number;
-  /** Verification timestamp (ISO instant). */
+  /**
+   * Not applied. Stamped alongside `verifiedBy` by the verify action, and
+   * removed from this payload for the same reason: the pair only ever moves
+   * together, so a settable timestamp is a settable verification.
+   *
+   * @deprecated The value is ignored. Verify through the action instead.
+   */
   verifiedAt?: string;
   /** Description (max 1000). */
   description?: string;
@@ -355,9 +372,26 @@ export interface UpdateConstructionPaymentRequest {
   accountNumber?: string;
   /** IFSC code (max 20). */
   ifscCode?: string;
-  /** User who verified the voucher. */
+  /**
+   * Not applied. Verification is an action rather than an attribute: the
+   * backend stamps the verifier from the session at
+   * `POST /construction-payments/web/{id}/verify`, and echno-backend#631
+   * removed both fields from this payload. A slot for "who checked this" that
+   * the caller fills in lets anyone able to edit a voucher record that a named
+   * colleague checked a payment, at a time of their choosing.
+   *
+   * Both remain on the read type, where they are what the backend stamped.
+   *
+   * @deprecated The value is ignored. Verify through the action instead.
+   */
   verifiedBy?: number;
-  /** Verification timestamp (ISO instant). */
+  /**
+   * Not applied. Stamped alongside `verifiedBy` by the verify action, and
+   * removed from this payload for the same reason: the pair only ever moves
+   * together, so a settable timestamp is a settable verification.
+   *
+   * @deprecated The value is ignored. Verify through the action instead.
+   */
   verifiedAt?: string;
   /** Description (max 1000). */
   description?: string;
@@ -368,10 +402,15 @@ export interface UpdateConstructionPaymentRequest {
 /**
  * Emits the payee, reference and optional fields shared by the create and
  * update payment bodies onto `json`. Only fields that are set are written.
+ *
+ * `verifiedBy` and `verifiedAt` are not among them. Verification is a
+ * transition taken through `POST /construction-payments/web/{id}/verify`, which
+ * stamps both from the session; echno-backend#631 removed them from the create
+ * and update payloads, so a value sent here would be read off no field.
  */
 function appendConstructionPaymentOptionalFields(
   json: Record<string, unknown>,
-  dto: CreateConstructionPaymentRequest | UpdateConstructionPaymentRequest
+  dto: CreateConstructionPaymentRequest | UpdateConstructionPaymentRequest,
 ): void {
   if (dto.payeeType !== undefined) json.payeeType = dto.payeeType;
   if (dto.invoiceId !== undefined) json.invoiceId = dto.invoiceId;
@@ -390,8 +429,6 @@ function appendConstructionPaymentOptionalFields(
   if (dto.bankName !== undefined) json.bankName = dto.bankName;
   if (dto.accountNumber !== undefined) json.accountNumber = dto.accountNumber;
   if (dto.ifscCode !== undefined) json.ifscCode = dto.ifscCode;
-  if (dto.verifiedBy !== undefined) json.verifiedBy = dto.verifiedBy;
-  if (dto.verifiedAt !== undefined) json.verifiedAt = dto.verifiedAt;
   if (dto.description !== undefined) json.description = dto.description;
   if (dto.notes !== undefined) json.notes = dto.notes;
 }
@@ -404,7 +441,7 @@ function appendConstructionPaymentOptionalFields(
  * @returns A plain object matching `CreateConstructionPaymentRequest`.
  */
 export function createConstructionPaymentToJson(
-  dto: CreateConstructionPaymentRequest
+  dto: CreateConstructionPaymentRequest,
 ): Record<string, unknown> {
   const json: Record<string, unknown> = {
     type: dto.type,
@@ -425,7 +462,7 @@ export function createConstructionPaymentToJson(
  * @returns A plain object matching `UpdateConstructionPaymentRequest`.
  */
 export function updateConstructionPaymentToJson(
-  dto: UpdateConstructionPaymentRequest
+  dto: UpdateConstructionPaymentRequest,
 ): Record<string, unknown> {
   const json: Record<string, unknown> = {
     type: dto.type,
