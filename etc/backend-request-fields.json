@@ -3,7 +3,7 @@
     "repository": "tornotron/echno-backend",
     "ref": "development",
     "path": "docs/openapi.json",
-    "sha256": "6b97949db387147bd3ea85322c2cc2e8ed2b3474d1f550495d18253003e684bd"
+    "sha256": "41d674f9ab30299c2eba6218e88982b64e952958d8d3f22cc372529c3c0281a4"
   },
   "operations": {
     "POST /api/v1/assets/web": {
@@ -1205,6 +1205,7 @@
     "POST /api/v1/grns": {
       "schema": "GoodsReceivedNoteCreationDto",
       "fields": [
+        "allowOverReceipt",
         "deliveryChallanNumber",
         "invoiceAmount",
         "invoiceNumber",
@@ -1243,6 +1244,7 @@
     "POST /api/v1/grns/web": {
       "schema": "GoodsReceivedNoteCreationDto",
       "fields": [
+        "allowOverReceipt",
         "deliveryChallanNumber",
         "invoiceAmount",
         "invoiceNumber",

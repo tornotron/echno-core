@@ -5,6 +5,49 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
+## [v4.2.0] - 2026-09-01
+
+The client half of echno-backend#659, which made a goods receipt reconcile against the purchase
+order it cites. Additive: one optional field on the create payload and one on the read type.
+Nothing is removed and no signature moves. The behaviour change is on the server, not here: a
+receipt that used to be accepted can now be refused, and this release is what lets a client answer
+that refusal.
+
+### Added
+
+- **`CreateGrnRequest.allowOverReceipt`** — acknowledges in advance that the receipt may take a
+  material past the quantity its order asked for.
+
+  Left unset, the backend refuses such a line with a 400 that names the order, the quantity
+  ordered, the quantity already received against it and the quantity now offered. Set, the excess
+  is recorded and the created note comes back marked. The field is omitted from the body when
+  `undefined`, so nothing changes on the wire for a caller that never sets it.
+
+  It is not a validation switch to leave on. A supplier who delivers 105 bags against an order for
+  100 has left 105 bags on the site whether the system likes it or not, and a receipt that cannot
+  be filed puts them outside the stock ledger; the flag is how that delivery is admitted, by
+  somebody who read the figures and meant it. A screen that sets it by default has thrown away the
+  check on a mistyped digit that the refusal exists to catch.
+
+- **`GoodsReceivedNote.overReceiptAcknowledged`** — whether somebody deliberately let this receipt
+  exceed its order.
+
+  `false` on a note filed within its order, on one that cites no order, and on every note filed
+  before the backend carried the field, so a screen can read it without a presence check. Worth a
+  badge: it is the only thing on the document that says a person decided to accept a delivery
+  bigger than the one that was ordered.
+
+### Changed
+
+- **`PurchaseOrderItem.receivedQuantity` now means something.** No signature moves and the parser
+  is untouched, but the backend wrote this `0` at creation and never again, so a client that
+  showed "outstanding" from it was showing the ordered quantity under another name. Receipts now
+  advance it, and `PurchaseOrderStatus.PARTIALLY_RECEIVED` and `FULLY_RECEIVED` are reachable
+  without anybody setting them by hand.
+
+  A receipt line for a material that is not on the order reconciles nothing and is not an error, so
+  an outstanding figure derived from these fields has to allow for a receipt it cannot explain.
+
 ## [v4.1.0] - 2026-09-01
 
 The client half of echno-backend#636, which froze a verified payment voucher and had to build a
