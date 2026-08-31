@@ -147,8 +147,12 @@ function parseClockEvent(raw: any): ClockEvent {
           ipAddress: raw.ipAddress,
         }
       : undefined,
-    isWithinGeofence: raw.isWithinGeofence ?? false,
-    distanceFromProject: raw.distanceFromProject ?? 0,
+    // Absent stays absent. Coercing these to `false` and `0` turned "the server
+    // said nothing" into "the employee was outside the fence, standing on the
+    // marker", which is a definite claim about a person's whereabouts that
+    // nothing had established. See tornotron/echno-backend#646.
+    isWithinGeofence: raw.isWithinGeofence ?? undefined,
+    distanceFromProject: raw.distanceFromProject ?? undefined,
     remarks: raw.remarks ?? undefined,
     verifiedBy: raw.verifiedBy ?? undefined,
     // Server-set, and the server runs in UTC, so a naive value here is UTC. The
