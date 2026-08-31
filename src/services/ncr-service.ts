@@ -54,6 +54,27 @@ export interface NcrListParams {
   /** Restrict to the reports one engineer is accountable for. */
   siteEngineerId?: number;
   /**
+   * Restrict to the reports one person raised.
+   *
+   * An **employee** id, not a user id. The backend writes the column from
+   * `NcrService.currentEmployeeId()`, which resolves the session user through
+   * `findByUserIdAndOrganizationId`, so this takes the same value
+   * `siteEngineerId` does and the same value the employee directory hands out.
+   * The two sequences run in lockstep on a fresh database, so passing a user
+   * id here names a different person only once they have diverged.
+   */
+  raisedById?: number;
+  /**
+   * Restrict to the reports one person accepted at the verify step. An
+   * **employee** id, from the same source as `raisedById`.
+   */
+  verifiedById?: number;
+  /**
+   * Restrict to the reports one person closed. An **employee** id, from the
+   * same source as `raisedById`. Distinct from whoever verified the work.
+   */
+  closedById?: number;
+  /**
    * `true` returns the punch list: every report that is not yet closed, whatever
    * stage it has reached. Distinct from filtering on `status`, which would need
    * six separate calls to express the same thing.
@@ -111,6 +132,9 @@ function toQuery(
   if (params.status !== undefined) query.status = params.status;
   if (params.siteEngineerId !== undefined)
     query.siteEngineerId = params.siteEngineerId;
+  if (params.raisedById !== undefined) query.raisedById = params.raisedById;
+  if (params.verifiedById !== undefined) query.verifiedById = params.verifiedById;
+  if (params.closedById !== undefined) query.closedById = params.closedById;
   if (params.open !== undefined) query.open = params.open;
   if (params.page !== undefined) query.page = params.page;
   if (params.size !== undefined) query.size = params.size;

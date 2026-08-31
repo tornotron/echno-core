@@ -57,13 +57,28 @@ export interface UpdateMaterialRequest {
   /** Cost per `unit`. */
   unitCost?: number;
 
-  /** Free-form category label. */
+  /**
+   * Not applied. `Material` has no category column, `MaterialDto` has no
+   * category field, and nothing in the backend names one at any layer.
+   *
+   * @deprecated The value is ignored. Stop passing it.
+   */
   category?: string;
 
-  /** Stock-availability classification — see {@link MaterialStatus}. */
+  /**
+   * Not applied. There is no such column and no such field on the response,
+   * so the classification a caller sends here cannot be read back.
+   *
+   * @deprecated The value is ignored. Stop passing it.
+   */
   status?: MaterialStatus;
 
-  /** Recent stock-level samples for sparkline rendering. */
+  /**
+   * Not applied. Stock history is derived from the inventory transactions,
+   * not stored on the material, and there is no column to put samples in.
+   *
+   * @deprecated The value is ignored. Stop passing it.
+   */
   trend?: number[];
 
   /** Lead-time-to-consume (days). */
@@ -74,6 +89,11 @@ export interface UpdateMaterialRequest {
  * Serializes an {@link UpdateMaterialRequest} into the backend's expected
  * patch body. Fields the caller did not set are omitted so the backend
  * leaves their current values untouched.
+ *
+ * `category`, `status` and `trend` are not forwarded. `MaterialUpdateDto`
+ * declares none of them, and `updateMaterial` is a bound-DTO update rather
+ * than a map and switch, so a value sent for one reached no `if` block and
+ * the request still answered 200.
  *
  * @param dto - The patch request to serialize.
  * @returns A plain object containing only the fields the caller set.
@@ -99,9 +119,6 @@ export function updateMaterialToJson(
     ...(dto.safetyStock !== undefined && { safetyStock: dto.safetyStock }),
     ...(dto.reorderLevel !== undefined && { reorderLevel: dto.reorderLevel }),
     ...(dto.unitCost !== undefined && { unitCost: dto.unitCost }),
-    ...(dto.category !== undefined && { category: dto.category }),
-    ...(dto.status !== undefined && { status: dto.status }),
-    ...(dto.trend !== undefined && { trend: dto.trend }),
     ...(dto.ltc !== undefined && { ltc: dto.ltc }),
   };
 }

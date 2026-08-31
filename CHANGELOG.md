@@ -5,54 +5,62 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
-## [v3.3.0] - 2026-08-31
+## [v3.5.0] - 2026-08-31
 
-A storage location can be deactivated again, and two form fields that wrote to nothing now reach
-real columns. Additive: no export renamed or removed, nothing made required.
+Eight request-contract findings that were held back as decisions rather than repairs, plus the
+three NCR people filters the register needs before "raised by" can become a link. Additive: no
+export renamed or removed, nothing made required.
 
-Seven request-contract findings clear, and only one of them needed a change here. Project
-`description` and material `ltc` were already being sent correctly; they were findings because the
-backend had no such column, and echno-backend#627 added both. The storage-location flag is the one
-that needed the client to move.
+### Added
+
+- `NcrListParams` takes `raisedById`, `verifiedById` and `closedById` beside the `siteEngineerId`
+  it already had, and `ncrService.getAll` forwards each one. `GET /ncrs/web` grew them in
+  echno-backend#626; they AND with each other and with every filter already there, on the same
+  specification, server-side.
+
+  **All three are employee ids, not user ids.** The backend writes the columns from
+  `NcrService.currentEmployeeId()`, which resolves the session user through
+  `findByUserIdAndOrganizationId`, so they take the same value `siteEngineerId` does. The
+  distinction is easy to get wrong and hard to notice: on a fresh database the user and employee
+  sequences run in lockstep, so a caller passing a user id gets the right rows by coincidence until
+  the two diverge, and then quietly names somebody else.
+
+  This is what unblocks echno-web#35 for NCRs. Narrowing the fetched page in the browser was not an
+  option there, because the register is paged: it would hide every match outside the page while
+  still reading as a complete answer.
 
 ### Changed
 
-- `createStorageLocationToJson` and `updateStorageLocationToJson` now put the active flag on the
-  wire as **`isActive`** rather than `active`.
+- `createMaterialToJson` and `updateMaterialToJson` stop sending **`category`, `status` and
+  `trend`**. Nothing in the backend names any of the three at any layer: not on `Material`, not on
+  `MaterialCreationDto` or `MaterialUpdateDto`, not on `MaterialDto`. There is also no input on the
+  material form that could set one, so the request never carried a value; the keys were read off no
+  field and dropped, and the response could not have carried them back.
 
-  **No storage location could be deactivated through the update endpoint**, and the cause was a
-  Lombok naming split in the backend rather than anything here. `StorageLocationCreationDto`
-  declared a primitive `boolean isActive`, which Lombok gives `isActive()`/`setActive()` accessors
-  and Jackson therefore published as `active`. `StorageLocationUpdateDto` declared a wrapper
-  `Boolean isActive`, whose accessors are `getIsActive()`/`setIsActive()`, published as `isActive`.
-  One field, two names. This client sent `active` to both, so create worked and update bound to
-  nothing, dropped the value, and answered 200.
+  Growing three columns instead would have meant building a feature nobody had asked for, to serve
+  a form with no way to fill it in. The read side is a separate matter and is untouched here: the
+  materials dashboard renders a category column that is always a dash, a category filter whose
+  option list is always empty, and a sparkline drawn from an empty array. That is dead UI in
+  echno-web, not a request-contract finding.
 
-  Both DTOs settled on `isActive` in echno-backend#627, each keeping a `@JsonAlias("active")` so a
-  published core still sending the old spelling keeps working. This release is the middle step of
-  that sequence; the aliases come out once no published core sends `active`.
+- `createTaskToJson` and `updateTaskToJson` stop sending **`priority`**. Same argument, one step
+  further along: no column, no DTO field, and no control anywhere in the client. `TaskService`
+  names it above its `default` branch as a key this package sends that the endpoint has no field
+  for.
 
-  **The TypeScript property is still called `active`.** The response DTO continues to serialise the
-  flag as `active`, so `StorageLocation.active` is the read name, and renaming only the request
-  property would make callers rename a field while round-tripping one shape into the other. Only
-  the wire key differs, the same way `issueType` maps to `type`.
+  **Issue `priority` is deliberately still sent**, and the contrast is the reason both are pinned
+  in one test file. The two read identically on the findings list and collapse in opposite
+  directions: the issue form has a real priority control that defaults to `medium`, colour-codes
+  the value and branches on `critical`, so dropping the request field would freeze a half-built
+  feature as permanently decorative. That one waits on the backend growing the column.
 
-### Fixed upstream, no client change needed
+All five properties stay on their request interfaces, deprecated, so no caller breaks on the
+upgrade. They come out in a later major once nothing passes one.
 
-- Project `description` (4 findings) and material `ltc` (2 findings) are real columns now. Both were
-  already in the payloads, so nothing here moved; they simply stop being dropped.
+### Fixed
 
-  `description` is a prominent labelled textarea on the project create and edit forms that wrote to
-  a concept existing at no layer: type one, get a 200, reopen the project, find the box blank.
-  `ltc` drove a client-side recompute of `minStock`, `reorderLevel` and `maxStock`, so the derived
-  numbers persisted while the input that produced them was lost, and reopening the form recomputed
-  from a blank field.
-
-### Ordering, which matters here
-
-The wire rename must not reach a backend that has not deployed echno-backend#627. Until it does,
-the old creation DTO binds only `active`, so a payload naming `isActive` would leave its primitive
-at `false` and create the location **inactive**. That deploy went out before this release.
+- The `v3.3.0` and `v3.4.0` entries below were in the wrong order, `v3.3.0` having been written on
+  top of a `v3.4.0` that landed first. Newest-first again.
 
 ## [v3.4.0] - 2026-08-31
 
@@ -112,6 +120,55 @@ text users see, so a test that pinned the old strings needs updating. A 403 that
 
 `isAuthError` is unchanged and still covers both statuses. It is the right test for "do not retry"
 and the wrong one for "what do we tell the user", and its doc comment now says so.
+
+## [v3.3.0] - 2026-08-31
+
+A storage location can be deactivated again, and two form fields that wrote to nothing now reach
+real columns. Additive: no export renamed or removed, nothing made required.
+
+Seven request-contract findings clear, and only one of them needed a change here. Project
+`description` and material `ltc` were already being sent correctly; they were findings because the
+backend had no such column, and echno-backend#627 added both. The storage-location flag is the one
+that needed the client to move.
+
+### Changed
+
+- `createStorageLocationToJson` and `updateStorageLocationToJson` now put the active flag on the
+  wire as **`isActive`** rather than `active`.
+
+  **No storage location could be deactivated through the update endpoint**, and the cause was a
+  Lombok naming split in the backend rather than anything here. `StorageLocationCreationDto`
+  declared a primitive `boolean isActive`, which Lombok gives `isActive()`/`setActive()` accessors
+  and Jackson therefore published as `active`. `StorageLocationUpdateDto` declared a wrapper
+  `Boolean isActive`, whose accessors are `getIsActive()`/`setIsActive()`, published as `isActive`.
+  One field, two names. This client sent `active` to both, so create worked and update bound to
+  nothing, dropped the value, and answered 200.
+
+  Both DTOs settled on `isActive` in echno-backend#627, each keeping a `@JsonAlias("active")` so a
+  published core still sending the old spelling keeps working. This release is the middle step of
+  that sequence; the aliases come out once no published core sends `active`.
+
+  **The TypeScript property is still called `active`.** The response DTO continues to serialise the
+  flag as `active`, so `StorageLocation.active` is the read name, and renaming only the request
+  property would make callers rename a field while round-tripping one shape into the other. Only
+  the wire key differs, the same way `issueType` maps to `type`.
+
+### Fixed upstream, no client change needed
+
+- Project `description` (4 findings) and material `ltc` (2 findings) are real columns now. Both were
+  already in the payloads, so nothing here moved; they simply stop being dropped.
+
+  `description` is a prominent labelled textarea on the project create and edit forms that wrote to
+  a concept existing at no layer: type one, get a 200, reopen the project, find the box blank.
+  `ltc` drove a client-side recompute of `minStock`, `reorderLevel` and `maxStock`, so the derived
+  numbers persisted while the input that produced them was lost, and reopening the form recomputed
+  from a blank field.
+
+### Ordering, which matters here
+
+The wire rename must not reach a backend that has not deployed echno-backend#627. Until it does,
+the old creation DTO binds only `active`, so a payload naming `isActive` would leave its primitive
+at `false` and create the location **inactive**. That deploy went out before this release.
 
 ## [v3.2.0] - 2026-08-31
 

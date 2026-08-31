@@ -47,8 +47,15 @@ export interface CreateTaskRequest {
   assigneeIds?: number[];
 
   /**
-   * Backend-defined priority bucket. Lives only on the request DTO —
-   * the parsed {@link Task} entity does not expose it.
+   * Not applied. There is no priority column on `Task`, no field on
+   * `TaskCreationDto`, and no control anywhere in the client that sets one,
+   * so this has never carried a value to anywhere.
+   *
+   * Note the contrast with issue priority, which reads the same on the
+   * request-contract list and is not the same case: the issue form has a
+   * priority control a user can see and use.
+   *
+   * @deprecated The value is ignored. Stop passing it.
    */
   priority?: string;
 }
@@ -95,7 +102,6 @@ export function createTaskToJson(
   if (dto.progress !== undefined) payload.progress = dto.progress;
   if (dto.tags !== undefined) payload.tags = dto.tags;
   if (dto.assigneeIds !== undefined) payload.assigneeIds = dto.assigneeIds;
-  if (dto.priority !== undefined) payload.priority = dto.priority;
 
   return payload;
 }
