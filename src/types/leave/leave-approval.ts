@@ -65,10 +65,14 @@ export interface LeaveApproval {
   createdAt?: Date;
 }
 
-/** Payload for an approve / reject / delegate action. */
+/**
+ * Payload for an approve / reject / delegate action.
+ *
+ * There is deliberately no approver. The backend stamps it from the signed-in
+ * session (echno-backend #598) and `LeaveApprovalActionDto` no longer declares
+ * an approver field, so nobody can record a decision in a colleague's name.
+ */
 export interface LeaveApprovalAction {
-  /** Employee performing the action. */
-  approverId: number;
   /** Optional comments to attach. */
   comments?: string;
   /** Delegate target; set only when delegating. */
@@ -130,16 +134,15 @@ export function parseLeaveApproval(json: unknown): LeaveApproval {
 /**
  * Serializes a {@link LeaveApprovalAction} into the backend request body.
  *
- * Always emits `approverId`; `comments` and `delegateToId` are included only
- * when set.
+ * `comments` and `delegateToId` are included only when set, so an action with
+ * neither serializes to an empty body. That is the right shape now that the
+ * approver comes from the session rather than from the request.
  *
  * @param dto - The approval action to serialize.
  * @returns A plain object matching the backend's expected body shape.
  */
 export function approvalActionToJson(dto: LeaveApprovalAction): any {
-  const json: any = {
-    approverId: dto.approverId,
-  };
+  const json: any = {};
 
   if (dto.comments !== undefined) json.comments = dto.comments;
   if (dto.delegateToId !== undefined) json.delegateToId = dto.delegateToId;

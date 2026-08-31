@@ -3,7 +3,7 @@
     "repository": "tornotron/echno-backend",
     "ref": "development",
     "path": "docs/openapi.json",
-    "sha256": "7da6673d2af1dbf2135e42e61eea635e39b82d65f614e48b6c9109f11130e8e9"
+    "sha256": "ca9132bddccfddf9abab0f896b516adebeaa341b89013bb279c320ce24b03424"
   },
   "operations": {
     "POST /api/v1/assets/web": {
@@ -1597,7 +1597,6 @@
       "schema": "IssueCreationDto",
       "fields": [
         "assignedToId",
-        "createdById",
         "description",
         "status",
         "taskId",
@@ -1612,12 +1611,10 @@
     "POST /api/v1/issues/comments": {
       "schema": "IssueCommentCreationDto",
       "fields": [
-        "authorId",
         "comment",
         "issueId"
       ],
       "required": [
-        "authorId",
         "issueId"
       ],
       "acceptsAnyField": false
@@ -1625,12 +1622,10 @@
     "POST /api/v1/issues/comments/web": {
       "schema": "IssueCommentCreationDto",
       "fields": [
-        "authorId",
         "comment",
         "issueId"
       ],
       "required": [
-        "authorId",
         "issueId"
       ],
       "acceptsAnyField": false
@@ -1639,7 +1634,6 @@
       "schema": "IssueCreationDto",
       "fields": [
         "assignedToId",
-        "createdById",
         "description",
         "status",
         "taskId",
@@ -1856,73 +1850,55 @@
     "POST /api/v1/leave-approvals/requests/{requestId}/approve": {
       "schema": "LeaveApprovalActionDto",
       "fields": [
-        "approverId",
         "comments",
         "delegateToId"
       ],
-      "required": [
-        "approverId"
-      ],
+      "required": [],
       "acceptsAnyField": false
     },
     "POST /api/v1/leave-approvals/requests/{requestId}/delegate": {
       "schema": "LeaveApprovalActionDto",
       "fields": [
-        "approverId",
         "comments",
         "delegateToId"
       ],
-      "required": [
-        "approverId"
-      ],
+      "required": [],
       "acceptsAnyField": false
     },
     "POST /api/v1/leave-approvals/requests/{requestId}/reject": {
       "schema": "LeaveApprovalActionDto",
       "fields": [
-        "approverId",
         "comments",
         "delegateToId"
       ],
-      "required": [
-        "approverId"
-      ],
+      "required": [],
       "acceptsAnyField": false
     },
     "POST /api/v1/leave-approvals/web/approve": {
       "schema": "LeaveApprovalActionDto",
       "fields": [
-        "approverId",
         "comments",
         "delegateToId"
       ],
-      "required": [
-        "approverId"
-      ],
+      "required": [],
       "acceptsAnyField": false
     },
     "POST /api/v1/leave-approvals/web/delegate": {
       "schema": "LeaveApprovalActionDto",
       "fields": [
-        "approverId",
         "comments",
         "delegateToId"
       ],
-      "required": [
-        "approverId"
-      ],
+      "required": [],
       "acceptsAnyField": false
     },
     "POST /api/v1/leave-approvals/web/reject": {
       "schema": "LeaveApprovalActionDto",
       "fields": [
-        "approverId",
         "comments",
         "delegateToId"
       ],
-      "required": [
-        "approverId"
-      ],
+      "required": [],
       "acceptsAnyField": false
     },
     "POST /api/v1/leave-balances/adjust": {
@@ -3404,7 +3380,6 @@
       "fields": [
         "assigneeIds",
         "categoryId",
-        "creatorId",
         "description",
         "endDate",
         "progress",
@@ -3416,7 +3391,6 @@
       ],
       "required": [
         "categoryId",
-        "creatorId",
         "progress",
         "projectId"
       ],
@@ -3433,7 +3407,6 @@
       "fields": [
         "assigneeIds",
         "categoryId",
-        "creatorId",
         "description",
         "endDate",
         "progress",
@@ -3445,7 +3418,6 @@
       ],
       "required": [
         "categoryId",
-        "creatorId",
         "progress",
         "projectId"
       ],

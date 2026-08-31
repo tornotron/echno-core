@@ -23,7 +23,6 @@ describe('the name an issue category travels under', () => {
       title: 'Honeycombing on the block A raft',
       issueType: IssueType.quality,
       projectId: 3,
-      creatorId: 5,
     });
 
     expect(payload.type).toBe(IssueType.quality);

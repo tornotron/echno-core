@@ -12,8 +12,11 @@ import { IssueStatus } from './issue-status';
  *
  * Field-name mapping on the wire:
  * - `issueType` → backend `type`
- * - `creatorId` → backend `createdById`
  * - `assigneeId` → backend `assignedToId`
+ *
+ * There is deliberately no creator. The backend stamps it from the signed-in
+ * session (echno-backend #598), `IssueCreationDto` no longer declares
+ * `createdById`, and a caller cannot raise an issue in somebody else's name.
  *
  * The first line used to claim `issueType` matched the backend, which was wrong twice
  * over: the field is `type` there, and nothing had ever checked. Create worked anyway,
@@ -49,9 +52,6 @@ export interface CreateIssueRequest {
   /** Optional parent task ID; omit for project-scoped issues. */
   taskId?: number;
 
-  /** Employee ID of the creator. */
-  creatorId: number;
-
   /** Optional initial assignee. */
   assigneeId?: number;
 }
@@ -71,7 +71,6 @@ export function createIssueToJson(
     title: dto.title,
     type: dto.issueType,
     projectId: dto.projectId,
-    createdById: dto.creatorId,
   };
 
   if (dto.description !== undefined) payload.description = dto.description;
@@ -85,6 +84,10 @@ export function createIssueToJson(
 
 /**
  * Payload accepted by the issue-comment create endpoint.
+ *
+ * There is deliberately no author. The backend stamps it from the signed-in
+ * session (echno-backend #598) and `IssueCommentCreationDto` no longer declares
+ * `authorId`, so a comment cannot be posted under another name.
  */
 export interface CreateIssueCommentRequest {
   /** Parent issue ID. */
@@ -92,9 +95,6 @@ export interface CreateIssueCommentRequest {
 
   /** The comment body. */
   comment: string;
-
-  /** Employee ID of the comment author. */
-  authorId: number;
 }
 
 /**
@@ -110,6 +110,5 @@ export function createIssueCommentToJson(
   return {
     issueId: dto.issueId,
     comment: dto.comment,
-    authorId: dto.authorId,
   };
 }

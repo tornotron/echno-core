@@ -210,7 +210,6 @@ describe('fields the backend has no column for are no longer sent', () => {
       title: 'Honeycombing on the south face',
       issueType: 'QUALITY',
       projectId: 1,
-      creatorId: 2,
     } as unknown as Parameters<typeof createIssueToJson>[0]);
     const updated = updateIssueToJson({
       title: 'Honeycombing on the south face',
