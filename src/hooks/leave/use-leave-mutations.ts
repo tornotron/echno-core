@@ -577,27 +577,35 @@ export const useCancelLeaveRequest = () => {
  *   to patch the detail with.
  * - `invalidateQueries({ predicate: isLeaveRequestListCache })` — kept: list
  *   entries' status changes.
- * - `invalidateQueries(leaveKeys.balances())` — kept: withdrawal frees the
- *   reserved balance; invalidated at the namespace level because the mutation
- *   input carries no employee id.
+ * - `invalidateQueries([...leaveKeys.balances(), 'employee', employeeId])` —
+ *   kept, and now scoped: withdrawal frees the reserved balance, and the
+ *   employee id the endpoint needs in its path is available to scope by. It
+ *   used to be invalidated at the namespace level, which emptied every
+ *   employee's balances, because the mutation input carried no employee id.
  *
- * @returns A TanStack `UseMutationResult` where the mutate function accepts the
- *   request `id` (`number`).
+ * @returns A TanStack `UseMutationResult` where the mutate function accepts
+ *   `{ requestId: number; employeeId: number }`.
  */
 export const useWithdrawLeaveRequest = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (requestId: number) => leaveService.withdrawRequest(requestId),
-    onSuccess: (_, requestId) => {
+    mutationFn: ({
+      requestId,
+      employeeId,
+    }: {
+      requestId: number;
+      employeeId: number;
+    }) => leaveService.withdrawRequest(requestId, employeeId),
+    onSuccess: (_, { requestId, employeeId }) => {
       // POST /leave-requests/web/employeeId/{employeeId}/withdraw → LeaveRequestDto per spec,
       // but leaveService.withdrawRequest returns Promise<void>.
-      // FIXME: capture the response and patch instead of invalidating; would
-      // also need to add employeeId to the mutation input for scoped balance
-      // invalidation.
+      // FIXME: capture the response and patch instead of invalidating.
       queryClient.invalidateQueries({ queryKey: leaveKeys.request(requestId) });
       queryClient.invalidateQueries({ predicate: isLeaveRequestListCache });
-      queryClient.invalidateQueries({ queryKey: leaveKeys.balances() });
+      queryClient.invalidateQueries({
+        queryKey: [...leaveKeys.balances(), 'employee', employeeId],
+      });
     },
     onError: (error) => logger.error('Failed to Withdraw Leave Request:', error),
   });

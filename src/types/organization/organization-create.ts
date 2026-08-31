@@ -28,7 +28,17 @@ export interface CreateOrganizationRequest {
    * @deprecated The value is ignored. Stop passing it.
    */
   creatorId?: number;
-  /** Whether the organization should be active on creation. Defaults to `true` when omitted. */
+  /**
+   * Not sent. `OrganizationCreationDto` has no such field, and the flag it
+   * would set is being removed rather than wired up: `Organization.isActive`
+   * has two writers, both hardcoded `true`, and no reader anywhere. Enforcing
+   * it would put a self-service lockout on the tenant behind two roles that
+   * live inside the organization being locked out, recoverable only through the
+   * global-admin bypass. Tenant suspension, when it is wanted, is the
+   * subscription record rather than a checkbox. See echno-core#57.
+   *
+   * @deprecated The value is ignored. Stop passing it.
+   */
   isActive?: boolean;
 }
 
@@ -36,8 +46,8 @@ export interface CreateOrganizationRequest {
  * Serializes a {@link CreateOrganizationRequest} for transmission to the backend.
  *
  * Optional fields are omitted from the payload when `undefined`.
- * `creatorId` is deliberately left out: the server resolves the owner
- * from the caller's token.
+ * `creatorId` and `isActive` are deliberately left out: the server resolves the
+ * owner from the caller's token, and the creation DTO has no active flag.
  *
  * @param dto - The creation request to serialize.
  * @returns A plain object matching the backend's request body shape.
@@ -53,6 +63,5 @@ export function createOrganizationToJson(
   };
   if (dto.organizationWebsite !== undefined)
     payload.organizationWebsite = dto.organizationWebsite;
-  if (dto.isActive !== undefined) payload.isActive = dto.isActive;
   return payload;
 }

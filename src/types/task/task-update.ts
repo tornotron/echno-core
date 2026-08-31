@@ -23,7 +23,14 @@ export interface UpdateTaskRequest {
   /** New title. */
   title?: string;
 
-  /** Move the task under a different project. */
+  /**
+   * Not sent. `TaskUpdateFieldsDto` has no such field, and `TaskService` names
+   * this key in its `default` branch as one echno-core sends that the endpoint
+   * cannot apply. There is no screen behind it either: nothing in echno-web
+   * moves a task between projects. See echno-core#57.
+   *
+   * @deprecated The value is ignored. Stop passing it.
+   */
   projectId?: number;
 
   /** New description. */
@@ -78,7 +85,6 @@ export function updateTaskToJson(
   const payload: Record<string, unknown> = {};
 
   if (dto.title !== undefined) payload.title = dto.title;
-  if (dto.projectId !== undefined) payload.projectId = dto.projectId;
   if (dto.description !== undefined) payload.description = dto.description;
   if (dto.startDate !== undefined)
     payload.startDate = toLocalDateAtMidnight(dto.startDate);
