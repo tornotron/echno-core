@@ -17,6 +17,12 @@ import { ApiError } from '../api/api-client';
  * `error.errors` (if present) to the base message. Returns the error's
  * message property for generic errors, or a fallback string otherwise.
  *
+ * The base is `error.message`, which mirrors the backend problem's `detail`
+ * and is the sentence written for the caller. It deliberately does not use
+ * `error.details`: the backend fills that with the request description
+ * (`'uri=/api/v1/leave-requests/9/approve'`), so preferring it showed the user
+ * a URI where the explanation should have been.
+ *
  * @param error - The error object (unknown type for flexibility)
  * @returns A user-friendly error message string
  *
@@ -32,7 +38,7 @@ import { ApiError } from '../api/api-client';
  */
 export function getErrorMessage(error: unknown): string {
   if (error instanceof ApiError) {
-    const base = error.details ?? error.message;
+    const base = error.message;
     if (error.errors && Object.keys(error.errors).length > 0) {
       const fieldMessages = Object.entries(error.errors)
         .flatMap(([field, messages]) => messages.map((m) => `${field}: ${m}`))
@@ -52,7 +58,26 @@ export function getErrorMessage(error: unknown): string {
  *
  * Determines an appropriate toast title based on the error type.
  * Provides context-aware titles for different error scenarios
- * (authentication, timeout, server errors, network errors).
+ * (authentication, authorization, timeout, server errors, network errors).
+ *
+ * Two rules shape the order of the branches:
+ *
+ * 1. **401 and 403 are different problems.** Only a 401 means the caller is
+ *    not signed in. A 403 means they are signed in and the account lacks the
+ *    permission, so telling them to authenticate sends them to re-login, which
+ *    changes nothing. Every refusal that moved onto a stored record or a
+ *    session-derived actor answers 403, and each one has a person to go to
+ *    rather than a login screen.
+ * 2. **The backend titles its own failures.** Its problem body carries a
+ *    `title` naming the problem class ('Access Denied', 'Validation Failed',
+ *    'Duplicate Resource'), while `message` carries the sentence, which on a
+ *    refused `@PreAuthorize` names the role or authority that was missing.
+ *    Pairing the server's title with the server's sentence beats any title
+ *    derived from the status code alone, so the body wins wherever it spoke.
+ *
+ * The generic titles remain for the cases with no body to read: a client-side
+ * timeout, a network failure, and a gateway error that never reached the
+ * application.
  *
  * @param error - The error object to analyze
  * @param defaultTitle - Fallback title if no specific error type is detected
@@ -71,12 +96,12 @@ export function getErrorMessage(error: unknown): string {
  */
 export function getErrorTitle(error: unknown, defaultTitle: string): string {
   if (error instanceof ApiError) {
-    if (error.isAuthError) return 'Authentication Required';
+    if (error.status === 401) return 'Authentication Required';
     if (error.isTimeout) return 'Request Timeout';
-    if (error.isServerError) return 'Server Error';
     if (error.status === 0) return 'Network Error';
-    // Use the backend's message as the title when details provides the description
-    if (error.details) return error.message;
+    if (error.title) return error.title;
+    if (error.isServerError) return 'Server Error';
+    if (error.status === 403) return 'Not Permitted';
   }
   return defaultTitle;
 }

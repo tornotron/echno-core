@@ -24,14 +24,30 @@ export interface ApiResponse<T = unknown> {
 
 /**
  * Standardized error payload returned by the backend on failure.
+ *
+ * The backend answers every handled failure with an RFC 7807 problem that also
+ * carries the legacy keys this client has always read. Two of them are easy to
+ * misread, so they are described exactly:
+ *
+ * - `title` is the short problem class (`'Access Denied'`, `'Validation
+ *   Failed'`, `'Duplicate Resource'`). It is the label for a notification.
+ * - `message` mirrors the problem's `detail`: the sentence written for the
+ *   caller, and on a refused authorization the one that names the permission
+ *   that was missing. It is the body of a notification.
+ * - `details` is **not** a human explanation. The backend puts the request
+ *   description there (`'uri=/api/v1/employees/9'`), and one endpoint family
+ *   puts a structured object there instead. It is debugging context only and
+ *   must never be shown to a user.
  */
 export interface ApiErrorData {
   /** Human-readable error message from the backend. */
   message: string;
   /** HTTP status code associated with the error. */
   status: number;
-  /** Additional detail string for debugging. */
-  details?: string;
+  /** Short problem class from the backend, suitable as a notification title. */
+  title?: string;
+  /** Request description or structured debugging context. Not user-facing. */
+  details?: unknown;
   /** Per-field validation errors keyed by field name. */
   errors?: Record<string, string[]>;
 }
@@ -46,9 +62,25 @@ export interface ApiErrorData {
 export class ApiError extends Error {
   /** HTTP status code of the failed response. `0` for network errors. */
   status: number;
-  /** Additional detail string from the backend error payload. */
+  /**
+   * Short problem class from the backend body, when it sent one.
+   * `'Access Denied'`, `'Validation Failed'`, and so on.
+   */
+  title?: string;
+  /**
+   * Debugging context from the backend error payload, normally the request
+   * description (`'uri=/api/v1/employees/9'`). Not a user-facing sentence:
+   * use `message` for that.
+   */
   details?: string;
-  /** `true` for 401 and 403 responses. */
+  /**
+   * `true` for 401 and 403 responses.
+   *
+   * The two statuses share a retry policy (neither is worth retrying), which
+   * is what this flag is for. They do not share a cause: a 401 is an
+   * unauthenticated caller, a 403 an authenticated one without permission.
+   * Anything that speaks to the user must branch on `status`, not on this.
+   */
   isAuthError: boolean;
   /** `true` for 404 responses. */
   isNotFound: boolean;
@@ -63,11 +95,13 @@ export class ApiError extends Error {
     message: string,
     status: number,
     details?: string,
-    errors?: Record<string, string[]>
+    errors?: Record<string, string[]>,
+    title?: string
   ) {
     super(message);
     this.name = 'ApiError';
     this.status = status;
+    this.title = title;
     this.details = details;
     this.errors = errors;
     this.isAuthError = status === 401 || status === 403;
@@ -98,6 +132,33 @@ export class ApiError extends Error {
   static network(message = 'Network error'): ApiError {
     return new ApiError(message, 0);
   }
+}
+
+/**
+ * Turns a parsed error body into the {@link ApiError} the callers see.
+ *
+ * Both keys that are read defensively are read that way for a reason. `title`
+ * is absent from the small JSON bodies the frontend proxy answers with itself,
+ * and `details` arrives as an object from the subscription endpoints, where the
+ * backend fills it with a quota breakdown rather than a string. Neither shape
+ * should reach a consumer typed for a string.
+ *
+ * @param errorData - The parsed response body.
+ * @param status - HTTP status of the failed response.
+ * @param fallbackMessage - Message to use when the body carries none.
+ */
+function apiErrorFrom(
+  errorData: ApiErrorData,
+  status: number,
+  fallbackMessage: string
+): ApiError {
+  return new ApiError(
+    errorData.message || fallbackMessage,
+    status,
+    typeof errorData.details === 'string' ? errorData.details : undefined,
+    errorData.errors,
+    typeof errorData.title === 'string' ? errorData.title : undefined
+  );
 }
 
 /** Optional per-request settings. */
@@ -204,11 +265,10 @@ class ApiClient {
         status: response.status,
       }));
 
-      throw new ApiError(
-        errorData.message || this.getDefaultErrorMessage(response.status),
+      throw apiErrorFrom(
+        errorData,
         response.status,
-        errorData.details,
-        errorData.errors
+        this.getDefaultErrorMessage(response.status)
       );
     }
 
@@ -395,11 +455,10 @@ class ApiClient {
         status: response.status,
       }));
 
-      throw new ApiError(
-        errorData.message || this.getDefaultErrorMessage(response.status),
+      throw apiErrorFrom(
+        errorData,
         response.status,
-        errorData.details,
-        errorData.errors
+        this.getDefaultErrorMessage(response.status)
       );
     }
 
