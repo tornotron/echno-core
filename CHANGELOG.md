@@ -19,9 +19,10 @@ that refusal.
   material past the quantity its order asked for.
 
   Left unset, the backend refuses such a line with a 400 that names the order, the quantity
-  ordered, the quantity already received against it and the quantity now offered. Set, the excess
-  is recorded and the created note comes back marked. The field is omitted from the body when
-  `undefined`, so nothing changes on the wire for a caller that never sets it.
+  ordered, the quantity already received against it and the quantity now offered. Set to `true`,
+  the excess is recorded and the created note comes back marked; `false` is the same refusal, sent
+  explicitly. The field is omitted from the body when `undefined`, so nothing changes on the wire
+  for a caller that never sets it.
 
   It is not a validation switch to leave on. A supplier who delivers 105 bags against an order for
   100 has left 105 bags on the site whether the system likes it or not, and a receipt that cannot
