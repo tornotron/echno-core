@@ -55,9 +55,13 @@ export interface ApiErrorData {
 /**
  * Error thrown by {@link ApiClient} for non-2xx responses and network failures.
  *
- * Use the `is*` boolean flags instead of comparing `status` directly —
- * they remain meaningful even when `status` is 0 (network error) or 504
- * (client-side timeout).
+ * Prefer the `is*` boolean flags to comparing `status` directly for the
+ * failures that have no status of their own: they remain meaningful when
+ * `status` is 0 (network error) or 504 (client-side timeout).
+ *
+ * `isAuthError` is the exception. It groups 401 with 403 for the retry
+ * policy, and anything that tells the user what went wrong has to separate
+ * them, so those call sites read `status`.
  */
 export class ApiError extends Error {
   /** HTTP status code of the failed response. `0` for network errors. */
