@@ -5,6 +5,55 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
+## [v3.3.0] - 2026-08-31
+
+A storage location can be deactivated again, and two form fields that wrote to nothing now reach
+real columns. Additive: no export renamed or removed, nothing made required.
+
+Seven request-contract findings clear, and only one of them needed a change here. Project
+`description` and material `ltc` were already being sent correctly; they were findings because the
+backend had no such column, and echno-backend#627 added both. The storage-location flag is the one
+that needed the client to move.
+
+### Changed
+
+- `createStorageLocationToJson` and `updateStorageLocationToJson` now put the active flag on the
+  wire as **`isActive`** rather than `active`.
+
+  **No storage location could be deactivated through the update endpoint**, and the cause was a
+  Lombok naming split in the backend rather than anything here. `StorageLocationCreationDto`
+  declared a primitive `boolean isActive`, which Lombok gives `isActive()`/`setActive()` accessors
+  and Jackson therefore published as `active`. `StorageLocationUpdateDto` declared a wrapper
+  `Boolean isActive`, whose accessors are `getIsActive()`/`setIsActive()`, published as `isActive`.
+  One field, two names. This client sent `active` to both, so create worked and update bound to
+  nothing, dropped the value, and answered 200.
+
+  Both DTOs settled on `isActive` in echno-backend#627, each keeping a `@JsonAlias("active")` so a
+  published core still sending the old spelling keeps working. This release is the middle step of
+  that sequence; the aliases come out once no published core sends `active`.
+
+  **The TypeScript property is still called `active`.** The response DTO continues to serialise the
+  flag as `active`, so `StorageLocation.active` is the read name, and renaming only the request
+  property would make callers rename a field while round-tripping one shape into the other. Only
+  the wire key differs, the same way `issueType` maps to `type`.
+
+### Fixed upstream, no client change needed
+
+- Project `description` (4 findings) and material `ltc` (2 findings) are real columns now. Both were
+  already in the payloads, so nothing here moved; they simply stop being dropped.
+
+  `description` is a prominent labelled textarea on the project create and edit forms that wrote to
+  a concept existing at no layer: type one, get a 200, reopen the project, find the box blank.
+  `ltc` drove a client-side recompute of `minStock`, `reorderLevel` and `maxStock`, so the derived
+  numbers persisted while the input that produced them was lost, and reopening the form recomputed
+  from a blank field.
+
+### Ordering, which matters here
+
+The wire rename must not reach a backend that has not deployed echno-backend#627. Until it does,
+the old creation DTO binds only `active`, so a payload naming `isActive` would leave its primitive
+at `false` and create the location **inactive**. That deploy went out before this release.
+
 ## [v3.2.0] - 2026-08-31
 
 Nineteen request-contract findings in one sweep, all of them the same shape: a key this package put
