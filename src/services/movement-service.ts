@@ -58,6 +58,7 @@ function parseMovement(raw: any): MovementRecord {
     endLatitude: raw.endLatitude ?? undefined,
     endLongitude: raw.endLongitude ?? undefined,
     verifiedBy: raw.verifiedBy ?? undefined,
+    verifiedById: raw.verifiedById ?? undefined,
     verifiedAt: parseUTCDate(raw.verifiedAt) ?? undefined,
     isVerified: raw.isVerified ?? false,
     attachments: Array.isArray(raw.attachments) ? raw.attachments : undefined,
@@ -150,25 +151,31 @@ export const movementService = {
   },
 
   /**
-   * Marks a movement record as verified by an approver.
+   * Marks a movement record as verified.
    *
-   * `POST /movement-records/web/{id}/verify?verifiedBy={verifiedBy}` →
-   * `MovementRecordDto` (full).
+   * `POST /movement-records/web/{id}/verify` → `MovementRecordDto` (full).
+   *
+   * **The verifier is not a parameter.** The backend resolves it from the
+   * session and stamps `verifiedBy` (a display name) and `verifiedById` (the
+   * verifier's employee id) itself; echno-backend#635 removed the `verifiedBy`
+   * request parameter from both verify handlers for the reason that took the
+   * payment voucher's stamp out in #631, and the six identity fields out in
+   * `v3.0.0`: a caller who can name the verifier can record that a colleague
+   * checked a movement they never saw, and the audit trail then says so
+   * silently.
+   *
+   * The call can now be refused where it could not before. The backend returns
+   * 400 when the movement is already verified, when the caller is the employee
+   * the movement belongs to (nobody verifies their own movement), and when the
+   * session resolves to no user of the organization. Callers should surface the
+   * server's message rather than a fixed one.
    *
    * @param id - Surrogate id of the movement record.
-   * @param verifiedBy - Name/identifier of the verifying approver.
    * @returns The updated {@link MovementRecord}.
    * @throws {ApiError} On non-2xx responses or if the response fails to parse.
    */
-  async verifyMovement(
-    id: number,
-    verifiedBy: string
-  ): Promise<MovementRecord> {
-    const data = await api.post<Raw>(
-      `/movement-records/web/${id}/verify`,
-      null,
-      { verifiedBy }
-    );
+  async verifyMovement(id: number): Promise<MovementRecord> {
+    const data = await api.post<Raw>(`/movement-records/web/${id}/verify`, null);
     return safeMovement(data);
   },
 };

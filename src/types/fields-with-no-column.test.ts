@@ -52,6 +52,8 @@ import {
   createConstructionPaymentToJson,
   parseConstructionPayment,
   updateConstructionPaymentToJson,
+  type CreateConstructionPaymentRequest,
+  type UpdateConstructionPaymentRequest,
 } from "./finance/construction-payment";
 
 describe("a material carries no category, status or trend to the backend", () => {
@@ -185,15 +187,58 @@ describe("a payment voucher is verified by an action, not by its payload", () =>
   // The pair only ever moves together, which is why the timestamp goes with the
   // id: a settable verifiedAt is a settable verification.
   //
-  // Both literals below are deliberately uncast. The stated point of this change
-  // is that the two fields are deprecated rather than deleted, so no caller
-  // breaks on the upgrade, and the literal is the only thing pinning that: under
-  // an `as CreateConstructionPaymentRequest` the fields could be removed from
-  // the interface outright and these tests would still compile and still pass.
-  // Uncast, excess-property checking fails the moment either stops being
-  // declared.
-  test("create sends neither stamp", () => {
-    const payload = createConstructionPaymentToJson({
+  // v3.6.0 stopped sending the pair and left both declared and deprecated, so
+  // no caller broke on the upgrade; v4.0.0 removes them, which is what the
+  // API-stability policy reserves a major for. That is why these tests are now
+  // in two halves rather than one.
+  //
+  // The type half is the @ts-expect-error below. It is the pin that the fields
+  // are gone: if either is re-added to either interface the literal stops being
+  // an error, the directive goes unused, and `typecheck:tests` fails. An
+  // assertion on the emitted payload could not tell that apart, because a
+  // re-declared field nothing sets emits nothing either.
+  //
+  // The runtime half is the smuggling test. It covers the caller the type
+  // system does not see: an older build, a spread, an `any`. Excess-property
+  // checking fires only on a fresh object literal at the call site, so a
+  // payload assembled into a variable first reaches the serializer with the
+  // fields still on it, and the serializer has to drop them there.
+  test("neither field is declared on either request type", () => {
+    const create = () =>
+      createConstructionPaymentToJson({
+        type: ConstructionPaymentType.INVOICE,
+        method: ConstructionPaymentMethod.BANK_TRANSFER,
+        payeeType: ConstructionPayeeType.VENDOR,
+        projectId: 3,
+        amount: 118_000,
+        paymentDate: "2026-08-30",
+        // @ts-expect-error verifiedBy is not a field of the create payload
+        verifiedBy: 7,
+      });
+
+    const update = () =>
+      updateConstructionPaymentToJson({
+        type: ConstructionPaymentType.INVOICE,
+        status: ConstructionPaymentVoucherStatus.COMPLETED,
+        method: ConstructionPaymentMethod.BANK_TRANSFER,
+        payeeType: ConstructionPayeeType.VENDOR,
+        projectId: 3,
+        amount: 118_000,
+        paymentDate: "2026-08-30",
+        // @ts-expect-error verifiedAt is not a field of the update payload
+        verifiedAt: "2026-08-30T09:00:00Z",
+      });
+
+    // Both still run: the directives above are compile-time, and the emitted
+    // payloads must be clean at runtime too.
+    expect(create()).not.toHaveProperty("verifiedBy");
+    expect(update()).not.toHaveProperty("verifiedAt");
+  });
+
+  test("create drops a stamp a caller smuggles past the type system", () => {
+    // Assembled into a variable and widened, which is exactly how the field
+    // kept being sent after a clean build.
+    const smuggled = {
       type: ConstructionPaymentType.INVOICE,
       method: ConstructionPaymentMethod.BANK_TRANSFER,
       payeeType: ConstructionPayeeType.VENDOR,
@@ -205,7 +250,9 @@ describe("a payment voucher is verified by an action, not by its payload", () =>
       // Neighbours on either side of the two removed lines.
       ifscCode: "HDFC0001234",
       description: "Second running bill",
-    });
+    } as unknown as CreateConstructionPaymentRequest;
+
+    const payload = createConstructionPaymentToJson(smuggled);
 
     expect(payload).not.toHaveProperty("verifiedBy");
     expect(payload).not.toHaveProperty("verifiedAt");
@@ -213,8 +260,8 @@ describe("a payment voucher is verified by an action, not by its payload", () =>
     expect(payload.description).toBe("Second running bill");
   });
 
-  test("update sends neither stamp", () => {
-    const payload = updateConstructionPaymentToJson({
+  test("update drops a stamp a caller smuggles past the type system", () => {
+    const smuggled = {
       type: ConstructionPaymentType.INVOICE,
       status: ConstructionPaymentVoucherStatus.COMPLETED,
       method: ConstructionPaymentMethod.BANK_TRANSFER,
@@ -226,7 +273,9 @@ describe("a payment voucher is verified by an action, not by its payload", () =>
       verifiedAt: "2026-08-30T09:00:00Z",
       ifscCode: "HDFC0001234",
       notes: "Cleared by the QS",
-    });
+    } as unknown as UpdateConstructionPaymentRequest;
+
+    const payload = updateConstructionPaymentToJson(smuggled);
 
     expect(payload).not.toHaveProperty("verifiedBy");
     expect(payload).not.toHaveProperty("verifiedAt");
@@ -235,9 +284,9 @@ describe("a payment voucher is verified by an action, not by its payload", () =>
   });
 
   test("but the read type still carries what the backend stamped", () => {
-    // The response DTO keeps all three, and echno-web renders verifiedBy as a
-    // link on the payment detail. Dropping them from the parser would blank a
-    // screen rather than fix anything.
+    // The response DTO keeps all three, and echno-web renders the verifier on
+    // the payment detail. Dropping them from the parser would blank a screen
+    // rather than fix anything.
     const payment = parseConstructionPayment({
       id: "11111111-1111-4111-8111-111111111111",
       paymentNumber: "PAY-2026-0004",
