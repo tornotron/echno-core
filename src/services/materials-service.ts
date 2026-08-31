@@ -23,6 +23,8 @@ import {
   parseMaterialLocationThreshold,
   MaterialLocationThresholdUpsert,
   materialLocationThresholdToJson,
+  LowStockMaterial,
+  parseLowStockMaterial,
 } from '../types/materials';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -36,6 +38,7 @@ type Raw = any;
  *   GET    /materials/web/all?pageNo&pageSize          → PageMaterialDto         (paginated; flattened to MaterialDto[])
  *   GET    /materials/web/search?name                  → MaterialDto[]           (full)
  *   GET    /materials/web/{id}                         → MaterialDto             (full)
+ *   GET    /materials/web/low-stock?pageNo&pageSize    → PageLowStockMaterialDto (paginated; envelope kept)
  *   GET    /materials/web/{id}/stock                   → MaterialWithStockDto    (full + non-null currentStock)
  *   PATCH  /materials/web/{id}                         → MaterialDto             (full)
  *   DELETE /materials/web/{id}                         → ApiResponse             (ack only)
@@ -162,6 +165,91 @@ function safeParseLocationThresholds(data: Raw): MaterialLocationThreshold[] {
   }
 }
 
+/**
+ * A parsed page of low-stock materials, mirroring the Spring
+ * `Page<LowStockMaterialDto>` envelope.
+ *
+ * `totalElements` is the whole point of keeping the envelope: it is how
+ * many materials are at or below their level across the scope, not how
+ * many happened to fit on the page that was asked for. A caller wanting
+ * only the number can ask for `pageSize: 1` and read it.
+ */
+export interface PagedLowStockMaterials {
+  /** The low-stock materials on this page, most depleted first. */
+  content: LowStockMaterial[];
+  /** How many materials are low across the whole scope. */
+  totalElements: number;
+  /** Total number of pages at the requested page size. */
+  totalPages: number;
+  /** 0-based page index. */
+  number: number;
+  /** Page size. */
+  size: number;
+}
+
+/** Scope and paging options for {@link materialsService.getLowStock}. */
+export interface LowStockParams {
+  /**
+   * Total stock over this project's storage locations, and only materials
+   * the project holds. Omit for an organization total, which also counts a
+   * material holding nothing anywhere.
+   */
+  projectId?: number;
+  /**
+   * Read stock at this one storage location, where its threshold override
+   * replaces the material's global level. Requires `projectId`.
+   */
+  storageLocationId?: number;
+  /** 0-based page index. Defaults to `0` on the backend. */
+  pageNo?: number;
+  /** Rows per page. Defaults to `10` on the backend, capped at 500. */
+  pageSize?: number;
+}
+
+/**
+ * Normalizes a Spring `Page<LowStockMaterialDto>` body into a
+ * {@link PagedLowStockMaterials}.
+ *
+ * A payload without a page envelope is rejected rather than counted. The
+ * length of a page is not the size of the set behind it, and reporting one
+ * as the other is the defect this endpoint exists to remove: an alert
+ * count that is short is an alert count that reassures.
+ *
+ * @param data - The raw JSON value from the backend.
+ * @returns The parsed page.
+ * @throws {ApiError} When the payload carries no `totalElements`, or a row
+ *   fails to parse (HTTP 422).
+ */
+function safeParseLowStockPage(data: Raw): PagedLowStockMaterials {
+  if (
+    !data ||
+    typeof data !== 'object' ||
+    !Array.isArray(data.content) ||
+    typeof data.totalElements !== 'number'
+  ) {
+    logger.error('Low-stock API returned no page envelope:', {
+      type: typeof data,
+      keys: data && typeof data === 'object' ? Object.keys(data) : null,
+    });
+    throw new ApiError(
+      'Failed to process low-stock data: the total count is missing.',
+      422
+    );
+  }
+  try {
+    return {
+      content: data.content.map((item: Raw) => parseLowStockMaterial(item)),
+      totalElements: data.totalElements,
+      totalPages: data.totalPages ?? 0,
+      number: data.number ?? 0,
+      size: data.size ?? data.content.length,
+    };
+  } catch (error) {
+    logger.error('Failed to parse low-stock materials:', error);
+    throw new ApiError('Failed to process low-stock data.', 422);
+  }
+}
+
 export const materialsService = {
   /**
    * Creates a new material.
@@ -209,6 +297,42 @@ export const materialsService = {
   async getAllPaginated(pageNo = 0, pageSize = 10): Promise<Material[]> {
     const data = await api.get<Raw>('/materials/web/all', { pageNo, pageSize });
     return safeParseMaterials(data);
+  },
+
+  /**
+   * Fetches the materials at or below the reorder level in force, most
+   * depleted first as a fraction of that level.
+   *
+   * `GET /materials/web/low-stock` → `Page<LowStockMaterialDto>`. The page
+   * envelope is kept rather than flattened, because `totalElements` is the
+   * true count of low-stock materials and the only number a "Low Stock
+   * Alert" may be built from. Filtering a fetched material list in the
+   * browser cannot produce it: that list is capped at 500 rows, it carries
+   * only organization-wide aggregates, and it cannot see a per-location
+   * threshold override at all.
+   *
+   * Three scopes, matching `GET /materials/web/{id}/stock`: neither id
+   * totals across the organization and treats every catalogue material as
+   * a candidate; `projectId` totals over that project's locations; both
+   * ids read one location, where its override replaces the material's
+   * global level.
+   *
+   * @param params - Scope (`projectId`, `storageLocationId`) and paging.
+   * @returns A {@link PagedLowStockMaterials} page.
+   * @throws {ApiError} On non-2xx HTTP responses, or when the response
+   *   carries no page envelope to read the total from.
+   */
+  async getLowStock(
+    params: LowStockParams = {}
+  ): Promise<PagedLowStockMaterials> {
+    const query: Record<string, string | number> = {};
+    if (params.projectId !== undefined) query.projectId = params.projectId;
+    if (params.storageLocationId !== undefined)
+      query.storageLocationId = params.storageLocationId;
+    if (params.pageNo !== undefined) query.pageNo = params.pageNo;
+    if (params.pageSize !== undefined) query.pageSize = params.pageSize;
+    const data = await api.get<Raw>('/materials/web/low-stock', query);
+    return safeParseLowStockPage(data);
   },
 
   /**

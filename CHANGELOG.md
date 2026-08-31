@@ -5,6 +5,59 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
+## [v4.3.0] - 2026-09-01
+
+The client half of echno-backend#652, which built the low-stock query the product never had. The
+console has always had a "Low Stock Alert", and it was a filter over whatever material list the
+browser happened to hold. Additive: one new service method, one new type, one new hook. Nothing is
+removed and no signature moves.
+
+### Added
+
+- **`materialsService.getLowStock(params)`** — `GET /materials/web/low-stock`, the materials at or
+  below the reorder level in force, most depleted first as a fraction of that level.
+
+  It returns the page envelope rather than a flat array, and that is the point of it.
+  `totalElements` is how many materials are low across the whole scope, so a card that wants only
+  the number can ask for `pageSize: 1` and read it without fetching a row. The number cannot be
+  arrived at in the browser: `GET /materials/web` is capped at 500 rows and marks the cut only in
+  an `X-Result-Capped` header, it carries organization-wide aggregate stock and nothing per
+  location, and it cannot see a per-location threshold override at all.
+
+  Three scopes, matching `GET /materials/web/{id}/stock`, because the answer differs at each. With
+  neither id, stock is totalled across the organization and every catalogue material is a
+  candidate, including one holding nothing anywhere. With `projectId`, stock is totalled over that
+  project's locations and only materials the project holds are candidates. With both ids, stock is
+  read at that one location, and there a `MaterialLocationThreshold` override replaces the
+  material's global level. A material reading healthy on the organization total while sitting at
+  one unit on five separate sites is the case the narrower scopes exist to surface.
+
+  A response without a page envelope is refused with a 422 rather than counted. The length of a
+  page is not the size of the set behind it, and an alert count that reports one as the other
+  fails short, which is the direction nobody checks.
+
+- **`LowStockMaterial`** and **`parseLowStockMaterial`** — a low-stock row: the material, the
+  `currentStock` and `reorderLevel` that were actually compared at the scope asked about, the
+  `shortfall` between them, and the `moq` a purchase would have to be raised for. The three
+  quantities are required rather than optional: a row that reached this list did so because the
+  backend compared them, and one that arrives without them fails the parse instead of defaulting
+  to zero.
+
+- **`useLowStockMaterials(params)`** — the query hook, keyed by scope and paging under
+  `['materials', 'low-stock', params]`. Two consumers passing the same params share one request
+  and therefore one answer, which is how a count and a badge on the same screen stop being able to
+  disagree.
+
+### Changed
+
+- **The material mutations no longer rewrite a cache they cannot understand.** The predicate
+  behind `useUpdateMaterial` and `useDeleteMaterial` matched everything under the `materials`
+  namespace bar three keys, and the updaters it feeds call `.map` and `.filter` on whatever it
+  matches. The low-stock cache holds a page envelope, so it is excluded, and create, update,
+  delete and both threshold mutations now invalidate it instead. Which materials are low is
+  decided on the server, against stock the browser does not hold, so a local patch could only
+  guess.
+
 ## [v4.2.0] - 2026-09-01
 
 The client half of echno-backend#659, which made a goods receipt reconcile against the purchase
