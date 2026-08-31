@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import { parseTask } from './task';
+import { TaskStatus } from './task-status';
 
 describe('parseTask', () => {
   test('parses a minimal payload and applies defaults', () => {
@@ -7,7 +8,7 @@ describe('parseTask', () => {
     expect(task.id).toBe(5);
     expect(task.projectId).toBe(1);
     expect(task.title).toBe('Untitled Task');
-    expect(task.status).toBe('onGoing');
+    expect(task.status).toBe(TaskStatus.onGoing);
   });
 
   test('throws when id is missing', () => {

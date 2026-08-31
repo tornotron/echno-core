@@ -29,7 +29,7 @@ import { StorageLocationType } from './storage-location';
 
 const base = {
   locationName: 'Block A site store',
-  locationType: StorageLocationType.siteStore,
+  locationType: StorageLocationType.PROJECT_SITE,
 };
 
 describe('the active flag travels as isActive', () => {

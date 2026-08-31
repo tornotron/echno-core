@@ -1,0 +1,35 @@
+// The test files are excluded from `tsconfig.json` because they must not reach
+// `dist`. That exclusion also meant nothing ever typechecked them: `tsc
+// --noEmit` skipped them and `bun test` transpiles without checking types. This
+// repo leans on tests as compile-time pins, so an unchecked test file is a pin
+// that holds nothing.
+//
+// This config checks them, under the same type system the library ships under.
+// It inherits `strict`, `target`, `module` and `moduleResolution` from the
+// production config on purpose: a pin written against looser semantics than the
+// published package would not pin the published package. Nothing here is
+// loosened, and nothing beyond the production settings is added either, so the
+// check stays at the same bar the source already meets.
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    // Checking only. The emit settings inherited from the production config
+    // would otherwise try to write declarations for test files.
+    "noEmit": true,
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": false,
+    // Nothing is emitted, and the guard test imports the contract checker out
+    // of `scripts/`, which sits outside the production `rootDir`.
+    "rootDir": ".",
+    // `bun:test` is ambient, so the tests do not resolve without it.
+    "types": ["bun", "node"]
+  },
+  // The production config excludes `**/*.test.ts`; this one deliberately does
+  // not, and checks the sources alongside them so a pin is read against the
+  // real declarations rather than a stub. `scripts/` is here for the same
+  // reason the tests are: the production config's `include` never reached it,
+  // so it has never been typechecked either.
+  "include": ["src", "scripts"],
+  "exclude": ["node_modules", "dist"]
+}

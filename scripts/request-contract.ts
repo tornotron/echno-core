@@ -36,6 +36,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as ts from 'typescript';
+import type { OperationContract } from './backend-contract';
 
 const ROOT = path.resolve(import.meta.dir, '..');
 const SERVICES = path.join(ROOT, 'src', 'services');

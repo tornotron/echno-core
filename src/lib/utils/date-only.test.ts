@@ -4,6 +4,7 @@ import { formatDateForBackend } from '../../types/user/user';
 import { createTaskToJson } from '../../types/task/task-create';
 import { createProjectToJson } from '../../types/project/project-create';
 import { createEmployeeToJson } from '../../types/employee/employee-create';
+import { Department } from '../../types/employee/departments';
 
 // Pinned to a non-UTC zone and restored afterwards. The runner defaults to UTC,
 // where the local and UTC calendar dates are always the same and every assertion
@@ -90,11 +91,23 @@ describe('date-only request serializers', () => {
   });
 
   test('employee create sends the birth and joining dates as local calendar dates', () => {
+    // Spelled out rather than cast. The cast that used to stand here hid a
+    // property this interface does not have: `employeeName` is the wire key,
+    // the request field is `name`, and nothing would have said so.
     const json = createEmployeeToJson({
-      employeeName: 'A Worker',
+      name: 'A Worker',
+      email: 'a.worker@example.com',
+      phone: '9876543210',
+      gender: 'female',
+      address: '12 Mount Road, Chennai',
+      qualification: 'Diploma in Civil Engineering',
+      employeeId: 'EMP-0042',
+      designation: 'Site Engineer',
+      department: Department.construction,
+      organizationId: 1,
       dateOfBirth: new Date(1990, 7, 22, 0, 0, 0),
       joiningDate: localMidnight(),
-    } as Parameters<typeof createEmployeeToJson>[0]);
+    });
 
     expect(json.dateOfBirth).toBe('1990-08-22T00:00:00');
     expect(json.joiningDate).toBe('2026-08-27T00:00:00');

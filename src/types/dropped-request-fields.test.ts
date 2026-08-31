@@ -92,19 +92,19 @@ describe('project membership is its own pair of routes', () => {
   test('update sends no employees list', () => {
     const payload = updateProjectToJson({
       memberIds: [7, 9],
-      status: ProjectStatus.ongoing,
+      status: ProjectStatus.open,
     });
 
     expect(payload).not.toHaveProperty('employees');
     expect(payload).not.toHaveProperty('memberIds');
-    expect(payload.status).toBe(ProjectStatus.ongoing);
+    expect(payload.status).toBe(ProjectStatus.open);
   });
 });
 
 describe('an indent line item is edited through its own route', () => {
   test('update sends no items array', () => {
     const payload = updateIndentToJson({
-      status: IndentStatus.approved,
+      status: IndentStatus.ordered,
       remarks: 'Cleared by the site engineer',
       projectId: 3,
       expectedOn: '2026-09-15',
@@ -112,7 +112,7 @@ describe('an indent line item is edited through its own route', () => {
     });
 
     expect(payload).not.toHaveProperty('items');
-    expect(payload.status).toBe(IndentStatus.approved);
+    expect(payload.status).toBe(IndentStatus.ordered);
     expect(payload.remarks).toBe('Cleared by the site engineer');
     expect(payload.projectId).toBe(3);
     expect(payload.expectedOn).toBe('2026-09-15');
@@ -123,7 +123,7 @@ describe('a storage location names its project by id', () => {
   test('create sends projectId and not projectName', () => {
     const payload = createStorageLocationToJson({
       locationName: 'Block A store',
-      locationType: StorageLocationType.projectSite,
+      locationType: StorageLocationType.PROJECT_SITE,
       projectId: 3,
       projectName: 'Riverside Tower',
       capacity: 500,
