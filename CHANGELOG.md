@@ -5,6 +5,80 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
+## [v4.0.0] - 2026-09-01
+
+The client half of the five backend changes that took "who did this" off the wire, and the first
+release to remove rather than deprecate. Breaking: one function signature narrows and two request
+fields come out. Nothing in `echno-web` sets either field, and the one call site that passes the
+removed argument is updated alongside this, so the upgrade is a version bump and one edit.
+
+### Removed
+
+- **`verifiedBy` and `verifiedAt` are gone from `CreateConstructionPaymentRequest` and
+  `UpdateConstructionPaymentRequest`.**
+
+  `v3.6.0` stopped sending the pair and left both declared and deprecated so no caller broke on
+  that upgrade. This is the major the note there promised. A caller that still sets one now fails
+  to compile instead of filling in a field the server reads off nothing.
+
+  **Both stay on the read type**, where they are what the backend stamped.
+
+  Worth knowing for anyone reviewing the diff: the public-API snapshot does not move for this. It
+  records exported symbol names, not their members, so a removed interface field passes `api:check`
+  in silence. `etc/public-api.md` being unchanged is not evidence that nothing broke here.
+
+### Changed
+
+- **`movementService.verifyMovement(id, verifiedBy)` becomes `verifyMovement(id)`**, and
+  `useVerifyMovement`'s mutation argument narrows from `{ id, verifiedBy }` to `{ id }`.
+
+  echno-backend#635 removed the `verifiedBy` request parameter from both verify handlers and now
+  resolves the verifier from the session. The old flow was the live one: `echno-web` sent
+  `currentEmployee?.name ?? currentEmployee?.employeeId ?? ''`, so the verifier recorded against an
+  attendance movement was whatever the client put there, into a free-text column nothing checked.
+
+  The backend ignores the parameter rather than rejecting it, so the old client kept working; it
+  just stopped influencing the stamp, which was the point. Removing the argument is what stops a
+  future reader concluding the client still chooses.
+
+  Two consequences for callers. A screen no longer needs a resolved employee before it can offer
+  the action, so any guard that waited for one can go. And verification can now be **refused**,
+  which it never could before: 400 when the movement is already verified, when the caller is the
+  employee the movement belongs to, and when the session resolves to no user of the organization.
+  A fixed error string is wrong for all three; render the `ApiError` message.
+
+### Added
+
+- **`financeConstructionPaymentService.verify(id)`** — `POST /finance/construction-payments/web/{id}/verify`,
+  no body, returns the updated voucher.
+
+  echno-backend#631 built this action to replace the two removed fields, and until now no client
+  could reach it: the fields were dropped in `v3.6.0` and nothing took their place, so a published
+  package had no way to verify a payment at all. Refused, with the reason in the message, on a
+  cancelled voucher, one already verified, and a caller who raised it (segregation of duties).
+
+  Named `verify` rather than `verifyConstructionPayment` to sit with `create`, `update` and
+  `getById` on the same service object, which do not repeat the entity either.
+
+- **`MovementRecord.verifiedById`** — the verifier's employee id, unset where the verifier has no
+  employee record in the organization. That is why `verifiedBy` stays the field to render and this
+  is the field to link on.
+
+  Added to both parsers. This DTO has two: the zod schema in `types/attendance/movement.ts` and the
+  hand-built `parseMovement` in `movement-service.ts`, and only the second runs on a response. A
+  field added to the schema alone compiles cleanly and is dead on every real payload.
+
+- **`ConstructionPayment.raisedBy` and `raisedByName`** — who raised the voucher, the counterpart to
+  the verifier and the field the backend's segregation-of-duties refusal compares against.
+
+- **`ConstructionPayment.verifiedByName`** — the verifier's display name. It was on the DTO before
+  today and the schema never declared it, so a plain `z.object` stripped it: this is why the payment
+  detail screen renders the verifier as `User #7`. Found while adding `raisedByName`, which
+  echno-core#74 described as being "on the same fallbacks as `verifiedByName`".
+
+  All three fall back to the account's email where it has no name, and to `User #<id>` where the
+  account is gone.
+
 ## [v3.6.0] - 2026-08-31
 
 Follows echno-backend#631 off this client. Additive: no export renamed or removed, nothing made

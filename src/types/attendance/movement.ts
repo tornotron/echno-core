@@ -47,6 +47,7 @@ const MovementRecordResponseSchema = z.object({
   endLatitude: nullableNumber,
   endLongitude: nullableNumber,
   verifiedBy: nullableString,
+  verifiedById: optionalNumericId,
   verifiedAt: backendDate,
   isVerified: nullableBoolean,
   attachments: z.array(z.string()).nullish(),
@@ -93,8 +94,18 @@ export interface MovementRecord {
   /** Longitude at the end of the movement, if captured. */
   endLongitude?: number;
 
-  /** Name of the approver who verified the movement, if verified. */
+  /**
+   * Display name of the verifier, if verified. Server-set: echno-backend#635
+   * resolves it from the session, so it is a real person in the organization
+   * rather than whatever a client sent.
+   */
   verifiedBy?: string;
+  /**
+   * Employee id of the verifier, if verified. Unset where the verifier has no
+   * employee record in the organization, which is why {@link verifiedBy} is the
+   * field to render and this one the field to link on.
+   */
+  verifiedById?: number;
   /** When the movement was verified. */
   verifiedAt?: Date;
   /** Whether the movement has been verified. */
@@ -132,6 +143,7 @@ export function parseMovementRecord(data: unknown): MovementRecord {
     startTime:
       parseLocalDateTime(raw.startTime) ?? new Date(raw.startTime as string),
     endTime: parseLocalDateTime(raw.endTime) ?? undefined,
+    verifiedById: raw.verifiedById ?? undefined,
     verifiedAt: parseUTCDate(raw.verifiedAt) ?? undefined,
     createdAt: parseUTCDate(raw.createdAt) ?? new Date(raw.createdAt as string),
     updatedAt: parseUTCDate(raw.updatedAt) ?? new Date(raw.updatedAt as string),

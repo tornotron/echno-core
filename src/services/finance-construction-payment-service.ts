@@ -9,6 +9,7 @@
  * - `GET  /finance/construction-payments/web/{id}` → `ConstructionPaymentDto` (query)
  * - `GET  /finance/construction-payments/web`      → `Page<ConstructionPaymentDto>` (list)
  * - `PUT  /finance/construction-payments/web/{id}` → `ConstructionPaymentDto` (full)
+ * - `POST /finance/construction-payments/web/{id}/verify` → `ConstructionPaymentDto` (full)
  *
  * The list endpoint returns a Spring `Page`; {@link getAll} unwraps `.content`
  * and parses each row, returning a plain `ConstructionPayment[]`.
@@ -169,6 +170,34 @@ export const financeConstructionPaymentService = {
       `${BASE}/${id}`,
       updateConstructionPaymentToJson(req)
     );
+    return safeParseConstructionPayment(data);
+  },
+
+  /**
+   * Records the current user as the voucher's verifier.
+   *
+   * `POST /finance/construction-payments/web/{id}/verify` →
+   * `ConstructionPaymentDto` (full).
+   *
+   * **Nothing about the verifier is sent, and there is no body.** The backend
+   * stamps `verifiedBy` from the session and `verifiedAt` from the clock. That
+   * is the whole point of the endpoint: echno-backend#631 replaced the pair of
+   * payload fields it supersedes because a caller who could edit a voucher
+   * could record that a named colleague had checked a payment, at a time of
+   * their choosing.
+   *
+   * The action is refused, with the reason in the `ApiError` message, when the
+   * voucher is cancelled, when it is already verified, and when the caller is
+   * the account that raised it. That last one is segregation of duties rather
+   * than a validation slip, so it is worth surfacing the server's wording
+   * instead of a generic failure.
+   *
+   * @param id - UUID of the payment.
+   * @returns The verified {@link ConstructionPayment}.
+   * @throws {ApiError} On non-2xx responses or if the response fails to parse.
+   */
+  async verify(id: string): Promise<ConstructionPayment> {
+    const data = await api.post<ApiResponse>(`${BASE}/${id}/verify`, null);
     return safeParseConstructionPayment(data);
   },
 };

@@ -148,7 +148,10 @@ const ConstructionPaymentSchema = z.object({
   bankName: nullableString,
   accountNumber: nullableString,
   ifscCode: nullableString,
+  raisedBy: optionalNumericId,
+  raisedByName: nullableString,
   verifiedBy: optionalNumericId,
+  verifiedByName: nullableString,
   verifiedAt: backendDate,
   description: nullableString,
   notes: nullableString,
@@ -202,8 +205,27 @@ export interface ConstructionPayment {
   accountNumber?: string;
   /** IFSC code. */
   ifscCode?: string;
+  /**
+   * User who raised the voucher. Unset on a voucher that does not record one.
+   *
+   * The counterpart to {@link verifiedBy}, and the field the backend's
+   * segregation-of-duties check reads: echno-backend#631 refuses a verify from
+   * the account that raised the voucher.
+   */
+  raisedBy?: number;
+  /**
+   * Display name for {@link raisedBy}. Falls back to the account's email where
+   * it has no name, and to `User #<id>` where the account is gone; unset where
+   * the voucher records no raiser.
+   */
+  raisedByName?: string;
   /** User who verified the voucher. */
   verifiedBy?: number;
+  /**
+   * Display name for {@link verifiedBy}, on the same fallbacks as
+   * {@link raisedByName}. Server-set at the verify action.
+   */
+  verifiedByName?: string;
   /** Verification timestamp (ISO instant). */
   verifiedAt?: string;
   /** Description (free text). */
@@ -246,7 +268,10 @@ export function parseConstructionPayment(json: unknown): ConstructionPayment {
     bankName: raw.bankName ?? undefined,
     accountNumber: raw.accountNumber ?? undefined,
     ifscCode: raw.ifscCode ?? undefined,
+    raisedBy: raw.raisedBy ?? undefined,
+    raisedByName: raw.raisedByName ?? undefined,
     verifiedBy: raw.verifiedBy ?? undefined,
+    verifiedByName: raw.verifiedByName ?? undefined,
     verifiedAt: raw.verifiedAt ?? undefined,
     description: raw.description ?? undefined,
     notes: raw.notes ?? undefined,
@@ -298,27 +323,6 @@ export interface CreateConstructionPaymentRequest {
   accountNumber?: string;
   /** IFSC code (max 20). */
   ifscCode?: string;
-  /**
-   * Not applied. Verification is an action rather than an attribute: the
-   * backend stamps the verifier from the session at
-   * `POST /construction-payments/web/{id}/verify`, and echno-backend#631
-   * removed both fields from this payload. A slot for "who checked this" that
-   * the caller fills in lets anyone able to edit a voucher record that a named
-   * colleague checked a payment, at a time of their choosing.
-   *
-   * Both remain on the read type, where they are what the backend stamped.
-   *
-   * @deprecated The value is ignored. Verify through the action instead.
-   */
-  verifiedBy?: number;
-  /**
-   * Not applied. Stamped alongside `verifiedBy` by the verify action, and
-   * removed from this payload for the same reason: the pair only ever moves
-   * together, so a settable timestamp is a settable verification.
-   *
-   * @deprecated The value is ignored. Verify through the action instead.
-   */
-  verifiedAt?: string;
   /** Description (max 1000). */
   description?: string;
   /** Free-text notes (max 1000). */
@@ -372,27 +376,6 @@ export interface UpdateConstructionPaymentRequest {
   accountNumber?: string;
   /** IFSC code (max 20). */
   ifscCode?: string;
-  /**
-   * Not applied. Verification is an action rather than an attribute: the
-   * backend stamps the verifier from the session at
-   * `POST /construction-payments/web/{id}/verify`, and echno-backend#631
-   * removed both fields from this payload. A slot for "who checked this" that
-   * the caller fills in lets anyone able to edit a voucher record that a named
-   * colleague checked a payment, at a time of their choosing.
-   *
-   * Both remain on the read type, where they are what the backend stamped.
-   *
-   * @deprecated The value is ignored. Verify through the action instead.
-   */
-  verifiedBy?: number;
-  /**
-   * Not applied. Stamped alongside `verifiedBy` by the verify action, and
-   * removed from this payload for the same reason: the pair only ever moves
-   * together, so a settable timestamp is a settable verification.
-   *
-   * @deprecated The value is ignored. Verify through the action instead.
-   */
-  verifiedAt?: string;
   /** Description (max 1000). */
   description?: string;
   /** Free-text notes (max 1000). */
@@ -403,10 +386,14 @@ export interface UpdateConstructionPaymentRequest {
  * Emits the payee, reference and optional fields shared by the create and
  * update payment bodies onto `json`. Only fields that are set are written.
  *
- * `verifiedBy` and `verifiedAt` are not among them. Verification is a
- * transition taken through `POST /construction-payments/web/{id}/verify`, which
- * stamps both from the session; echno-backend#631 removed them from the create
- * and update payloads, so a value sent here would be read off no field.
+ * `verifiedBy` and `verifiedAt` are not among them, and as of `v4.0.0` are no
+ * longer declared on either request type either. Verification is a transition
+ * taken through {@link financeConstructionPaymentService.verify}, which posts
+ * `POST /construction-payments/web/{id}/verify`; the backend stamps the
+ * verifier from the session and the time from the clock. `v3.6.0` stopped
+ * sending the pair and left them deprecated so no caller broke on the upgrade;
+ * this release removes them, so a caller that still sets one now fails to
+ * compile rather than filling in a field nothing reads.
  */
 function appendConstructionPaymentOptionalFields(
   json: Record<string, unknown>,

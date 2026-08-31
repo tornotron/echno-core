@@ -86,9 +86,20 @@ export function useLogMovement() {
 }
 
 /**
- * Marks a movement record as verified by an approver.
+ * Marks a movement record as verified.
  *
  * Backend response: `MovementRecordDto` (full).
+ *
+ * **The verifier is not an argument.** echno-backend#635 removed the
+ * `verifiedBy` request parameter and now resolves the verifier from the
+ * session, so the caller has nothing to supply beyond the id and nothing to
+ * wait for before enabling the action.
+ *
+ * Verification can be refused, which it could not before: the backend answers
+ * 400 when the movement is already verified, when the caller is the employee
+ * the movement belongs to, and when the session resolves to no user of the
+ * organization. Callers should render the `ApiError` message rather than a
+ * fixed string, because all three read as the same failure otherwise.
  *
  * On success:
  * - `setQueryData(movementKeys.detail(id), movement)` — replaces the detail
@@ -96,18 +107,18 @@ export function useLogMovement() {
  * - `setQueryData(movementKeys.byAttendance(attendanceId), replace)` — replaces
  *   the record in the per-attendance list when that cache exists.
  * - {@link patchMovementInParentAttendance} — (cross-namespace: movement →
- *   attendance) mirrors the flipped `isVerified` / `verifiedBy` / `verifiedAt`
- *   fields into the cached parent's movements array. The parent attendance's
- *   own status is unaffected, so no parent-key invalidation is needed.
+ *   attendance) mirrors the flipped `isVerified` / `verifiedBy` /
+ *   `verifiedById` / `verifiedAt` fields into the cached parent's movements
+ *   array. The parent attendance's own status is unaffected, so no parent-key
+ *   invalidation is needed.
  *
  * @returns A TanStack `UseMutationResult` where the mutate function accepts
- *   `{ id: number; verifiedBy: string }`.
+ *   `{ id: number }`.
  */
 export function useVerifyMovement() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, verifiedBy }: { id: number; verifiedBy: string }) =>
-      movementService.verifyMovement(id, verifiedBy),
+    mutationFn: ({ id }: { id: number }) => movementService.verifyMovement(id),
     onSuccess: (movement) => {
       // POST /movement-records/web/{id}/verify → MovementRecordDto (full).
       queryClient.setQueryData<MovementRecord>(
@@ -119,9 +130,10 @@ export function useVerifyMovement() {
         (old) => old?.map((m) => (m.id === movement.id ? movement : m))
       );
       // Cross-namespace (movement → attendance): verification flips the child's
-      // `isVerified` / `verifiedBy` / `verifiedAt` fields; mirror those into
-      // the cached parent's movements array. Status of the parent attendance
-      // itself does not change, so no parent-key invalidation is needed.
+      // `isVerified` / `verifiedBy` / `verifiedById` / `verifiedAt` fields;
+      // mirror those into the cached parent's movements array. Status of the
+      // parent attendance itself does not change, so no parent-key
+      // invalidation is needed.
       patchMovementInParentAttendance(queryClient, movement);
     },
   });
