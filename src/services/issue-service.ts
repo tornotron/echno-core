@@ -244,9 +244,13 @@ export const issueService = {
    * `multipart/form-data` round-trip.
    *
    * `POST /issues/web` → `IssueSimpleDto` (partial — `comments`,
-   * `attachments`, and `taskName` may be absent on the response). When no
-   * files are supplied the payload still carries `attachments: []` so the
-   * backend's multipart parser sees a deterministic shape.
+   * `attachments`, and `taskName` may be absent on the response).
+   *
+   * When no files are supplied the payload used to carry `attachments: []`
+   * so the multipart parser saw a deterministic shape. The parser never saw
+   * it: the files are their own multipart part read from a `@RequestParam`,
+   * and `IssueCreationDto` has no `attachments` field for the JSON key to
+   * bind to.
    *
    * @param dto - The create request payload.
    * @param files - Optional file payload uploaded as multipart fields.
@@ -258,10 +262,6 @@ export const issueService = {
   async create(dto: CreateIssueRequest, files?: IssueFiles): Promise<Issue> {
     const payload = createIssueToJson(dto);
     const hasFiles = files?.attachments && files.attachments.length > 0;
-
-    if (!hasFiles) {
-      payload.attachments = [];
-    }
 
     const data = await api.postMultipart<ApiResponse>(
       '/issues/web',
@@ -276,8 +276,12 @@ export const issueService = {
    * same `multipart/form-data` round-trip.
    *
    * `PATCH /issues/web/{id}` → `IssueSimpleDto` (partial — same shape as
-   * `create`). When no files are supplied the payload still carries
-   * `attachments: []` for parser consistency.
+   * `create`).
+   *
+   * When no files are supplied the payload used to carry `attachments: []`
+   * for parser consistency. The partial-update handler switches over the
+   * keys it was given and names `attachments` in the branch it drops, so
+   * the key made no difference to the request either way.
    *
    * @param id - Surrogate ID of the issue to update.
    * @param dto - Fields to update; only set fields are sent.
@@ -294,10 +298,6 @@ export const issueService = {
   ): Promise<Issue> {
     const payload = updateIssueToJson(dto);
     const hasFiles = files?.attachments && files.attachments.length > 0;
-
-    if (!hasFiles) {
-      payload.attachments = [];
-    }
 
     const data = await api.patchMultipart<ApiResponse>(
       `/issues/web/${id}`,

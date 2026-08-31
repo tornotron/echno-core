@@ -151,8 +151,12 @@ export const projectService = {
    *
    * `POST /project/web` (multipart) → `ProjectSimpleDto` (partial).
    *
-   * If `files.attachments` is empty, an empty `attachments` field is sent
-   * to instruct the backend that no files were uploaded.
+   * The files travel as their own multipart part and the controller reads
+   * them from a `@RequestParam`, so the JSON body never speaks about them.
+   * This used to add an empty `attachments` key when there was nothing to
+   * upload, on the stated grounds that it told the backend so; it did not,
+   * because `ProjectCreationDto` has no such field and the value was
+   * dropped on binding.
    *
    * @param dto - Domain create request.
    * @param files - Files to upload alongside the request.
@@ -165,7 +169,6 @@ export const projectService = {
   ): Promise<Project> {
     const payload = createProjectToJson(dto);
     const hasFiles = files.attachments && files.attachments.length > 0;
-    if (!hasFiles) payload.attachments = [];
     const data = await api.postMultipart<ApiResponse>(
       '/project/web',
       payload,
@@ -200,8 +203,11 @@ export const projectService = {
    *
    * `PATCH /project/web/{id}` (multipart) → `ProjectSimpleDto` (partial).
    *
-   * If `files.attachments` is empty, an empty `attachments` field is sent
-   * so the backend distinguishes "no upload" from "untouched".
+   * An empty `attachments` key used to be added when there was nothing to
+   * upload, on the stated grounds that it separated "no upload" from
+   * "untouched". It never did: the partial-update handler switches over
+   * the keys it was given and names `attachments` in the branch it drops,
+   * so the two cases were always the same request.
    *
    * @param id - Surrogate ID of the project.
    * @param dto - Fields to update.
@@ -216,7 +222,6 @@ export const projectService = {
   ): Promise<Project> {
     const payload = updateProjectToJson(dto);
     const hasFiles = files.attachments && files.attachments.length > 0;
-    if (!hasFiles) payload.attachments = [];
     const data = await api.patchMultipart<ApiResponse>(
       `/project/web/${id}`,
       payload,

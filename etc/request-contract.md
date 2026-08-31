@@ -19,7 +19,7 @@ Write calls in `src/services`: 136
 | endpoint not in the document | 4 |
 | not readable | 17 |
 
-## Findings (54)
+## Findings (35)
 
 - src/services/employee-service.ts:226  POST /api/v1/employee/web  is not an endpoint in the document
 - src/services/employee-service.ts:246  PATCH /api/v1/employee/web/{id}  sends "address", which is not a field of EmployeeUpdateFieldsDto (did you mean "emailAddress"?)
@@ -29,12 +29,8 @@ Write calls in `src/services`: 136
 - src/services/employee-service.ts:246  PATCH /api/v1/employee/web/{id}  sends "qualification", which is not a field of EmployeeUpdateFieldsDto
 - src/services/employee-service.ts:246  PATCH /api/v1/employee/web/{id}  sends "skills", which is not a field of EmployeeUpdateFieldsDto
 - src/services/employee-service.ts:280  POST /api/v1/employee/web/joinOrganization/{}/{}  is not an endpoint in the document
-- src/services/indents-service.ts:139  PATCH /api/v1/indents/web/{id}  sends "items", which is not a field of IndentUpdateDto
 - src/services/issue-comment-service.ts:156  PATCH /api/v1/issues/comments/web/{}  is not an endpoint in the document
-- src/services/issue-service.ts:266  POST /api/v1/issues/web  sends "attachments", which is not a field of IssueCreationDto
 - src/services/issue-service.ts:266  POST /api/v1/issues/web  sends "priority", which is not a field of IssueCreationDto
-- src/services/issue-service.ts:266  POST /api/v1/issues/web  sends "projectId", which is not a field of IssueCreationDto
-- src/services/issue-service.ts:302  PATCH /api/v1/issues/web/{id}  sends "attachments", which is not a field of IssueUpdateFieldsDto
 - src/services/issue-service.ts:302  PATCH /api/v1/issues/web/{id}  sends "priority", which is not a field of IssueUpdateFieldsDto
 - src/services/leave-service.ts:518  POST /api/v1/leave-requests/web  sends "employeeId", which is not a field of LeaveRequestCreationDto
 - src/services/leave-service.ts:747  POST /api/v1/leave-requests/web/withdraw  is not an endpoint in the document
@@ -50,31 +46,16 @@ Write calls in `src/services`: 136
 - src/services/materials-service.ts:269  PATCH /api/v1/materials/web/{id}  sends "storageLocationId", which is not a field of MaterialUpdateDto
 - src/services/materials-service.ts:269  PATCH /api/v1/materials/web/{id}  sends "trend", which is not a field of MaterialUpdateDto
 - src/services/materials-service.ts:269  PATCH /api/v1/materials/web/{id}  sends "unitCost", which is not a field of MaterialUpdateDto (did you mean "unit"?)
-- src/services/organization-service.ts:103  POST /api/v1/organization/web  sends "creatorId", which is not a field of OrganizationCreationDto
 - src/services/organization-service.ts:103  POST /api/v1/organization/web  sends "isActive", which is not a field of OrganizationCreationDto
 - src/services/organization-service.ts:131  PATCH /api/v1/organization/web/{id}  sends "isActive", which is not a field of OrganizationUpdateFieldsDto
 - src/services/project-service.ts:141  POST /api/v1/project/web  sends "description", which is not a field of ProjectCreationDto
-- src/services/project-service.ts:141  POST /api/v1/project/web  sends "employees", which is not a field of ProjectCreationDto
-- src/services/project-service.ts:141  POST /api/v1/project/web  sends "organizationId", which is not a field of ProjectCreationDto
-- src/services/project-service.ts:169  POST /api/v1/project/web  sends "attachments", which is not a field of ProjectCreationDto
-- src/services/project-service.ts:169  POST /api/v1/project/web  sends "description", which is not a field of ProjectCreationDto
-- src/services/project-service.ts:169  POST /api/v1/project/web  sends "employees", which is not a field of ProjectCreationDto
-- src/services/project-service.ts:169  POST /api/v1/project/web  sends "organizationId", which is not a field of ProjectCreationDto
-- src/services/project-service.ts:190  PATCH /api/v1/project/web/{id}  sends "description", which is not a field of ProjectUpdateFieldsDto
-- src/services/project-service.ts:190  PATCH /api/v1/project/web/{id}  sends "employees", which is not a field of ProjectUpdateFieldsDto
-- src/services/project-service.ts:190  PATCH /api/v1/project/web/{id}  sends "organizationId", which is not a field of ProjectUpdateFieldsDto
-- src/services/project-service.ts:220  PATCH /api/v1/project/web/{id}  sends "attachments", which is not a field of ProjectUpdateFieldsDto
-- src/services/project-service.ts:220  PATCH /api/v1/project/web/{id}  sends "description", which is not a field of ProjectUpdateFieldsDto
-- src/services/project-service.ts:220  PATCH /api/v1/project/web/{id}  sends "employees", which is not a field of ProjectUpdateFieldsDto
-- src/services/project-service.ts:220  PATCH /api/v1/project/web/{id}  sends "organizationId", which is not a field of ProjectUpdateFieldsDto
-- src/services/storage-locations-service.ts:141  POST /api/v1/storage-locations/web  sends "projectName", which is not a field of StorageLocationCreationDto (did you mean "projectId"?)
+- src/services/project-service.ts:172  POST /api/v1/project/web  sends "description", which is not a field of ProjectCreationDto
+- src/services/project-service.ts:193  PATCH /api/v1/project/web/{id}  sends "description", which is not a field of ProjectUpdateFieldsDto
+- src/services/project-service.ts:225  PATCH /api/v1/project/web/{id}  sends "description", which is not a field of ProjectUpdateFieldsDto
 - src/services/storage-locations-service.ts:164  PATCH /api/v1/storage-locations/web/{id}  sends "active", which is not a field of StorageLocationUpdateDto (did you mean "isActive"?)
-- src/services/storage-locations-service.ts:164  PATCH /api/v1/storage-locations/web/{id}  sends "projectName", which is not a field of StorageLocationUpdateDto (did you mean "projectId"?)
-- src/services/task-service.ts:201  POST /api/v1/tasks/web  sends "attachments", which is not a field of TaskCreationDto
 - src/services/task-service.ts:201  POST /api/v1/tasks/web  sends "priority", which is not a field of TaskCreationDto
-- src/services/task-service.ts:238  PATCH /api/v1/tasks/web/{id}  sends "attachments", which is not a field of TaskUpdateFieldsDto
-- src/services/task-service.ts:238  PATCH /api/v1/tasks/web/{id}  sends "priority", which is not a field of TaskUpdateFieldsDto
-- src/services/task-service.ts:238  PATCH /api/v1/tasks/web/{id}  sends "projectId", which is not a field of TaskUpdateFieldsDto
+- src/services/task-service.ts:236  PATCH /api/v1/tasks/web/{id}  sends "priority", which is not a field of TaskUpdateFieldsDto
+- src/services/task-service.ts:236  PATCH /api/v1/tasks/web/{id}  sends "projectId", which is not a field of TaskUpdateFieldsDto
 
 ## Call sites this pass cannot read (17)
 
