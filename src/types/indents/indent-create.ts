@@ -13,8 +13,17 @@ import type { CreateIndentItemRequest } from './indent-item-create';
  * items.
  */
 export interface CreateIndentRequest {
-  /** Human-readable indent number; must be unique within the organisation. */
-  indentNumber: string;
+  /**
+   * Not sent, and not yours to choose. The server allocates the indent
+   * number atomically per organisation, document type and year, on every
+   * create, whatever the payload says. A value passed here was discarded
+   * and the record came back carrying a different one.
+   *
+   * Read the allocated number off the created {@link Indent} in the response.
+   *
+   * @deprecated The value is ignored. Stop passing it.
+   */
+  indentNumber?: string;
 
   /** Surrogate ID of the {@link Employee} creating the indent. */
   createdByEmployeeId: number;
@@ -37,8 +46,12 @@ export interface CreateIndentRequest {
 
 /**
  * Serializes a {@link CreateIndentRequest} into the backend's expected
- * request body. All fields are forwarded verbatim — the backend
+ * request body. Remaining fields are forwarded verbatim — the backend
  * tolerates `undefined` on optional fields.
+ *
+ * `indentNumber` is deliberately left out: the server allocates it. A
+ * number that genuinely has to be corrected afterwards goes through
+ * {@link indentsService.update}, whose DTO does carry the field.
  *
  * @param dto - The domain request to serialize.
  * @returns A plain object matching the backend's expected JSON shape.
@@ -47,7 +60,6 @@ export function createIndentToJson(
   dto: CreateIndentRequest
 ): Record<string, unknown> {
   return {
-    indentNumber: dto.indentNumber,
     createdByEmployeeId: dto.createdByEmployeeId,
     status: dto.status,
     expectedOn: dto.expectedOn,

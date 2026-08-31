@@ -19,7 +19,7 @@ Write calls in `src/services`: 136
 | endpoint not in the document | 4 |
 | not readable | 17 |
 
-## Findings (59)
+## Findings (55)
 
 - src/services/employee-service.ts:226  POST /api/v1/employee/web  is not an endpoint in the document
 - src/services/employee-service.ts:246  PATCH /api/v1/employee/web/{id}  sends "address", which is not a field of EmployeeUpdateFieldsDto (did you mean "emailAddress"?)
@@ -29,9 +29,7 @@ Write calls in `src/services`: 136
 - src/services/employee-service.ts:246  PATCH /api/v1/employee/web/{id}  sends "qualification", which is not a field of EmployeeUpdateFieldsDto
 - src/services/employee-service.ts:246  PATCH /api/v1/employee/web/{id}  sends "skills", which is not a field of EmployeeUpdateFieldsDto
 - src/services/employee-service.ts:280  POST /api/v1/employee/web/joinOrganization/{}/{}  is not an endpoint in the document
-- src/services/grn-service.ts:100  POST /api/v1/grns/web  sends "grnNumber", which is not a field of GoodsReceivedNoteCreationDto
 - src/services/indents-service.ts:139  PATCH /api/v1/indents/web/{id}  sends "items", which is not a field of IndentUpdateDto
-- src/services/indents-service.ts:87  POST /api/v1/indents/web  sends "indentNumber", which is not a field of IndentCreationDto
 - src/services/issue-comment-service.ts:156  PATCH /api/v1/issues/comments/web/{}  is not an endpoint in the document
 - src/services/issue-service.ts:266  POST /api/v1/issues/web  sends "attachments", which is not a field of IssueCreationDto
 - src/services/issue-service.ts:266  POST /api/v1/issues/web  sends "priority", which is not a field of IssueCreationDto
@@ -69,8 +67,6 @@ Write calls in `src/services`: 136
 - src/services/project-service.ts:220  PATCH /api/v1/project/web/{id}  sends "description", which is not a field of ProjectUpdateFieldsDto
 - src/services/project-service.ts:220  PATCH /api/v1/project/web/{id}  sends "employees", which is not a field of ProjectUpdateFieldsDto
 - src/services/project-service.ts:220  PATCH /api/v1/project/web/{id}  sends "organizationId", which is not a field of ProjectUpdateFieldsDto
-- src/services/purchase-orders-service.ts:100  POST /api/v1/purchase-orders/web  sends "poNumber", which is not a field of PurchaseOrderCreationDto
-- src/services/site-transfers-service.ts:111  POST /api/v1/site-transfers/web  sends "transferNumber", which is not a field of SiteTransferCreationDto
 - src/services/storage-locations-service.ts:141  POST /api/v1/storage-locations/web  sends "projectName", which is not a field of StorageLocationCreationDto (did you mean "projectId"?)
 - src/services/storage-locations-service.ts:164  PATCH /api/v1/storage-locations/web/{id}  sends "active", which is not a field of StorageLocationUpdateDto (did you mean "isActive"?)
 - src/services/storage-locations-service.ts:164  PATCH /api/v1/storage-locations/web/{id}  sends "projectName", which is not a field of StorageLocationUpdateDto (did you mean "projectId"?)

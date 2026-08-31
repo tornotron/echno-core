@@ -31,7 +31,14 @@ export interface CreateTaskRequest {
   /** Planned end date. */
   endDate?: Date;
 
-  /** Surrogate ID of the creator employee. */
+  /**
+   * Not sent. The server takes who created a task from the session: it reads the
+   * subject of the caller's access token and resolves the employee from
+   * that, so a value passed here named someone the request could not
+   * have made it on behalf of.
+   *
+   * @deprecated The value is ignored. Stop passing it.
+   */
   creatorId?: number;
 
   /** Surrogate ID of the work category. */
@@ -93,7 +100,6 @@ export function createTaskToJson(
   if (dto.startDate !== undefined)
     payload.startDate = toLocalDateAtMidnight(dto.startDate);
   if (dto.endDate !== undefined) payload.endDate = toLocalDateAtMidnight(dto.endDate);
-  if (dto.creatorId !== undefined) payload.creatorId = dto.creatorId;
   if (dto.categoryId !== undefined) payload.categoryId = dto.categoryId;
   if (dto.status !== undefined) payload.status = dto.status;
   if (dto.progress !== undefined) payload.progress = dto.progress;

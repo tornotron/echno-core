@@ -12,7 +12,6 @@ import { IssueStatus } from './issue-status';
  *
  * Field-name mapping on the wire:
  * - `issueType` → backend `type`
- * - `creatorId` → backend `createdById`
  * - `assigneeId` → backend `assignedToId`
  *
  * The first line used to claim `issueType` matched the backend, which was wrong twice
@@ -49,8 +48,15 @@ export interface CreateIssueRequest {
   /** Optional parent task ID; omit for project-scoped issues. */
   taskId?: number;
 
-  /** Employee ID of the creator. */
-  creatorId: number;
+  /**
+   * Not sent. The server takes who raised an issue from the session: it reads the
+   * subject of the caller's access token and resolves the employee from
+   * that, so a value passed here named someone the request could not
+   * have made it on behalf of.
+   *
+   * @deprecated The value is ignored. Stop passing it.
+   */
+  creatorId?: number;
 
   /** Optional initial assignee. */
   assigneeId?: number;
@@ -71,7 +77,6 @@ export function createIssueToJson(
     title: dto.title,
     type: dto.issueType,
     projectId: dto.projectId,
-    createdById: dto.creatorId,
   };
 
   if (dto.description !== undefined) payload.description = dto.description;
@@ -93,8 +98,15 @@ export interface CreateIssueCommentRequest {
   /** The comment body. */
   comment: string;
 
-  /** Employee ID of the comment author. */
-  authorId: number;
+  /**
+   * Not sent. The server takes who wrote a comment from the session: it reads the
+   * subject of the caller's access token and resolves the employee from
+   * that, so a value passed here named someone the request could not
+   * have made it on behalf of.
+   *
+   * @deprecated The value is ignored. Stop passing it.
+   */
+  authorId?: number;
 }
 
 /**
@@ -110,6 +122,5 @@ export function createIssueCommentToJson(
   return {
     issueId: dto.issueId,
     comment: dto.comment,
-    authorId: dto.authorId,
   };
 }

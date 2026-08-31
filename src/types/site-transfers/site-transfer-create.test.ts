@@ -40,7 +40,9 @@ describe('createSiteTransferToJson', () => {
   test('carries the rest of the header through unchanged', () => {
     const body = createSiteTransferToJson(request());
 
-    expect(body.transferNumber).toBe('ST-2026-0001');
+    // transferNumber is not among them: the server allocates it, and this test used to assert the
+    // opposite. See types/document-number-allocation.test.ts.
+    expect(Object.hasOwn(body, 'transferNumber')).toBe(false);
     expect(body.sendingStorageLocationId).toBe(11);
     expect(body.receivingStorageLocationId).toBe(12);
   });

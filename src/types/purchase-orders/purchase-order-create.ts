@@ -14,8 +14,17 @@ import type { InlinePurchaseOrderItemInput } from './purchase-order-item';
  * line items.
  */
 export interface CreatePurchaseOrderRequest {
-  /** Human-readable PO number; must be unique within the organisation. */
-  poNumber: string;
+  /**
+   * Not sent, and not yours to choose. The server allocates the purchase-order
+   * number atomically per organisation, document type and year, on every
+   * create, whatever the payload says. A value passed here was discarded
+   * and the record came back carrying a different one.
+   *
+   * Read the allocated number off the created {@link PurchaseOrder} in the response.
+   *
+   * @deprecated The value is ignored. Stop passing it.
+   */
+  poNumber?: string;
 
   /** Surrogate ID of the {@link Vendor} the PO is issued to. */
   vendorId: number;
@@ -47,8 +56,11 @@ export interface CreatePurchaseOrderRequest {
 
 /**
  * Serializes a {@link CreatePurchaseOrderRequest} into the backend's
- * expected request body. All fields are forwarded verbatim — the backend
- * tolerates `undefined` on optional fields.
+ * expected request body. Remaining fields are forwarded verbatim — the
+ * backend tolerates `undefined` on optional fields.
+ *
+ * `poNumber` is deliberately left out: the server allocates it, and no
+ * update DTO carries the field, so the allocated number stands.
  *
  * @param dto - The domain request to serialize.
  * @returns A plain object matching the backend's expected JSON shape.
@@ -57,7 +69,6 @@ export function createPurchaseOrderToJson(
   dto: CreatePurchaseOrderRequest
 ): Record<string, unknown> {
   return {
-    poNumber: dto.poNumber,
     vendorId: dto.vendorId,
     projectId: dto.projectId,
     indentId: dto.indentId,

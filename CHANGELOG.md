@@ -5,6 +5,66 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
+## [v2.5.0] - 2026-08-31
+
+Ten request fields that the backend never read stop being sent. Four of them are document
+reference numbers the server allocates for itself, and two of those reached the wire from
+required, user-editable inputs, so a number somebody typed was accepted and quietly replaced.
+The other six named the person making the request, which the server now takes from the caller's
+token instead. Additive on the public surface: no export was renamed or removed and no field
+became required, so `echno-web` picks this up on its existing range with a lockfile bump.
+
+### Changed
+
+- `createIndentToJson`, `createPurchaseOrderToJson`, `createSiteTransferToJson` and
+  `createGrnToJson` no longer send `indentNumber`, `poNumber`, `transferNumber` or `grnNumber`.
+
+  The server allocates all four atomically per organisation, document type and year, on every
+  create, whatever the payload says, and each creation DTO's schema already said so. The
+  allocator exists because these numbers used to be invented in the browser from whatever page
+  of the list happened to be loaded, so two people on the same screen would propose the same one.
+  A value sent here was read off no field and dropped, and the record came back carrying the
+  allocator's answer. Read the number off the created entity in the response.
+
+  One asymmetry decides where a genuine correction goes: `IndentUpdateDto` does declare
+  `indentNumber`, so an indent's number can be amended afterwards through
+  `indentsService.update`. No update DTO on the other three does, so the allocated number stands.
+
+- `createIssueToJson` no longer sends `createdById`, `createIssueCommentToJson` no longer sends
+  `authorId`, `createTaskToJson` no longer sends `creatorId`, and `approvalActionToJson` no
+  longer sends `approverId`.
+
+  The backend stopped declaring all four and resolves the actor from the subject claim of the
+  caller's access token. A value in the body named someone the request could not have been made
+  on behalf of. The move needs no shim in either direction: Spring Boot's mapper ignores a key no
+  payload declares, so a published core still sending these keeps working, and none of the four
+  is required any more, so a client omitting them is complete.
+
+### Deprecated
+
+- `indentNumber` on `CreateIndentRequest`, `poNumber` on `CreatePurchaseOrderRequest`,
+  `transferNumber` on `CreateSiteTransferRequest` and `grnNumber` on `CreateGrnRequest`, all now
+  optional. Nothing reads them.
+- `creatorId` on `CreateIssueRequest` and `authorId` on `CreateIssueCommentRequest`, both now
+  optional. Nothing reads them.
+
+  `approverId` on `LeaveApprovalAction` is deliberately **not** deprecated and stays required.
+  It never reaches the wire, but the approve, reject and delegate success handlers use it to drop
+  the request from that approver's pending list without a refetch. Same shape as `employeeId` on
+  the leave-request create call: a value the caller must supply and the wire never carries.
+
+  None of the deprecated fields is removed here. Deleting a property from a request interface is
+  a compile break for every caller on a published core, and there is nothing to gain by making
+  this move a breaking one.
+
+### For `echno-web`
+
+The purchase-order and indent forms offer a document-number input that has never had any effect,
+and the site-transfer and GRN forms display a predicted number derived from the loaded list,
+which is wrong under concurrency and is not what gets saved. All four should come off, along with
+`document-number-utils.ts` and the test that locks in the discarded behaviour. Tracked on
+echno-core#57.
+
 ## [v2.4.0] - 2026-08-31
 
 A construction invoice's approval stamps carried only user ids, so the screens showing them had

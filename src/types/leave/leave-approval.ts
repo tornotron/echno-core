@@ -67,7 +67,21 @@ export interface LeaveApproval {
 
 /** Payload for an approve / reject / delegate action. */
 export interface LeaveApprovalAction {
-  /** Employee performing the action. */
+  /**
+   * Employee performing the action.
+   *
+   * Not sent to the server, and not optional either. The three action
+   * endpoints stopped declaring the field: the approver is resolved from the
+   * subject of the caller's access token, so a value in the body named
+   * someone the request could not have been made on behalf of.
+   *
+   * It stays required because the client still reads it. The success
+   * handlers in `useApproveLeaveRequest`, `useRejectLeaveRequest` and
+   * `useDelegateApproval` use it to drop the request from that approver's
+   * pending list and decrement the count without a refetch. Same shape as
+   * `employeeId` on the leave-request create call: a value the caller must
+   * supply and the wire never carries.
+   */
   approverId: number;
   /** Optional comments to attach. */
   comments?: string;
@@ -130,16 +144,15 @@ export function parseLeaveApproval(json: unknown): LeaveApproval {
 /**
  * Serializes a {@link LeaveApprovalAction} into the backend request body.
  *
- * Always emits `approverId`; `comments` and `delegateToId` are included only
- * when set.
+ * Emits `comments` and `delegateToId` only when set. `approverId` is never
+ * emitted: the server resolves the approver from the caller's token, and the
+ * three endpoints stopped declaring the field at all.
  *
  * @param dto - The approval action to serialize.
  * @returns A plain object matching the backend's expected body shape.
  */
 export function approvalActionToJson(dto: LeaveApprovalAction): any {
-  const json: any = {
-    approverId: dto.approverId,
-  };
+  const json: any = {};
 
   if (dto.comments !== undefined) json.comments = dto.comments;
   if (dto.delegateToId !== undefined) json.delegateToId = dto.delegateToId;
