@@ -45,7 +45,15 @@ export interface UpdateStorageLocationRequest {
   /** New geographic longitude (decimal degrees). */
   longitude?: number;
 
-  /** New active flag. Sent as-is — `undefined` is forwarded as `undefined`. */
+  /**
+   * New active flag. Sent as-is, so `undefined` is forwarded as `undefined`
+   * rather than turning into `false`.
+   *
+   * The property keeps this name because the read side does: the response
+   * DTO still serialises the flag as `active`, so {@link StorageLocation}
+   * reads `active` and a caller round-tripping one into the other does not
+   * have to rename it. Only the request key differs.
+   */
   active?: boolean;
 }
 
@@ -53,9 +61,14 @@ export interface UpdateStorageLocationRequest {
  * Serializes an {@link UpdateStorageLocationRequest} for the backend.
  *
  * Optional fields are sent as `null` rather than omitted so the backend's
- * deserializer sees an explicit value. The `active` flag, in contrast, is
+ * deserializer sees an explicit value. The active flag, in contrast, is
  * forwarded verbatim so a deliberate `undefined` does not flip an existing
  * active record to inactive.
+ *
+ * The flag goes on the wire as `isActive`. It was sent as `active`, which
+ * this DTO has never declared, so **no storage location could be
+ * deactivated through this endpoint**: the key bound to nothing and was
+ * dropped, and the request still answered 200. See echno-backend#627.
  *
  * `projectName` is deliberately left out. `StorageLocationUpdateDto`
  * carries the project as an id, and the name only ever came back on the
@@ -75,6 +88,6 @@ export function updateStorageLocationToJson(
     capacity: dto.capacity ?? null,
     latitude: dto.latitude ?? null,
     longitude: dto.longitude ?? null,
-    active: dto.active,
+    isActive: dto.active,
   };
 }

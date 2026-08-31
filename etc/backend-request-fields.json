@@ -3,7 +3,7 @@
     "repository": "tornotron/echno-backend",
     "ref": "development",
     "path": "docs/openapi.json",
-    "sha256": "ec58ad9191036f384eae02d775b40a0749528705dec38bc2796f6d86ac4d815e"
+    "sha256": "939b4d04fcd7eb3da34f62dab066e0f48a87bf2b864453fa0150178fd05af625"
   },
   "operations": {
     "POST /api/v1/assets/web": {
@@ -2270,6 +2270,7 @@
         "description",
         "gstRate",
         "hsn",
+        "ltc",
         "materialName",
         "maxStock",
         "minStock",
@@ -2295,6 +2296,7 @@
         "description",
         "gstRate",
         "hsn",
+        "ltc",
         "materialName",
         "maxStock",
         "minStock",
@@ -2319,6 +2321,7 @@
         "description",
         "gstRate",
         "hsn",
+        "ltc",
         "materialName",
         "maxStock",
         "minStock",
@@ -2349,6 +2352,7 @@
         "description",
         "gstRate",
         "hsn",
+        "ltc",
         "materialName",
         "maxStock",
         "minStock",
@@ -2636,6 +2640,7 @@
       "fields": [
         "createdAt",
         "customerId",
+        "description",
         "endDate",
         "projectAddress",
         "projectCity",
@@ -2662,6 +2667,7 @@
       "fields": [
         "createdAt",
         "customerId",
+        "description",
         "endDate",
         "projectAddress",
         "projectCity",
@@ -2681,6 +2687,7 @@
       "schema": "ProjectUpdateFieldsDto",
       "fields": [
         "customerId",
+        "description",
         "endDate",
         "projectAddress",
         "projectCity",
@@ -3233,9 +3240,9 @@
     "POST /api/v1/storage-locations": {
       "schema": "StorageLocationCreationDto",
       "fields": [
-        "active",
         "address",
         "capacity",
+        "isActive",
         "latitude",
         "locationName",
         "locationType",
@@ -3248,9 +3255,9 @@
     "POST /api/v1/storage-locations/web": {
       "schema": "StorageLocationCreationDto",
       "fields": [
-        "active",
         "address",
         "capacity",
+        "isActive",
         "latitude",
         "locationName",
         "locationType",

@@ -19,7 +19,7 @@ Write calls in `src/services`: 136
 | endpoint not in the document | 4 |
 | not readable | 17 |
 
-## Findings (35)
+## Findings (28)
 
 - src/services/employee-service.ts:226  POST /api/v1/employee/web  is not an endpoint in the document
 - src/services/employee-service.ts:246  PATCH /api/v1/employee/web/{id}  sends "address", which is not a field of EmployeeUpdateFieldsDto (did you mean "emailAddress"?)
@@ -35,11 +35,9 @@ Write calls in `src/services`: 136
 - src/services/leave-service.ts:518  POST /api/v1/leave-requests/web  sends "employeeId", which is not a field of LeaveRequestCreationDto
 - src/services/leave-service.ts:747  POST /api/v1/leave-requests/web/withdraw  is not an endpoint in the document
 - src/services/materials-service.ts:176  POST /api/v1/materials/web  sends "category", which is not a field of MaterialCreationDto
-- src/services/materials-service.ts:176  POST /api/v1/materials/web  sends "ltc", which is not a field of MaterialCreationDto
 - src/services/materials-service.ts:176  POST /api/v1/materials/web  sends "status", which is not a field of MaterialCreationDto
 - src/services/materials-service.ts:176  POST /api/v1/materials/web  sends "trend", which is not a field of MaterialCreationDto
 - src/services/materials-service.ts:269  PATCH /api/v1/materials/web/{id}  sends "category", which is not a field of MaterialUpdateDto
-- src/services/materials-service.ts:269  PATCH /api/v1/materials/web/{id}  sends "ltc", which is not a field of MaterialUpdateDto
 - src/services/materials-service.ts:269  PATCH /api/v1/materials/web/{id}  sends "openingStock", which is not a field of MaterialUpdateDto
 - src/services/materials-service.ts:269  PATCH /api/v1/materials/web/{id}  sends "projectId", which is not a field of MaterialUpdateDto
 - src/services/materials-service.ts:269  PATCH /api/v1/materials/web/{id}  sends "status", which is not a field of MaterialUpdateDto
@@ -48,11 +46,6 @@ Write calls in `src/services`: 136
 - src/services/materials-service.ts:269  PATCH /api/v1/materials/web/{id}  sends "unitCost", which is not a field of MaterialUpdateDto (did you mean "unit"?)
 - src/services/organization-service.ts:103  POST /api/v1/organization/web  sends "isActive", which is not a field of OrganizationCreationDto
 - src/services/organization-service.ts:131  PATCH /api/v1/organization/web/{id}  sends "isActive", which is not a field of OrganizationUpdateFieldsDto
-- src/services/project-service.ts:141  POST /api/v1/project/web  sends "description", which is not a field of ProjectCreationDto
-- src/services/project-service.ts:172  POST /api/v1/project/web  sends "description", which is not a field of ProjectCreationDto
-- src/services/project-service.ts:193  PATCH /api/v1/project/web/{id}  sends "description", which is not a field of ProjectUpdateFieldsDto
-- src/services/project-service.ts:225  PATCH /api/v1/project/web/{id}  sends "description", which is not a field of ProjectUpdateFieldsDto
-- src/services/storage-locations-service.ts:164  PATCH /api/v1/storage-locations/web/{id}  sends "active", which is not a field of StorageLocationUpdateDto (did you mean "isActive"?)
 - src/services/task-service.ts:201  POST /api/v1/tasks/web  sends "priority", which is not a field of TaskCreationDto
 - src/services/task-service.ts:236  PATCH /api/v1/tasks/web/{id}  sends "priority", which is not a field of TaskUpdateFieldsDto
 - src/services/task-service.ts:236  PATCH /api/v1/tasks/web/{id}  sends "projectId", which is not a field of TaskUpdateFieldsDto

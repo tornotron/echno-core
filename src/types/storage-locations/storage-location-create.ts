@@ -57,8 +57,16 @@ export interface CreateStorageLocationRequest {
  * Serializes a {@link CreateStorageLocationRequest} for the backend.
  *
  * Optional fields are sent as `null` rather than omitted so the backend's
- * deserializer sees an explicit value for every column. `active` defaults
- * to `true` when the caller didn't supply it.
+ * deserializer sees an explicit value for every column. The active flag
+ * defaults to `true` when the caller didn't supply it.
+ *
+ * The flag goes on the wire as `isActive`, not as the property's own name.
+ * `StorageLocationCreationDto` used to declare a primitive `boolean`, which
+ * Lombok gives `isActive()`/`setActive()` accessors and Jackson therefore
+ * published as `active`, while the update DTO's wrapper published
+ * `isActive`. Both settled on `isActive` in echno-backend#627, which also
+ * accepts the old spelling through a `@JsonAlias` until no published core
+ * sends it.
  *
  * `projectName` is deliberately left out. `StorageLocationCreationDto`
  * carries the project as an id, and the name is only ever flattened onto
@@ -78,6 +86,6 @@ export function createStorageLocationToJson(
     capacity: dto.capacity ?? null,
     latitude: dto.latitude ?? null,
     longitude: dto.longitude ?? null,
-    active: dto.active ?? true,
+    isActive: dto.active ?? true,
   };
 }
