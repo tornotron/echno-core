@@ -18,9 +18,15 @@
  *
  * Excludes single-material caches `detail(id)` (Material) and `stock(id)`
  * (MaterialWithStock), the `location-thresholds` cache
- * (MaterialLocationThreshold[], a different row shape), and `low-stock`
- * (a `PagedLowStockMaterials` envelope, not an array at all), all of which
- * the mutations address by their own key shapes.
+ * (MaterialLocationThreshold[], a different row shape), and the two
+ * envelope caches `page` (a `PagedMaterials`) and `low-stock` (a
+ * `PagedLowStockMaterials`), neither of which is an array at all. The
+ * mutations address all of those by their own key shapes.
+ *
+ * The exclusion list is what a new key shape has to be added to. This
+ * predicate matches by what it is *not*, so a cache added under the
+ * namespace and forgotten here is matched by default and handed to an
+ * updater that will call `.map` on it.
  *
  * The exclusions are what makes the predicate safe rather than merely
  * tidy: the updaters it is passed to call `.map` and `.filter` on whatever
@@ -40,8 +46,28 @@ export function isMaterialListCache(query: {
     key[1] !== 'detail' &&
     key[1] !== 'stock' &&
     key[1] !== 'location-thresholds' &&
+    key[1] !== 'page' &&
     key[1] !== 'low-stock'
   );
+}
+
+/**
+ * Matches every materials page cache under the `materials` namespace.
+ *
+ * How many materials the catalogue holds is a number only the server has,
+ * so a mutation that adds or removes one invalidates these rather than
+ * patching them. Patching would mean adjusting `totalElements` by hand,
+ * which reintroduces a client-side count of the catalogue by a longer
+ * route.
+ *
+ * @param query - The TanStack query whose key is being tested.
+ * @returns `true` when the key belongs to a materials page cache.
+ */
+export function isMaterialPageCache(query: {
+  queryKey: ReadonlyArray<unknown>;
+}): boolean {
+  const key = query.queryKey;
+  return Array.isArray(key) && key[0] === 'materials' && key[1] === 'page';
 }
 
 /**

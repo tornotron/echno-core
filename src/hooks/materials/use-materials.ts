@@ -14,6 +14,7 @@ import { useQuery } from '@tanstack/react-query';
 import {
   materialsService,
   type LowStockParams,
+  type MaterialsPageParams,
 } from '../../services/materials-service';
 import { materialsKeys } from './keys';
 
@@ -29,7 +30,11 @@ export const useMaterials = () =>
   });
 
 /**
- * Fetches a page of materials.
+ * Fetches a page of materials, flattened to a plain array.
+ *
+ * The flattening drops the catalogue size with the envelope. A caller that
+ * shows a total, or that needs to know whether the rows it holds are all
+ * of them, wants {@link useMaterialsPage}.
  *
  * @param pageNo - Zero-based page number. Defaults to `0`.
  * @param pageSize - Number of materials per page. Defaults to `10`.
@@ -39,6 +44,31 @@ export const useMaterialsPaginated = (pageNo = 0, pageSize = 10) =>
   useQuery({
     queryKey: materialsKeys.paginated(pageNo, pageSize),
     queryFn: () => materialsService.getAllPaginated(pageNo, pageSize),
+  });
+
+/**
+ * Fetches a page of materials with the page envelope kept.
+ *
+ * `data.totalElements` is how many materials the catalogue holds, not how
+ * many are on the page, and it is the only number a "Total Materials"
+ * figure may be built from. {@link useMaterials} cannot supply it: that
+ * list stops at 500 rows and says so in a response header the console's
+ * API proxy does not forward, so counting it answers for one page and
+ * reads as the whole catalogue.
+ *
+ * The same number also says whether a list already on hand is complete.
+ * Anything derived from those rows and presented as an organization-wide
+ * figure, a total stock value most of all, is only a total while the rows
+ * are all of them.
+ *
+ * @param params - Paging (`pageNo`, `pageSize`). Pass `{ pageSize: 1 }` to
+ *   read only the count.
+ * @returns A TanStack `UseQueryResult` wrapping `PagedMaterials`.
+ */
+export const useMaterialsPage = (params: MaterialsPageParams = {}) =>
+  useQuery({
+    queryKey: materialsKeys.page(params),
+    queryFn: () => materialsService.getPage(params),
   });
 
 /**

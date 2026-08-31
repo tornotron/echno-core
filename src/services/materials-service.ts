@@ -35,7 +35,7 @@ type Raw = any;
  *
  *   POST   /materials/web                              → MaterialDto             (full)
  *   GET    /materials/web                              → MaterialDto[]           (full list)
- *   GET    /materials/web/all?pageNo&pageSize          → PageMaterialDto         (paginated; flattened to MaterialDto[])
+ *   GET    /materials/web/all?pageNo&pageSize          → PageMaterialDto         (paginated; flattened to MaterialDto[], or envelope kept by getPage)
  *   GET    /materials/web/search?name                  → MaterialDto[]           (full)
  *   GET    /materials/web/{id}                         → MaterialDto             (full)
  *   GET    /materials/web/low-stock?pageNo&pageSize    → PageLowStockMaterialDto (paginated; envelope kept)
@@ -187,6 +187,40 @@ export interface PagedLowStockMaterials {
   size: number;
 }
 
+/**
+ * A parsed page of materials, mirroring the Spring `Page<MaterialDto>`
+ * envelope that `GET /materials/web/all` answers with.
+ *
+ * The envelope is kept rather than flattened because `totalElements` is
+ * the size of the catalogue, and that number cannot be recovered from the
+ * rows. `GET /materials/web` serves at most
+ * `UnpagedResultCap.MAX_ROWS` (500) of them and says so only in an
+ * `X-Result-Capped` response header, which the console's API proxy does
+ * not forward, so a screen counting the array it holds reads 500 as the
+ * whole catalogue from the 501st material on. A caller wanting only the
+ * number asks for `pageSize: 1` and reads it here.
+ */
+export interface PagedMaterials {
+  /** The materials on this page. */
+  content: Material[];
+  /** How many materials the catalogue holds, whatever this page carries. */
+  totalElements: number;
+  /** Total number of pages at the requested page size. */
+  totalPages: number;
+  /** 0-based page index. */
+  number: number;
+  /** Page size. */
+  size: number;
+}
+
+/** Paging options for {@link materialsService.getPage}. */
+export interface MaterialsPageParams {
+  /** 0-based page index. Defaults to `0` on the backend. */
+  pageNo?: number;
+  /** Rows per page. Defaults to `10` on the backend, capped at 500. */
+  pageSize?: number;
+}
+
 /** Scope and paging options for {@link materialsService.getLowStock}. */
 export interface LowStockParams {
   /**
@@ -204,6 +238,51 @@ export interface LowStockParams {
   pageNo?: number;
   /** Rows per page. Defaults to `10` on the backend, capped at 500. */
   pageSize?: number;
+}
+
+/**
+ * Normalizes a Spring `Page<MaterialDto>` body into a
+ * {@link PagedMaterials}.
+ *
+ * A payload without a page envelope is refused rather than counted from
+ * its rows. Falling back to `content.length` would answer "how many
+ * materials are there" with the size of one page, which is the defect
+ * this reader exists to remove and is invisible until the catalogue
+ * outgrows a page.
+ *
+ * @param data - The raw JSON value from the backend.
+ * @returns The parsed page.
+ * @throws {ApiError} When the payload carries no `totalElements`, or a row
+ *   fails to parse (HTTP 422).
+ */
+function safeParseMaterialsPage(data: Raw): PagedMaterials {
+  if (
+    !data ||
+    typeof data !== 'object' ||
+    !Array.isArray(data.content) ||
+    typeof data.totalElements !== 'number'
+  ) {
+    logger.error('Materials API returned no page envelope:', {
+      type: typeof data,
+      keys: data && typeof data === 'object' ? Object.keys(data) : null,
+    });
+    throw new ApiError(
+      'Failed to process materials data: the total count is missing.',
+      422
+    );
+  }
+  try {
+    return {
+      content: data.content.map((item: Raw) => parseMaterial(item)),
+      totalElements: data.totalElements,
+      totalPages: data.totalPages ?? 0,
+      number: data.number ?? 0,
+      size: data.size ?? data.content.length,
+    };
+  } catch (error) {
+    logger.error('Failed to parse materials page:', error);
+    throw new ApiError('Failed to process materials data.', 422);
+  }
 }
 
 /**
@@ -289,6 +368,10 @@ export const materialsService = {
    * `GET /materials/web/all?pageNo&pageSize` → `PageMaterialDto`
    * (flattened to `MaterialDto[]`).
    *
+   * The flattening drops `totalElements`, so a caller that needs to know
+   * how large the catalogue is, or whether the rows it holds are all of
+   * them, wants {@link getPage} instead.
+   *
    * @param pageNo - Zero-based page number. Defaults to `0`.
    * @param pageSize - Number of materials per page. Defaults to `10`.
    * @returns An array of {@link Material} objects for the page.
@@ -297,6 +380,36 @@ export const materialsService = {
   async getAllPaginated(pageNo = 0, pageSize = 10): Promise<Material[]> {
     const data = await api.get<Raw>('/materials/web/all', { pageNo, pageSize });
     return safeParseMaterials(data);
+  },
+
+  /**
+   * Fetches a page of materials, keeping the page envelope.
+   *
+   * `GET /materials/web/all?pageNo&pageSize` → `Page<MaterialDto>`. Same
+   * endpoint as {@link getAllPaginated}, and the difference is the whole
+   * point: `totalElements` is how many materials the catalogue holds,
+   * which no amount of arithmetic over the returned rows can produce.
+   *
+   * `GET /materials/web` cannot answer that question. It serves at most
+   * 500 rows and reports the cut in a response header the console's API
+   * proxy does not forward, so a count taken over what it returned is the
+   * catalogue's size only while the catalogue is smaller than the cap, and
+   * becomes wrong with no error and no visible change.
+   *
+   * A caller wanting only the number asks for `pageSize: 1`: the count is
+   * the size of the whole set whatever page size was requested.
+   *
+   * @param params - Paging (`pageNo`, `pageSize`).
+   * @returns A {@link PagedMaterials} page.
+   * @throws {ApiError} On non-2xx HTTP responses, or when the response
+   *   carries no page envelope to read the total from.
+   */
+  async getPage(params: MaterialsPageParams = {}): Promise<PagedMaterials> {
+    const query: Record<string, string | number> = {};
+    if (params.pageNo !== undefined) query.pageNo = params.pageNo;
+    if (params.pageSize !== undefined) query.pageSize = params.pageSize;
+    const data = await api.get<Raw>('/materials/web/all', query);
+    return safeParseMaterialsPage(data);
   },
 
   /**

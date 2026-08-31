@@ -5,6 +5,48 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
+## [v5.1.0] - 2026-09-01
+
+The catalogue's own size, which nothing could ask for. `GET /materials/web` stops at 500 rows and
+says so only in an `X-Result-Capped` response header; the console's API proxy rebuilds every
+response and forwards `Content-Type` alone, so that header never reaches a browser. The only other
+reader of the paginated endpoint, `getAllPaginated`, flattens the page envelope away. Between them
+a screen showing "Total Materials" had no number to show but the length of an array. Additive: one
+new service method, two new types, one new hook, one new cache predicate.
+
+### Added
+
+- **`materialsService.getPage(params)`** — `GET /materials/web/all` with the Spring page envelope
+  kept. Same endpoint as `getAllPaginated`, and the difference is the whole point:
+  `totalElements` is how many materials the catalogue holds, which no arithmetic over the returned
+  rows can produce. A caller wanting only the number asks for `pageSize: 1`.
+
+  A response without a page envelope is refused with a 422 rather than counted from its rows.
+  Falling back to `content.length` would answer "how many materials are there" with the size of one
+  page, which is the defect this reader exists to remove, and it would go unnoticed until the
+  catalogue outgrew the page.
+
+- **`PagedMaterials`** and **`MaterialsPageParams`** — the parsed envelope and its paging options.
+
+- **`useMaterialsPage(params)`** — the query hook, keyed under `['materials', 'page', params]`.
+  The same number also says whether a material list already on hand is complete, which is what any
+  figure derived from those rows and presented as an organization-wide total depends on.
+
+- **`isMaterialPageCache`** — internal predicate. The new cache holds an envelope, not an array, so
+  the mutations invalidate it rather than patching it: adjusting `totalElements` by hand would be a
+  client-side count of the catalogue by a longer route.
+
+### Changed
+
+- **`isMaterialListCache` now excludes the `page` key.** It matches by what a key is *not*, so a
+  new shape under the `materials` namespace is matched by default, and the updaters it feeds call
+  `.map` and `.filter` on whatever they match. Left alone, the first edit to any material would
+  have thrown inside `onSuccess` against a `PagedMaterials`.
+
+- **Creating, updating or deleting a material invalidates the page caches.** A create or delete
+  moves the catalogue size; an update changes rows the envelope carries and that the existing patch
+  cannot reach through it.
+
 ## [v5.0.0] - 2026-09-01
 
 Fifteen findings off echno-core#57, taking the recorded count from **20 to 5**. Thirteen are keys

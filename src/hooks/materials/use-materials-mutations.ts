@@ -18,7 +18,11 @@ import {
   MaterialLocationThresholdUpsert,
 } from '../../types/materials';
 import { logger } from '../../lib/logger';
-import { isLowStockCache, isMaterialListCache } from './cache-predicates';
+import {
+  isLowStockCache,
+  isMaterialListCache,
+  isMaterialPageCache,
+} from './cache-predicates';
 
 /**
  * Creates a new material.
@@ -35,6 +39,9 @@ import { isLowStockCache, isMaterialListCache } from './cache-predicates';
  *   search results are name-scoped (the new material may not match the
  *   active query) and paginated views depend on sort/page boundaries
  *   that can't be recomputed locally.
+ * - `invalidateQueries({ predicate: isMaterialPageCache })` — the page
+ *   caches carry the catalogue size on their envelope, and it is now one
+ *   larger.
  *
  * Errors are logged via {@link logger}; the mutation result still surfaces
  * the error to the caller via `onError`.
@@ -69,6 +76,9 @@ export const useCreateMaterial = () => {
       // A new material with a reorder level and no stock is low from the
       // moment it exists, and only the server knows that.
       queryClient.invalidateQueries({ predicate: isLowStockCache });
+      // The catalogue is one larger. The page caches carry that count on
+      // their envelope, so they are refetched rather than adjusted here.
+      queryClient.invalidateQueries({ predicate: isMaterialPageCache });
     },
     onError: (error) => {
       logger.error('Failed to create material:', error);
@@ -90,6 +100,8 @@ export const useCreateMaterial = () => {
  * - `invalidateQueries(materialsKeys.stock(id))` — kept: the stock view is
  *   `MaterialWithStock`, not `MaterialDto`, and edited material fields (e.g.
  *   `materialName`, `unit`, `reorderLevel`) may affect its display.
+ * - `invalidateQueries({ predicate: isMaterialPageCache })` — those caches
+ *   hold rows as well, inside an envelope the patch above cannot reach.
  *
  * @returns A TanStack `UseMutationResult` where the mutate function
  *   accepts `{ id: number; data: UpdateMaterialRequest }`.
@@ -111,6 +123,9 @@ export const useUpdateMaterial = () => {
       );
       queryClient.invalidateQueries({ queryKey: materialsKeys.stock(id) });
       queryClient.invalidateQueries({ predicate: isLowStockCache });
+      // The page caches hold rows too, and they are envelopes rather than
+      // arrays, so the patch above cannot reach them.
+      queryClient.invalidateQueries({ predicate: isMaterialPageCache });
     },
     onError: (error) => {
       logger.error('Failed to update material:', error);
@@ -134,6 +149,8 @@ export const useUpdateMaterial = () => {
  * - `invalidateQueries({ predicate: isLowStockCache })` — the low-stock
  *   pages are counted on the server, so a deleted material leaves them
  *   holding a count that is one too many.
+ * - `invalidateQueries({ predicate: isMaterialPageCache })` — same reason
+ *   for the catalogue size those pages carry.
  *
  * @returns A TanStack `UseMutationResult` where the mutate function
  *   accepts the numeric ID of the material to delete.
@@ -152,6 +169,8 @@ export const useDeleteMaterial = () => {
         (old) => old?.filter((m) => m.id !== id)
       );
       queryClient.invalidateQueries({ predicate: isLowStockCache });
+      // The catalogue is one smaller, and that count lives on the server.
+      queryClient.invalidateQueries({ predicate: isMaterialPageCache });
     },
     onError: (error) => {
       logger.error('Failed to delete material:', error);
