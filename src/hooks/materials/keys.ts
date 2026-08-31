@@ -16,6 +16,10 @@
  *   by {@link useMaterialSearch}.
  * - `['materials', 'paginated', { pageNo, pageSize }]` — paginated list,
  *   consumed by {@link useMaterialsPaginated}.
+ * - `['materials', 'page', { pageNo, pageSize }]` — a page of materials
+ *   with the envelope kept, consumed by {@link useMaterialsPage}. Holds a
+ *   `PagedMaterials` envelope, not `Material[]`: the catalogue size lives
+ *   on it.
  * - `['materials', 'low-stock', { projectId, storageLocationId, pageNo, pageSize }]`
  *   — a page of the materials at or below their reorder level, consumed by
  *   {@link useLowStockMaterials}. Holds a `PagedLowStockMaterials`
@@ -27,9 +31,9 @@
  *
  * The mutation file's `isMaterialListCache` predicate matches every
  * `Material[]` list cache (`list`, `search`, `paginated`) but excludes
- * single-material caches (`detail`, `stock`) and the
- * `location-thresholds` cache (a different row shape) — see the mutation
- * hooks for the cache-strategy details.
+ * single-material caches (`detail`, `stock`), the `location-thresholds`
+ * cache (a different row shape), and the two envelope caches `page` and
+ * `low-stock` — see the mutation hooks for the cache-strategy details.
  */
 export const materialsKeys = {
   /** Invalidation prefix only — pass to `invalidateQueries` to wipe every cache entry under the namespace. */
@@ -50,6 +54,10 @@ export const materialsKeys = {
   /** Query key for a paginated material list. */
   paginated: (pageNo: number, pageSize: number) =>
     [...materialsKeys.all, 'paginated', { pageNo, pageSize }] as const,
+
+  /** Query key for a page of materials with its envelope kept. */
+  page: (params: { pageNo?: number; pageSize?: number }) =>
+    [...materialsKeys.all, 'page', params] as const,
 
   /** Query key for a material's per-location threshold overrides. */
   locationThresholds: (materialId: number) =>

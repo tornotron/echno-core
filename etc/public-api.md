@@ -415,6 +415,7 @@ Entry points: 134
 - MaterialLocationThresholdUpsert
 - MaterialMovementHistoryEntry
 - materialsKeys
+- MaterialsPageParams
 - materialsService
 - MaterialStatus
 - MaterialStock
@@ -453,6 +454,7 @@ Entry points: 134
 - PagedIssue
 - PagedLowStockMaterials
 - PagedMaterialMovementHistory
+- PagedMaterials
 - PagedReceipt
 - PagedTask
 - parseAccount
@@ -944,6 +946,7 @@ Entry points: 134
 - useMaterialMovementHistory
 - useMaterials
 - useMaterialSearch
+- useMaterialsPage
 - useMaterialsPaginated
 - useMaterialStock
 - useMaterialWithStock
@@ -2129,6 +2132,7 @@ Entry points: 134
 - useMaterialLocationThresholds
 - useMaterials
 - useMaterialSearch
+- useMaterialsPage
 - useMaterialsPaginated
 - useMaterialWithStock
 - useUpdateMaterial
@@ -2141,8 +2145,10 @@ Entry points: 134
 ## `@tornotron/echno-core/materials/services`
 
 - LowStockParams
+- MaterialsPageParams
 - materialsService
 - PagedLowStockMaterials
+- PagedMaterials
 
 ## `@tornotron/echno-core/materials/types`
 
