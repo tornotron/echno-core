@@ -16,8 +16,17 @@ import { createSiteTransferItemToJson } from './site-transfer-item';
  * its line items.
  */
 export interface CreateSiteTransferRequest {
-  /** Human-readable transfer number; must be unique within the organisation. */
-  transferNumber: string;
+  /**
+   * Not sent, and not yours to choose. The server allocates the site-transfer
+   * number atomically per organisation, document type and year, on every
+   * create, whatever the payload says. A value passed here was discarded
+   * and the record came back carrying a different one.
+   *
+   * Read the allocated number off the created {@link SiteTransfer} in the response.
+   *
+   * @deprecated The value is ignored. Stop passing it.
+   */
+  transferNumber?: string;
 
   /** ISO 8601 date the transfer is being dispatched. */
   issueDate: string;
@@ -65,7 +74,7 @@ export interface CreateSiteTransferRequest {
  *
  * `status` is omitted from the body when the caller names none, rather
  * than sent as `undefined`, so the server applies its own `PENDING`
- * default.
+ * default. `transferNumber` is omitted always: the server allocates it.
  *
  * @param dto - The domain request to serialize.
  * @returns A plain object matching the backend's expected JSON shape.
@@ -74,7 +83,6 @@ export function createSiteTransferToJson(
   dto: CreateSiteTransferRequest
 ): Record<string, unknown> {
   return {
-    transferNumber: dto.transferNumber,
     issueDate: dto.issueDate,
     sendingPerson: dto.sendingPerson,
     sendingProjectId: dto.sendingProjectId,

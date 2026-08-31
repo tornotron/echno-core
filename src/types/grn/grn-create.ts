@@ -14,8 +14,17 @@ import { CreateGrnItemRequest } from './grn-item-create';
  * with its line items.
  */
 export interface CreateGrnRequest {
-  /** Human-readable GRN number; must be unique within the organisation. */
-  grnNumber: string;
+  /**
+   * Not sent, and not yours to choose. The server allocates the GRN
+   * number atomically per organisation, document type and year, on every
+   * create, whatever the payload says. A value passed here was discarded
+   * and the record came back carrying a different one.
+   *
+   * Read the allocated number off the created {@link GoodsReceivedNote} in the response.
+   *
+   * @deprecated The value is ignored. Stop passing it.
+   */
+  grnNumber?: string;
 
   /** ISO 8601 date the goods were received on site. */
   receivedOn: string;
@@ -52,7 +61,8 @@ export interface CreateGrnRequest {
  * Serializes a {@link CreateGrnRequest} into the backend's expected
  * request body. Optional fields are omitted from the payload when
  * `undefined` (rather than sent as `undefined`); item-level optional
- * fields follow the same omit-when-absent rule.
+ * fields follow the same omit-when-absent rule. `grnNumber` is omitted
+ * always: the server allocates it.
  *
  * @param dto - The domain request to serialize.
  * @returns A plain object matching the backend's expected JSON shape.
@@ -61,7 +71,6 @@ export function createGrnToJson(
   dto: CreateGrnRequest
 ): Record<string, unknown> {
   return {
-    grnNumber: dto.grnNumber,
     receivedOn: dto.receivedOn,
     receivedByEmployeeId: dto.receivedByEmployeeId,
     vendorId: dto.vendorId,
