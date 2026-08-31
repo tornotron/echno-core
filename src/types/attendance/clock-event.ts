@@ -97,10 +97,30 @@ export interface ClockEvent {
     /** Originating IP address, if captured. */
     ipAddress?: string;
   };
-  /** Whether {@link location} fell inside the project geo-fence. */
-  isWithinGeofence: boolean;
-  /** Distance in meters from the project location at punch time. */
-  distanceFromProject: number;
+  /**
+   * Whether {@link location} fell inside the project geo-fence, or `undefined`
+   * when the server did not say.
+   *
+   * Optional on purpose. A caller has to be able to tell "the punch was outside
+   * the fence" from "nobody worked out where the punch was", and those are not
+   * the same statement to put in front of an employee. Absent must therefore
+   * stay absent rather than being read as a definite `false`.
+   *
+   * The server does not currently evaluate the geo-fence at all: it writes a
+   * fixed `false` on every clock event. Treat the field as carrying no
+   * information until tornotron/echno-backend#646 is resolved.
+   */
+  isWithinGeofence?: boolean;
+  /**
+   * Distance in meters from the project location at punch time, or `undefined`
+   * when the server did not say.
+   *
+   * Optional for the same reason as {@link isWithinGeofence}, and with more at
+   * stake: a fabricated `0` does not read as missing, it reads as the employee
+   * having stood exactly on the site marker. The server currently writes a
+   * fixed `0.0` on every clock event.
+   */
+  distanceFromProject?: number;
   /** Optional remarks entered by the employee. */
   remarks?: string;
   /** Name of the admin who verified the punch, if verified. */
