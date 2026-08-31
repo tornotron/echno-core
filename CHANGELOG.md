@@ -5,6 +5,27 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
+## [v2.4.0] - 2026-08-31
+
+A construction invoice's approval stamps carried only user ids, so the screens showing them had
+nothing to render but the number. The backend now resolves each stamp to a name and the client
+type carries it. Additive: no export was renamed or removed and no field became required.
+
+### Added
+
+- `submittedByName`, `approvedByName` and `paymentRecordedByName` on `ConstructionInvoice`,
+  read by `parseConstructionInvoice` from the matching backend fields.
+
+  Each name is set exactly when its id is, which keeps two different situations apart on screen:
+  an invoice that was never approved has neither field, while one approved by an account that has
+  since been deleted still carries the literal `User #<id>` in the name. An account with no name
+  resolves to its email. A consumer can therefore render the name unconditionally wherever the id
+  is present, and needs no fallback of its own.
+
+  These stamps are **user** ids rather than employee ids, which is why the name has to come from
+  the server: the employee lookup a screen would otherwise reach for is keyed by a different
+  sequence, so it misses for most ids and names a different person whenever the two collide.
+
 ## [v2.3.0] - 2026-08-31
 
 The accounts-receivable invoice module had no listing and dropped the field that links a receivable

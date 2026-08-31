@@ -118,6 +118,56 @@ describe('parseConstructionInvoice', () => {
     expect(invoice.reversalJournalEntryId).toBeUndefined();
   });
 
+  // The three names the backend resolves beside the three stamp ids. Screens
+  // read the name and never the id, so if the parser drops them the audit
+  // trail silently loses the only part of it a person can read.
+  test('carries the resolved name beside each stamp id', () => {
+    const invoice = parseConstructionInvoice({
+      id: UUID,
+      projectId: 1,
+      submittedBy: 12,
+      submittedByName: 'Anand Rajashekar',
+      approvedBy: 34,
+      approvedByName: 'Aneesh Johny',
+      paymentRecordedBy: 56,
+      paymentRecordedByName: 'Abin Thomas',
+    });
+    expect(invoice.submittedByName).toBe('Anand Rajashekar');
+    expect(invoice.approvedByName).toBe('Aneesh Johny');
+    expect(invoice.paymentRecordedByName).toBe('Abin Thomas');
+  });
+
+  // An account with no name resolves to its email, and one that has since been
+  // deleted to the literal `User #<id>`. Both are ordinary strings the parser
+  // must pass through untouched: neither is a sentinel it may reinterpret.
+  test('passes the email and deleted-account forms through unchanged', () => {
+    const invoice = parseConstructionInvoice({
+      id: UUID,
+      projectId: 1,
+      submittedBy: 12,
+      submittedByName: 'qa-raiser@echno.com',
+      approvedBy: 34,
+      approvedByName: 'User #34',
+    });
+    expect(invoice.submittedByName).toBe('qa-raiser@echno.com');
+    expect(invoice.approvedByName).toBe('User #34');
+  });
+
+  // The name is null exactly when the stamp is, which is what keeps "never
+  // approved" distinguishable from "the approver's account is gone".
+  test('leaves a name undefined when its stamp is unset', () => {
+    const invoice = parseConstructionInvoice({
+      id: UUID,
+      projectId: 1,
+      submittedBy: 12,
+      submittedByName: 'Anand Rajashekar',
+    });
+    expect(invoice.submittedByName).toBe('Anand Rajashekar');
+    expect(invoice.approvedBy).toBeUndefined();
+    expect(invoice.approvedByName).toBeUndefined();
+    expect(invoice.paymentRecordedByName).toBeUndefined();
+  });
+
   test('parses the cost-category tag on a line', () => {
     const categoryId = '99999999-9999-9999-9999-999999999999';
     const invoice = parseConstructionInvoice({
