@@ -16,6 +16,10 @@
  *   by {@link useMaterialSearch}.
  * - `['materials', 'paginated', { pageNo, pageSize }]` — paginated list,
  *   consumed by {@link useMaterialsPaginated}.
+ * - `['materials', 'low-stock', { projectId, storageLocationId, pageNo, pageSize }]`
+ *   — a page of the materials at or below their reorder level, consumed by
+ *   {@link useLowStockMaterials}. Holds a `PagedLowStockMaterials`
+ *   envelope, not `Material[]`: the count lives on it.
  * - `['materials', 'location-thresholds', materialId]` — per-storage-location
  *   threshold overrides for a material, consumed by
  *   {@link useMaterialLocationThresholds}. Holds
@@ -50,4 +54,12 @@ export const materialsKeys = {
   /** Query key for a material's per-location threshold overrides. */
   locationThresholds: (materialId: number) =>
     [...materialsKeys.all, 'location-thresholds', materialId] as const,
+
+  /** Query key for a page of materials at or below their reorder level. */
+  lowStock: (params: {
+    projectId?: number;
+    storageLocationId?: number;
+    pageNo?: number;
+    pageSize?: number;
+  }) => [...materialsKeys.all, 'low-stock', params] as const,
 };

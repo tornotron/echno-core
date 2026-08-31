@@ -11,7 +11,10 @@
  * uses the recommended setup).
  */
 import { useQuery } from '@tanstack/react-query';
-import { materialsService } from '../../services/materials-service';
+import {
+  materialsService,
+  type LowStockParams,
+} from '../../services/materials-service';
 import { materialsKeys } from './keys';
 
 /**
@@ -97,6 +100,27 @@ export const useMaterialLocationThresholds = (materialId: number) =>
     queryKey: materialsKeys.locationThresholds(materialId),
     queryFn: () => materialsService.getLocationThresholds(materialId),
     enabled: !!materialId,
+  });
+
+/**
+ * Fetches a page of the materials at or below the reorder level in force,
+ * most depleted first.
+ *
+ * The result keeps the page envelope, so `data.totalElements` is how many
+ * materials are low across the scope rather than how many are on the page.
+ * That is the number a "Low Stock Alert" must be built from: counting a
+ * fetched material list in the browser counts one capped page of the
+ * catalogue, is blind to a per-location threshold override, and fails
+ * short, which is the direction that reassures.
+ *
+ * @param params - Scope (`projectId`, `storageLocationId`) and paging
+ *   (`pageNo`, `pageSize`). Pass `{ pageSize: 1 }` to read only the count.
+ * @returns A TanStack `UseQueryResult` wrapping `PagedLowStockMaterials`.
+ */
+export const useLowStockMaterials = (params: LowStockParams = {}) =>
+  useQuery({
+    queryKey: materialsKeys.lowStock(params),
+    queryFn: () => materialsService.getLowStock(params),
   });
 
 export { materialsKeys } from './keys';

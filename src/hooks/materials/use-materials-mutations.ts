@@ -18,34 +18,7 @@ import {
   MaterialLocationThresholdUpsert,
 } from '../../types/materials';
 import { logger } from '../../lib/logger';
-
-/**
- * Matches every `Material[]` list cache under the `materials` namespace,
- * spanning `lists()`, `search(name)`, and `paginated({ pageNo, pageSize })`.
- * `materialsService.getAllPaginated` flattens `PageMaterialDto` to
- * `Material[]` so all three caches share the same data shape and a single
- * predicate covers them.
- *
- * Excludes single-material caches `detail(id)` (Material) and `stock(id)`
- * (MaterialWithStock), and the `location-thresholds` cache
- * (MaterialLocationThreshold[], a different row shape), all of which the
- * mutations address by their own key shapes.
- *
- * @param query - The TanStack query whose key is being tested.
- * @returns `true` when the key belongs to a material list cache.
- */
-function isMaterialListCache(query: {
-  queryKey: ReadonlyArray<unknown>;
-}): boolean {
-  const key = query.queryKey;
-  return (
-    Array.isArray(key) &&
-    key[0] === 'materials' &&
-    key[1] !== 'detail' &&
-    key[1] !== 'stock' &&
-    key[1] !== 'location-thresholds'
-  );
-}
+import { isLowStockCache, isMaterialListCache } from './cache-predicates';
 
 /**
  * Creates a new material.
@@ -93,6 +66,9 @@ export const useCreateMaterial = () => {
           q.queryKey[0] === 'materials' &&
           (q.queryKey[1] === 'search' || q.queryKey[1] === 'paginated'),
       });
+      // A new material with a reorder level and no stock is low from the
+      // moment it exists, and only the server knows that.
+      queryClient.invalidateQueries({ predicate: isLowStockCache });
     },
     onError: (error) => {
       logger.error('Failed to create material:', error);
@@ -134,6 +110,7 @@ export const useUpdateMaterial = () => {
         (old) => old?.map((m) => (m.id === id ? updatedMaterial : m))
       );
       queryClient.invalidateQueries({ queryKey: materialsKeys.stock(id) });
+      queryClient.invalidateQueries({ predicate: isLowStockCache });
     },
     onError: (error) => {
       logger.error('Failed to update material:', error);
@@ -154,9 +131,9 @@ export const useUpdateMaterial = () => {
  * - `setQueriesData({ predicate: isMaterialListCache }, filter)` — drops
  *   the deleted material from every list cache (`list`, `search`,
  *   `paginated`) without a refetch.
- *
- * No invalidations are kept: with the entity gone, every consequence of
- * the delete is local-cache cleanup.
+ * - `invalidateQueries({ predicate: isLowStockCache })` — the low-stock
+ *   pages are counted on the server, so a deleted material leaves them
+ *   holding a count that is one too many.
  *
  * @returns A TanStack `UseMutationResult` where the mutate function
  *   accepts the numeric ID of the material to delete.
@@ -174,6 +151,7 @@ export const useDeleteMaterial = () => {
         { predicate: isMaterialListCache },
         (old) => old?.filter((m) => m.id !== id)
       );
+      queryClient.invalidateQueries({ predicate: isLowStockCache });
     },
     onError: (error) => {
       logger.error('Failed to delete material:', error);
@@ -239,6 +217,7 @@ export const useUpsertMaterialLocationThreshold = () => {
       queryClient.invalidateQueries({
         queryKey: materialsKeys.stock(materialId),
       });
+      queryClient.invalidateQueries({ predicate: isLowStockCache });
     },
     onError: (error) => {
       logger.error('Failed to upsert material location threshold:', error);
@@ -285,6 +264,7 @@ export const useDeleteMaterialLocationThreshold = () => {
       queryClient.invalidateQueries({
         queryKey: materialsKeys.stock(materialId),
       });
+      queryClient.invalidateQueries({ predicate: isLowStockCache });
     },
     onError: (error) => {
       logger.error('Failed to delete material location threshold:', error);

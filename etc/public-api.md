@@ -403,6 +403,8 @@ Entry points: 134
 - LocationMaterialStock
 - LocationStock
 - logger
+- LowStockMaterial
+- LowStockParams
 - MANAGER_ROLES
 - Material
 - MaterialConsumption
@@ -449,6 +451,7 @@ Entry points: 134
 - PagedExpense
 - PagedInvoice
 - PagedIssue
+- PagedLowStockMaterials
 - PagedMaterialMovementHistory
 - PagedReceipt
 - PagedTask
@@ -530,6 +533,7 @@ Entry points: 134
 - parseLeaveTransaction
 - parseLocalDate
 - parseLocalDateTime
+- parseLowStockMaterial
 - parseMaterial
 - parseMaterialConsumption
 - parseMaterialLocationThreshold
@@ -925,6 +929,7 @@ Entry points: 134
 - useLeavePolicy
 - useLeaveRequest
 - useLogMovement
+- useLowStockMaterials
 - useManagerName
 - useManagerNames
 - useManagers
@@ -2119,6 +2124,7 @@ Entry points: 134
 - useCreateMaterial
 - useDeleteMaterial
 - useDeleteMaterialLocationThreshold
+- useLowStockMaterials
 - useMaterial
 - useMaterialLocationThresholds
 - useMaterials
@@ -2134,7 +2140,9 @@ Entry points: 134
 
 ## `@tornotron/echno-core/materials/services`
 
+- LowStockParams
 - materialsService
+- PagedLowStockMaterials
 
 ## `@tornotron/echno-core/materials/types`
 
@@ -2144,6 +2152,7 @@ Entry points: 134
 - createMaterialConsumptionToJson
 - CreateMaterialRequest
 - createMaterialToJson
+- LowStockMaterial
 - Material
 - MaterialConsumption
 - MaterialLocationThreshold
@@ -2151,6 +2160,7 @@ Entry points: 134
 - MaterialLocationThresholdUpsert
 - MaterialStatus
 - MaterialWithStock
+- parseLowStockMaterial
 - parseMaterial
 - parseMaterialConsumption
 - parseMaterialLocationThreshold
