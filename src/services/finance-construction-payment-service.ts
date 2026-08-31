@@ -10,6 +10,7 @@
  * - `GET  /finance/construction-payments/web`      → `Page<ConstructionPaymentDto>` (list)
  * - `PUT  /finance/construction-payments/web/{id}` → `ConstructionPaymentDto` (full)
  * - `POST /finance/construction-payments/web/{id}/verify` → `ConstructionPaymentDto` (full)
+ * - `POST /finance/construction-payments/web/{id}/cancel` → `ConstructionPaymentDto` (full)
  *
  * The list endpoint returns a Spring `Page`; {@link getAll} unwraps `.content`
  * and parses each row, returning a plain `ConstructionPayment[]`.
@@ -157,6 +158,17 @@ export const financeConstructionPaymentService = {
    * `PUT /finance/construction-payments/web/{id}` → `ConstructionPaymentDto`
    * (full).
    *
+   * Refused with a 400 on two states the caller can see in advance, so a screen
+   * is better off not offering the edit than letting the user fill a form in
+   * and lose it:
+   *
+   * - **the voucher is verified.** echno-backend#636 freezes it, because an
+   *   edit would leave the stamp attesting to figures nobody checked. The
+   *   correction route is {@link cancel} and raise a replacement.
+   * - **`status` is `CANCELLED`.** Cancelling is {@link cancel}, which records
+   *   the required reason; setting the status through a full replacement would
+   *   be a cancellation that also silently changes an amount.
+   *
    * @param id - UUID of the payment.
    * @param req - Replacement fields ({@link UpdateConstructionPaymentRequest}).
    * @returns The updated {@link ConstructionPayment}.
@@ -198,6 +210,41 @@ export const financeConstructionPaymentService = {
    */
   async verify(id: string): Promise<ConstructionPayment> {
     const data = await api.post<ApiResponse>(`${BASE}/${id}/verify`, null);
+    return safeParseConstructionPayment(data);
+  },
+
+  /**
+   * Voids a construction payment voucher, recording why.
+   *
+   * `POST /finance/construction-payments/web/{id}/cancel` →
+   * `ConstructionPaymentDto` (full).
+   *
+   * This is the only route to `CANCELLED`. Before echno-backend#636 the status
+   * was set through {@link update}, which now refuses it; that same change
+   * froze a verified voucher against editing, so cancelling is also the only
+   * way to correct one. Cancel, then raise the replacement.
+   *
+   * The reason is **required and non-blank**, max 1000 characters, and a blank
+   * one comes back 400. A voided voucher that does not say what was wrong with
+   * it explains nothing, and on a verified voucher it is the only record of why
+   * somebody's check was set aside.
+   *
+   * Cancelling is one-way: a second cancellation is refused. The verification
+   * stamp is deliberately left in place, so a cancelled voucher still names its
+   * verifier and reads as "checked, then voided" rather than as a
+   * contradiction. There is no unverify.
+   *
+   * @param id - UUID of the payment.
+   * @param reason - Why the voucher is being voided. Required, non-blank, max
+   *   1000 characters.
+   * @returns The cancelled {@link ConstructionPayment}, carrying its
+   *   {@link ConstructionPayment.cancellationReason}.
+   * @throws {ApiError} On non-2xx responses or if the response fails to parse.
+   */
+  async cancel(id: string, reason: string): Promise<ConstructionPayment> {
+    const data = await api.post<ApiResponse>(`${BASE}/${id}/cancel`, {
+      reason,
+    });
     return safeParseConstructionPayment(data);
   },
 };

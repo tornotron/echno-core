@@ -3,7 +3,7 @@
     "repository": "tornotron/echno-backend",
     "ref": "development",
     "path": "docs/openapi.json",
-    "sha256": "eec9a36255ed8161ffd1eff39d21b473168b041552ff520d5976894f82ca0490"
+    "sha256": "6b97949db387147bd3ea85322c2cc2e8ed2b3474d1f550495d18253003e684bd"
   },
   "operations": {
     "POST /api/v1/assets/web": {
@@ -1015,6 +1015,14 @@
         "status",
         "type"
       ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/finance/construction-payments/web/{id}/cancel": {
+      "schema": "CancelConstructionPaymentRequest",
+      "fields": [
+        "reason"
+      ],
+      "required": [],
       "acceptsAnyField": false
     },
     "POST /api/v1/finance/construction-payments/web/{id}/verify": {

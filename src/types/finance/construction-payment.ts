@@ -155,6 +155,7 @@ const ConstructionPaymentSchema = z.object({
   verifiedAt: backendDate,
   description: nullableString,
   notes: nullableString,
+  cancellationReason: nullableString,
 });
 
 /** An outgoing construction payment voucher. */
@@ -232,6 +233,16 @@ export interface ConstructionPayment {
   description?: string;
   /** Free-text notes. */
   notes?: string;
+  /**
+   * Why the voucher was voided, recorded by the cancel action. Unset on a
+   * voucher that has not been cancelled.
+   *
+   * On a verified voucher this is the only record of why somebody's check was
+   * set aside, because the verification stamp deliberately survives the
+   * cancellation: echno-backend#636 voids the document rather than retracting
+   * the check, so a cancelled voucher still names its verifier.
+   */
+  cancellationReason?: string;
 }
 
 /**
@@ -275,6 +286,7 @@ export function parseConstructionPayment(json: unknown): ConstructionPayment {
     verifiedAt: raw.verifiedAt ?? undefined,
     description: raw.description ?? undefined,
     notes: raw.notes ?? undefined,
+    cancellationReason: raw.cancellationReason ?? undefined,
   };
 }
 

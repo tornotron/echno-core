@@ -5,6 +5,48 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
+## [v4.1.0] - 2026-09-01
+
+The client half of echno-backend#636, which froze a verified payment voucher and had to build a
+route back out of the freeze in the same change. Additive: one new service method and one new
+optional field on the read type. Nothing is removed and no signature moves.
+
+### Added
+
+- **`financeConstructionPaymentService.cancel(id, reason)`** — `POST /finance/construction-payments/web/{id}/cancel`,
+  body `{ reason }`, returns the updated voucher.
+
+  This is now the only route to `CANCELLED`. It used to be a status you set through `update`, and
+  echno-backend#636 refuses that outright, so a client without this method cannot cancel a voucher
+  at all. The same change froze a verified voucher against editing, which makes cancel-and-re-raise
+  the only way to correct one, so the method is what reopens a document that would otherwise be
+  stuck.
+
+  The reason is required and non-blank, max 1000 characters; a blank one is refused. A voided
+  voucher that does not say what was wrong with it explains nothing, and on a verified voucher it
+  is the only record of why somebody's check was set aside.
+
+  Cancelling is one-way, a second cancellation is refused, and the verification stamp deliberately
+  stays where it is. A cancelled voucher therefore still names its verifier, and a screen should
+  read that as "checked, then voided" rather than as a contradiction. There is still no unverify.
+
+- **`ConstructionPayment.cancellationReason`** — why the voucher was voided, unset on one that has
+  not been cancelled.
+
+  Set by the cancel action and read-only. Left `undefined` rather than defaulted to an empty
+  string, so a screen can decide on the field itself whether the line is worth drawing.
+
+### Changed
+
+- **`update` now documents the two states it is refused in**, because both are visible to the
+  caller before the request goes out and neither is worth discovering through a 400: the voucher is
+  verified, or `status` is `CANCELLED`. A screen is better off not offering the edit than letting
+  somebody fill a form in and lose it.
+
+  No signature moves and nothing is removed here. `UpdateConstructionPaymentRequest.status` still
+  accepts the whole enum, because `CANCELLED` is a real status to read back and a screen still has
+  to render it; it is only setting it through this call that the backend refuses.
+
 ## [v4.0.0] - 2026-09-01
 
 The client half of the five backend changes that took "who did this" off the wire, and the first
