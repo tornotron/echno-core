@@ -53,6 +53,24 @@ export interface CreateGrnRequest {
   /** Vendor invoice amount tied to the receipt. */
   invoiceAmount?: number;
 
+  /**
+   * Acknowledges in advance that this receipt may take a material past the
+   * quantity its purchase order asked for.
+   *
+   * Left unset, the backend refuses such a line with a 400 naming the order,
+   * the quantity ordered, the quantity already received against it and the
+   * quantity this note offers, which is enough for somebody to recognise a
+   * mistyped digit. Set, the excess is recorded and the created note comes
+   * back with {@link GoodsReceivedNote.overReceiptAcknowledged} true.
+   *
+   * It is not a validation switch to leave on. A supplier who delivers 105
+   * bags against an order for 100 has left 105 bags on the site whether the
+   * system likes it or not, and a receipt that cannot be filed puts them
+   * outside the stock ledger; the flag is how that delivery is admitted, by
+   * somebody who looked at the figures and meant it.
+   */
+  allowOverReceipt?: boolean;
+
   /** Line items to create alongside the GRN. */
   items: CreateGrnItemRequest[];
 }
@@ -89,6 +107,9 @@ export function createGrnToJson(
     }),
     ...(dto.invoiceAmount !== undefined && {
       invoiceAmount: dto.invoiceAmount,
+    }),
+    ...(dto.allowOverReceipt !== undefined && {
+      allowOverReceipt: dto.allowOverReceipt,
     }),
     items: dto.items.map((item: CreateGrnItemRequest) => ({
       materialId: item.materialId,

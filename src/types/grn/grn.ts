@@ -16,6 +16,7 @@ import { parsePositiveInt } from '../../lib/utils/parse-id';
 import {
   backendDate,
   money,
+  nullableBoolean,
   nullableString,
   numericId,
   opaque,
@@ -45,6 +46,7 @@ const GoodsReceivedNoteResponseSchema = z.object({
   deliveryChallanNumber: nullableString,
   invoiceNumber: nullableString,
   invoiceAmount: money,
+  overReceiptAcknowledged: nullableBoolean,
   items: z.array(z.unknown()).nullish(),
 });
 
@@ -107,6 +109,20 @@ export interface GoodsReceivedNote {
   /** Vendor invoice amount tied to the receipt. */
   invoiceAmount?: number;
 
+  /**
+   * Whether somebody deliberately let this receipt take a material past the
+   * quantity its purchase order asked for.
+   *
+   * The backend refuses an over-receipt by default, so a note carrying `true`
+   * was filed a second time with `CreateGrnRequest.allowOverReceipt` set after
+   * the figures had been read. It is worth showing: it is the difference
+   * between a delivery that matched its order and one somebody decided to
+   * accept anyway, and it is the only thing on the document that says so six
+   * months on. `false` on every note filed within its order, and on every note
+   * that cites no order at all.
+   */
+  overReceiptAcknowledged: boolean;
+
   /** Line items received as part of this GRN. */
   items: GrnItem[];
 }
@@ -149,6 +165,7 @@ export function parseGoodsReceivedNote(json: unknown): GoodsReceivedNote {
     deliveryChallanNumber: raw.deliveryChallanNumber ?? undefined,
     invoiceNumber: raw.invoiceNumber ?? undefined,
     invoiceAmount: raw.invoiceAmount ?? undefined,
+    overReceiptAcknowledged: raw.overReceiptAcknowledged ?? false,
     items: Array.isArray(raw.items)
       ? raw.items.map((item) => parseGrnItem(item))
       : [],
