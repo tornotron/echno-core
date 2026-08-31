@@ -5,6 +5,54 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
+## [v3.1.0] - 2026-08-31
+
+The four document reference numbers stop being sent. An indent, purchase order, site transfer and
+GRN are all numbered by the server, and always were: `DocumentNumberAllocator` hands out each one
+atomically per organisation, document type and year, and every create service calls it
+unconditionally before it saves anything. Each creation DTO's schema already said the number "is
+allocated by the server ... it is not part of this payload". The allocator exists because these
+numbers used to be invented in the browser from whatever page of the list happened to be loaded,
+so two people on the same screen would propose the same one.
+
+The client had not been told. All four serializers sent a key no request DTO declares, so it was
+read off no field and dropped, and the record came back carrying the allocator's answer.
+
+Two of the four are worse than inert on the web side, because they reach the wire from required,
+user-editable inputs: someone could type `PO-LEGACY-0042`, be told the order was saved, and find it
+filed under a different number.
+
+### Changed
+
+- `createIndentToJson`, `createPurchaseOrderToJson`, `createSiteTransferToJson` and
+  `createGrnToJson` no longer emit `indentNumber`, `poNumber`, `transferNumber` or `grnNumber`.
+  Read the allocated number off the created entity in the response.
+
+  One asymmetry decides where a genuine correction goes: `IndentUpdateDto` does declare
+  `indentNumber`, so an indent's number can be amended afterwards through `indentsService.update`.
+  No update DTO on the other three does, so the allocated number stands.
+
+### Deprecated
+
+- `indentNumber` on `CreateIndentRequest`, `poNumber` on `CreatePurchaseOrderRequest`,
+  `transferNumber` on `CreateSiteTransferRequest` and `grnNumber` on `CreateGrnRequest`.
+
+  **All four become optional, which is the point of the release rather than a side effect.** They
+  were required, so no caller could stop passing them; a consumer that wanted to take the input off
+  its form could not, because the type still demanded a string. Widening them is what unblocks that
+  work. Deleting them outright would have been the tidier diff and the wrong order: it breaks the
+  build of every caller on a published core before anyone has had the chance to remove the input
+  that feeds them.
+
+  They are removed in a later major once no caller passes one.
+
+### For `echno-web`
+
+Now unblocked, and owed: the purchase-order and indent number inputs come off the forms, the
+site-transfer and GRN screens stop displaying a predicted number derived from the loaded list
+(which is wrong under concurrency and is not what gets saved), `lib/utils/document-number-utils.ts`
+goes, and so does the test that locks in the discarded `poNumber`. Tracked on echno-core#57.
+
 ## [v3.0.0] - 2026-08-31
 
 **Breaking.** Four request payloads no longer carry the id of whoever is acting. The backend reads
