@@ -34,10 +34,10 @@ Write calls in `src/services`: 138
 - src/services/issue-service.ts:302  PATCH /api/v1/issues/web/{id}  sends "priority", which is not a field of IssueUpdateFieldsDto
 - src/services/leave-service.ts:518  POST /api/v1/leave-requests/web  sends "employeeId", which is not a field of LeaveRequestCreationDto
 - src/services/leave-service.ts:747  POST /api/v1/leave-requests/web/withdraw  is not an endpoint in the document
-- src/services/materials-service.ts:393  PATCH /api/v1/materials/web/{id}  sends "openingStock", which is not a field of MaterialUpdateDto
-- src/services/materials-service.ts:393  PATCH /api/v1/materials/web/{id}  sends "projectId", which is not a field of MaterialUpdateDto
-- src/services/materials-service.ts:393  PATCH /api/v1/materials/web/{id}  sends "storageLocationId", which is not a field of MaterialUpdateDto
-- src/services/materials-service.ts:393  PATCH /api/v1/materials/web/{id}  sends "unitCost", which is not a field of MaterialUpdateDto (did you mean "unit"?)
+- src/services/materials-service.ts:409  PATCH /api/v1/materials/web/{id}  sends "openingStock", which is not a field of MaterialUpdateDto
+- src/services/materials-service.ts:409  PATCH /api/v1/materials/web/{id}  sends "projectId", which is not a field of MaterialUpdateDto
+- src/services/materials-service.ts:409  PATCH /api/v1/materials/web/{id}  sends "storageLocationId", which is not a field of MaterialUpdateDto
+- src/services/materials-service.ts:409  PATCH /api/v1/materials/web/{id}  sends "unitCost", which is not a field of MaterialUpdateDto (did you mean "unit"?)
 - src/services/organization-service.ts:103  POST /api/v1/organization/web  sends "isActive", which is not a field of OrganizationCreationDto
 - src/services/organization-service.ts:131  PATCH /api/v1/organization/web/{id}  sends "isActive", which is not a field of OrganizationUpdateFieldsDto
 - src/services/task-service.ts:236  PATCH /api/v1/tasks/web/{id}  sends "projectId", which is not a field of TaskUpdateFieldsDto

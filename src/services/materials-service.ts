@@ -317,14 +317,30 @@ export const materialsService = {
    * ids read one location, where its override replaces the material's
    * global level.
    *
+   * A storage location without its project is refused here rather than
+   * sent. The backend answers that combination with a 400 naming the
+   * mismatch, and the round trip buys nothing: a location belongs to
+   * exactly one project, so a caller that knows the location and not the
+   * project is asking about a scope it has not established.
+   *
    * @param params - Scope (`projectId`, `storageLocationId`) and paging.
    * @returns A {@link PagedLowStockMaterials} page.
-   * @throws {ApiError} On non-2xx HTTP responses, or when the response
-   *   carries no page envelope to read the total from.
+   * @throws {ApiError} When `storageLocationId` is given without
+   *   `projectId`, on non-2xx HTTP responses, or when the response carries
+   *   no page envelope to read the total from.
    */
   async getLowStock(
     params: LowStockParams = {}
   ): Promise<PagedLowStockMaterials> {
+    if (
+      params.storageLocationId !== undefined &&
+      params.projectId === undefined
+    ) {
+      throw new ApiError(
+        'A storage location can only be asked about within its project.',
+        400
+      );
+    }
     const query: Record<string, string | number> = {};
     if (params.projectId !== undefined) query.projectId = params.projectId;
     if (params.storageLocationId !== undefined)

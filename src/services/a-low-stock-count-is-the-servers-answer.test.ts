@@ -102,6 +102,15 @@ describe('reading the low-stock materials', () => {
     expect(get).toHaveBeenCalledWith('/materials/web/low-stock', {});
   });
 
+  test('refuses a storage location that names no project', async () => {
+    const get = spyOn(api, 'get').mockResolvedValue(page([]));
+
+    await expect(
+      materialsService.getLowStock({ storageLocationId: 2 })
+    ).rejects.toThrow(/within its project/);
+    expect(get).not.toHaveBeenCalled();
+  });
+
   test('refuses a payload with no total rather than counting the rows', async () => {
     spyOn(api, 'get').mockResolvedValue([row, row]);
 

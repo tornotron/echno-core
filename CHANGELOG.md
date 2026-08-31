@@ -38,10 +38,11 @@ removed and no signature moves.
 
 - **`LowStockMaterial`** and **`parseLowStockMaterial`** — a low-stock row: the material, the
   `currentStock` and `reorderLevel` that were actually compared at the scope asked about, the
-  `shortfall` between them, and the `moq` a purchase would have to be raised for. The three
-  quantities are required rather than optional: a row that reached this list did so because the
-  backend compared them, and one that arrives without them fails the parse instead of defaulting
-  to zero.
+  `shortfall` between them, and the `moq` a purchase would have to be raised for. `currentStock`,
+  `reorderLevel` and `shortfall` are required rather than optional: a row that reached this list
+  did so because the backend compared them, and one that arrives without them fails the parse
+  instead of defaulting to zero. `moq` stays optional, because a material can be low without
+  anybody having recorded a minimum order quantity for it.
 
 - **`useLowStockMaterials(params)`** — the query hook, keyed by scope and paging under
   `['materials', 'low-stock', params]`. Two consumers passing the same params share one request
