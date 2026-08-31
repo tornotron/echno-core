@@ -139,10 +139,13 @@ const ConstructionInvoiceSchema = z.object({
   notes: nullableString,
   termsAndConditions: nullableString,
   submittedBy: optionalNumericId,
+  submittedByName: nullableString,
   submittedAt: backendDate,
   approvedBy: optionalNumericId,
+  approvedByName: nullableString,
   approvedAt: backendDate,
   paymentRecordedBy: optionalNumericId,
+  paymentRecordedByName: nullableString,
   journalEntryId: nullableString,
   reversalJournalEntryId: nullableString,
   arInvoiceId: nullableString,
@@ -237,14 +240,42 @@ export interface ConstructionInvoice {
   termsAndConditions?: string;
   /** Id of the user who submitted the invoice for approval (server-set). */
   submittedBy?: number;
+  /**
+   * Display name of the user in {@link submittedBy}, resolved server-side
+   * (server-set).
+   *
+   * Set whenever `submittedBy` is, and undefined only when it is not, so the
+   * two questions a screen asks stay separable: an invoice never submitted has
+   * neither, and one submitted by an account since deleted still carries the
+   * literal `User #<id>` here rather than nothing. An account holding no name
+   * falls back to its email.
+   *
+   * It is resolved from the `users` table, which is why it exists at all: these
+   * stamps are user ids, and the employee lookup a screen would otherwise reach
+   * for is keyed by a different sequence, so it misses for most of them and
+   * names the wrong person on a collision.
+   */
+  submittedByName?: string;
   /** Timestamp the invoice was submitted, ISO-8601 (server-set). */
   submittedAt?: string;
   /** Id of the user who approved the invoice (server-set). */
   approvedBy?: number;
+  /**
+   * Display name of the user in {@link approvedBy}, resolved server-side
+   * (server-set). Same contract as {@link submittedByName}: present with the
+   * id, absent without it.
+   */
+  approvedByName?: string;
   /** Timestamp the invoice was approved, ISO-8601 (server-set). */
   approvedAt?: string;
   /** Id of the user who recorded the latest payment (server-set). */
   paymentRecordedBy?: number;
+  /**
+   * Display name of the user in {@link paymentRecordedBy}, resolved server-side
+   * (server-set). Same contract as {@link submittedByName}: present with the
+   * id, absent without it.
+   */
+  paymentRecordedByName?: string;
   /** UUID of the ledger journal entry posted on approval (server-set). */
   journalEntryId?: string;
   /** UUID of the reversal journal entry posted on cancellation (server-set). */
@@ -327,10 +358,13 @@ export function parseConstructionInvoice(json: unknown): ConstructionInvoice {
     notes: raw.notes ?? undefined,
     termsAndConditions: raw.termsAndConditions ?? undefined,
     submittedBy: raw.submittedBy ?? undefined,
+    submittedByName: raw.submittedByName ?? undefined,
     submittedAt: raw.submittedAt ?? undefined,
     approvedBy: raw.approvedBy ?? undefined,
+    approvedByName: raw.approvedByName ?? undefined,
     approvedAt: raw.approvedAt ?? undefined,
     paymentRecordedBy: raw.paymentRecordedBy ?? undefined,
+    paymentRecordedByName: raw.paymentRecordedByName ?? undefined,
     journalEntryId: raw.journalEntryId ?? undefined,
     reversalJournalEntryId: raw.reversalJournalEntryId ?? undefined,
     arInvoiceId: raw.arInvoiceId ?? undefined,
