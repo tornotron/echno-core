@@ -40,6 +40,7 @@ import { createMaterialToJson } from './materials/material-create';
 import { updateMaterialToJson } from './materials/material-update';
 import { createTaskToJson } from './task/task-create';
 import { updateTaskToJson } from './task/task-update';
+import { TaskStatus } from './task/task-status';
 import { createIssueToJson } from './issue/issue-create';
 import { updateIssueToJson } from './issue/issue-update';
 import { IssueType } from './issue/issue-type';
@@ -112,13 +113,13 @@ describe('a task carries no priority to the backend', () => {
       // the update switch in echno-backend#606 after years of being dropped,
       // and it is the line directly below the one being removed.
       assigneeIds: [8, 9],
-      status: 'in-progress',
+      status: TaskStatus.onGoing,
       progress: 40,
     });
 
     expect(payload).not.toHaveProperty('priority');
     expect(payload.assigneeIds).toEqual([8, 9]);
-    expect(payload.status).toBe('in-progress');
+    expect(payload.status).toBe(TaskStatus.onGoing);
     expect(payload.progress).toBe(40);
     expect(payload.title).toBe('Pour the raft slab');
     expect(payload.projectId).toBe(3);

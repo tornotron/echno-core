@@ -46,6 +46,7 @@
     "build": "tsc",
     "dev": "tsc --watch",
     "typecheck": "tsc --noEmit",
+    "typecheck:tests": "tsc --noEmit -p tsconfig.test.json",
     "test": "bun test",
     "test:coverage": "bun test --coverage",
     "api:snapshot": "bun scripts/api-snapshot.ts",
@@ -64,6 +65,7 @@
     "react": ">=18"
   },
   "devDependencies": {
+    "@types/bun": "^1.4.0",
     "@types/node": "^25.9.1",
     "@types/react": "^19.2.16",
     "typedoc": "^0.28.20",
