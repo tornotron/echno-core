@@ -50,7 +50,14 @@ export interface UpdateTaskRequest {
   /** Replacement assignee list. */
   assigneeIds?: number[];
 
-  /** New priority bucket. Lives only on the request DTO. */
+  /**
+   * Not applied. There is no priority column on `Task`, no field on
+   * `TaskUpdateFieldsDto`, and no control anywhere in the client that sets
+   * one. `TaskService` names it in the comment above its `default` branch as
+   * a key echno-core sends that the endpoint has no field for.
+   *
+   * @deprecated The value is ignored. Stop passing it.
+   */
   priority?: string;
 }
 
@@ -81,7 +88,6 @@ export function updateTaskToJson(
   if (dto.progress !== undefined) payload.progress = dto.progress;
   if (dto.tags !== undefined) payload.tags = dto.tags;
   if (dto.assigneeIds !== undefined) payload.assigneeIds = dto.assigneeIds;
-  if (dto.priority !== undefined) payload.priority = dto.priority;
 
   return payload;
 }
