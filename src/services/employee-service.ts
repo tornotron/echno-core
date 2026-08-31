@@ -38,6 +38,7 @@ import {
   UpdateEmployeeRequest,
   updateEmployeeToJson,
 } from '../types/employee/employee-update';
+import { EmployeeStatus } from '../types/employee/employee-status';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ApiResponse = any;
@@ -262,24 +263,38 @@ export const employeeService = {
   /**
    * Provisions a new employee record for a user joining an organization.
    *
-   * `POST /employee/web/joinOrganization/{userId}/{organizationId}` →
-   * `EmployeeDto` (full).
+   * `POST /employee/web/joinOrganization/userId/{userId}/organizationId/{organizationId}`
+   * → `EmployeeDto` (full).
    *
    * This is the only employee-create code path the backend actually
    * supports today.
    *
+   * The path segments are named rather than bare. This package used to send
+   * `/joinOrganization/{userId}/{organizationId}`, which is the shape
+   * `EmployeeController` publishes on the non-web prefix; `EmployeeControllerWeb`
+   * spells both ids out, so every call 404'd. Checked against the controller's
+   * own mapping rather than against a status code, since an unmatched path
+   * behind Spring Security answers 401 exactly as a real one does.
+   *
+   * `status` is sent because `EmployeeJoinOrgDto` marks it required. The
+   * backend field also carries a default of `active`, so an omitted value bound
+   * to the same thing, but the document says required and a client that reads
+   * the document has to be able to satisfy it.
+   *
    * @param userId - Surrogate ID of the user joining.
    * @param organizationId - Surrogate ID of the target organization.
+   * @param status - Employment status the new record starts in.
    * @returns The newly-created {@link Employee} record.
    * @throws {ApiError} On non-2xx transport responses or parse failures (status 422).
    */
   async joinOrganization(
     userId: number,
-    organizationId: number
+    organizationId: number,
+    status: EmployeeStatus = EmployeeStatus.active
   ): Promise<Employee> {
     const data = await api.post<ApiResponse>(
-      `/employee/web/joinOrganization/${userId}/${organizationId}`,
-      {}
+      `/employee/web/joinOrganization/userId/${userId}/organizationId/${organizationId}`,
+      { status }
     );
     return safeParseEmployee(data);
   },

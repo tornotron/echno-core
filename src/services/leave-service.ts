@@ -736,15 +736,29 @@ export const leaveService = {
   /**
    * Withdraws a pending (already-submitted) leave request.
    *
-   * `POST /leave-requests/web/withdraw?requestId={requestId}`. The response body
-   * is discarded.
+   * `POST /leave-requests/web/employeeId/{employeeId}/withdraw?requestId={requestId}`.
+   * The response body is discarded.
+   *
+   * `employeeId` is a path variable rather than a query parameter because
+   * `@PreAuthorize("@orgSecurity.isSelfOrHasAnyOrgRole(#employeeId, ...)")`
+   * reads it from the path, and without it the request does not reach the
+   * mapping at all. This package used to post to
+   * `/leave-requests/web/withdraw`, which no controller publishes, so every
+   * withdrawal 404'd. Checked against the controller's own mapping rather than
+   * against a status code, since an unmatched path behind Spring Security
+   * answers 401 exactly as a real one does.
    *
    * @param requestId - Surrogate id of the request.
+   * @param employeeId - Surrogate id of the employee the request belongs to.
    * @returns Resolves once the request is withdrawn.
    * @throws {ApiError} On non-2xx responses.
    */
-  async withdrawRequest(requestId: number): Promise<void> {
-    await api.post(`/leave-requests/web/withdraw`, {}, { requestId });
+  async withdrawRequest(requestId: number, employeeId: number): Promise<void> {
+    await api.post(
+      `/leave-requests/web/employeeId/${employeeId}/withdraw`,
+      {},
+      { requestId }
+    );
   },
 
   /**

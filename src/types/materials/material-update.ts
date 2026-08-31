@@ -30,13 +30,43 @@ export interface UpdateMaterialRequest {
   /** Applicable GST rate as a percentage (e.g. `18.00`). */
   gstRate?: number | null;
 
-  /** Opening stock baseline. */
+  /**
+   * Not sent. `MaterialUpdateDto` declares none of the four coordinates of the
+   * opening balance, and the asymmetry with creation is deliberate rather than
+   * an oversight: they position the single `OPENING_BALANCE` inventory
+   * transaction the material is created with, not editable catalogue
+   * attributes. Correcting an opening balance is a stock adjustment, which is
+   * its own endpoint and its own audit trail. See echno-core#57.
+   *
+   * @deprecated The value is ignored. Adjust stock through the stock-adjustment
+   * endpoint instead.
+   */
   openingStock?: number | null;
 
-  /** Surrogate ID of the default storage location. */
+  /**
+   * Not sent. `MaterialUpdateDto` declares none of the four coordinates of the
+   * opening balance, and the asymmetry with creation is deliberate rather than
+   * an oversight: they position the single `OPENING_BALANCE` inventory
+   * transaction the material is created with, not editable catalogue
+   * attributes. Correcting an opening balance is a stock adjustment, which is
+   * its own endpoint and its own audit trail. See echno-core#57.
+   *
+   * @deprecated The value is ignored. Adjust stock through the stock-adjustment
+   * endpoint instead.
+   */
   storageLocationId?: number | null;
 
-  /** Surrogate ID of an associated project. */
+  /**
+   * Not sent. `MaterialUpdateDto` declares none of the four coordinates of the
+   * opening balance, and the asymmetry with creation is deliberate rather than
+   * an oversight: they position the single `OPENING_BALANCE` inventory
+   * transaction the material is created with, not editable catalogue
+   * attributes. Correcting an opening balance is a stock adjustment, which is
+   * its own endpoint and its own audit trail. See echno-core#57.
+   *
+   * @deprecated The value is ignored. Adjust stock through the stock-adjustment
+   * endpoint instead.
+   */
   projectId?: number | null;
 
   /** Minimum order quantity for procurement. */
@@ -54,7 +84,20 @@ export interface UpdateMaterialRequest {
   /** Threshold at which a reorder is triggered. */
   reorderLevel?: number;
 
-  /** Cost per `unit`. */
+  /**
+   * Not sent. `MaterialUpdateDto` declares none of the four coordinates of the
+   * opening balance, and the asymmetry with creation is deliberate rather than
+   * an oversight: they position the single `OPENING_BALANCE` inventory
+   * transaction the material is created with, not editable catalogue
+   * attributes. Correcting an opening balance is a stock adjustment, which is
+   * its own endpoint and its own audit trail. See echno-core#57.
+   *
+   * @deprecated The value is ignored. Adjust stock through the stock-adjustment
+   * endpoint instead.
+   *
+   * The contract check hints that this means `unit`. It does not: `unit` is the
+   * unit of measure and is a separate field that is still sent.
+   */
   unitCost?: number;
 
   /**
@@ -108,17 +151,11 @@ export function updateMaterialToJson(
     ...(dto.description !== undefined && { description: dto.description }),
     ...(dto.hsn !== undefined && { hsn: dto.hsn }),
     ...(dto.gstRate !== undefined && { gstRate: dto.gstRate }),
-    ...(dto.openingStock !== undefined && { openingStock: dto.openingStock }),
-    ...(dto.storageLocationId !== undefined && {
-      storageLocationId: dto.storageLocationId,
-    }),
-    ...(dto.projectId !== undefined && { projectId: dto.projectId }),
     ...(dto.moq !== undefined && { moq: dto.moq }),
     ...(dto.minStock !== undefined && { minStock: dto.minStock }),
     ...(dto.maxStock !== undefined && { maxStock: dto.maxStock }),
     ...(dto.safetyStock !== undefined && { safetyStock: dto.safetyStock }),
     ...(dto.reorderLevel !== undefined && { reorderLevel: dto.reorderLevel }),
-    ...(dto.unitCost !== undefined && { unitCost: dto.unitCost }),
     ...(dto.ltc !== undefined && { ltc: dto.ltc }),
   };
 }

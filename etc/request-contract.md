@@ -12,35 +12,20 @@ Write calls in `src/services`: 138
 
 | outcome | calls |
 | --- | --- |
-| checked | 87 |
-| sends nothing | 30 |
+| checked | 88 |
+| sends nothing | 31 |
 | endpoint accepts any field name | 0 |
 | endpoint documents no request body | 0 |
-| endpoint not in the document | 4 |
+| endpoint not in the document | 2 |
 | not readable | 17 |
 
-## Findings (20)
+## Findings (5)
 
-- src/services/employee-service.ts:226  POST /api/v1/employee/web  is not an endpoint in the document
-- src/services/employee-service.ts:246  PATCH /api/v1/employee/web/{id}  sends "address", which is not a field of EmployeeUpdateFieldsDto (did you mean "emailAddress"?)
-- src/services/employee-service.ts:246  PATCH /api/v1/employee/web/{id}  sends "experience", which is not a field of EmployeeUpdateFieldsDto
-- src/services/employee-service.ts:246  PATCH /api/v1/employee/web/{id}  sends "gender", which is not a field of EmployeeUpdateFieldsDto
-- src/services/employee-service.ts:246  PATCH /api/v1/employee/web/{id}  sends "organizationId", which is not a field of EmployeeUpdateFieldsDto
-- src/services/employee-service.ts:246  PATCH /api/v1/employee/web/{id}  sends "qualification", which is not a field of EmployeeUpdateFieldsDto
-- src/services/employee-service.ts:246  PATCH /api/v1/employee/web/{id}  sends "skills", which is not a field of EmployeeUpdateFieldsDto
-- src/services/employee-service.ts:280  POST /api/v1/employee/web/joinOrganization/{}/{}  is not an endpoint in the document
+- src/services/employee-service.ts:227  POST /api/v1/employee/web  is not an endpoint in the document
 - src/services/issue-comment-service.ts:156  PATCH /api/v1/issues/comments/web/{}  is not an endpoint in the document
 - src/services/issue-service.ts:266  POST /api/v1/issues/web  sends "priority", which is not a field of IssueCreationDto
 - src/services/issue-service.ts:302  PATCH /api/v1/issues/web/{id}  sends "priority", which is not a field of IssueUpdateFieldsDto
 - src/services/leave-service.ts:518  POST /api/v1/leave-requests/web  sends "employeeId", which is not a field of LeaveRequestCreationDto
-- src/services/leave-service.ts:747  POST /api/v1/leave-requests/web/withdraw  is not an endpoint in the document
-- src/services/materials-service.ts:409  PATCH /api/v1/materials/web/{id}  sends "openingStock", which is not a field of MaterialUpdateDto
-- src/services/materials-service.ts:409  PATCH /api/v1/materials/web/{id}  sends "projectId", which is not a field of MaterialUpdateDto
-- src/services/materials-service.ts:409  PATCH /api/v1/materials/web/{id}  sends "storageLocationId", which is not a field of MaterialUpdateDto
-- src/services/materials-service.ts:409  PATCH /api/v1/materials/web/{id}  sends "unitCost", which is not a field of MaterialUpdateDto (did you mean "unit"?)
-- src/services/organization-service.ts:103  POST /api/v1/organization/web  sends "isActive", which is not a field of OrganizationCreationDto
-- src/services/organization-service.ts:131  PATCH /api/v1/organization/web/{id}  sends "isActive", which is not a field of OrganizationUpdateFieldsDto
-- src/services/task-service.ts:236  PATCH /api/v1/tasks/web/{id}  sends "projectId", which is not a field of TaskUpdateFieldsDto
 
 ## Call sites this pass cannot read (17)
 
@@ -63,4 +48,4 @@ go unnoticed.
 - src/services/labour-service.ts:118  POST /api/v1/labour/web  (body is a value this pass cannot follow)
 - src/services/labour-service.ts:133  PATCH /api/v1/labour/web/{}  (body is a value this pass cannot follow)
 - src/services/leave-service.ts:445  POST /api/v1/leave-balances/web/adjust  (body is a value this pass cannot follow)
-- src/services/leave-service.ts:791  POST /api/v1/leave-requests/web/calculate-days  (body is a value this pass cannot follow)
+- src/services/leave-service.ts:805  POST /api/v1/leave-requests/web/calculate-days  (body is a value this pass cannot follow)

@@ -20,7 +20,14 @@ export interface UpdateOrganizationRequest {
   organizationPhone?: string;
   /** Updated website URL. Pass an empty string to clear the field. */
   organizationWebsite?: string;
-  /** Updated active state. */
+  /**
+   * Not sent. `OrganizationUpdateFieldsDto` has no such field, and the update
+   * switch names this key in its `default` branch as the one echno-core sends
+   * that the endpoint cannot apply. The flag is being removed rather than wired
+   * up; the argument is on the create request and on echno-core#57.
+   *
+   * @deprecated The value is ignored. Stop passing it.
+   */
   isActive?: boolean;
 }
 
@@ -28,7 +35,8 @@ export interface UpdateOrganizationRequest {
  * Serializes an {@link UpdateOrganizationRequest} for transmission to the backend.
  *
  * Only fields that are explicitly set (not `undefined`) are included in the
- * returned payload.
+ * returned payload. `isActive` is deliberately left out: the endpoint has no
+ * such field.
  *
  * @param dto - The update request to serialize.
  * @returns A plain object containing only the fields to update.
@@ -47,6 +55,5 @@ export function updateOrganizationToJson(
     payload.organizationPhone = dto.organizationPhone;
   if (dto.organizationWebsite !== undefined)
     payload.organizationWebsite = dto.organizationWebsite;
-  if (dto.isActive !== undefined) payload.isActive = dto.isActive;
   return payload;
 }

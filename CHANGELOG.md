@@ -5,6 +5,88 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
+## [v5.0.0] - 2026-09-01
+
+Fifteen findings off echno-core#57, taking the recorded count from **20 to 5**. Thirteen are keys
+this package put on the wire that the endpoint receiving it has no field for, and two are call
+sites addressing a real endpoint at a path no controller publishes.
+
+Breaking in one place only, and only because a route cannot be corrected without it:
+`leaveService.withdrawRequest` and `useWithdrawLeaveRequest` now take the employee id as well as
+the request id. Everything else is a deprecation, so a caller passing one of the thirteen keys
+still compiles and now sends a body the endpoint can read.
+
+### Removed
+
+- **`leaveService.withdrawRequest(requestId)` is now `withdrawRequest(requestId, employeeId)`**,
+  and **`useWithdrawLeaveRequest` takes `{ requestId, employeeId }`** rather than a bare number.
+
+  The old call posted to `/leave-requests/web/withdraw`, which no controller publishes, so every
+  withdrawal 404'd. The mapping is `POST /leave-requests/web/employeeId/{employeeId}/withdraw`
+  with `requestId` as a query parameter, and the employee id has to be in the path because
+  `@PreAuthorize("@orgSecurity.isSelfOrHasAnyOrgRole(#employeeId, …)")` reads it from there. There
+  is no way to send it without taking it. Checked against the controller's own mapping rather than
+  by calling it: a path Spring does not route answers 401 behind Spring Security exactly as a real
+  one does.
+
+  The hook's balance invalidation is scoped to that employee now that the id is available, instead
+  of emptying every employee's balances under the `leave/balances` namespace.
+
+### Fixed
+
+- **`employeeService.joinOrganization` reaches its endpoint.** It posted to
+  `/employee/web/joinOrganization/{userId}/{organizationId}`, which is the shape the bare
+  `/employee` controller publishes; `EmployeeControllerWeb` names both segments,
+  `/joinOrganization/userId/{userId}/organizationId/{orgId}`. The method's own doc comment called
+  this "the only employee-create code path the backend actually supports today", so it was worth
+  getting right. It also now sends `{ status }`, which `EmployeeJoinOrgDto` marks required, with an
+  optional third argument defaulting to `EmployeeStatus.active`. Adding the argument is not
+  breaking.
+
+### Deprecated
+
+Thirteen request properties stay on their interfaces, optional and deprecated, and are no longer
+serialized. Spring leaves `FAIL_ON_UNKNOWN_PROPERTIES` off, so each of them came back 200 with the
+value discarded; nothing that worked stops working.
+
+- **Organization `isActive`, on create and update.** The flag is being removed rather than wired
+  up. `Organization.isActive` has two writers, both an unconditional `true`, and no reader anywhere
+  in the backend; the column is nullable with no default, so every seeded row is `NULL` and any
+  check would have to read `NULL` as active, leaving the flag meaningful only in a `false` case
+  nothing can produce. Enforcing it would put a self-service lockout on the tenant behind
+  `system-admin` and `hr-admin`, both roles inside the organization being locked out. Tenant
+  suspension, when it is wanted, is the subscription record, which already carries the eight states
+  a boolean cannot express.
+
+- **Employee `gender`, `address`, `qualification`, `skills` and `experience`.** Real columns, on
+  `User` rather than on `Employee`, and `PATCH /user/web/{id}` accepts all five under those exact
+  names. The repair is to send them to the endpoint that already has them, which is a change in
+  echno-web.
+
+- **Employee `organizationId`.** Unlike the five above this one has no other home. An employee's
+  organization is fixed at creation and the tenant filter derives it from the caller's token, so a
+  backend reading this off the body would be honouring a tenant the caller named for themselves.
+
+- **Material `openingStock`, `storageLocationId`, `projectId` and `unitCost`.** Present on creation
+  and absent from `MaterialUpdateDto`, and the asymmetry is deliberate: the four position the single
+  `OPENING_BALANCE` inventory transaction a material is created with, rather than being editable
+  catalogue attributes. Correcting an opening balance is a stock adjustment, with its own endpoint
+  and its own audit trail. The contract tool's hint that `unitCost` means `unit` is wrong; `unit` is
+  the unit of measure, is a different field, and is still sent.
+
+- **Task `projectId`.** Named in `TaskService`'s own `default` branch, with no screen behind it:
+  nothing in echno-web moves a task between projects.
+
+### Still open on #57
+
+Five findings, none of them fixable here alone. Issue `priority` on create and update stays,
+because the issue form has a real priority control and the decision is for the backend to grow the
+column. Leave `employeeId` on create stays, because the query argument reads it. `POST
+/employee/web` and `PATCH /issues/comments/web/{id}` are genuinely absent — the first has its
+`@PostMapping` commented out in `EmployeeControllerWeb`, the second was never written, that
+controller publishing only `POST` and `DELETE` — and each is a decision about whether the endpoint
+should exist rather than a path this package can correct.
+
 ## [v4.3.0] - 2026-09-01
 
 The client half of echno-backend#652, which built the low-stock query the product never had. The

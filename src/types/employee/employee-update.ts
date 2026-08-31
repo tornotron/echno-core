@@ -28,16 +28,37 @@ export interface UpdateEmployeeRequest {
   /** New phone; serialised as `phoneNumber`. */
   phone?: string;
 
-  /** Updated gender. */
+  /**
+   * Not sent. `EmployeeUpdateFieldsDto` has no such field, and the update
+   * switch names this key in its `default` branch. It is a real column on
+   * `User` rather than on `Employee`, so the place to change it is
+   * `PATCH /user/web/{id}`, which accepts it. See echno-core#57.
+   *
+   * @deprecated The value is ignored here. Update it through the user endpoint.
+   */
   gender?: string;
 
   /** New date of birth. */
   dateOfBirth?: Date;
 
-  /** New postal address. */
+  /**
+   * Not sent. `EmployeeUpdateFieldsDto` has no such field, and the update
+   * switch names this key in its `default` branch. It is a real column on
+   * `User` rather than on `Employee`, so the place to change it is
+   * `PATCH /user/web/{id}`, which accepts it. See echno-core#57.
+   *
+   * @deprecated The value is ignored here. Update it through the user endpoint.
+   */
   address?: string;
 
-  /** New qualification. */
+  /**
+   * Not sent. `EmployeeUpdateFieldsDto` has no such field, and the update
+   * switch names this key in its `default` branch. It is a real column on
+   * `User` rather than on `Employee`, so the place to change it is
+   * `PATCH /user/web/{id}`, which accepts it. See echno-core#57.
+   *
+   * @deprecated The value is ignored here. Update it through the user endpoint.
+   */
   qualification?: string;
 
   /** Updated employee code. */
@@ -54,7 +75,15 @@ export interface UpdateEmployeeRequest {
    */
   joiningDate?: Date | null;
 
-  /** Reassigned owning organization ID. */
+  /**
+   * Not sent. `EmployeeUpdateFieldsDto` has no such field, and unlike the five
+   * profile keys above there is no other endpoint that takes it either: an
+   * employee's organization is fixed at creation and the tenant filter derives
+   * it from the caller's token, so moving one between organizations is not an
+   * operation the API offers. See echno-core#57.
+   *
+   * @deprecated The value is ignored. Stop passing it.
+   */
   organizationId?: number;
 
   /**
@@ -75,10 +104,24 @@ export interface UpdateEmployeeRequest {
   /** New employment {@link EmployeeStatus}. */
   status?: EmployeeStatus;
 
-  /** Updated skills list. */
+  /**
+   * Not sent. `EmployeeUpdateFieldsDto` has no such field, and the update
+   * switch names this key in its `default` branch. It is a real column on
+   * `User` rather than on `Employee`, so the place to change it is
+   * `PATCH /user/web/{id}`, which accepts it. See echno-core#57.
+   *
+   * @deprecated The value is ignored here. Update it through the user endpoint.
+   */
   skills?: string[];
 
-  /** Updated years of experience. */
+  /**
+   * Not sent. `EmployeeUpdateFieldsDto` has no such field, and the update
+   * switch names this key in its `default` branch. It is a real column on
+   * `User` rather than on `Employee`, so the place to change it is
+   * `PATCH /user/web/{id}`, which accepts it. See echno-core#57.
+   *
+   * @deprecated The value is ignored here. Update it through the user endpoint.
+   */
   experience?: number;
 }
 
@@ -89,6 +132,11 @@ export interface UpdateEmployeeRequest {
  * Only fields that are not `undefined` are emitted, preserving partial-update
  * semantics. Field renames (`name → employeeName`, etc.) and
  * salary-as-`Double` coercion mirror {@link createEmployeeToJson}.
+ *
+ * Six keys the interface still accepts are deliberately not emitted, because
+ * `EmployeeUpdateFieldsDto` declares none of them: `gender`, `address`,
+ * `qualification`, `skills` and `experience`, which belong to
+ * `PATCH /user/web/{id}`, and `organizationId`, which belongs to no endpoint.
  *
  * @param dto - The partial update payload.
  * @returns A plain object containing only the explicitly set fields.
@@ -101,12 +149,8 @@ export function updateEmployeeToJson(
   if (dto.name !== undefined) payload.employeeName = dto.name;
   if (dto.email !== undefined) payload.emailAddress = dto.email;
   if (dto.phone !== undefined) payload.phoneNumber = dto.phone;
-  if (dto.gender !== undefined) payload.gender = dto.gender;
   if (dto.dateOfBirth !== undefined)
     payload.dateOfBirth = toLocalDateAtMidnight(dto.dateOfBirth);
-  if (dto.address !== undefined) payload.address = dto.address;
-  if (dto.qualification !== undefined)
-    payload.qualification = dto.qualification;
   if (dto.employeeId !== undefined) payload.employeeId = dto.employeeId;
   if (dto.designation !== undefined) payload.designation = dto.designation;
   if (dto.department !== undefined) payload.department = dto.department;
@@ -114,8 +158,6 @@ export function updateEmployeeToJson(
     payload.joiningDate =
       dto.joiningDate === null ? null : toLocalDateAtMidnight(dto.joiningDate);
   }
-  if (dto.organizationId !== undefined)
-    payload.organizationId = dto.organizationId;
   if (dto.salary !== undefined) {
     payload.salary =
       dto.salary === null
@@ -125,8 +167,6 @@ export function updateEmployeeToJson(
   if (dto.managerId !== undefined) payload.managerId = dto.managerId;
   if (dto.shiftTimingId !== undefined) payload.shiftTimingId = dto.shiftTimingId;
   if (dto.status !== undefined) payload.status = dto.status;
-  if (dto.skills !== undefined) payload.skills = dto.skills;
-  if (dto.experience !== undefined) payload.experience = dto.experience;
 
   return payload;
 }
