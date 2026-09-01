@@ -103,3 +103,32 @@ export const useSiteTransfersByReceivingProject = (projectId: number) =>
   });
 
 export { siteTransferKeys } from './keys';
+
+/**
+ * Fetches one page of a site transfer's status trail, newest first.
+ *
+ * The trail says how each state came about, which is the point of reading it:
+ * a receipt or a cancellation names the person who made it, while a `BASELINE`
+ * entry is an observation the trail opened with and a `SYSTEM` entry is a
+ * correction nobody decided. Use `isPersonsChange` to tell the two apart
+ * rather than rendering every entry as somebody's act.
+ *
+ * Reading the trail needs the `system-admin` role in the current tenant. A
+ * caller without it gets a 403, which the consumer should read as a trail it
+ * may not see rather than as a transfer with no history.
+ *
+ * @param id - Surrogate ID of the transfer. Falsy defers the query.
+ * @param pageNo - Zero-based page number. Defaults to `0`.
+ * @param pageSize - Entries per page. Defaults to `20`.
+ * @returns A TanStack `UseQueryResult` wrapping a `PagedStatusTransition`.
+ */
+export const useSiteTransferStatusHistory = (
+  id: number,
+  pageNo = 0,
+  pageSize = 20
+) =>
+  useQuery({
+    queryKey: siteTransferKeys.statusHistory(id, pageNo, pageSize),
+    queryFn: () => siteTransfersService.getStatusHistory(id, pageNo, pageSize),
+    enabled: !!id,
+  });

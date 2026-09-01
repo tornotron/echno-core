@@ -25,7 +25,15 @@ import {
   CreateSiteTransferRequest,
   createSiteTransferToJson,
   parseSiteTransfer,
+  ReceiveSiteTransferRequest,
+  receiveSiteTransferToJson,
+  CancelSiteTransferRequest,
+  cancelSiteTransferToJson,
 } from '../types/site-transfers';
+import {
+  StatusTransition,
+  parseStatusTransition,
+} from '../types/history';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Raw = any;
@@ -40,15 +48,16 @@ type Raw = any;
  *   GET    /site-transfers/web/status/{status}                                → SiteTransferDto[]  (full; filtered server-side by status bucket)
  *   GET    /site-transfers/web/sending-project/{projectId}                    → SiteTransferDto[]  (full; filtered server-side by sending project)
  *   GET    /site-transfers/web/receiving-project/{projectId}                  → SiteTransferDto[]  (full; filtered server-side by receiving project)
- *   PATCH  /site-transfers/web/{id}/status?status                             → ApiResponse        (ack per spec; status comes from a query-string parameter, body empty)
+ *   PATCH  /site-transfers/web/{id}/status?status                             → 400 always        (refuses every status since echno-backend#660)
+ *   POST   /site-transfers/web/{id}/receive                                   → SiteTransferDto    (full; the receiving site's statement of what arrived)
+ *   POST   /site-transfers/web/{id}/cancel                                    → SiteTransferDto    (full; reverses the outbound leg)
+ *   GET    /site-transfers/web/{id}/status-history?pageNo&pageSize            → Page<StatusTransitionDto>
  *   DELETE /site-transfers/web/{id}                                           → (not implemented server-side)
  *
- * The PATCH status endpoint's spec-defined response is `ApiResponse`,
- * but {@link siteTransfersService.updateStatus} parses it through
- * {@link parseSiteTransfer} on the tolerant assumption the server may
- * upgrade to returning the full entity. The status mutation hook
- * ({@link useUpdateSiteTransferStatus}) guards against both shapes at
- * runtime.
+ * The PATCH status endpoint now refuses everything it is handed and names
+ * its replacements. {@link siteTransfersService.updateStatus} is kept so an
+ * existing caller gets an answer rather than a compile error, but it is
+ * deprecated and there is no payload that makes it succeed.
  *
  * Backend has no DELETE endpoint —
  * {@link useDeleteSiteTransfer} fails fast rather than issuing a
@@ -88,6 +97,65 @@ function safeParseSiteTransfers(data: Raw[]): SiteTransfer[] {
     logger.error('Failed to parse site transfers:', error);
     throw new ApiError('Failed to process site transfers data.', 422);
   }
+}
+
+/**
+ * A parsed page of status-trail entries, mirroring the Spring
+ * `Page<StatusTransitionDto>` envelope.
+ */
+export interface PagedStatusTransition {
+  /** The entries on this page, newest first. */
+  content: StatusTransition[];
+  /** Total entries across all pages. */
+  totalElements: number;
+  /** Total number of pages. */
+  totalPages: number;
+  /** 0-based page index. */
+  number: number;
+  /** Page size. */
+  size: number;
+}
+
+/**
+ * Normalises a Spring `Page<StatusTransitionDto>` body (or a bare array, for
+ * resilience) into a {@link PagedStatusTransition}.
+ *
+ * @param data - The raw response body.
+ * @param pageSize - The size that was asked for, used when the body carries none.
+ * @returns The parsed page.
+ * @throws {ApiError} When any entry fails parsing (HTTP 422).
+ */
+function safeParseStatusHistory(
+  data: Raw,
+  pageSize: number
+): PagedStatusTransition {
+  const parseAll = (rows: Raw[]): StatusTransition[] => {
+    if (!Array.isArray(rows)) return [];
+    try {
+      return rows.map((row) => parseStatusTransition(row));
+    } catch (error) {
+      logger.error('Failed to parse site transfer status history:', error);
+      throw new ApiError('Failed to process site transfer history.', 422);
+    }
+  };
+
+  if (Array.isArray(data)) {
+    const content = parseAll(data);
+    return {
+      content,
+      totalElements: content.length,
+      totalPages: 1,
+      number: 0,
+      size: pageSize,
+    };
+  }
+  return {
+    content: parseAll(data?.content ?? []),
+    totalElements: data?.totalElements ?? 0,
+    totalPages: data?.totalPages ?? 0,
+    number: data?.number ?? 0,
+    size: data?.size ?? pageSize,
+  };
 }
 
 export const siteTransfersService = {
@@ -207,18 +275,21 @@ export const siteTransfersService = {
    * dedicated status endpoint
    * (`PATCH /site-transfers/web/{id}/status?status=…`).
    *
-   * The spec-defined response is `ApiResponse` (ack only), but this
-   * method parses the response through {@link parseSiteTransfer} in
-   * case the backend upgrades to returning the full entity. The
-   * status mutation hook ({@link useUpdateSiteTransferStatus})
-   * branches on `data.id` at runtime to handle either shape.
+   * Always refused. It used to assign whatever status it was handed and
+   * move no stock, which is how a transfer could read `COMPLETED` with
+   * nothing confirmed at the far end. The route is kept server-side so an
+   * existing client gets an answer naming its replacement rather than a 404.
    *
    * @param id - Surrogate ID of the transfer.
    * @param status - The new {@link SiteTransferStatus} value.
-   * @returns The updated {@link SiteTransfer} when the backend
-   *   returns a full entity, or a parsed-from-`ApiResponse` shape
-   *   that the mutation hook handles gracefully.
-   * @throws {ApiError} On a non-2xx response or parse failure.
+   * @returns Never resolves in practice.
+   * @throws {ApiError} Always, with a 400 naming the endpoint that does what
+   *   the caller wanted.
+   *
+   * @deprecated Since echno-backend#660 every state a transfer can hold
+   *   follows from a movement, so this endpoint refuses whatever it is given.
+   *   Record a delivery with {@link siteTransfersService.receive}, or abandon
+   *   one that never arrived with {@link siteTransfersService.cancel}.
    */
   async updateStatus(
     id: number,
@@ -230,6 +301,106 @@ export const siteTransfersService = {
       { status }
     );
     return safeParseSiteTransfer(data);
+  },
+
+  /**
+   * Records what the receiving site took delivery of
+   * (`POST /site-transfers/web/{id}/receive`).
+   *
+   * Posts the stock that actually arrived at the receiving project and
+   * location, writes each named line's received quantity, and lets the server
+   * derive the status from the arithmetic: every line met is
+   * {@link SiteTransferStatus.completed}, some received is
+   * {@link SiteTransferStatus.partiallyTransferred}, nothing received leaves
+   * it {@link SiteTransferStatus.pending}.
+   *
+   * Only a transfer that crosses a project boundary can be received. One
+   * between two stores on a single project had both of its legs written at
+   * creation and is refused here.
+   *
+   * Receiving less than was sent is accepted with no acknowledgement and
+   * leaves an open variance on the transfer. Receiving more is refused with a
+   * 400 naming the line and the figures, unless the payload sets
+   * {@link ReceiveSiteTransferRequest.allowOverReceipt}.
+   *
+   * @param id - Surrogate ID of the transfer.
+   * @param dto - What arrived.
+   * @returns The transfer as it now stands, with received and in-transit
+   *   quantities on every line.
+   * @throws {ApiError} On a non-2xx response or parse failure. A 400 whose
+   *   message names `allowOverReceipt` is the over-receipt refusal and is a
+   *   decision for the caller rather than a fault.
+   */
+  async receive(
+    id: number,
+    dto: ReceiveSiteTransferRequest
+  ): Promise<SiteTransfer> {
+    const data = await api.post<Raw>(
+      `/site-transfers/web/${id}/receive`,
+      receiveSiteTransferToJson(dto)
+    );
+    return safeParseSiteTransfer(data);
+  },
+
+  /**
+   * Abandons a transfer that never arrived
+   * (`POST /site-transfers/web/{id}/cancel`).
+   *
+   * Returns the whole sent quantity to the sending project and location it
+   * was drawn from, as a real movement on the ledger. Only a
+   * {@link SiteTransferStatus.pending} transfer can be cancelled.
+   *
+   * @param id - Surrogate ID of the transfer.
+   * @param dto - Why it is being abandoned. The reason is required.
+   * @returns The cancelled {@link SiteTransfer}.
+   * @throws {ApiError} On a non-2xx response or parse failure. A 400 says the
+   *   transfer is in some state other than `PENDING`, or that no reason was
+   *   given.
+   */
+  async cancel(
+    id: number,
+    dto: CancelSiteTransferRequest
+  ): Promise<SiteTransfer> {
+    const data = await api.post<Raw>(
+      `/site-transfers/web/${id}/cancel`,
+      cancelSiteTransferToJson(dto)
+    );
+    return safeParseSiteTransfer(data);
+  },
+
+  /**
+   * Reads a transfer's status trail
+   * (`GET /site-transfers/web/{id}/status-history`), newest first.
+   *
+   * Unlike a purchase order's receipt-driven move, a transfer reaching
+   * `PARTIALLY_TRANSFERRED` or `COMPLETED` is somebody's act, so those entries
+   * name the person who confirmed the delivery. A transfer raised before the
+   * trail existed carries a `BASELINE` entry naming the status it was observed
+   * to hold, and one raised before the two-step document existed may carry a
+   * `SYSTEM` entry recording that its status was corrected to match movements
+   * already posted. Those two are not somebody's act and
+   * {@link isPersonsChange} is how a screen tells them apart.
+   *
+   * Requires the `system-admin` role in the current tenant; a caller without
+   * it gets a 403, which is a trail they may not read rather than a trail that
+   * is empty.
+   *
+   * @param id - Surrogate ID of the transfer.
+   * @param pageNo - Zero-based page number. Defaults to `0`.
+   * @param pageSize - Entries per page. Defaults to `20`.
+   * @returns The page of {@link StatusTransition} entries and its metadata.
+   * @throws {ApiError} On a non-2xx response or parse failure.
+   */
+  async getStatusHistory(
+    id: number,
+    pageNo = 0,
+    pageSize = 20
+  ): Promise<PagedStatusTransition> {
+    const data = await api.get<Raw>(
+      `/site-transfers/web/${id}/status-history`,
+      { pageNo, pageSize }
+    );
+    return safeParseStatusHistory(data, pageSize);
   },
 
   /**

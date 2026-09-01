@@ -128,6 +128,10 @@ export * from './types/grn';
 export * from './services/grn-service';
 export * from './hooks/grn';
 
+// Status trails — the one shape every document with a lifecycle reports its
+// history in, shared by projects, purchase orders and site transfers.
+export * from './types/history';
+
 // Site Transfers
 export * from './types/site-transfers';
 export * from './services/site-transfers-service';

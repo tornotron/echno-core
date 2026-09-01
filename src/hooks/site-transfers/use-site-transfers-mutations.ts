@@ -18,32 +18,87 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { siteTransfersService } from '../../services/site-transfers-service';
 import { siteTransferKeys } from './keys';
+import { isSiteTransferListCache } from './cache-predicates';
 import { ApiError } from '../../lib/api/api-client';
 import {
   CreateSiteTransferRequest,
   SiteTransfer,
   SiteTransferStatus,
+  ReceiveSiteTransferRequest,
+  CancelSiteTransferRequest,
 } from '../../types/site-transfers';
 import { logger } from '../../lib/logger';
 import { materialsKeys } from '../materials';
 import { inventoryTransactionKeys } from '../inventory-transactions';
 
 /**
- * Matches every `SiteTransfer[]` list cache under the `site-transfers`
- * namespace — `lists()`, `paginated({...})`, `byStatus(s)`,
- * `bySendingProject(id)`, and `byReceivingProject(id)`. Excludes only
- * `detail(id)`, which is patched directly by ID.
+ * Applies a transfer the server has just returned to every cache that can hold
+ * it, and drops everything the movements it wrote have invalidated.
  *
- * @param query - The TanStack query whose key is being tested.
- * @returns `true` when the key belongs to a site-transfer list cache.
+ * Shared by the receipt and the cancellation because the two have identical
+ * cache consequences: both move the transfer's status, both write inventory
+ * movements against the lines' materials, and both append to the status trail.
+ *
+ * @param queryClient - The client to patch.
+ * @param transfer - The transfer as the server now reports it.
  */
-function isSiteTransferListCache(query: {
-  queryKey: ReadonlyArray<unknown>;
-}): boolean {
-  const key = query.queryKey;
-  return (
-    Array.isArray(key) && key[0] === 'site-transfers' && key[1] !== 'detail'
+function applyMovedTransfer(
+  queryClient: ReturnType<typeof useQueryClient>,
+  transfer: SiteTransfer
+): void {
+  queryClient.setQueryData(siteTransferKeys.detail(transfer.id), transfer);
+  queryClient.setQueriesData<SiteTransfer[]>(
+    { predicate: isSiteTransferListCache },
+    (old) => old?.map((t) => (t.id === transfer.id ? transfer : t))
   );
+
+  // The transfer has moved between byStatus buckets. setQueriesData only
+  // rewrites entries already cached in a list; the destination bucket has to
+  // refetch to pull it in.
+  queryClient.invalidateQueries({
+    predicate: (q) =>
+      Array.isArray(q.queryKey) &&
+      q.queryKey[0] === 'site-transfers' &&
+      q.queryKey[1] === 'status',
+  });
+
+  // The status moved, so the trail has a new entry. It is append-only and
+  // paged, so refetch rather than guess at the entry the server wrote.
+  queryClient.invalidateQueries({
+    queryKey: siteTransferKeys.statusHistories(transfer.id),
+  });
+
+  // Cross-namespace: both a receipt and a cancellation post real movements.
+  // MaterialWithStockDto is a different shape from anything a SiteTransfer
+  // carries, so only a refetch produces the new balances.
+  for (const item of transfer.items) {
+    if (item.materialId !== undefined) {
+      queryClient.invalidateQueries({
+        queryKey: materialsKeys.stock(item.materialId),
+      });
+    }
+  }
+  queryClient.invalidateQueries({ queryKey: inventoryTransactionKeys.all });
+}
+
+/**
+ * Drops the cached copy of a transfer whose mutation the server refused.
+ *
+ * Nothing was written, but the server has just read the transfer to judge the
+ * request, and the refusal is usually about a figure the client was reasoning
+ * from: an over-receipt is judged against what has already arrived, and a
+ * cancellation against whether anything has. Leaving the stale copy in place
+ * is how a page goes on offering an action the server has already refused, and
+ * how an acknowledgement gets given against figures that have since moved.
+ *
+ * @param queryClient - The client to invalidate against.
+ * @param id - Surrogate ID of the transfer the request named.
+ */
+function dropRefusedTransfer(
+  queryClient: ReturnType<typeof useQueryClient>,
+  id: number
+): void {
+  queryClient.invalidateQueries({ queryKey: siteTransferKeys.detail(id) });
 }
 
 /**
@@ -166,6 +221,12 @@ export const useCreateSiteTransfer = () => {
  * Transitions a site transfer to a new lifecycle state via the
  * dedicated status endpoint.
  *
+ * @deprecated Since echno-backend#660 this endpoint refuses every status it
+ *   is handed, so this hook can only ever reach its `onError`. A transfer is
+ *   moved on by recording what arrived ({@link useReceiveSiteTransfer}) or by
+ *   abandoning it in transit ({@link useCancelSiteTransfer}). Kept so an
+ *   existing caller still compiles while it migrates.
+ *
  * Backend response per spec: `ApiResponse` (ack only). The service
  * tolerantly parses the response through {@link parseSiteTransfer} in
  * case the backend upgrades to returning the full entity; this hook
@@ -279,5 +340,86 @@ export const useUpdateSiteTransferStatus = () => {
     },
     onError: (error) =>
       logger.error('Failed to update site transfer status:', error),
+  });
+};
+
+/**
+ * Records what the receiving site took delivery of, posting the stock that
+ * arrived and letting the server derive the transfer's new status.
+ *
+ * Backend response: `SiteTransferDto` (full, with `receivedQuantity` and
+ * `inTransitQuantity` on every line).
+ *
+ * Two refusals need different handling by the caller, and neither is a fault
+ * this hook can resolve on its own:
+ *
+ * - **Over-receipt** comes back as a 400 whose message names `allowOverReceipt`
+ *   along with the line and the figures. It is a decision to put to the person
+ *   filing the receipt, who resubmits the same payload with
+ *   {@link ReceiveSiteTransferRequest.allowOverReceipt} set.
+ * - **A shortfall is not refused at all** and needs no acknowledgement. The gap
+ *   comes back as each line's `inTransitQuantity`, an open variance a stock
+ *   adjustment closes.
+ *
+ * On success it applies the returned transfer to the detail and list caches,
+ * invalidates the byStatus buckets, the status trail, every line's material
+ * stock and the inventory-transactions namespace.
+ *
+ * On failure it drops the cached detail, so the next render reasons from what
+ * the server actually holds rather than from the figures that provoked the
+ * refusal.
+ *
+ * @returns A TanStack `UseMutationResult` whose mutate function accepts
+ *   `{ id: number; receipt: ReceiveSiteTransferRequest }`.
+ */
+export const useReceiveSiteTransfer = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      id,
+      receipt,
+    }: {
+      id: number;
+      receipt: ReceiveSiteTransferRequest;
+    }) => siteTransfersService.receive(id, receipt),
+    onSuccess: (transfer) => applyMovedTransfer(queryClient, transfer),
+    onError: (error: ApiError, { id }) => {
+      dropRefusedTransfer(queryClient, id);
+      logger.error('Failed to record a site transfer receipt:', error);
+    },
+  });
+};
+
+/**
+ * Abandons a transfer that never arrived, returning the whole sent quantity to
+ * the sending location.
+ *
+ * Backend response: `SiteTransferDto` (full), now
+ * {@link SiteTransferStatus.cancelled}.
+ *
+ * Only a {@link SiteTransferStatus.pending} transfer can be cancelled; any
+ * other state is refused with a 400. On failure the cached detail is dropped,
+ * because a refusal here usually means somebody else has received against the
+ * transfer since the page loaded, and the stale copy is exactly what would
+ * keep the cancel button on screen.
+ *
+ * @returns A TanStack `UseMutationResult` whose mutate function accepts
+ *   `{ id: number; cancellation: CancelSiteTransferRequest }`.
+ */
+export const useCancelSiteTransfer = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      id,
+      cancellation,
+    }: {
+      id: number;
+      cancellation: CancelSiteTransferRequest;
+    }) => siteTransfersService.cancel(id, cancellation),
+    onSuccess: (transfer) => applyMovedTransfer(queryClient, transfer),
+    onError: (error: ApiError, { id }) => {
+      dropRefusedTransfer(queryClient, id);
+      logger.error('Failed to cancel a site transfer:', error);
+    },
   });
 };

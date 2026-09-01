@@ -25,6 +25,8 @@ const SiteTransferItemResponseSchema = z.object({
   materialId: optionalNumericId,
   materialName: nullableString,
   sentQuantity: money,
+  receivedQuantity: money,
+  inTransitQuantity: money,
   transferValue: money,
   remarks: nullableString,
 });
@@ -47,6 +49,35 @@ export interface SiteTransferItem {
 
   /** Quantity dispatched from the sending location, in the material's unit. */
   sentQuantity: number;
+
+  /**
+   * Quantity recorded as having arrived at the receiving site.
+   *
+   * `null` while nobody has confirmed anything about this line, which is not
+   * the same as confirming that nothing came: a line received as zero holds
+   * `0` and says somebody looked. Render the two differently, or a transfer
+   * nobody has touched reads as a delivery that turned up empty.
+   *
+   * Read-only. It is written by `POST /site-transfers/web/{id}/receive` and
+   * never by a payload of the client's own.
+   */
+  receivedQuantity: number | null;
+
+  /**
+   * Sent minus received: what is neither at the sending site nor recorded as
+   * having reached the receiving one.
+   *
+   * On a {@link SiteTransferStatus.pending} transfer this is stock on a lorry.
+   * On a received one it is an **open variance** — the sending site is down
+   * the full sent quantity, the receiving site is up what arrived, and the
+   * difference is unaccounted for. The transfer writes no loss movement for
+   * it, deliberately: a loss written automatically is a stock correction
+   * nobody authorised. Show it as an open figure with a route to raise a stock
+   * adjustment naming the transfer; do not offer to write it off.
+   *
+   * Read-only, and the whole sent quantity while nothing has been confirmed.
+   */
+  inTransitQuantity: number;
 
   /**
    * Monetary value of `sentQuantity` at the time of dispatch,
@@ -98,7 +129,9 @@ export function createSiteTransferItemToJson(
  * {@link SiteTransferItem}.
  *
  * Numeric/string fields fall back to safe defaults (`0` / `''`) when
- * absent; optional fields resolve to `undefined`.
+ * absent; optional fields resolve to `undefined`. `receivedQuantity` is the
+ * exception: it stays `null` when absent, because "nobody has confirmed this
+ * line" is a distinct statement from "nothing arrived".
  *
  * @param json - The raw JSON object from the backend.
  * @returns The parsed {@link SiteTransferItem}.
@@ -113,6 +146,16 @@ export function parseSiteTransferItem(json: unknown): SiteTransferItem {
     materialId: raw.materialId ?? 0,
     materialName: raw.materialName ?? '',
     sentQuantity: raw.sentQuantity ?? 0,
+    // Kept as null rather than folded to 0: an unconfirmed line and a line
+    // confirmed as receiving nothing are different statements, and only the
+    // absence of the field distinguishes them.
+    receivedQuantity: raw.receivedQuantity ?? null,
+    // Falls back to the arithmetic rather than to 0, so a payload from a
+    // server that predates the field still reports a pending line's stock as
+    // in transit instead of claiming nothing is.
+    inTransitQuantity:
+      raw.inTransitQuantity ??
+      Math.max((raw.sentQuantity ?? 0) - (raw.receivedQuantity ?? 0), 0),
     transferValue: raw.transferValue ?? undefined,
     remarks: raw.remarks ?? undefined,
   };
