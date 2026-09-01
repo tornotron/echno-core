@@ -21,6 +21,12 @@
  * - `['site-transfers', 'receiving-project', projectId]` — transfers
  *   destined for one project, consumed by
  *   {@link useSiteTransfersByReceivingProject}.
+ * - `['site-transfers', 'status-history', id, { pageNo, pageSize }]` — one
+ *   transfer's status trail, consumed by
+ *   {@link useSiteTransferStatusHistory}. Not a `SiteTransfer[]` cache, so
+ *   `isSiteTransferListCache` deliberately excludes it: the trail grows when
+ *   a receipt or a cancellation moves the status, and is invalidated by those
+ *   mutations rather than patched.
  *
  * The mutation file's `isSiteTransferListCache` predicate matches
  * every `SiteTransfer[]` list cache (`list`, `paginated`, `status`,
@@ -54,4 +60,17 @@ export const siteTransferKeys = {
   /** Query key for transfers destined for a given project. */
   byReceivingProject: (projectId: number) =>
     [...siteTransferKeys.all, 'receiving-project', projectId] as const,
+
+  /** Invalidation prefix for every page of one transfer's status trail. */
+  statusHistories: (id: number) =>
+    [...siteTransferKeys.all, 'status-history', id] as const,
+
+  /** Query key for one page of a transfer's status trail. */
+  statusHistory: (id: number, pageNo: number, pageSize: number) =>
+    [
+      ...siteTransferKeys.all,
+      'status-history',
+      id,
+      { pageNo, pageSize },
+    ] as const,
 };

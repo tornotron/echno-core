@@ -3,7 +3,7 @@
     "repository": "tornotron/echno-backend",
     "ref": "development",
     "path": "docs/openapi.json",
-    "sha256": "a84360415d69c777fac89f606def9495202b841d3fce15f123cd43099d48ae8d"
+    "sha256": "aeefe59b4596a65c73811262dc4ef07c76926960ed2b5726d4398af80f767c95"
   },
   "operations": {
     "POST /api/v1/assets/web": {
@@ -3352,10 +3352,56 @@
       ],
       "acceptsAnyField": false
     },
+    "POST /api/v1/site-transfers/web/{id}/cancel": {
+      "schema": "SiteTransferCancellationDto",
+      "fields": [
+        "reason"
+      ],
+      "required": [
+        "reason"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/site-transfers/web/{id}/receive": {
+      "schema": "SiteTransferReceiptDto",
+      "fields": [
+        "allowOverReceipt",
+        "items",
+        "receivedOn",
+        "remarks"
+      ],
+      "required": [
+        "items"
+      ],
+      "acceptsAnyField": false
+    },
     "PATCH /api/v1/site-transfers/web/{id}/status": {
       "schema": null,
       "fields": [],
       "required": [],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/site-transfers/{id}/cancel": {
+      "schema": "SiteTransferCancellationDto",
+      "fields": [
+        "reason"
+      ],
+      "required": [
+        "reason"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/site-transfers/{id}/receive": {
+      "schema": "SiteTransferReceiptDto",
+      "fields": [
+        "allowOverReceipt",
+        "items",
+        "receivedOn",
+        "remarks"
+      ],
+      "required": [
+        "items"
+      ],
       "acceptsAnyField": false
     },
     "PATCH /api/v1/site-transfers/{id}/status": {
