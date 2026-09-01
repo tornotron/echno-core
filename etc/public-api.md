@@ -4,7 +4,7 @@
      Run `bun run api:snapshot` after an intended public-API change and commit the diff.
      See docs/API-STABILITY.md. -->
 
-Entry points: 134
+Entry points: 135
 
 ## `@tornotron/echno-core`
 
@@ -72,6 +72,8 @@ Entry points: 134
 - calculateWorkDuration
 - CanApproveResponse
 - CancelConstructionInvoiceArgs
+- CancelSiteTransferRequest
+- cancelSiteTransferToJson
 - categoryId
 - CheckItemStatus
 - ChecklistTemplate
@@ -358,6 +360,7 @@ Entry points: 134
 - isManager
 - isManagerOrAbove
 - isNcrOverdue
+- isPersonsChange
 - Issue
 - IssueComment
 - issueCommentKeys
@@ -456,6 +459,7 @@ Entry points: 134
 - PagedMaterialMovementHistory
 - PagedMaterials
 - PagedReceipt
+- PagedStatusTransition
 - PagedTask
 - parseAccount
 - parseAccountLine
@@ -567,6 +571,7 @@ Entry points: 134
 - parseSiteTransfer
 - parseSiteTransferItem
 - parseStarterChecklistTemplate
+- parseStatusTransition
 - parseStorageLocation
 - parseStorageLocationStock
 - parseTask
@@ -612,6 +617,9 @@ Entry points: 134
 - ReceiptPageParams
 - ReceiptStatus
 - ReceiptType
+- ReceiveSiteTransferLine
+- ReceiveSiteTransferRequest
+- receiveSiteTransferToJson
 - RecordConstructionInvoicePaymentArgs
 - RecordPaymentArgs
 - RecordPaymentRequest
@@ -650,6 +658,9 @@ Entry points: 134
 - standardQueryOptions
 - StarterChecklistTemplate
 - staticQueryOptions
+- StatusTransition
+- StatusTransitionSource
+- statusTransitionSourceLabels
 - StockDirection
 - STORAGE_LOCATION_TYPE_LABELS
 - StorageLocation
@@ -783,6 +794,7 @@ Entry points: 134
 - useCancelConstructionInvoice
 - useCancelInvoice
 - useCancelLeaveRequest
+- useCancelSiteTransfer
 - useCheckConflicts
 - useCheckIn
 - useConsumptionsByDateRange
@@ -987,6 +999,7 @@ Entry points: 134
 - useReceipt
 - useReceipts
 - useReceiptsPage
+- useReceiveSiteTransfer
 - useRecordClockEvent
 - useRecordConstructionInvoicePayment
 - useRecordPayment
@@ -1016,6 +1029,7 @@ Entry points: 134
 - useSiteTransfersBySendingProject
 - useSiteTransfersByStatus
 - useSiteTransfersPaginated
+- useSiteTransferStatusHistory
 - useStorageLocation
 - useStorageLocations
 - useStorageLocationStock
@@ -1056,7 +1070,7 @@ Entry points: 134
 - useUpdatePurchaseOrder
 - useUpdateReceipt
 - useUpdateShift
-- useUpdateSiteTransferStatus
+- useUpdateSiteTransferStatus  [deprecated]
 - useUpdateStorageLocation
 - useUpdateTask
 - useUpdateUser
@@ -1662,6 +1676,14 @@ Entry points: 134
 - parseGrnItem
 - UpdateGrnRequest
 - updateGrnToJson
+
+## `@tornotron/echno-core/history/types`
+
+- isPersonsChange
+- parseStatusTransition
+- StatusTransition
+- StatusTransitionSource
+- statusTransitionSourceLabels
 
 ## `@tornotron/echno-core/indent-items/hooks`
 
@@ -2396,15 +2418,18 @@ Entry points: 134
 ## `@tornotron/echno-core/site-transfers/hooks`
 
 - siteTransferKeys
+- useCancelSiteTransfer
 - useCreateSiteTransfer
 - useDeleteSiteTransfer  [deprecated]
+- useReceiveSiteTransfer
 - useSiteTransfer
 - useSiteTransfers
 - useSiteTransfersByReceivingProject
 - useSiteTransfersBySendingProject
 - useSiteTransfersByStatus
 - useSiteTransfersPaginated
-- useUpdateSiteTransferStatus
+- useSiteTransferStatusHistory
+- useUpdateSiteTransferStatus  [deprecated]
 
 ## `@tornotron/echno-core/site-transfers/hooks/keys`
 
@@ -2412,16 +2437,22 @@ Entry points: 134
 
 ## `@tornotron/echno-core/site-transfers/services`
 
+- PagedStatusTransition
 - siteTransfersService
 
 ## `@tornotron/echno-core/site-transfers/types`
 
+- CancelSiteTransferRequest
+- cancelSiteTransferToJson
 - CreateSiteTransferItemRequest
 - createSiteTransferItemToJson
 - CreateSiteTransferRequest
 - createSiteTransferToJson
 - parseSiteTransfer
 - parseSiteTransferItem
+- ReceiveSiteTransferLine
+- ReceiveSiteTransferRequest
+- receiveSiteTransferToJson
 - SiteTransfer
 - SiteTransferItem
 - SiteTransferStatus

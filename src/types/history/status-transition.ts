@@ -41,6 +41,21 @@ export enum StatusTransitionSource {
    * but not a person's.
    */
   system = 'SYSTEM',
+
+  /**
+   * A source this client does not recognise, which the backend added after
+   * this version shipped.
+   *
+   * Not a wire value: nothing sends `UNKNOWN`. It is where the parser puts a
+   * source it cannot name, and it exists so that fallback can be **fail-closed**
+   * on attribution. Folding an unrecognised source into
+   * {@link StatusTransitionSource.update} would make {@link isPersonsChange}
+   * answer `true` for it, and any new system-generated source would then be
+   * drawn as somebody's act beside whatever name happened to be on the entry.
+   * Attributing a change to nobody is recoverable; attributing it to a
+   * colleague who did not make it is not.
+   */
+  unknown = 'UNKNOWN',
 }
 
 /** Human-readable label for each {@link StatusTransitionSource}. */
@@ -49,15 +64,20 @@ export const statusTransitionSourceLabels: Record<StatusTransitionSource, string
   [StatusTransitionSource.update]: 'Changed',
   [StatusTransitionSource.baseline]: 'Recorded at the start of the trail',
   [StatusTransitionSource.system]: 'Corrected by the system',
+  [StatusTransitionSource.unknown]: 'Recorded',
 };
 
 /**
  * Whether an entry was somebody's act rather than the system's.
  *
- * `false` for {@link StatusTransitionSource.system} and
- * {@link StatusTransitionSource.baseline}, which is what lets a screen show
- * the two apart from a person's change instead of attributing a migration to
+ * `false` for {@link StatusTransitionSource.system},
+ * {@link StatusTransitionSource.baseline} and
+ * {@link StatusTransitionSource.unknown}, which is what lets a screen show
+ * those apart from a person's change instead of attributing a migration to
  * whoever happens to be named nearby.
+ *
+ * Written as an allowlist of the two sources a person makes, so a source added
+ * to the enum later is not a person's act until somebody says it is.
  *
  * @param entry - The trail entry.
  * @returns `true` when a person made the change.
@@ -126,9 +146,9 @@ export interface StatusTransition {
  * Parses a raw status-transition payload into a typed
  * {@link StatusTransition}.
  *
- * An unrecognised `source` falls back to {@link StatusTransitionSource.update}
- * rather than throwing, so a source the backend adds later still renders,
- * though as a change rather than as a system entry.
+ * An unrecognised `source` falls back to {@link StatusTransitionSource.unknown}
+ * rather than throwing, so a source the backend adds later still renders — but
+ * as one nobody is named for, never as a person's act.
  *
  * @param json - The raw JSON object from the backend.
  * @returns The parsed {@link StatusTransition}.
@@ -143,7 +163,7 @@ export function parseStatusTransition(json: unknown): StatusTransition {
     toStatus: raw.toStatus ?? '',
     source: Object.values(StatusTransitionSource).includes(source)
       ? source
-      : StatusTransitionSource.update,
+      : StatusTransitionSource.unknown,
     occurredAt: raw.occurredAt ?? '',
     changedBy: raw.changedBy ?? null,
     changedByName: raw.changedByName ?? '',
