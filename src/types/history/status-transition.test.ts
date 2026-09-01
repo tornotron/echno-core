@@ -71,9 +71,13 @@ describe('who an entry is attributed to', () => {
 });
 
 describe('a source the backend adds later', () => {
-  test('renders rather than throwing', () => {
+  test('renders rather than throwing, and is attributed to nobody', () => {
     const unknown = entry({ source: 'SOMETHING_NEW' });
 
-    expect(unknown.source).toBe(StatusTransitionSource.update);
+    expect(unknown.source).toBe(StatusTransitionSource.unknown);
+    // Fail-closed. Folding it into UPDATE would draw the next
+    // system-generated source as an act by whoever is named on the entry,
+    // which is the misattribution the whole trail exists to prevent.
+    expect(isPersonsChange(unknown)).toBe(false);
   });
 });
