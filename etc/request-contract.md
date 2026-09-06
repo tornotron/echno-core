@@ -19,10 +19,9 @@ Write calls in `src/services`: 138
 | endpoint not in the document | 0 |
 | not readable | 6 |
 
-## Findings (2)
+## Findings (0)
 
-- src/services/issue-service.ts:266  POST /api/v1/issues/web  sends "priority", which is not a field of IssueCreationDto
-- src/services/issue-service.ts:302  PATCH /api/v1/issues/web/{id}  sends "priority", which is not a field of IssueUpdateFieldsDto
+None.
 
 ## Call sites this pass cannot read (6)
 

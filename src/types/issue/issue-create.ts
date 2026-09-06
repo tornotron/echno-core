@@ -4,6 +4,7 @@
  * Request shapes and serializers for creating an {@link Issue} and an
  * {@link IssueComment}.
  */
+import { IssuePriority } from './issue-priority';
 import { IssueType } from './issue-type';
 import { IssueStatus } from './issue-status';
 
@@ -43,8 +44,13 @@ export interface CreateIssueRequest {
   /** Optional initial lifecycle state; the backend supplies a default if omitted. */
   status?: IssueStatus;
 
-  /** Optional priority label (free-form string at the moment). */
-  priority?: string;
+  /**
+   * Optional urgency. `Issue` now has a `priority` column with a closed set of
+   * values (echno-backend#677), so this is an {@link IssuePriority} rather
+   * than the free-form string it was while the backend had nowhere to put it.
+   * Omitting it raises an issue with no priority, which the column allows.
+   */
+  priority?: IssuePriority;
 
   /**
    * Not sent. An issue hangs off a task, and the backend walks
