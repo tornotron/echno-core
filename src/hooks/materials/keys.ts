@@ -24,6 +24,10 @@
  *   — a page of the materials at or below their reorder level, consumed by
  *   {@link useLowStockMaterials}. Holds a `PagedLowStockMaterials`
  *   envelope, not `Material[]`: the count lives on it.
+ * - `['materials', 'stock-summary', { projectId }]` — the server-side
+ *   totals for one scope, consumed by {@link useMaterialStockSummary}. The
+ *   scope is in the key: a project's totals and the organization's are
+ *   different answers and must not share an entry.
  * - `['materials', 'location-thresholds', materialId]` — per-storage-location
  *   threshold overrides for a material, consumed by
  *   {@link useMaterialLocationThresholds}. Holds
@@ -70,4 +74,8 @@ export const materialsKeys = {
     pageNo?: number;
     pageSize?: number;
   }) => [...materialsKeys.all, 'low-stock', params] as const,
+
+  /** Query key for the server-side materials totals at one scope. */
+  stockSummary: (params: { projectId?: number }) =>
+    [...materialsKeys.all, 'stock-summary', params] as const,
 };

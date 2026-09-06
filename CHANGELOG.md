@@ -5,6 +5,37 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
+## [v5.3.0] - 2026-09-06
+
+The materials totals, computed where the rows are. A console adding up the material list it holds
+adds up at most 500 rows, because that is what `GET /materials/web` serves, so past the cap its
+"Total Stock Value" was the value of 500 materials and its unit count was the units those 500
+happened to be held in. Both failed short and neither said so. `echno-backend` now totals all of it
+in the database; this is the client method for asking. Additive: one new service method, two new
+types, one new hook, one new cache key.
+
+### Added
+
+- **`materialsService.getStockSummary(params)`** — `GET /materials/web/summary`, optionally scoped
+  with `projectId`. Returns the value of the stock on hand, how many materials the figures cover,
+  how many distinct units they are held in, and how many holdings the value could not price. Every
+  figure is summed over the same scope: the organization, or one project.
+
+  A payload missing any of them is refused with a 422 rather than reduced to the fields that did
+  arrive. Every figure here is a total, and a total that reads zero because its field was absent is
+  the failure the endpoint exists to remove. A 404 likewise surfaces as an error: it means no such
+  project in this tenant, not a summary of zeroes.
+
+- **`MaterialStockSummary`** and **`StockSummaryParams`** — the parsed summary and its scope
+  options. `totalStockValue` coerces through the same `money` schema as every other decimal in the
+  package. `unvaluedHoldingCount` is the caveat that travels with the value: non-zero means that
+  many holdings carried no unit cost, so they sit in the total at the zero they hold and the total
+  understates by whatever they are worth. It qualifies the figure; it does not withhold it.
+
+- **`useMaterialStockSummary(params)`** — the hook, and **`materialsKeys.stockSummary(params)`**,
+  its cache key. The scope is in the key, so a project's totals and the organization's never share
+  an entry.
+
 ## [v5.1.0] - 2026-09-01
 
 The catalogue's own size, which nothing could ask for. `GET /materials/web` stops at 500 rows and

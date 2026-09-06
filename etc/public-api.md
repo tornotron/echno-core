@@ -422,6 +422,7 @@ Entry points: 135
 - materialsService
 - MaterialStatus
 - MaterialStock
+- MaterialStockSummary
 - MaterialWithStock
 - MAX_DEFECT_ANNOTATIONS
 - mergePreservingNested
@@ -545,6 +546,7 @@ Entry points: 135
 - parseMaterialLocationThreshold
 - parseMaterialMovementHistoryEntry
 - parseMaterialStock
+- parseMaterialStockSummary
 - parseMaterialWithStock
 - parseMovementRecord
 - parseNcr
@@ -662,6 +664,7 @@ Entry points: 135
 - StatusTransitionSource
 - statusTransitionSourceLabels
 - StockDirection
+- StockSummaryParams
 - STORAGE_LOCATION_TYPE_LABELS
 - StorageLocation
 - storageLocationKeys
@@ -961,6 +964,7 @@ Entry points: 135
 - useMaterialsPage
 - useMaterialsPaginated
 - useMaterialStock
+- useMaterialStockSummary
 - useMaterialWithStock
 - useMovementById
 - useMovementsByAttendance
@@ -2156,6 +2160,7 @@ Entry points: 135
 - useMaterialSearch
 - useMaterialsPage
 - useMaterialsPaginated
+- useMaterialStockSummary
 - useMaterialWithStock
 - useUpdateMaterial
 - useUpsertMaterialLocationThreshold
@@ -2171,6 +2176,7 @@ Entry points: 135
 - materialsService
 - PagedLowStockMaterials
 - PagedMaterials
+- StockSummaryParams
 
 ## `@tornotron/echno-core/materials/types`
 
@@ -2187,11 +2193,13 @@ Entry points: 135
 - materialLocationThresholdToJson
 - MaterialLocationThresholdUpsert
 - MaterialStatus
+- MaterialStockSummary
 - MaterialWithStock
 - parseLowStockMaterial
 - parseMaterial
 - parseMaterialConsumption
 - parseMaterialLocationThreshold
+- parseMaterialStockSummary
 - parseMaterialWithStock
 - UpdateMaterialRequest
 - updateMaterialToJson

@@ -25,6 +25,8 @@ import {
   materialLocationThresholdToJson,
   LowStockMaterial,
   parseLowStockMaterial,
+  MaterialStockSummary,
+  parseMaterialStockSummary,
 } from '../types/materials';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -39,6 +41,7 @@ type Raw = any;
  *   GET    /materials/web/search?name                  → MaterialDto[]           (full)
  *   GET    /materials/web/{id}                         → MaterialDto             (full)
  *   GET    /materials/web/low-stock?pageNo&pageSize    → PageLowStockMaterialDto (paginated; envelope kept)
+ *   GET    /materials/web/summary?projectId            → MaterialStockSummaryDto (server-side totals)
  *   GET    /materials/web/{id}/stock                   → MaterialWithStockDto    (full + non-null currentStock)
  *   PATCH  /materials/web/{id}                         → MaterialDto             (full)
  *   DELETE /materials/web/{id}                         → ApiResponse             (ack only)
@@ -238,6 +241,37 @@ export interface LowStockParams {
   pageNo?: number;
   /** Rows per page. Defaults to `10` on the backend, capped at 500. */
   pageSize?: number;
+}
+
+/**
+ * Parses a materials stock summary, wrapping parser failures in
+ * {@link ApiError} so callers receive a uniform error shape.
+ *
+ * A payload the parser rejects is refused rather than reduced to the
+ * fields that did arrive. Every figure on the summary is a total, and a
+ * total that quietly reads zero because its field was missing is the
+ * failure this endpoint exists to remove.
+ *
+ * @param data - The raw JSON object from the backend.
+ * @returns The parsed {@link MaterialStockSummary}.
+ * @throws {ApiError} When the payload does not parse (HTTP 422).
+ */
+function safeParseStockSummary(data: Raw): MaterialStockSummary {
+  try {
+    return parseMaterialStockSummary(data);
+  } catch (error) {
+    logger.error('Failed to parse material stock summary:', error);
+    throw new ApiError('Failed to process material stock summary.', 422);
+  }
+}
+
+/** Scope options for {@link materialsService.getStockSummary}. */
+export interface StockSummaryParams {
+  /**
+   * Total within this project's balance rows. Omit for the organization,
+   * where `materialCount` is the catalogue size.
+   */
+  projectId?: number;
 }
 
 /**
@@ -462,6 +496,42 @@ export const materialsService = {
     if (params.pageSize !== undefined) query.pageSize = params.pageSize;
     const data = await api.get<Raw>('/materials/web/low-stock', query);
     return safeParseLowStockPage(data);
+  },
+
+  /**
+   * Fetches the materials figures totalled by the server: the value of the
+   * stock on hand, how many materials the figures cover, and how many
+   * distinct units those materials are held in.
+   *
+   * `GET /materials/web/summary` → `MaterialStockSummaryDto`.
+   *
+   * None of these can be computed from a fetched material list. That list
+   * is capped at 500 rows and says so only in a response header the
+   * console's API proxy does not forward, so a browser summing what it
+   * holds reports the value of 500 materials as the organization's, with
+   * nothing on screen to say the catalogue is larger. Here every figure is
+   * summed in the database over the whole scope.
+   *
+   * Two scopes. No `projectId` totals across the organization, where
+   * `materialCount` is the catalogue size. A `projectId` totals over that
+   * project's balance rows, where `materialCount` is how many materials
+   * the project holds a balance for.
+   *
+   * A 404 means no such project in this tenant, not an empty summary, and
+   * arrives as an {@link ApiError} rather than as zeroes.
+   *
+   * @param params - Scope (`projectId`); omit for the organization.
+   * @returns The {@link MaterialStockSummary} for that scope.
+   * @throws {ApiError} On non-2xx HTTP responses, or when the payload does
+   *   not carry every figure (HTTP 422).
+   */
+  async getStockSummary(
+    params: StockSummaryParams = {}
+  ): Promise<MaterialStockSummary> {
+    const query: Record<string, string | number> = {};
+    if (params.projectId !== undefined) query.projectId = params.projectId;
+    const data = await api.get<Raw>('/materials/web/summary', query);
+    return safeParseStockSummary(data);
   },
 
   /**
