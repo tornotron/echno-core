@@ -5,6 +5,44 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
+## [Unreleased]
+
+The three people on a payment voucher become something the server can be asked about.
+
+`GET /finance/construction-payments/web` grew `employeeId`, `verifiedBy` and `raisedBy` in
+echno-backend#655, which closed echno-backend#638. This makes them reachable. Additive: a caller
+that names none of them sends the same request it sent before.
+
+The listing is the one echno-backend#638 was filed about. It returns a Spring `Page` whose default
+is twenty rows, and `getAll` unwraps the envelope, so the array it returns is one page and its
+length says nothing about how many vouchers exist. Anything narrowed or counted over that array
+answers a different question from the one it appears to, and a short result reads as a complete
+answer. `echno-web`'s payments screen does exactly that today for its `verifier` filter, which is
+why the parameter matters more than a convenience: it moves the question to the side that can
+answer it.
+
+### Added
+
+- **`ConstructionPaymentListParams.employeeId`**, the employee a voucher was paid to. An
+  **employee** id, set from the creation payload beside `vendorId`, `subContractId` and
+  `labourId` and selected by `payeeType`.
+
+- **`ConstructionPaymentListParams.verifiedBy` and `.raisedBy`**, the accounts that verified and
+  raised a voucher. **User** ids, stamped from the session, the same ids the response returns
+  beside `verifiedByName` and `raisedByName`.
+
+  The two kinds are not interchangeable and nothing on the wire will say so. On a fresh database
+  the user and employee sequences run in lockstep, so a caller that crosses them gets the right
+  rows under the right name by coincidence, until enough rows exist on one side to push the
+  sequences apart. Each field says which kind it takes, and the tests send three distinct values
+  so a transposition is caught rather than returning a plausible list of somebody else's vouchers.
+
+### Changed
+
+- **`getAll` documents that it returns one page rather than the register**, and points a caller at
+  the parameters instead of at filtering the result. The behaviour is unchanged; what it returned
+  was already one page.
+
 ## [v7.0.0] - 2026-09-06
 
 An issue's priority reaches a column, and comes back. This closes echno-core#57: the request
