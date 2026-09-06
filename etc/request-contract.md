@@ -6,46 +6,55 @@
 
 Checked against `tornotron/echno-backend` `development`, reduced into `etc/backend-request-fields.json` by `scripts/backend-contract.ts`.
 
-Write calls in `src/services`: 140
+Write calls in `src/services`: 138
 
 ## Coverage
 
 | outcome | calls |
 | --- | --- |
-| checked | 90 |
+| checked | 101 |
 | sends nothing | 31 |
 | endpoint accepts any field name | 0 |
 | endpoint documents no request body | 0 |
-| endpoint not in the document | 2 |
-| not readable | 17 |
+| endpoint not in the document | 0 |
+| not readable | 6 |
 
-## Findings (5)
+## Findings (2)
 
-- src/services/employee-service.ts:227  POST /api/v1/employee/web  is not an endpoint in the document
-- src/services/issue-comment-service.ts:156  PATCH /api/v1/issues/comments/web/{}  is not an endpoint in the document
 - src/services/issue-service.ts:266  POST /api/v1/issues/web  sends "priority", which is not a field of IssueCreationDto
 - src/services/issue-service.ts:302  PATCH /api/v1/issues/web/{id}  sends "priority", which is not a field of IssueUpdateFieldsDto
-- src/services/leave-service.ts:518  POST /api/v1/leave-requests/web  sends "employeeId", which is not a field of LeaveRequestCreationDto
 
-## Call sites this pass cannot read (17)
+## Call sites this pass cannot read (6)
 
 Not checked, and not claimed to be. Each one is a place a wrong field name would
 go unnoticed.
 
 - src/services/attachment-service.ts:113  POST /api/v1/attachment/web/entityId/{}/entityType/{}  (body is a FormData assembled by the caller)
-- src/services/attachment-service.ts:139  POST /api/v1/attachment/web/presign/entityId/{}/entityType/{}  (body is a value this pass cannot follow)
-- src/services/attachment-service.ts:162  POST /api/v1/attachment/web/register/entityId/{}/entityType/{}  (body is a value this pass cannot follow)
-- src/services/attendance-service.ts:396  (unknown)  (endpoint path is not a literal)
-- src/services/attendance-service.ts:419  (unknown)  (endpoint path is not a literal)
+- src/services/attachment-service.ts:139  POST /api/v1/attachment/web/presign/entityId/{}/entityType/{}  (body is an array, which has no top-level field names)
+- src/services/attachment-service.ts:162  POST /api/v1/attachment/web/register/entityId/{}/entityType/{}  (body is an array, which has no top-level field names)
+- src/services/attendance-service.ts:396  POST /api/v1/attendance/web/check-in  (the payload travels in the query string, not the body)
+- src/services/attendance-service.ts:419  POST /api/v1/attendance/web/clock-event  (the payload travels in the query string, not the body)
 - src/services/finance-account-service.ts:216  POST /api/v1/finance/accounts/web/import  (body is a FormData assembled by the caller)
-- src/services/finance-expense-service.ts:188  POST /api/v1/expenses/web  (body is a value this pass cannot follow)
-- src/services/finance-expense-service.ts:203  PUT /api/v1/expenses/web/{}  (body is a value this pass cannot follow)
-- src/services/finance-journal-service.ts:119  POST /api/v1/finance/journal-entries/web  (body is a value this pass cannot follow)
-- src/services/finance-journal-service.ts:141  POST /api/v1/finance/journal-entries/web/reverse  (body is a value this pass cannot follow)
-- src/services/finance-project-budget-service.ts:103  (unknown)  (endpoint path is not a literal)
-- src/services/finance-receipt-service.ts:187  POST /api/v1/receipts/web  (body is a value this pass cannot follow)
-- src/services/finance-receipt-service.ts:202  PUT /api/v1/receipts/web/{}  (body is a value this pass cannot follow)
-- src/services/labour-service.ts:118  POST /api/v1/labour/web  (body is a value this pass cannot follow)
-- src/services/labour-service.ts:133  PATCH /api/v1/labour/web/{}  (body is a value this pass cannot follow)
-- src/services/leave-service.ts:445  POST /api/v1/leave-balances/web/adjust  (body is a value this pass cannot follow)
-- src/services/leave-service.ts:805  POST /api/v1/leave-requests/web/calculate-days  (body is a value this pass cannot follow)
+
+These are not a backlog. The list stood at seventeen until the pass learned to follow a
+serializer that delegates to another one, to read the interface a body parameter is
+declared with when the call posts that parameter straight through, to union the branches
+of a conditionally built body, to render a path helper, and to ignore a return belonging
+to a callback rather than to the serializer. Those eleven are now checked and none of them
+was sending a wrong name.
+
+What is left is not syntax this pass fails on. It is bodies with no top-level
+field names to compare:
+
+- A `FormData` is assembled key by key by the caller, and a CSV import has one part that is
+  a file.
+- The attachment presign and register calls post an **array**. A useful check of those
+  would compare the element type against the array item schema, which is a second pass, not
+  a fix to this one.
+- The two attendance calls put their payload in a URL-encoded `data` query parameter
+  rather than in the body, so the document has no request schema for them to be checked
+  against.
+
+So the honest floor for this pass is where it now stands. Reducing it further
+means either changing how those endpoints take their payload or writing a
+different check.

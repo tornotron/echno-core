@@ -10,7 +10,6 @@ import { issueCommentService } from '../../services/issue-comment-service';
 import { Issue } from '../../types/issue';
 import { IssueComment } from '../../types/issue/issue-comment';
 import { CreateIssueCommentRequest } from '../../types/issue/issue-create';
-import { UpdateIssueCommentRequest } from '../../types/issue/issue-update';
 import { logger } from '../../lib/logger';
 import { issueKeys, issueCommentKeys } from './keys';
 
@@ -97,46 +96,6 @@ export function useCreateIssueComment() {
     },
     onError: (error) => {
       logger.error('Failed to create issue comment:', error);
-    },
-  });
-}
-
-/**
- * Updates an issue comment.
- *
- * Backend response: `(orphan endpoint)` — the backend has no PATCH route
- * for issue comments at present, so this mutation will 404/405 in
- * production. The hook is preserved with broad-invalidation behaviour so
- * the wiring is in place when the endpoint lands.
- *
- * On success (theoretical):
- * - `invalidateQueries(issueCommentKeys.detail(id))` — refetch the canonical comment.
- * - `invalidateQueries({ predicate: isIssueCommentListCache })` — refetch every comment list.
- * - `invalidateQueries(issueKeys.all)` — broad refresh since the parent issue's nested `comments` array would also be stale.
- *
- * @returns A TanStack `UseMutationResult` where the mutate function accepts
- *   `{ id: number; data: UpdateIssueCommentRequest }`.
- *
- * @internal
- */
-export function useUpdateIssueComment() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({
-      id,
-      data,
-    }: {
-      id: number;
-      data: UpdateIssueCommentRequest;
-    }) => issueCommentService.update(id, data),
-    onSuccess: (_, { id }) => {
-      queryClient.invalidateQueries({ queryKey: issueCommentKeys.detail(id) });
-      queryClient.invalidateQueries({ predicate: isIssueCommentListCache });
-      queryClient.invalidateQueries({ queryKey: issueKeys.all });
-    },
-    onError: (error) => {
-      logger.error('Failed to update issue comment:', error);
     },
   });
 }

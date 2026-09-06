@@ -10,11 +10,16 @@
  * @remarks
  * Two service-level findings to be aware of:
  *
- * 1. {@link employeeService.create} POSTs to `/employee/web` but the backend
- *    OpenAPI spec exposes **no such endpoint** — the only employee POST is
- *    `joinOrganization`. The method is preserved against the day a direct
- *    create endpoint lands; the consuming `useCreateEmployee` hook fails
- *    fast in the meantime.
+ * 1. There is no direct create on this prefix. `EmployeeControllerWeb` has its
+ *    plain `@PostMapping` commented out, so `POST /employee/web` is a path
+ *    nothing routes, and {@link employeeService.joinOrganization} is the only
+ *    employee create this package can call. A direct create does exist on the
+ *    non-web prefix, but it names the organization by `organizationName`
+ *    rather than deriving the tenant from the token, so it is not a route the
+ *    console should be pointed at without a redesign. This package used to
+ *    publish a `create` addressing the absent path, plus a hook that threw
+ *    rather than call it; both are gone. Whether a web create should exist is
+ *    echno-backend#675.
  * 2. `PATCH /employee/web/{id}` is labelled `ApiResponse` (ack) in the spec
  *    but the live backend returns an `EmployeeDto`-shaped body. The service
  *    parses optimistically; mutation hooks apply a 3-way guarded patch to
@@ -30,10 +35,6 @@ import {
   EmployeeLookup,
   parseEmployeeLookup,
 } from '../types/employee/employee-lookup';
-import {
-  CreateEmployeeRequest,
-  createEmployeeToJson,
-} from '../types/employee/employee-create';
 import {
   UpdateEmployeeRequest,
   updateEmployeeToJson,
@@ -204,27 +205,6 @@ export const employeeService = {
    */
   async getById(id: number): Promise<Employee> {
     const data = await api.get<ApiResponse>(`/employee/web/${id}`);
-    return safeParseEmployee(data);
-  },
-
-  /**
-   * Creates a new employee.
-   *
-   * `POST /employee/web` → `EmployeeDto` (full, expected).
-   *
-   * @remarks
-   * **The backend has no such endpoint.** Calls will fail with a 404 / 405
-   * transport error. The consuming `useCreateEmployee` hook fails fast and
-   * directs callers to `useJoinOrganization` instead. Kept for future API
-   * growth.
-   *
-   * @param dto - Create payload; rendered via {@link createEmployeeToJson}.
-   * @returns The parsed {@link Employee}.
-   * @throws {ApiError} On non-2xx transport responses or parse failures (status 422).
-   */
-  async create(dto: CreateEmployeeRequest): Promise<Employee> {
-    const payload = createEmployeeToJson(dto);
-    const data = await api.post<ApiResponse>('/employee/web', payload);
     return safeParseEmployee(data);
   },
 

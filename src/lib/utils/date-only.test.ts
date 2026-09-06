@@ -3,8 +3,7 @@ import { toLocalDateAtMidnight } from './date-helpers';
 import { formatDateForBackend } from '../../types/user/user';
 import { createTaskToJson } from '../../types/task/task-create';
 import { createProjectToJson } from '../../types/project/project-create';
-import { createEmployeeToJson } from '../../types/employee/employee-create';
-import { Department } from '../../types/employee/departments';
+import { updateEmployeeToJson } from '../../types/employee/employee-update';
 
 // Pinned to a non-UTC zone and restored afterwards. The runner defaults to UTC,
 // where the local and UTC calendar dates are always the same and every assertion
@@ -90,21 +89,18 @@ describe('date-only request serializers', () => {
     expect(json.endDate).toBe('2027-03-31T00:00:00');
   });
 
-  test('employee create sends the birth and joining dates as local calendar dates', () => {
-    // Spelled out rather than cast. The cast that used to stand here hid a
-    // property this interface does not have: `employeeName` is the wire key,
-    // the request field is `name`, and nothing would have said so.
-    const json = createEmployeeToJson({
+  test('employee update sends the birth and joining dates as local calendar dates', () => {
+    // Spelled out rather than cast, so a property the interface does not have
+    // is a compile error rather than a silent pass. This used to exercise the
+    // create serializer, which addressed an endpoint the backend never routed
+    // and has been removed; the update serializer does the same coercion and
+    // is the one that reaches a live endpoint.
+    const json = updateEmployeeToJson({
       name: 'A Worker',
       email: 'a.worker@example.com',
       phone: '9876543210',
-      gender: 'female',
-      address: '12 Mount Road, Chennai',
-      qualification: 'Diploma in Civil Engineering',
       employeeId: 'EMP-0042',
       designation: 'Site Engineer',
-      department: Department.construction,
-      organizationId: 1,
       dateOfBirth: new Date(1990, 7, 22, 0, 0, 0),
       joiningDate: localMidnight(),
     });

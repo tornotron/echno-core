@@ -5,8 +5,8 @@
  * comment `author` from the cached employee list so consumers receive
  * `IssueComment` objects with populated joined fields.
  *
- * Mutations live in {@link useCreateIssueComment},
- * {@link useUpdateIssueComment} (orphan), and {@link useDeleteIssueComment}.
+ * Mutations live in {@link useCreateIssueComment} and
+ * {@link useDeleteIssueComment}.
  */
 import { useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';

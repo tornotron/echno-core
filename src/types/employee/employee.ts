@@ -264,7 +264,7 @@ export function parseEmployee(json: unknown): Employee {
     email: raw.emailAddress ?? '',
     phone: raw.phoneNumber ?? '',
     gender: raw.gender ?? '',
-    // Calendar dates, written by createEmployeeToJson with toLocalDateAtMidnight.
+    // Calendar dates, written by updateEmployeeToJson with toLocalDateAtMidnight.
     dateOfBirth: parseLocalDateTime(raw.dateOfBirth) ?? new Date(),
     qualification: raw.qualification ?? '',
     skills: raw.skills ? [...raw.skills] : undefined,
