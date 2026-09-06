@@ -5,7 +5,7 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
-## [Unreleased]
+## [v8.1.0] - 2026-09-06
 
 The three people on a payment voucher become something the server can be asked about.
 
