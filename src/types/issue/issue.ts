@@ -6,6 +6,7 @@
  * and always belongs to a project.
  */
 import { z } from 'zod';
+import { IssuePriority, issuePriorityFromString } from './issue-priority';
 import { IssueType, issueTypeFromString } from './issue-type';
 import { IssueStatus, issueStatusFromString } from './issue-status';
 import { IssueComment, parseIssueComment } from './issue-comment';
@@ -25,8 +26,8 @@ import {
 
 /**
  * Shape of the backend issue payload at the parse boundary. `type` and
- * `status` are required strings — they feed the `fromString` mappers, which
- * already reject anything unknown. Nested arrays are handed to their own
+ * `status` are required strings and `priority` is a nullable one; all three feed
+ * the `fromString` mappers, which already reject anything unknown. Nested arrays are handed to their own
  * parsers; the joined `creator` / `assignee` never appear on the payload.
  */
 const IssueResponseSchema = z.object({
@@ -37,6 +38,7 @@ const IssueResponseSchema = z.object({
   description: nullableString,
   type: z.string(),
   status: z.string(),
+  priority: nullableString,
   createdAt: backendDate,
   updatedAt: backendDate,
   createdById: optionalNumericId,
@@ -73,6 +75,13 @@ export interface Issue {
 
   /** Lifecycle state — see {@link IssueStatus}. */
   status: IssueStatus;
+
+  /**
+   * Urgency — see {@link IssuePriority}. Absent on an issue raised before the
+   * column existed, and on one raised without a priority, which the backend
+   * allows: the column is nullable with no default.
+   */
+  priority?: IssuePriority;
 
   /** Creation timestamp (UTC). */
   createdAt: Date;
@@ -125,6 +134,10 @@ export function parseIssue(json: unknown): Issue {
     description: raw.description ?? undefined,
     type: issueTypeFromString(raw.type),
     status: issueStatusFromString(raw.status),
+    // Parsed only when there is something to parse. Unlike type and status
+    // this one is genuinely optional on the wire, so an absent value is an
+    // issue with no priority rather than a payload to reject.
+    priority: raw.priority ? issuePriorityFromString(raw.priority) : undefined,
     createdAt: parseUTCDate(raw.createdAt) ?? new Date(),
     updatedAt: raw.updatedAt
       ? (parseUTCDate(raw.updatedAt) ?? undefined)
@@ -159,6 +172,7 @@ export function issueToJson(issue: Issue): Record<string, unknown> {
     description: issue.description,
     type: issue.type,
     status: issue.status,
+    priority: issue.priority,
     createdAt: toLocalDateTimeString(issue.createdAt),
     updatedAt: issue.updatedAt && toLocalDateTimeString(issue.updatedAt),
     createdById: issue.creatorId ?? issue.creator?.id,

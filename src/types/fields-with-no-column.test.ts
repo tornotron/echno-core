@@ -44,6 +44,7 @@ import { TaskStatus } from "./task/task-status";
 import { createIssueToJson } from "./issue/issue-create";
 import { updateIssueToJson } from "./issue/issue-update";
 import { IssueType } from "./issue/issue-type";
+import { IssuePriority } from "./issue/issue-priority";
 import {
   ConstructionPayeeType,
   ConstructionPaymentMethod,
@@ -155,23 +156,37 @@ describe("an issue does still carry its priority, and the difference is delibera
   // These two are the opposite decision, pinned so a later pass working from
   // the findings list alone cannot take them along with the task ones. The
   // issue form puts a priority control in front of the user; the task form has
-  // none. Until the backend grows the column, this key is dropped on arrival
-  // the same way task priority was, but the repair is on the other side.
+  // none.
+  //
+  // The decision has since been carried out on the other side.
+  // echno-backend#677 gave Issue a nullable priority column, a create field, a
+  // case on the partial-update switch and the field on both response DTOs, so
+  // the key is now read rather than dropped and this is no longer a finding.
+  // The tests stay: what they hold is that the client keeps sending it, which
+  // is what a sweep reading the task decision would undo.
   test("create still sends priority", () => {
     const payload = createIssueToJson({
       title: "Honeycombing on column C4",
       description: "Voids visible on the south face after stripping.",
       issueType: IssueType.quality,
-      priority: "critical",
+      priority: IssuePriority.critical,
     });
 
     expect(payload.priority).toBe("critical");
   });
 
   test("update still sends priority", () => {
-    const payload = updateIssueToJson({ priority: "low" });
+    const payload = updateIssueToJson({ priority: IssuePriority.low });
 
     expect(payload.priority).toBe("low");
+  });
+
+  test("update can clear a priority, which type and status cannot", () => {
+    // The asymmetry is the backend's: the column is nullable, so an explicit
+    // null clears it, while type and status answer 400 on one.
+    const payload = updateIssueToJson({ priority: null });
+
+    expect(payload).toHaveProperty("priority", null);
   });
 });
 

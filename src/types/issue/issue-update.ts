@@ -10,6 +10,7 @@
  * that was never written. Whether a comment should be editable at all is
  * echno-backend#676.
  */
+import { IssuePriority } from './issue-priority';
 import { IssueType } from './issue-type';
 import { IssueStatus } from './issue-status';
 
@@ -36,8 +37,12 @@ export interface UpdateIssueRequest {
   /** New lifecycle state, if changing. */
   status?: IssueStatus;
 
-  /** New priority label, if changing. */
-  priority?: string;
+  /**
+   * New urgency, if changing. `null` clears it: the column is nullable and the
+   * update endpoint accepts an explicit null there, unlike `type` and
+   * `status`, which refuse one.
+   */
+  priority?: IssuePriority | null;
 
   /** New assignee employee ID; pass `null` to explicitly unassign. */
   assigneeId?: number | null;

@@ -52,11 +52,18 @@
  * OpenAPI document, which is that a change to any of those three should be visible in review
  * rather than only in a log.
  *
- * The findings list is not empty today, and that is the point of the issue rather than a defect
- * in the check. `development` carries live drift: endpoints whose paths the backend moved, and
- * half a dozen create and update bodies carrying fields no DTO has. Each needs its own decision,
- * some of them on the backend, so they are recorded rather than fixed here. What this test
- * enforces is that the list does not grow, and #57 carries the triage of what is left.
+ * **The findings list is empty, and keeping it that way is now the whole job.** It opened at 66,
+ * every one of which needed a decision rather than a repair, and #57 carries the argument for each
+ * and the order they were taken in. Thirty-six were drift the client stopped sending, seven were
+ * columns the backend grew, four were routes corrected to the paths the controllers publish, two
+ * were calls to routes that do not exist and were removed, and the rest were keys whose home was a
+ * different endpoint.
+ *
+ * A new entry here is therefore a bug introduced today, not inherited. It can arrive without
+ * anybody touching this repository: the index is derived from the backend's `development`, so a
+ * DTO field removed there turns into a finding here within the hour. That has happened once
+ * already, when echno-backend#631 dropped `verifiedBy` and `verifiedAt` from the construction
+ * payment DTOs and four findings appeared in this package unprompted. That is the check working.
  */
 import { describe, expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';

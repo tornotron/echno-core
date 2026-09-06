@@ -2,6 +2,7 @@ import { describe, expect, test } from 'bun:test';
 import { parseIssue } from './issue';
 import { IssueType } from './issue-type';
 import { IssueStatus } from './issue-status';
+import { IssuePriority } from './issue-priority';
 
 const valid = {
   id: 8,
@@ -30,5 +31,30 @@ describe('parseIssue boundary validation', () => {
 
   test('rejects an unknown type', () => {
     expect(() => parseIssue({ ...valid, type: 'nonsense' })).toThrow();
+  });
+});
+
+describe('the priority the client can now set comes back', () => {
+  // The read side is the half that decides whether a settable field is a
+  // feature or a write-only one. Material category, status and trend were
+  // deleted rather than built precisely because no response DTO could carry
+  // them back; echno-backend#677 put priority on IssueDto and IssueSimpleDto,
+  // so this parses it.
+  test('parses a priority the payload carries', () => {
+    expect(parseIssue({ ...valid, priority: 'critical' }).priority).toBe(
+      IssuePriority.critical
+    );
+  });
+
+  test('an issue with no priority parses, and has none', () => {
+    // The column is nullable with no default, so every row raised before it
+    // existed answers null here. Reading that as a priority would put a value
+    // on screen nobody chose.
+    expect(parseIssue(valid).priority).toBeUndefined();
+    expect(parseIssue({ ...valid, priority: null }).priority).toBeUndefined();
+  });
+
+  test('rejects an unknown priority', () => {
+    expect(() => parseIssue({ ...valid, priority: 'urgent' })).toThrow();
   });
 });

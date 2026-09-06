@@ -5,6 +5,50 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
+## [v7.0.0] - 2026-09-06
+
+An issue's priority reaches a column, and comes back. This closes echno-core#57: the request
+contract has **no findings left**, from 66 when the check first ran.
+
+`priority` was a free-form `string` on both issue request interfaces for as long as the backend
+had nowhere to put it. echno-backend#677 gave `Issue` a nullable `priority` column with a closed
+set of values, a `case` on the partial-update switch, and the field on both response DTOs, so the
+type is closed here too and the read side carries it back.
+
+Breaking because narrowing an optional field's type is a break: a caller passing `'medium'` as a
+bare string now has to pass `IssuePriority.medium`. Nothing in `echno-web` sends the field yet,
+which is its own gap and is filed separately.
+
+### Added
+
+- **`IssuePriority`** (`low`, `medium`, `high`, `critical`), with `getIssuePriorityLabel`,
+  `getIssuePriorityColor` and `issuePriorityFromString`. The values match the backend's wire
+  representation, the same arrangement as `IssueStatus` and `IssueType`.
+
+- **`Issue.priority`**, parsed from the response. Optional, because the column is nullable with no
+  default: an issue raised before the column existed, or raised without one, has none, and reading
+  that as a priority would put a value on screen nobody chose. An unrecognised value is refused
+  rather than passed through.
+
+  The read side is what decides whether a settable field is a feature or a write-only one.
+  Material `category`, `status` and `trend` were deleted rather than built precisely because no
+  response DTO could carry them back.
+
+### Changed
+
+- **`CreateIssueRequest.priority` and `UpdateIssueRequest.priority` are `IssuePriority`** rather
+  than `string`. The update field also accepts `null`, which clears the priority. That asymmetry
+  is the backend's: the column is nullable, so an explicit null is applied there, while `type` and
+  `status` refuse one with a 400.
+
+### Fixed
+
+- **The request-contract pass answers from a body's declared type only while nothing writes to
+  it.** The parameter-type fallback added in v6.0.0 is the right answer only while the object
+  leaves the service unchanged. A service that set a key on the parameter before posting it would
+  put a name on the wire the interface does not carry, and the pass would have reported that call
+  as checked. No service does that today, so the coverage account does not move.
+
 ## [v6.0.0] - 2026-09-06
 
 The last three findings on echno-core#57, and the end of the register. Two of them were calls

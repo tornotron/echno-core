@@ -263,6 +263,8 @@ Entry points: 135
 - getFileTypeFromMimeType
 - getFileTypeIcon
 - getInvitationStatus
+- getIssuePriorityColor
+- getIssuePriorityLabel
 - getIssueStatusColor
 - getIssueStatusIcon
 - getIssueStatusLabel
@@ -367,6 +369,8 @@ Entry points: 135
 - IssueFilterParams
 - issueKeys
 - IssuePageParams
+- IssuePriority
+- issuePriorityFromString
 - issueService
 - IssueStats
 - IssueStatus
@@ -1955,6 +1959,8 @@ Entry points: 135
 - createIssueCommentToJson
 - CreateIssueRequest
 - createIssueToJson
+- getIssuePriorityColor
+- getIssuePriorityLabel
 - getIssueStatusColor
 - getIssueStatusIcon
 - getIssueStatusLabel
@@ -1965,6 +1971,8 @@ Entry points: 135
 - IssueComment
 - issueCommentToJson
 - IssueFiles
+- IssuePriority
+- issuePriorityFromString
 - IssueStatus
 - issueStatusFromString
 - issueToJson
