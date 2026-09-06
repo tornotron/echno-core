@@ -15,6 +15,7 @@ import {
   materialsService,
   type LowStockParams,
   type MaterialsPageParams,
+  type StockSummaryParams,
 } from '../../services/materials-service';
 import { materialsKeys } from './keys';
 
@@ -151,6 +152,39 @@ export const useLowStockMaterials = (params: LowStockParams = {}) =>
   useQuery({
     queryKey: materialsKeys.lowStock(params),
     queryFn: () => materialsService.getLowStock(params),
+  });
+
+/**
+ * Fetches the materials figures the server totals: the value of the stock
+ * on hand, how many materials the figures cover, and how many distinct
+ * units they are held in.
+ *
+ * These are the numbers a dashboard strip is built from, and none of them
+ * can be worked out from a material list already on hand. That list stops
+ * at 500 rows, so a sum over it is the value of 500 materials however
+ * large the catalogue is, and a set of its units counts only the units
+ * those 500 are held in. Both fail short, and both look like answers.
+ *
+ * `data.materialCount` at organization scope is the catalogue size, so it
+ * also settles whether a list on hand is complete. Anything still derived
+ * from those rows, a composition breakdown most of all, is a share of the
+ * rows and not of the catalogue whenever it is not.
+ *
+ * `data.unvaluedHoldingCount` is the caveat that goes with the value:
+ * non-zero means that many holdings carried no unit cost, so they sit in
+ * the total at zero and the total understates. It qualifies the figure
+ * rather than withholding it.
+ *
+ * The scope is part of the cache key, so a project's totals never come
+ * back for an organization-wide read.
+ *
+ * @param params - Scope (`projectId`); omit for the organization.
+ * @returns A TanStack `UseQueryResult` wrapping `MaterialStockSummary`.
+ */
+export const useMaterialStockSummary = (params: StockSummaryParams = {}) =>
+  useQuery({
+    queryKey: materialsKeys.stockSummary(params),
+    queryFn: () => materialsService.getStockSummary(params),
   });
 
 export { materialsKeys } from './keys';
