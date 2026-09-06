@@ -43,6 +43,53 @@ answer it.
   the parameters instead of at filtering the result. The behaviour is unchanged; what it returned
   was already one page.
 
+## [v8.0.0] - 2026-09-06
+
+An approval queue is the caller's own. Sixth entry in the shape closed by echno-backend#589,
+#599, #607, #631 and #635, filed as echno-backend#683. `GET /leave-requests/web/approver`, `GET
+/leave-requests/web/pending-approvals`, its count, and `GET /leave-approvals/web/can-approve` each
+took the employee to answer about as a query parameter, under a guard that only asked whether the
+caller held the system-admin or hr-admin role. The guard checked a role, the query read a number
+the caller sent, and nothing tied the two together. An administrator read any colleague's queue by
+asking for it, and the line managers an approval chain is actually built from could not read their
+own at all.
+
+The backend now reads the approver from the session, so there is nothing left for a client to
+send. Breaking because four published service methods lose a parameter.
+
+### Changed
+
+- **`leaveService.getApproverRequests()`, `leaveService.getPendingApprovals()` and
+  `leaveService.getPendingApprovalsCount()` take no arguments.** Each dropped its `approverId`,
+  and none of the three puts a query object on the request any more. A queue and its count are
+  the signed-in caller's own, so naming an approver was either redundant or a way to read
+  somebody else's.
+
+- **`leaveService.canApprove(requestId)` takes only the request.** The `employeeId` second
+  argument is gone and no longer rides on the query string. This is the check a client makes
+  before drawing an approve button, so it answers about whoever is signed in. Asking about
+  another employee is a question no client has needed, and it let one employee probe another's
+  place in an approval chain.
+
+- **`useApproverRequests`, `usePendingApprovals`, `usePendingApprovalsCount` and `useCanApprove`
+  keep their arguments and stop sending them.** The id is now the cache key and the enable gate,
+  nothing more, so two employees on one device do not share an entry and the query does not fire
+  before the employee resolves. Hook callers get no compile error, which is the part to check by
+  hand: a screen that passed a colleague's id to read that colleague's queue now silently reads
+  the signed-in caller's. Passing anything but the signed-in employee's own id is meaningless
+  after this release.
+
+  The same applies to `useCanApprove`. The backend is the authority on who may approve, not the
+  client's reading of a job title, because an approval chain is built from the employee's
+  management line and a supervisor with no administrative role can hold the decision.
+
+### Added
+
+- **Tests that pin the outgoing request** for all four calls. A green `tsc` does not catch a
+  regression here: a query object assembled key by key, or a parameter reintroduced with a
+  default, compiles cleanly while still putting the id on the wire. Every one of them fails
+  against v7.0.0.
+
 ## [v7.0.0] - 2026-09-06
 
 An issue's priority reaches a column, and comes back. This closes echno-core#57: the request
