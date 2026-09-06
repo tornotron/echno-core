@@ -789,6 +789,8 @@ Entry points: 135
 - useAttendanceByEmployee
 - useAttendanceById
 - useAttendanceByProject
+- useAttendancePendingApprovals
+- useAttendancePendingApprovalsCount
 - useAttendanceProfiles
 - useAttendanceSummary
 - useBalanceSheet
@@ -1210,6 +1212,8 @@ Entry points: 135
 - useAttendanceByEmployee
 - useAttendanceById
 - useAttendanceByProject
+- useAttendancePendingApprovals
+- useAttendancePendingApprovalsCount
 - useAttendanceSummary
 - useCheckIn
 - useDeleteAttendance

@@ -31,8 +31,8 @@ go unnoticed.
 - src/services/attachment-service.ts:113  POST /api/v1/attachment/web/entityId/{}/entityType/{}  (body is a FormData assembled by the caller)
 - src/services/attachment-service.ts:139  POST /api/v1/attachment/web/presign/entityId/{}/entityType/{}  (body is an array, which has no top-level field names)
 - src/services/attachment-service.ts:162  POST /api/v1/attachment/web/register/entityId/{}/entityType/{}  (body is an array, which has no top-level field names)
-- src/services/attendance-service.ts:410  POST /api/v1/attendance/web/check-in  (the payload travels in the query string, not the body)
-- src/services/attendance-service.ts:433  POST /api/v1/attendance/web/clock-event  (the payload travels in the query string, not the body)
+- src/services/attendance-service.ts:411  POST /api/v1/attendance/web/check-in  (the payload travels in the query string, not the body)
+- src/services/attendance-service.ts:434  POST /api/v1/attendance/web/clock-event  (the payload travels in the query string, not the body)
 - src/services/finance-account-service.ts:216  POST /api/v1/finance/accounts/web/import  (body is a FormData assembled by the caller)
 
 These are not a backlog. The list stood at seventeen until the pass learned to follow a

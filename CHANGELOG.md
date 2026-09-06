@@ -5,6 +5,46 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
+## [v8.2.0] - 2026-09-06
+
+An attendance approver can find what is waiting on them.
+
+A day marked from outside a project's geofence has been routed to a named person since
+echno-backend#681, and the decision has worked since. Finding the record has not: the two listings
+are a project on one required date and one employee over a range, so an approver with people on
+several sites had to guess a site and a day, and a day held last week was invisible to anyone not
+already looking for it. echno-backend#692 adds the queue and its count; this makes them reachable.
+Additive.
+
+Neither method takes an approver. A queue is the caller's own and the server resolves it from the
+session, which is the correction echno-backend#683 made to the leave pair for the same reason: an
+id on the query string under a role-only guard let an administrator read a colleague's queue while
+the line managers a chain is actually built from could read none of their own.
+
+The count is a second request rather than the length of the first. The listing is capped server
+side, so past the cap its length stops being the count, and a badge read off it would understate a
+queue exactly when it is worth reading.
+
+### Added
+
+- **`attendanceService.getPendingApprovals()`**, the attendance days awaiting the signed-in
+  caller's decision, newest day first. `GET /attendance/web/pending-approvals`.
+
+- **`attendanceService.getPendingApprovalsCount()`**, the same set counted by the server, for a
+  badge. `GET /attendance/web/pending-approvals/count`.
+
+- **`useAttendancePendingApprovals()` and `useAttendancePendingApprovalsCount()`**, the query
+  hooks over the two, keyed by **`attendanceKeys.pendingApprovals()`** and
+  **`attendanceKeys.pendingApprovalsCount()`**. Neither takes an argument and neither is ever
+  disabled: there is no id to wait for. The count's key sits under the queue's, so invalidating
+  the queue refreshes the number beside it.
+
+### Changed
+
+- **`useApproveAttendance` invalidates the approval queue** when a decision lands. The record has
+  left the queue and the badge has to drop; whether it left is the server's answer, so the caches
+  are invalidated rather than patched.
+
 ## [v8.1.0] - 2026-09-06
 
 The three people on a payment voucher become something the server can be asked about.

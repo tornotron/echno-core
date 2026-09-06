@@ -186,6 +186,11 @@ export function useRecordClockEvent() {
  *   cache with the record carrying the new approval state.
  * - {@link patchAttendanceInLists} — replaces the record in place across every
  *   cached list shape.
+ * - `invalidateQueries(attendanceKeys.pendingApprovals())` — the decided record
+ *   has left the queue and the badge beside it has to drop. Invalidated rather
+ *   than patched: whether it leaves is the server's answer, and the count is
+ *   the server's too. The key prefix covers the count, which is nested under
+ *   it.
  *
  * @returns A TanStack `UseMutationResult` where the mutate function accepts
  *   `{ id: number; approvalStatus: 'APPROVED' | 'REJECTED'; remarks?: string }`.
@@ -209,6 +214,9 @@ export function useApproveAttendance() {
         attendance
       );
       patchAttendanceInLists(queryClient, attendance);
+      queryClient.invalidateQueries({
+        queryKey: attendanceKeys.pendingApprovals(),
+      });
     },
   });
 }

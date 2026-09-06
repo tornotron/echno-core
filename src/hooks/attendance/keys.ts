@@ -13,6 +13,10 @@
  *   ({@link attendanceKeys.byProject}).
  * - `['attendance', 'summary', employeeId, month, year]` — a monthly summary
  *   ({@link attendanceKeys.summary}).
+ * - `['attendance', 'pendingApprovals']` — the days waiting on the signed-in
+ *   caller ({@link attendanceKeys.pendingApprovals}), with the badge count
+ *   nested under it ({@link attendanceKeys.pendingApprovalsCount}) so that
+ *   invalidating the queue invalidates the number beside it.
  *
  * The `project` and `employee` sub-namespaces are what `isAttendanceListCache`
  * predicates match when patching or invalidating list caches.
@@ -45,4 +49,16 @@ export const attendanceKeys = {
 
   summary: (employeeId: number, month: number, year: number) =>
     [...attendanceKeys.all, 'summary', employeeId, month, year] as const,
+
+  /**
+   * The approval queue. No argument: a queue is the caller's own, and the
+   * server answers for whoever is signed in. Keying it by an approver id would
+   * be the same mistake one layer up, caching one person's queue under
+   * another's name.
+   */
+  pendingApprovals: () => [...attendanceKeys.all, 'pendingApprovals'] as const,
+
+  /** The badge beside the queue, nested so the queue's key is its prefix. */
+  pendingApprovalsCount: () =>
+    [...attendanceKeys.pendingApprovals(), 'count'] as const,
 };

@@ -2,7 +2,8 @@
  * @module attendance-service
  *
  * Typed client for the core attendance endpoints under `/attendance/web` —
- * check-in, clock events, summaries, approvals, mark-absent, delete. All
+ * check-in, clock events, summaries, approvals, the approver's own queue,
+ * mark-absent, delete. All
  * methods throw {@link ApiError} on non-2xx responses and on parse failures
  * (mapped to a 422).
  *
@@ -508,6 +509,56 @@ export const attendanceService = {
       number: data.number ?? 0,
       size: data.size ?? params.size ?? 20,
     };
+  },
+
+  /**
+   * Fetches the attendance days awaiting the signed-in caller's decision.
+   *
+   * `GET /attendance/web/pending-approvals` → `AttendanceResponseDto[]`.
+   *
+   * A day marked from outside a project's geofence is held for a named person
+   * (echno-backend#681), and until echno-backend#692 there was no way to find
+   * one: the two listings are a project on one required date and one employee
+   * over a range, so an approver had to guess a site and a day, and a day held
+   * last week was invisible to anyone not already looking for it.
+   *
+   * There is no approver argument, and there must not be one. A queue is the
+   * caller's own; the server resolves it from the session. Sending an id under
+   * a role-only guard is what let an administrator read a colleague's queue
+   * while the line managers a chain is built from could read none of their own
+   * (echno-backend#683).
+   *
+   * The days a caller may decide but that nobody is waiting on them for are
+   * not in it: the queue is the held days, not every record sitting at
+   * `pending`, which is the resting state of every attendance record ever
+   * created.
+   *
+   * @returns The {@link Attendance} records waiting on the caller, newest day
+   *   first.
+   * @throws {ApiError} On non-2xx responses or if a record fails to parse.
+   */
+  async getPendingApprovals(): Promise<Attendance[]> {
+    const data = await api.get<Raw[]>(`/attendance/web/pending-approvals`);
+    return safeAttendances(data);
+  },
+
+  /**
+   * Fetches how many attendance days await the caller's decision.
+   *
+   * `GET /attendance/web/pending-approvals/count` → `{ count: number }`.
+   *
+   * Asked of the server rather than counted off {@link getPendingApprovals},
+   * because that listing is capped and its length stops being the answer once
+   * the queue is longer than the cap.
+   *
+   * @returns The number waiting (`0` when the field is absent).
+   * @throws {ApiError} On non-2xx responses.
+   */
+  async getPendingApprovalsCount(): Promise<number> {
+    const data = await api.get<{ count: number }>(
+      `/attendance/web/pending-approvals/count`
+    );
+    return data.count ?? 0;
   },
 
   /**
