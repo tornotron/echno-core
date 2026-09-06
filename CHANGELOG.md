@@ -30,8 +30,9 @@ the validation boundary exists to prevent.
 
 ### Fixed
 
-- **`Invitation.inviteCode`** parses the numeric `code` the backend sends today, and the string it
-  is expected to send later, instead of rejecting both cases the backend actually produces.
+- **`Invitation.inviteCode`** parses the numeric `code` the backend sends today. The old schema
+  accepted a string and rejected a number, which is the one shape the backend actually produces, so
+  every payload failed. A string still parses, which is what the widened code will be.
 
 ## [v8.2.0] - 2026-09-06
 
