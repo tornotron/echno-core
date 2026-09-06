@@ -38,6 +38,9 @@ const ClockEventResponseSchema = z.object({
   deviceInfo: opaque,
   isWithinGeofence: nullableBoolean,
   distanceFromProject: nullableNumber,
+  geofenceRadiusMeters: nullableNumber,
+  geofenceExceptionReason: nullableString,
+  recordedById: optionalNumericId,
   remarks: nullableString,
   verifiedBy: nullableString,
   verifiedAt: backendDate,
@@ -99,28 +102,59 @@ export interface ClockEvent {
   };
   /**
    * Whether {@link location} fell inside the project geo-fence, or `undefined`
-   * when the server did not say.
+   * when the server reached no verdict.
    *
    * Optional on purpose. A caller has to be able to tell "the punch was outside
    * the fence" from "nobody worked out where the punch was", and those are not
    * the same statement to put in front of an employee. Absent must therefore
    * stay absent rather than being read as a definite `false`.
    *
-   * The server does not currently evaluate the geo-fence at all: it writes a
-   * fixed `false` on every clock event. Treat the field as carrying no
-   * information until tornotron/echno-backend#646 is resolved.
+   * The server evaluates this as of tornotron/echno-backend#646. Absent stays
+   * common and is not a violation: the project may carry no coordinates, the
+   * punch may carry no position, the event may have come from a regularization
+   * rather than a live punch, or the punch may have been entered by a
+   * supervisor for somebody else, in which case the captured position is the
+   * supervisor's and says nothing about the employee. Every clock event written
+   * before #646 is also `undefined`, because none of them were ever measured.
    */
   isWithinGeofence?: boolean;
   /**
    * Distance in meters from the project location at punch time, or `undefined`
-   * when the server did not say.
+   * when the geo-fence was not evaluated.
    *
    * Optional for the same reason as {@link isWithinGeofence}, and with more at
    * stake: a fabricated `0` does not read as missing, it reads as the employee
-   * having stood exactly on the site marker. The server currently writes a
-   * fixed `0.0` on every clock event.
+   * having stood exactly on the site marker. Never substitute a `0` here.
    */
   distanceFromProject?: number;
+  /**
+   * The geo-fence radius in meters that the verdict was reached against, as it
+   * stood at punch time, or `undefined` when the geo-fence was not evaluated.
+   *
+   * Carried so a punch still explains itself after the radius or the project's
+   * coordinates are edited. Render the verdict against this, not against the
+   * project's current settings, which may no longer be the ones that applied.
+   */
+  geofenceRadiusMeters?: number;
+  /**
+   * Why the employee marked their own attendance from outside the site
+   * boundary, or `undefined` when they did not.
+   *
+   * Being outside the fence does not block the punch. The employee supplies a
+   * reason, it is stored here, and the day's attendance record is held for
+   * their reporting manager to approve.
+   */
+  geofenceExceptionReason?: string;
+  /**
+   * The employee who submitted the punch, which is not always the employee it
+   * belongs to: a supervisor can record attendance for their team.
+   *
+   * This is what makes an absent {@link isWithinGeofence} readable. When it
+   * differs from the attendance record's employee, the geo-fence was
+   * deliberately not evaluated because the captured position is the
+   * submitter's.
+   */
+  recordedById?: number;
   /** Optional remarks entered by the employee. */
   remarks?: string;
   /** Name of the admin who verified the punch, if verified. */
@@ -220,6 +254,14 @@ export function isWithinGeofence(
  * naive value is read as local. `verifiedAt` is set by the server, which runs
  * in UTC, so a naive value there is read as UTC.
  *
+ * The geo-fence fields are narrowed from `null` to `undefined` rather than
+ * passed through. The server sends an explicit `null` for a punch it did not
+ * evaluate, and the spread would carry that null into a field the interface
+ * declares as `boolean | undefined`, so the declared type and the runtime value
+ * would disagree. They are never defaulted: an absent verdict has to stay
+ * absent, because a manufactured `false` reads as a violation and a
+ * manufactured `0` reads as the employee standing on the site marker.
+ *
  * @param data - The untyped JSON object received from the backend.
  * @returns A `ClockEvent` with date fields hydrated.
  */
@@ -231,6 +273,11 @@ export function parseClockEvent(data: unknown): ClockEvent {
     timestamp:
       parseLocalDateTime(raw.timestamp) ?? new Date(raw.timestamp as string),
     verifiedAt: parseUTCDate(raw.verifiedAt) ?? undefined,
+    isWithinGeofence: raw.isWithinGeofence ?? undefined,
+    distanceFromProject: raw.distanceFromProject ?? undefined,
+    geofenceRadiusMeters: raw.geofenceRadiusMeters ?? undefined,
+    geofenceExceptionReason: raw.geofenceExceptionReason ?? undefined,
+    recordedById: raw.recordedById ?? undefined,
   } as ClockEvent;
 }
 

@@ -153,6 +153,15 @@ function parseClockEvent(raw: any): ClockEvent {
     // nothing had established. See tornotron/echno-backend#646.
     isWithinGeofence: raw.isWithinGeofence ?? undefined,
     distanceFromProject: raw.distanceFromProject ?? undefined,
+    // The radius the verdict was reached against, carried so a punch still
+    // explains itself after the site's radius or coordinates are edited. Render
+    // the verdict against this, not against the project's current settings.
+    geofenceRadiusMeters: raw.geofenceRadiusMeters ?? undefined,
+    geofenceExceptionReason: raw.geofenceExceptionReason ?? undefined,
+    // Who submitted the punch, which is not always whose day it is. When it
+    // differs from the record's employee, a supervisor entered it and the fence
+    // was deliberately not evaluated, because the captured position is theirs.
+    recordedById: raw.recordedById ?? undefined,
     remarks: raw.remarks ?? undefined,
     verifiedBy: raw.verifiedBy ?? undefined,
     // Server-set, and the server runs in UTC, so a naive value here is UTC. The
@@ -294,6 +303,11 @@ function parseAttendance(raw: any): Attendance {
       | 'approved'
       | 'rejected',
     approvedBy: raw.approvedBy ?? undefined,
+    // Left undefined when the server says nothing, for the same reason the
+    // geo-fence verdict on a clock event is: a manufactured false here would
+    // claim the day had been checked and found clean.
+    requiresGeofenceApproval: raw.requiresGeofenceApproval ?? undefined,
+    geofenceApproverId: raw.geofenceApproverId ?? undefined,
     // Every timestamp on this record is server-set, so UTC. Only the clock and
     // movement times above are the employee's local wall clock.
     approvedAt: parseUTCDate(raw.approvedAt) ?? undefined,
