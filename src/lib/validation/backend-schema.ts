@@ -58,5 +58,20 @@ export const nullableNumber = z.number().nullish();
  */
 export const money = z.coerce.number().nullish();
 
+/**
+ * A scalar the client holds as a string but the backend may serialize as a JSON
+ * number. The invite code is the case that prompted it: the column and the DTO
+ * field are `int`, so Jackson writes a number, while both clients type the code
+ * as a string. Accepting either shape means the parser is correct against the
+ * backend as it stands and stays correct when the code widens to an opaque
+ * string, which is where that contract is heading.
+ *
+ * Deliberately a union rather than `z.coerce.string()`: coercion would also
+ * accept an object or an array and stringify it to `'[object Object]'`, which
+ * is exactly the silently-fabricated value this module exists to prevent.
+ * Callers normalize the accepted value with `String(...)`.
+ */
+export const nullableStringOrNumber = z.union([z.string(), z.number()]).nullish();
+
 /** A blob left to a dedicated parser (attachments, nested polymorphic shapes). */
 export const opaque = z.unknown().nullish();
