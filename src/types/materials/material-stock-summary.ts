@@ -18,8 +18,18 @@ import { money, optionalNumericId } from '../../lib/validation/backend-schema';
  * A count the backend totalled: a whole number, never negative. Required
  * rather than nullish, so a payload that arrived without one fails the
  * parse instead of reporting an empty catalogue.
+ *
+ * The union in front of the coercion is what makes that true. `z.coerce
+ * .number()` runs `Number()` on whatever it is given, and `Number(null)`
+ * is `0`, so coercing on its own would turn a null count into a catalogue
+ * of nothing and pass it on as an answer. Only a number or a numeric
+ * string gets that far; the string is accepted because some drivers
+ * serialise a Java `long` as one.
  */
-const totalledCount = z.coerce.number().int().nonnegative();
+const totalledCount = z
+  .union([z.number(), z.string().trim().min(1)])
+  .transform((value) => (typeof value === 'string' ? Number(value) : value))
+  .pipe(z.number().int().nonnegative());
 
 /**
  * Shape of the backend `MaterialStockSummaryDto` at the parse boundary.
