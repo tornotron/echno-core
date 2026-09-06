@@ -364,53 +364,58 @@ export const useOrganizationRequests = (page?: number, size?: number) => {
 };
 
 /**
- * Fetches every leave request routed to an approver.
+ * Fetches every leave request the signed-in caller has been an approver on.
  *
  * Keyed by `leaveKeys.approverRequests(approverId)`; disabled until
  * `approverId` is truthy.
  *
- * @param approverId - Surrogate id of the approver.
+ * @param approverId - The signed-in employee's own id. It is **not sent**: the
+ *   backend reads the approver from the session (echno-backend #683). It names
+ *   whose list this is, so two employees on one device do not share a cache
+ *   entry, and it keeps the query from firing before the employee resolves.
  * @returns A TanStack `UseQueryResult` wrapping a {@link LeaveRequest} array.
  */
 export const useApproverRequests = (approverId: number) => {
   return useQuery({
     queryKey: leaveKeys.approverRequests(approverId),
-    queryFn: () => leaveService.getApproverRequests(approverId),
+    queryFn: () => leaveService.getApproverRequests(),
     enabled: !!approverId,
   });
 };
 
 /**
- * Fetches the requests awaiting an approver's decision.
+ * Fetches the requests awaiting the signed-in caller's decision.
  *
  * Keyed by `leaveKeys.pendingApprovals(approverId)`; disabled until
  * `approverId` is truthy.
  *
- * @param approverId - Surrogate id of the approver.
+ * @param approverId - The signed-in employee's own id, used as the cache key
+ *   rather than sent; see {@link useApproverRequests}.
  * @returns A TanStack `UseQueryResult` wrapping a {@link LeaveRequest} array.
  */
 export const usePendingApprovals = (approverId: number) => {
   return useQuery({
     queryKey: leaveKeys.pendingApprovals(approverId),
-    queryFn: () => leaveService.getPendingApprovals(approverId),
+    queryFn: () => leaveService.getPendingApprovals(),
     enabled: !!approverId,
   });
 };
 
 /**
- * Fetches the count of requests awaiting an approver's decision.
+ * Fetches the count of requests awaiting the signed-in caller's decision.
  *
  * Keyed by `leaveKeys.pendingApprovalsCount(approverId)`; disabled until
  * `approverId` is truthy.
  *
- * @param approverId - Surrogate id of the approver.
+ * @param approverId - The signed-in employee's own id, used as the cache key
+ *   rather than sent; see {@link useApproverRequests}.
  * @returns A TanStack `UseQueryResult` wrapping the pending-approval count
  *   (`number`).
  */
 export const usePendingApprovalsCount = (approverId: number) => {
   return useQuery({
     queryKey: leaveKeys.pendingApprovalsCount(approverId),
-    queryFn: () => leaveService.getPendingApprovalsCount(approverId),
+    queryFn: () => leaveService.getPendingApprovalsCount(),
     enabled: !!approverId,
   });
 };
@@ -456,14 +461,22 @@ export const useApprovalChain = (requestId: number) => {
 };
 
 /**
- * Checks whether an employee may approve a given request.
+ * Checks whether the signed-in caller may approve a given request.
  *
  * Keyed by `leaveKeys.canApprove(requestId, employeeId)`; disabled unless both
  * `requestId` and `employeeId` are truthy and the caller-supplied `enabled`
  * flag is `true`.
  *
+ * The backend is the authority here, not the client's reading of a job title.
+ * An approval chain is built from the employee's management line, so a
+ * supervisor with no administrative role can be the person who holds the
+ * decision. Gating the UI on anything narrower than this answer hides the
+ * action from somebody entitled to take it.
+ *
  * @param requestId - Surrogate id of the request.
- * @param employeeId - Surrogate id of the prospective approver.
+ * @param employeeId - The signed-in employee's own id. It is **not sent**: the
+ *   backend answers about the session (echno-backend #683). It names whose
+ *   answer this is so the cache entry is not shared between two employees.
  * @param enabled - Caller gate to defer the query; defaults to `true`.
  * @returns A TanStack `UseQueryResult` wrapping a {@link CanApproveResponse}.
  */
@@ -474,7 +487,7 @@ export const useCanApprove = (
 ) => {
   return useQuery({
     queryKey: leaveKeys.canApprove(requestId, employeeId),
-    queryFn: () => leaveService.canApprove(requestId, employeeId),
+    queryFn: () => leaveService.canApprove(requestId),
     enabled: !!requestId && !!employeeId && enabled,
   });
 };
