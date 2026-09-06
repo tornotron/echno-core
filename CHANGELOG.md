@@ -45,14 +45,14 @@ answer it.
 
 ## [v8.0.0] - 2026-09-06
 
-An approval queue is the caller's own. Sixth entry in the shape closed by echno-backend#589,
-#599, #607, #631 and #635, filed as echno-backend#683. `GET /leave-requests/web/approver`, `GET
-/leave-requests/web/pending-approvals`, its count, and `GET /leave-approvals/web/can-approve` each
-took the employee to answer about as a query parameter, under a guard that only asked whether the
-caller held the system-admin or hr-admin role. The guard checked a role, the query read a number
-the caller sent, and nothing tied the two together. An administrator read any colleague's queue by
-asking for it, and the line managers an approval chain is actually built from could not read their
-own at all.
+An approval queue is the caller's own. Sixth entry in the shape closed by
+echno-backend#589, #599, #607, #631 and #635, filed as echno-backend#683.
+`GET /leave-requests/web/approver`, `GET /leave-requests/web/pending-approvals`, its count, and
+`GET /leave-approvals/web/can-approve` each took the employee to answer about as a query
+parameter, under a guard that only asked whether the caller held the system-admin or hr-admin
+role. The guard checked a role, the query read a number the caller sent, and nothing tied the two
+together. An administrator read any colleague's queue by asking for it, and the line managers an
+approval chain is actually built from could not read their own at all.
 
 The backend now reads the approver from the session, so there is nothing left for a client to
 send. Breaking because four published service methods lose a parameter.
@@ -61,9 +61,8 @@ send. Breaking because four published service methods lose a parameter.
 
 - **`leaveService.getApproverRequests()`, `leaveService.getPendingApprovals()` and
   `leaveService.getPendingApprovalsCount()` take no arguments.** Each dropped its `approverId`,
-  and none of the three puts a query object on the request any more. A queue and its count are
-  the signed-in caller's own, so naming an approver was either redundant or a way to read
-  somebody else's.
+  and none of the three sends a query object at all now. A queue and its count are the signed-in
+  caller's own, so naming an approver was either redundant or a way to read somebody else's.
 
 - **`leaveService.canApprove(requestId)` takes only the request.** The `employeeId` second
   argument is gone and no longer rides on the query string. This is the check a client makes
