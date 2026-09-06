@@ -44,6 +44,29 @@ export interface ConstructionPaymentListParams {
   type?: string;
   /** Restrict to a payee type (SCREAMING_SNAKE_CASE). */
   payeeType?: string;
+  /**
+   * Restrict to the employee a voucher was paid to.
+   *
+   * An **employee** id: the payee on a salary or advance voucher, set from the
+   * creation payload beside `vendorId`, `subContractId` and `labourId` and
+   * selected by `payeeType`. Not a user id, and not interchangeable with the
+   * two below.
+   */
+  employeeId?: number;
+  /**
+   * Restrict to the account that verified a voucher.
+   *
+   * A **user** id, stamped from the session, the same id the response returns
+   * beside `verifiedByName`.
+   */
+  verifiedBy?: number;
+  /**
+   * Restrict to the account that raised a voucher.
+   *
+   * A **user** id, stamped from the session, the same id the response returns
+   * beside `raisedByName`.
+   */
+  raisedBy?: number;
 }
 
 /** Safely parse a payment, converting parse failures into a 422 ApiError. */
@@ -101,9 +124,20 @@ export const financeConstructionPaymentService = {
    * `GET /finance/construction-payments/web` → `Page<ConstructionPaymentDto>`.
    * The Spring page envelope is unwrapped to a plain array of parsed rows.
    *
+   * **This returns one page, not the register.** The endpoint serves twenty
+   * rows when the caller names no `pageSize`, and unwrapping the envelope drops
+   * the total along with it, so the length of the returned array says nothing
+   * about how many vouchers exist. Narrow with the parameters below rather than
+   * filtering or counting the result: a filter applied to the returned array
+   * narrows that page and not the register, so it answers a different question
+   * from the one it appears to, and a short result then reads as a complete
+   * answer. That was echno-backend#638.
+   *
    * @param params - Optional `projectId` / `vendorId` / `status` / `type` /
-   *   `payeeType` filters.
-   * @returns The parsed {@link ConstructionPayment} rows.
+   *   `payeeType` filters, plus the three people on a voucher: `employeeId`
+   *   (the payee, an employee id) and `verifiedBy` / `raisedBy` (user ids).
+   *   The three are not interchangeable; see each field.
+   * @returns The parsed {@link ConstructionPayment} rows of one page.
    * @throws {ApiError} On non-2xx responses or if a row fails to parse.
    */
   async getAll(
@@ -115,6 +149,9 @@ export const financeConstructionPaymentService = {
     if (params.status !== undefined) query.status = params.status;
     if (params.type !== undefined) query.type = params.type;
     if (params.payeeType !== undefined) query.payeeType = params.payeeType;
+    if (params.employeeId !== undefined) query.employeeId = params.employeeId;
+    if (params.verifiedBy !== undefined) query.verifiedBy = params.verifiedBy;
+    if (params.raisedBy !== undefined) query.raisedBy = params.raisedBy;
     const data = await api.get<ApiResponse>(BASE, query);
     return safeParseConstructionPayments(data);
   },
