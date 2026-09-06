@@ -3,7 +3,9 @@
  *
  * React Query query hooks for core attendance data:
  * {@link useAttendanceById}, {@link useAttendanceByEmployee},
- * {@link useAttendanceByProject}, and {@link useAttendanceSummary}. Keyed via
+ * {@link useAttendanceByProject}, {@link useAttendanceSummary},
+ * {@link useAttendancePendingApprovals} and
+ * {@link useAttendancePendingApprovalsCount}. Keyed via
  * {@link attendanceKeys}. All hooks inherit the default query-client
  * configuration (no per-hook option profile).
  *
@@ -105,3 +107,34 @@ export function useAttendanceSummary(
 }
 
 export { attendanceKeys } from './keys';
+
+/**
+ * Fetches the attendance days awaiting the signed-in caller's decision.
+ *
+ * Keyed by `attendanceKeys.pendingApprovals()`. Takes no argument and is never
+ * disabled: a queue is the caller's own, and the server answers for whoever is
+ * signed in. There is no id to wait for and none to pass.
+ *
+ * @returns A TanStack `UseQueryResult` wrapping an {@link Attendance} array.
+ */
+export function useAttendancePendingApprovals() {
+  return useQuery({
+    queryKey: attendanceKeys.pendingApprovals(),
+    queryFn: () => attendanceService.getPendingApprovals(),
+  });
+}
+
+/**
+ * Fetches how many attendance days await the caller's decision, for a badge.
+ *
+ * Keyed by `attendanceKeys.pendingApprovalsCount()`, which sits under the
+ * queue's own key, so invalidating the queue refreshes the number beside it.
+ *
+ * @returns A TanStack `UseQueryResult` wrapping the count.
+ */
+export function useAttendancePendingApprovalsCount() {
+  return useQuery({
+    queryKey: attendanceKeys.pendingApprovalsCount(),
+    queryFn: () => attendanceService.getPendingApprovalsCount(),
+  });
+}
