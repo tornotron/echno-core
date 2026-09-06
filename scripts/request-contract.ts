@@ -836,6 +836,13 @@ function keysOfParameterType(
   file: ts.SourceFile
 ): string[] | null {
   if (!ts.isFunctionLike(scope)) return null;
+  // The type is the whole answer only while nothing writes to the object on the way out. A
+  // service that set a key on the parameter before posting it would put a name on the wire that
+  // the interface does not carry, and answering from the type alone would report that call as
+  // checked while missing exactly the kind of key this check exists to find. No service does that
+  // today, and this is what keeps the fallback honest if one starts.
+  const written = assignedKeys(name, scope, 0);
+  if (written === null || written.length > 0) return null;
   const parameter = scope.parameters.find(
     (each) => ts.isIdentifier(each.name) && each.name.text === name
   );
