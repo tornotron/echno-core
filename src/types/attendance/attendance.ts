@@ -64,6 +64,8 @@ const AttendanceResponseSchema = z.object({
   approvalStatus: nullableString,
   approvedBy: nullableString,
   approvedAt: backendDate,
+  requiresGeofenceApproval: nullableBoolean,
+  geofenceApproverId: optionalNumericId,
   remarks: nullableString,
   createdAt: backendDate,
   updatedAt: backendDate,
@@ -146,6 +148,28 @@ export interface Attendance {
 
   /** When the approval decision was made. */
   approvedAt?: Date;
+
+  /**
+   * Whether the day contains a punch the employee marked themselves from
+   * outside the project's site boundary, having given a reason.
+   *
+   * The day is still awaiting that decision while {@link approvalStatus} is
+   * `'pending'`. Every attendance record starts pending, so the status alone
+   * does not say why one needs a look; this is what separates a geo-fence
+   * exception from an ordinary day, and what an approver's queue filters on.
+   */
+  requiresGeofenceApproval?: boolean;
+
+  /**
+   * Employee id of the person expected to decide the geo-fence exception: the
+   * employee's reporting manager, or a project manager assigned to the site.
+   *
+   * `undefined` when neither could be resolved, in which case the attendance
+   * record managers decide as they do for every other record. The id widens who
+   * may approve rather than narrowing it, so an absent value never means the
+   * record is stuck.
+   */
+  geofenceApproverId?: number;
 
   /** Free-text remarks attached to the record. */
   remarks?: string;

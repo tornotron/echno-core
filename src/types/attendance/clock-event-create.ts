@@ -50,6 +50,18 @@ export interface CreateClockEventRequest {
   ipAddress?: string;
   /** Free-text remarks. */
   remarks?: string;
+  /**
+   * Why the employee is marking their own attendance from outside the
+   * project's site boundary.
+   *
+   * Required only when the captured position falls outside the boundary and
+   * the employee is marking their own attendance. The punch is then accepted
+   * rather than refused, the reason is stored on it, and the day's record is
+   * held for their reporting manager to approve. Omitting it in that situation
+   * comes back 422 with the measured distance and the boundary radius, which
+   * is the prompt to ask for one.
+   */
+  geofenceExceptionReason?: string;
 }
 
 /**
@@ -80,5 +92,6 @@ export function createClockEventToJson(
     deviceId: dto.deviceId,
     ipAddress: dto.ipAddress,
     remarks: dto.remarks,
+    geofenceExceptionReason: dto.geofenceExceptionReason,
   };
 }

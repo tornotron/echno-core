@@ -10,14 +10,16 @@
  * marker. Every consumer then rendered the second-hand version of that, because
  * a bare truthiness check cannot tell a real `false` from a manufactured one.
  *
- * This is not hypothetical. The server does not evaluate the geo-fence at all,
+ * This is not hypothetical. The server did not evaluate the geo-fence at all,
  * so `echno-web` showed "Outside Geofence" against punches taken a few metres
- * from the site (tornotron/echno-web#372). The display has been removed, which
- * fixes what is on screen today but not the coercion underneath: the moment the
- * server starts sending real values, an unevaluated record would read as a
- * violation again.
+ * from the site (tornotron/echno-web#372). The display was removed, which fixed
+ * what was on screen but not the coercion underneath.
  *
- * Server side is tornotron/echno-backend#646.
+ * The server now does evaluate it (tornotron/echno-backend#646), which is what
+ * these tests were guarding against: real values and unevaluated ones arrive
+ * through the same fields, and only the absence of a fallback keeps them apart.
+ * Unevaluated stays common and is not a violation, so the cases below now also
+ * cover the three fields that came with the evaluation.
  */
 import { afterEach, describe, expect, spyOn, test } from "bun:test";
 
@@ -121,5 +123,57 @@ describe("a clock event the server did evaluate", () => {
     // Indistinguishable from "not evaluated" before this change, because both
     // arrived as 0. Now only a measured 0 produces one.
     expect(event.distanceFromProject).toBe(0);
+  });
+});
+
+describe("the fields that came with the server-side evaluation", () => {
+  test("carries the radius the verdict was reached against", async () => {
+    // Without this a consumer would have to render the verdict against the
+    // project's current radius, which may not be the one that applied.
+    const event = await firstEvent({
+      isWithinGeofence: false,
+      distanceFromProject: 256.4,
+      geofenceRadiusMeters: 100,
+    });
+
+    expect(event.geofenceRadiusMeters).toBe(100);
+  });
+
+  test("carries the reason the employee gave for marking from outside", async () => {
+    const event = await firstEvent({
+      isWithinGeofence: false,
+      distanceFromProject: 256.4,
+      geofenceRadiusMeters: 100,
+      geofenceExceptionReason: "At head office for the client review",
+    });
+
+    expect(event.geofenceExceptionReason).toBe(
+      "At head office for the client review"
+    );
+  });
+
+  test("leaves the radius and the reason undefined when the server sends null", async () => {
+    const event = await firstEvent({
+      geofenceRadiusMeters: null,
+      geofenceExceptionReason: null,
+    });
+
+    expect(event.geofenceRadiusMeters).toBeUndefined();
+    expect(event.geofenceExceptionReason).toBeUndefined();
+  });
+
+  test("carries who submitted the punch, which explains an absent verdict", async () => {
+    // A punch a supervisor entered for somebody else is deliberately left
+    // unevaluated, because the captured position is the supervisor's. Without
+    // recordedById that null is indistinguishable from a project that has no
+    // coordinates set.
+    const event = await firstEvent({
+      isWithinGeofence: null,
+      distanceFromProject: null,
+      recordedById: 31,
+    });
+
+    expect(event.recordedById).toBe(31);
+    expect(event.isWithinGeofence).toBeUndefined();
   });
 });
