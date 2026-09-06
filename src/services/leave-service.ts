@@ -611,51 +611,53 @@ export const leaveService = {
   },
 
   /**
-   * Fetches every leave request routed to an approver.
+   * Fetches every leave request the signed-in caller has been an approver on.
    *
-   * `GET /leave-requests/web/approver?approverId={approverId}`
+   * `GET /leave-requests/web/approver`
    *
-   * @param approverId - Surrogate id of the approver.
-   * @returns The {@link LeaveRequest} records assigned to the approver.
+   * There is deliberately no approver argument. The backend reads the approver
+   * from the session (echno-backend #683). It used to take `approverId` on the
+   * query string under a guard that only checked for the system-admin or
+   * hr-admin role, so an administrator read any colleague's list while the line
+   * managers an approval chain is actually built from could not read their own.
+   *
+   * @returns The {@link LeaveRequest} records the caller was an approver on.
    * @throws {ApiError} On non-2xx responses or if a record fails to parse.
    */
-  async getApproverRequests(approverId: number): Promise<LeaveRequest[]> {
-    const data = await api.get<ApiResponse[]>(`/leave-requests/web/approver`, {
-      approverId,
-    });
+  async getApproverRequests(): Promise<LeaveRequest[]> {
+    const data = await api.get<ApiResponse[]>(`/leave-requests/web/approver`);
     return safeParseLeaveRequests(data);
   },
 
   /**
-   * Fetches the requests currently awaiting an approver's decision.
+   * Fetches the requests currently awaiting the signed-in caller's decision.
    *
-   * `GET /leave-requests/web/pending-approvals?approverId={approverId}`
+   * `GET /leave-requests/web/pending-approvals`
    *
-   * @param approverId - Surrogate id of the approver.
+   * A queue is the caller's own, so there is no approver argument; see
+   * {@link leaveService.getApproverRequests}.
+   *
    * @returns The pending {@link LeaveRequest} records.
    * @throws {ApiError} On non-2xx responses or if a record fails to parse.
    */
-  async getPendingApprovals(approverId: number): Promise<LeaveRequest[]> {
+  async getPendingApprovals(): Promise<LeaveRequest[]> {
     const data = await api.get<ApiResponse[]>(
-      `/leave-requests/web/pending-approvals`,
-      { approverId }
+      `/leave-requests/web/pending-approvals`
     );
     return safeParseLeaveRequests(data);
   },
 
   /**
-   * Fetches the count of requests awaiting an approver's decision.
+   * Fetches the count of requests awaiting the signed-in caller's decision.
    *
-   * `GET /leave-requests/web/pending-approvals/count?approverId={approverId}`
+   * `GET /leave-requests/web/pending-approvals/count`
    *
-   * @param approverId - Surrogate id of the approver.
    * @returns The pending-approval count (`0` when the field is absent).
    * @throws {ApiError} On non-2xx responses.
    */
-  async getPendingApprovalsCount(approverId: number): Promise<number> {
+  async getPendingApprovalsCount(): Promise<number> {
     const data = await api.get<{ count: number }>(
-      `/leave-requests/web/pending-approvals/count`,
-      { approverId }
+      `/leave-requests/web/pending-approvals/count`
     );
     return data.count ?? 0;
   },
@@ -908,23 +910,25 @@ export const leaveService = {
   },
 
   /**
-   * Checks whether an employee may approve a given request.
+   * Checks whether the signed-in caller may approve a given request.
    *
-   * `GET /leave-approvals/web/can-approve?requestId={requestId}&employeeId={employeeId}`
+   * `GET /leave-approvals/web/can-approve?requestId={requestId}`
+   *
+   * This is the check a client makes before drawing an approve button, so it
+   * answers about whoever is signed in. It used to take the employee to ask
+   * about as a second query parameter, which is a question no client has needed
+   * and which let one employee probe another's place in an approval chain
+   * (echno-backend #683).
    *
    * @param requestId - Surrogate id of the request.
-   * @param employeeId - Surrogate id of the prospective approver.
    * @returns A {@link CanApproveResponse} with the decision and an optional
    *   reason.
    * @throws {ApiError} On non-2xx responses.
    */
-  async canApprove(
-    requestId: number,
-    employeeId: number
-  ): Promise<CanApproveResponse> {
+  async canApprove(requestId: number): Promise<CanApproveResponse> {
     const data = await api.get<ApiResponse>(
       `/leave-approvals/web/can-approve`,
-      { requestId, employeeId }
+      { requestId }
     );
     return {
       canApprove: data.canApprove ?? false,
