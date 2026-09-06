@@ -7,6 +7,11 @@
  *
  * All exported functions throw {@link ApiError} on non-2xx responses or
  * when the response payload fails parsing.
+ *
+ * A comment can be posted, read and deleted. There is no update: neither
+ * issue-comment controller publishes a PATCH or a PUT, and this package used
+ * to carry one addressing a route that was never written. Whether a comment
+ * should be editable is echno-backend#676.
  */
 import { api, ApiError } from '../lib/api/api-client';
 import { logger } from '../lib/logger';
@@ -15,10 +20,6 @@ import {
   CreateIssueCommentRequest,
   createIssueCommentToJson,
 } from '../types/issue/issue-create';
-import {
-  UpdateIssueCommentRequest,
-  updateIssueCommentToJson,
-} from '../types/issue/issue-update';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ApiResponse = any;
@@ -29,7 +30,6 @@ type ApiResponse = any;
  *   GET    /issues/comments/web                       → IssueCommentDto[]        (full)
  *   GET    /issues/comments/web/{id}                  → IssueCommentDto          (full)
  *   POST   /issues/comments/web                       → IssueCommentSimpleDto    (partial — optional scalars may be absent)
- *   PATCH  /issues/comments/web/{id}                  → (orphan — endpoint does not exist; calls will 404)
  *   GET    /issues/comments/web/issueId/{issueId}     → IssueCommentDto[]        (full)
  *   DELETE /issues/comments/web/{id}                  → ApiResponse              (ack only)
  *
@@ -131,32 +131,6 @@ export const issueCommentService = {
   async create(dto: CreateIssueCommentRequest): Promise<IssueComment> {
     const payload = createIssueCommentToJson(dto);
     const data = await api.post<ApiResponse>('/issues/comments/web', payload);
-    return safeParseIssueComment(data);
-  },
-
-  /**
-   * Updates an issue comment.
-   *
-   * **Orphan endpoint:** the backend has no PATCH route for issue
-   * comments at present. This method will 404/405 until the backend
-   * adds support. The corresponding hook ({@link useUpdateIssueComment})
-   * is preserved unchanged for the day the endpoint lands.
-   *
-   * @param id - Surrogate ID of the issue comment.
-   * @param dto - Update payload.
-   * @returns The updated {@link IssueComment} (in theory).
-   * @throws {ApiError} 404/405 in current backend versions.
-   * @internal
-   */
-  async update(
-    id: number,
-    dto: UpdateIssueCommentRequest
-  ): Promise<IssueComment> {
-    const payload = updateIssueCommentToJson(dto);
-    const data = await api.patch<ApiResponse>(
-      `/issues/comments/web/${id}`,
-      payload
-    );
     return safeParseIssueComment(data);
   },
 

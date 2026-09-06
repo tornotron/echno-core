@@ -126,8 +126,6 @@ Entry points: 135
 - createCostCategoryToJson
 - CreateCustomerRequest
 - createCustomerToJson
-- CreateEmployeeRequest
-- createEmployeeToJson
 - CreateExpenseRequest
 - createExpenseToJson
 - CreateGrnItemRequest
@@ -717,8 +715,6 @@ Entry points: 135
 - updateIndentToJson
 - UpdateInspectionRequest
 - updateInspectionToJson
-- UpdateIssueCommentRequest
-- updateIssueCommentToJson
 - UpdateIssueRequest
 - updateIssueToJson
 - UpdateLeavePolicyRequest
@@ -813,7 +809,6 @@ Entry points: 135
 - useCreateCostCategory
 - useCreateCustomer
 - useCreateDraftInvoice
-- useCreateEmployee  [deprecated]
 - useCreateExpense
 - useCreateGRN
 - useCreateIndent
@@ -1061,7 +1056,6 @@ Entry points: 135
 - useUpdateIndent
 - useUpdateIndentItem
 - useUpdateIssue
-- useUpdateIssueComment  [internal]
 - useUpdateLabour
 - useUpdateLeavePolicy
 - useUpdateLeaveRequest
@@ -1293,7 +1287,6 @@ Entry points: 135
 
 - employeeKeys
 - useAssignManager
-- useCreateEmployee  [deprecated]
 - useCurrentUserEmployee
 - useDeleteEmployee
 - useEmployee
@@ -1322,8 +1315,6 @@ Entry points: 135
 ## `@tornotron/echno-core/employee/types`
 
 - ADMIN_ROLES
-- CreateEmployeeRequest
-- createEmployeeToJson
 - Department
 - Employee
 - EmployeeLookup
@@ -1941,7 +1932,6 @@ Entry points: 135
 - useIssueStats
 - usePrefetchIssue
 - useUpdateIssue
-- useUpdateIssueComment  [internal]
 
 ## `@tornotron/echno-core/issue/hooks/keys`
 
@@ -1982,8 +1972,6 @@ Entry points: 135
 - issueTypeFromString
 - parseIssue
 - parseIssueComment
-- UpdateIssueCommentRequest
-- updateIssueCommentToJson
 - UpdateIssueRequest
 - updateIssueToJson
 

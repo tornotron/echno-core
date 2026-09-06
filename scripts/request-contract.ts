@@ -68,7 +68,9 @@ const OPAQUE_BODY_METHODS = ['postFormData'];
 export type Unresolved =
   | 'body built from a spread or a computed key'
   | 'body is a value this pass cannot follow'
+  | 'body is an array, which has no top-level field names'
   | 'endpoint path is not a literal'
+  | 'the payload travels in the query string, not the body'
   | 'body is a FormData assembled by the caller';
 
 export interface WriteCall {
@@ -128,16 +130,63 @@ function endpointOf(node: ts.Expression, file: ts.SourceFile): string | null {
       // nothing, which would report two dozen live endpoints as removed.
       const constant = ts.isIdentifier(span.expression)
         ? constantString(span.expression.text, file)
-        : null;
+        : ts.isCallExpression(span.expression)
+          ? prefixFromHelperCall(span.expression, file)
+          : null;
       rendered += `${constant ?? '{}'}${span.literal.text}`;
     }
-    // A path whose prefix came from something other than a string constant, such as
-    // `${budgetBase(projectId)}/${id}`, renders as `{}/{}` and would otherwise be reported as an
-    // endpoint the backend has removed. It is a path this pass cannot read, which is a different
-    // thing and gets said differently.
+    // A path whose prefix came from something this pass cannot render still starts with an
+    // interpolation, so it reads as `{}/{}` and would otherwise be reported as an endpoint the
+    // backend has removed. It is a path this pass cannot read, which is a different thing and
+    // gets said differently.
     return rendered.startsWith('/') ? rendered : null;
   }
   return null;
+}
+
+/**
+ * Renders the path a module-level path helper returns, with each of its own interpolations
+ * replaced by `{}`.
+ *
+ * Two finance services keep a per-project prefix in a helper rather than a constant:
+ *
+ * ```ts
+ * const budgetBase = (projectId: number) => `/finance/projects/${projectId}/budget/web`;
+ * ```
+ *
+ * A call site interpolating that renders as `{}/{}` without this, so the endpoint matches nothing
+ * and the body is never compared against anything. The helper's own parameters become `{}` for
+ * the same reason a path parameter does: the document matches by shape, not by name.
+ */
+function prefixFromHelperCall(call: ts.CallExpression, file: ts.SourceFile): string | null {
+  if (!ts.isIdentifier(call.expression)) return null;
+  const helper = findFunction(file, call.expression.text);
+  if (!helper) return null;
+
+  const body = helper.body;
+  let returned: ts.Expression | undefined;
+  if (body && !ts.isBlock(body)) {
+    returned = body;
+  } else if (body && ts.isBlock(body)) {
+    const returns: ts.Expression[] = [];
+    walk(body, (node) => {
+      if (ts.isReturnStatement(node) && node.expression) returns.push(node.expression);
+    });
+    if (returns.length !== 1) return null;
+    returned = returns[0];
+  }
+  if (!returned) return null;
+
+  if (ts.isStringLiteral(returned) || ts.isNoSubstitutionTemplateLiteral(returned)) {
+    return returned.text;
+  }
+  if (!ts.isTemplateExpression(returned)) return null;
+
+  let rendered = returned.head.text;
+  for (const span of returned.templateSpans) {
+    rendered += `{}${span.literal.text}`;
+  }
+  return rendered;
 }
 
 /** The value of a module-level `const X = '...'`, when it is a plain string. */
@@ -248,29 +297,63 @@ const serializerCache = new Map<string, Map<string, string[] | null>>();
 /**
  * Reads the field names a function puts on the object it returns.
  *
- * Covers the two shapes this package writes: a returned object literal, and the far more common
+ * Covers the three shapes this package writes: a returned object literal, the far more common
  * `const payload: Record<string, unknown> = { ... }` followed by conditional
- * `payload.field = ...` assignments. Returns null when the function does something else, so the
- * caller can report the call site as unresolved rather than as sending nothing.
+ * `payload.field = ...` assignments, and a serializer that is nothing but a call to another one.
+ * That last shape is how the finance modules share a body between create and update:
+ *
+ * ```ts
+ * export function createExpenseToJson(dto: CreateExpenseRequest): Record<string, unknown> {
+ *   return expenseRequestToJson(dto);
+ * }
+ * ```
+ *
+ * Returns null when the function does something else, so the caller can report the call site as
+ * unresolved rather than as sending nothing.
  */
-function keysReturnedBy(fn: ts.FunctionLikeDeclaration): string[] | null {
+function keysReturnedBy(fn: ts.FunctionLikeDeclaration, depth = 0): string[] | null {
+  if (depth > 3) return null;
   const body = fn.body;
   if (!body || !ts.isBlock(body)) {
     if (body && ts.isObjectLiteralExpression(body)) return literalKeys(body);
+    if (body && ts.isCallExpression(body)) {
+      return keysFromSerializerCall(body, fn.getSourceFile(), depth + 1);
+    }
     return null;
   }
 
-  const returned: ts.Expression[] = [];
-  walk(body, (node) => {
-    if (ts.isReturnStatement(node) && node.expression) returned.push(node.expression);
-  });
+  const returned = ownReturns(body);
   if (returned.length !== 1) return null;
 
   const result = returned[0];
   if (ts.isObjectLiteralExpression(result)) return literalKeys(result);
+  if (ts.isCallExpression(result)) {
+    return keysFromSerializerCall(result, fn.getSourceFile(), depth + 1);
+  }
   if (!ts.isIdentifier(result)) return null;
 
   return keysAssignedTo(result.text, body);
+}
+
+/**
+ * The return statements belonging to a function body, not to the callbacks inside it.
+ *
+ * `postJournalToJson` builds its `lines` array with a `.map` whose callback has a return of its
+ * own, so counting every return in the subtree found two and gave up on a serializer that is a
+ * plain object literal at the top level. The nested return says what one line looks like, which
+ * is a level below anything this check compares.
+ */
+function ownReturns(body: ts.Block): ts.Expression[] {
+  const returned: ts.Expression[] = [];
+  const descend = (node: ts.Node): void => {
+    node.forEachChild((child) => {
+      if (ts.isFunctionLike(child)) return;
+      if (ts.isReturnStatement(child) && child.expression) returned.push(child.expression);
+      descend(child);
+    });
+  };
+  descend(body);
+  return returned;
 }
 
 /**
@@ -299,6 +382,13 @@ function keysAssignedTo(name: string, scope: ts.Node): string[] | null {
         else declared = keys;
       } else if (ts.isCallExpression(node.initializer)) {
         const keys = keysFromSerializerCall(node.initializer, node.getSourceFile());
+        if (keys === null) unknown = true;
+        else declared = keys;
+      } else if (objectShaped(node.initializer)) {
+        // `const body = dto.reason === undefined ? {} : { reason: dto.reason };` is a body whose
+        // keys are the union of the branches, for the same reason a conditional spread is: a name
+        // that is sometimes sent is wrong every time it is sent.
+        const keys = spreadKeys(node.initializer);
         if (keys === null) unknown = true;
         else declared = keys;
       } else {
@@ -403,12 +493,16 @@ function resolveCalledFunction(
 }
 
 /** Resolves `someToJson(...)` to the key set of the function it names, following the import. */
-function keysFromSerializerCall(call: ts.CallExpression, from: ts.SourceFile): string[] | null {
+function keysFromSerializerCall(
+  call: ts.CallExpression,
+  from: ts.SourceFile,
+  depth = 0
+): string[] | null {
   if (!ts.isIdentifier(call.expression)) return null;
   const name = call.expression.text;
 
   const local = findFunction(from, name);
-  if (local) return keysReturnedBy(local);
+  if (local) return keysReturnedBy(local, depth);
 
   const moduleFile = resolveImport(from, name);
   if (!moduleFile) return null;
@@ -421,7 +515,7 @@ function keysFromSerializerCall(call: ts.CallExpression, from: ts.SourceFile): s
   if (cached.has(name)) return cached.get(name) ?? null;
 
   const imported = findExportedFunction(moduleFile, name, new Set());
-  const keys = imported ? keysReturnedBy(imported) : null;
+  const keys = imported ? keysReturnedBy(imported, depth) : null;
   cached.set(name, keys);
   return keys;
 }
@@ -518,6 +612,45 @@ function resolveImport(file: ts.SourceFile, name: string): string | null {
 
 /* ------------------------------------------------------------- the call scan */
 
+/**
+ * The path a local `const endpoint = ...` holds, when the call was handed that local.
+ *
+ * The two attendance write calls build their path into a variable first, because the payload has
+ * to be URL-encoded into a query parameter before the call:
+ *
+ * ```ts
+ * const endpoint = `/attendance/web/check-in?data=${encodeURIComponent(...)}`;
+ * const data = await api.postFormData<Raw>(endpoint, formData);
+ * ```
+ *
+ * Reading only module constants left both reported as having no readable path at all, which said
+ * less than the truth: the path is perfectly readable, and it is the payload that is out of
+ * reach.
+ */
+function localPath(
+  argument: ts.Expression,
+  call: ts.CallExpression,
+  file: ts.SourceFile
+): string | null {
+  if (!ts.isIdentifier(argument)) return null;
+  const scope = enclosingFunction(call);
+  if (!scope) return null;
+
+  let found: string | null = null;
+  walk(scope, (node) => {
+    if (found !== null) return;
+    if (
+      ts.isVariableDeclaration(node) &&
+      ts.isIdentifier(node.name) &&
+      node.name.text === argument.text &&
+      node.initializer
+    ) {
+      found = endpointOf(node.initializer, file);
+    }
+  });
+  return found;
+}
+
 /** The nearest enclosing function, which is the scope a payload local lives in. */
 function enclosingFunction(node: ts.Node): ts.Node | null {
   let current: ts.Node | undefined = node.parent;
@@ -553,7 +686,13 @@ export function collectWriteCalls(): WriteCall[] {
       if (!isWrite && !isOpaque) return;
 
       const location = `${relative}:${lineOf(file, node)}`;
-      const endpoint = node.arguments[0] ? endpointOf(node.arguments[0], file) : null;
+      const written = node.arguments[0]
+        ? (endpointOf(node.arguments[0], file) ?? localPath(node.arguments[0], node, file))
+        : null;
+      // A query string is not part of the path the document keys on, so it is split off before
+      // matching. Where the query is what carries the payload, that is worth saying separately.
+      const endpoint = written === null ? null : (written.split('?')[0] as string);
+      const query = written === null || endpoint === null ? '' : written.slice(endpoint.length);
       if (endpoint === null) {
         calls.push({
           location,
@@ -578,7 +717,9 @@ export function collectWriteCalls(): WriteCall[] {
           method,
           fields: [],
           bodyless: false,
-          unresolved: 'body is a FormData assembled by the caller',
+          unresolved: query
+            ? 'the payload travels in the query string, not the body'
+            : 'body is a FormData assembled by the caller',
         });
         return;
       }
@@ -599,9 +740,7 @@ export function collectWriteCalls(): WriteCall[] {
               method,
               fields: [],
               bodyless: false,
-              unresolved: ts.isObjectLiteralExpression(bodyArgument)
-                ? 'body built from a spread or a computed key'
-                : 'body is a value this pass cannot follow',
+              unresolved: unreadableBodyReason(bodyArgument, node),
             }
           : { location, operation, endpoint, method, fields, bodyless: false }
       );
@@ -609,6 +748,41 @@ export function collectWriteCalls(): WriteCall[] {
   }
 
   return calls;
+}
+
+/**
+ * Says why a body could not be read, as precisely as the syntax allows.
+ *
+ * The distinction that matters is between a body this pass merely failed on and a body that has
+ * no top-level field names to check in the first place. The attachment presign and register calls
+ * post an array of upload slots, so there is no object whose keys could be compared: an eventual
+ * check of those belongs one level down, inside the element type, which is a different pass. That
+ * is worth saying, because "cannot follow" reads as a gap to close and this one is not.
+ */
+function unreadableBodyReason(body: ts.Expression, call: ts.CallExpression): Unresolved {
+  if (ts.isObjectLiteralExpression(body)) return 'body built from a spread or a computed key';
+  if (ts.isArrayLiteralExpression(body) || isArrayTyped(body, call)) {
+    return 'body is an array, which has no top-level field names';
+  }
+  return 'body is a value this pass cannot follow';
+}
+
+/** Whether the identifier posted as a body is declared as an array parameter. */
+function isArrayTyped(body: ts.Expression, call: ts.CallExpression): boolean {
+  if (!ts.isIdentifier(body)) return false;
+  const scope = enclosingFunction(call);
+  if (!scope || !ts.isFunctionLike(scope)) return false;
+  const parameter = scope.parameters.find(
+    (each) => ts.isIdentifier(each.name) && each.name.text === body.text
+  );
+  const type = parameter?.type;
+  if (!type) return false;
+  return (
+    ts.isArrayTypeNode(type) ||
+    (ts.isTypeReferenceNode(type) &&
+      ts.isIdentifier(type.typeName) &&
+      ['Array', 'ReadonlyArray'].includes(type.typeName.text))
+  );
 }
 
 /** The field names one body argument puts on the wire, or null when it cannot be read. */
@@ -627,8 +801,149 @@ function fieldsOf(
   }
   if (ts.isIdentifier(body)) {
     const scope = enclosingFunction(call);
-    return scope ? keysAssignedTo(body.text, scope) : null;
+    if (!scope) return null;
+    const assigned = keysAssignedTo(body.text, scope);
+    if (assigned !== null) return assigned;
+    return keysOfParameterType(body.text, scope, file);
   }
+  return null;
+}
+
+/**
+ * The property names of the interface a parameter is declared with, when the call posts that
+ * parameter straight through as the body.
+ *
+ * Four services skip the serializer and send the request object itself:
+ *
+ * ```ts
+ * async create(request: LabourCreateRequest): Promise<Labour> {
+ *   const data = await api.post<ApiResponse>('/labour/web', request);
+ * ```
+ *
+ * There is no object literal and no assignment to read, so the syntax pass sees nothing, and the
+ * call site used to be reported as unreadable. The declared type is the right answer here and
+ * only here: the whole parameter is the body, so every property a caller sets goes on the wire
+ * under its own name. Reading a type this way would overstate coverage anywhere the service
+ * renames or drops fields on the way out, which is exactly why it is a fallback after the
+ * assignment pass rather than a first resort.
+ *
+ * Returns null unless the type is a plain interface of named properties, so an intersection, a
+ * mapped type or anything else reports as unreadable rather than as a partial answer.
+ */
+function keysOfParameterType(
+  name: string,
+  scope: ts.Node,
+  file: ts.SourceFile
+): string[] | null {
+  if (!ts.isFunctionLike(scope)) return null;
+  const parameter = scope.parameters.find(
+    (each) => ts.isIdentifier(each.name) && each.name.text === name
+  );
+  const type = parameter?.type;
+  if (!type || !ts.isTypeReferenceNode(type) || !ts.isIdentifier(type.typeName)) return null;
+
+  const typeName = type.typeName.text;
+  const local = findInterface(file, typeName);
+  if (local) return interfaceKeys(local, path.dirname(file.fileName), new Set());
+
+  const moduleFile = resolveImport(file, typeName);
+  if (!moduleFile) return null;
+  const found = findExportedInterface(moduleFile, typeName, new Set());
+  return found
+    ? interfaceKeys(found.declaration, path.dirname(found.file), new Set())
+    : null;
+}
+
+/** The property names an interface declares, following the interfaces it extends. */
+function interfaceKeys(
+  declaration: ts.InterfaceDeclaration,
+  directory: string,
+  visited: Set<string>
+): string[] | null {
+  const keys: string[] = [];
+
+  for (const member of declaration.members) {
+    if (!ts.isPropertySignature(member)) return null;
+    const memberName = member.name;
+    if (ts.isIdentifier(memberName) || ts.isStringLiteral(memberName)) {
+      keys.push(memberName.text);
+    } else {
+      return null;
+    }
+  }
+
+  for (const clause of declaration.heritageClauses ?? []) {
+    for (const parent of clause.types) {
+      if (!ts.isIdentifier(parent.expression)) return null;
+      const parentName = parent.expression.text;
+      if (visited.has(parentName)) return null;
+      visited.add(parentName);
+
+      const source = declaration.getSourceFile();
+      const local = findInterface(source, parentName);
+      const resolved = local
+        ? { declaration: local, file: source.fileName }
+        : (() => {
+            const moduleFile = resolveImport(source, parentName);
+            return moduleFile ? findExportedInterface(moduleFile, parentName, new Set()) : null;
+          })();
+      if (!resolved) return null;
+
+      const inherited = interfaceKeys(
+        resolved.declaration,
+        path.dirname(resolved.file),
+        visited
+      );
+      if (inherited === null) return null;
+      keys.push(...inherited);
+    }
+  }
+
+  return [...new Set(keys)].sort();
+}
+
+function findInterface(file: ts.SourceFile, name: string): ts.InterfaceDeclaration | null {
+  let found: ts.InterfaceDeclaration | null = null;
+  walk(file, (node) => {
+    if (found) return;
+    if (ts.isInterfaceDeclaration(node) && node.name.text === name) found = node;
+  });
+  return found;
+}
+
+/** Finds an interface by name in a module, following the barrel re-exports it is reached through. */
+function findExportedInterface(
+  file: string,
+  name: string,
+  visited: Set<string>
+): { declaration: ts.InterfaceDeclaration; file: string } | null {
+  if (visited.has(file) || !fs.existsSync(file)) return null;
+  visited.add(file);
+
+  const source = sourceFileOf(file);
+  const declared = findInterface(source, name);
+  if (declared) return { declaration: declared, file };
+
+  for (const statement of source.statements) {
+    if (!ts.isExportDeclaration(statement) || !statement.moduleSpecifier) continue;
+
+    const bindings = statement.exportClause;
+    let localName: string = name;
+    if (bindings && ts.isNamedExports(bindings)) {
+      const element = bindings.elements.find((each) => each.name.text === name);
+      if (!element) continue;
+      localName = (element.propertyName ?? element.name).text;
+    }
+
+    const target = resolveModulePath(
+      file,
+      (statement.moduleSpecifier as ts.StringLiteral).text
+    );
+    if (!target) continue;
+    const found = findExportedInterface(target, localName, visited);
+    if (found) return found;
+  }
+
   return null;
 }
 
@@ -955,6 +1270,49 @@ export function renderReport(analysis: Analysis, source: { repository: string; r
     for (const call of unreadable) {
       lines.push(`- ${call.location}  ${call.operation}  (${call.detail})`);
     }
+    lines.push('');
+    lines.push(
+      'These are not a backlog. The list stood at seventeen until the pass learned to follow a'
+    );
+    lines.push(
+      'serializer that delegates to another one, to read the interface a body parameter is'
+    );
+    lines.push(
+      'declared with when the call posts that parameter straight through, to union the branches'
+    );
+    lines.push(
+      'of a conditionally built body, to render a path helper, and to ignore a return belonging'
+    );
+    lines.push(
+      'to a callback rather than to the serializer. Those eleven are now checked and none of them'
+    );
+    lines.push('was sending a wrong name.');
+    lines.push('');
+    lines.push('What is left is not syntax this pass fails on. It is bodies with no top-level');
+    lines.push('field names to compare:');
+    lines.push('');
+    lines.push(
+      '- A `FormData` is assembled key by key by the caller, and a CSV import has one part that is'
+    );
+    lines.push('  a file.');
+    lines.push(
+      '- The attachment presign and register calls post an **array**. A useful check of those'
+    );
+    lines.push(
+      '  would compare the element type against the array item schema, which is a second pass, not'
+    );
+    lines.push('  a fix to this one.');
+    lines.push(
+      '- The two attendance calls put their payload in a URL-encoded `data` query parameter'
+    );
+    lines.push(
+      '  rather than in the body, so the document has no request schema for them to be checked'
+    );
+    lines.push('  against.');
+    lines.push('');
+    lines.push('So the honest floor for this pass is where it now stands. Reducing it further');
+    lines.push('means either changing how those endpoints take their payload or writing a');
+    lines.push('different check.');
   }
   lines.push('');
 

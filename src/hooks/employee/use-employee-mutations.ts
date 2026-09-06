@@ -3,9 +3,7 @@
  *
  * Mutation hooks for the Employee domain.
  *
- * Six mutations covering the full lifecycle plus manager-reassignment:
- * - {@link useCreateEmployee} — **deprecated** fail-fast (backend endpoint
- *   does not exist).
+ * Five mutations covering the lifecycle plus manager-reassignment:
  * - {@link useUpdateEmployee} — 3-way guarded patch over a spec/service drift.
  * - {@link useDeleteEmployee} — ack-response delete with cross-namespace user
  *   invalidate.
@@ -22,7 +20,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { employeeService } from '../../services/employee-service';
 import { Employee } from '../../types/employee';
-import { CreateEmployeeRequest } from '../../types/employee/employee-create';
 import { UpdateEmployeeRequest } from '../../types/employee/employee-update';
 import { employeeKeys } from './keys';
 import { organizationKeys } from '../organization/keys';
@@ -49,33 +46,6 @@ function isEmployeeListCache(query: {
     key[1] !== 'detail' &&
     key[1] !== 'page'
   );
-}
-
-/**
- * Reserved for direct employee creation once the backend exposes a plain
- * `POST /employee/web` endpoint.
- *
- * Backend response: none — endpoint does not exist (audited 2026-06-02).
- *
- * On invoke: throws synchronously with a message directing callers to
- * {@link useJoinOrganization}; the error surfaces through the standard
- * `useMutation` error path. Callers are responsible for surfacing feedback.
- *
- * @deprecated The backend has no plain `POST /employee/web` endpoint per
- *   the live OpenAPI spec (audited 2026-06-02). Use
- *   {@link useJoinOrganization} to add an existing user as an employee of
- *   an organization. Do not call from new code.
- * @returns A TanStack `UseMutationResult` where the mutate function accepts
- *   a {@link CreateEmployeeRequest} and always throws.
- */
-export function useCreateEmployee() {
-  return useMutation({
-    mutationFn: async (_dto: CreateEmployeeRequest): Promise<Employee> => {
-      throw new Error(
-        'Direct employee creation is not supported by the backend (no POST /employee/web endpoint). Use useJoinOrganization to add an existing user as an employee of an organization.'
-      );
-    },
-  });
 }
 
 /**

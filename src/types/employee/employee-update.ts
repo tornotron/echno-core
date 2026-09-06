@@ -131,7 +131,8 @@ export interface UpdateEmployeeRequest {
  *
  * Only fields that are not `undefined` are emitted, preserving partial-update
  * semantics. Field renames (`name → employeeName`, etc.) and
- * salary-as-`Double` coercion mirror {@link createEmployeeToJson}.
+ * salary-as-`Double` coercion are this module's own; the create counterpart was
+ * removed with the endpoint it addressed.
  *
  * Six keys the interface still accepts are deliberately not emitted, because
  * `EmployeeUpdateFieldsDto` declares none of them: `gender`, `address`,

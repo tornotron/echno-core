@@ -1,8 +1,14 @@
 /**
  * @module types/issue/issue-update
  *
- * Request shapes and serializers for updating an {@link Issue} and an
- * {@link IssueComment}.
+ * Request shape and serializer for updating an {@link Issue}.
+ *
+ * There is no counterpart for an issue comment. A comment can be posted and
+ * deleted, and nothing else: neither issue-comment controller publishes a
+ * PATCH or a PUT, and `IssueCommentService` has no update method. This module
+ * used to carry an `UpdateIssueCommentRequest` and its serializer for a route
+ * that was never written. Whether a comment should be editable at all is
+ * echno-backend#676.
  */
 import { IssueType } from './issue-type';
 import { IssueStatus } from './issue-status';
@@ -60,27 +66,3 @@ export function updateIssueToJson(
   return payload;
 }
 
-/**
- * Partial-update payload for an issue comment. Only `comment` is updatable.
- *
- * Note: the backend has no PATCH endpoint for issue comments at present;
- * `issueCommentService.update` will 404/405. The shape is preserved for
- * the day the endpoint lands.
- */
-export interface UpdateIssueCommentRequest {
-  /** New comment body. */
-  comment: string;
-}
-
-/**
- * Serializes an {@link UpdateIssueCommentRequest} for transmission to the
- * backend.
- *
- * @param dto - The update-comment request to serialize.
- * @returns A plain object matching the backend's expected request body shape.
- */
-export function updateIssueCommentToJson(
-  dto: UpdateIssueCommentRequest
-): Record<string, unknown> {
-  return { comment: dto.comment };
-}

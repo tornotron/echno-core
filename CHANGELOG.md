@@ -5,6 +5,71 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
+## [v6.0.0] - 2026-09-06
+
+The last three findings on echno-core#57, and the end of the register. Two of them were calls
+addressing paths no controller publishes, which is what makes this a major: removing a published
+method is a compile break even when the method could never have worked. The third is a key that
+was being sent twice and read once.
+
+The check itself also learned to read eleven call sites it used to give up on, taking the
+uncheckable list from seventeen to six. None of the eleven was sending a wrong name.
+
+### Removed
+
+- **`employeeService.create` and `useCreateEmployee`**, along with `CreateEmployeeRequest` and
+  `createEmployeeToJson`.
+
+  The method posted to `/employee/web`, where `EmployeeControllerWeb` has its plain
+  `@PostMapping` commented out, so the path routes to nothing. The hook never called it: it threw
+  and told the caller to use `useJoinOrganization`. So nothing changes behaviourally, and
+  `joinOrganization` remains the employee create this package can reach.
+
+  A direct create does exist on the non-web prefix. It is not a drop-in replacement: it names the
+  organization by `organizationName` rather than deriving the tenant from the token, and it is
+  gated on Keycloak authorities rather than the org-role expressions the rest of the console uses.
+  The serializer's field names had never been compared with it either, and four of them
+  (`qualification`, `organizationId`, `skills`, `experience`) are not fields of
+  `EmployeeCreationDto` at all. Whether a web create should exist is echno-backend#675.
+
+- **`issueCommentService.update` and `useUpdateIssueComment`**, along with
+  `UpdateIssueCommentRequest` and `updateIssueCommentToJson`.
+
+  The method patched `/issues/comments/web/{id}`, which was never written. Neither issue-comment
+  controller publishes a PATCH or a PUT and `IssueCommentService` has no update method, so a
+  comment can be posted and deleted and nothing else. Both were already marked `@internal` with a
+  note that they 404. Whether a comment should be editable, and who may edit one, is
+  echno-backend#676.
+
+Both were checked against the controllers' own mapping annotations rather than by calling them. A
+path Spring does not route answers 401 behind Spring Security exactly as a real path does for an
+unauthenticated caller, so a status code cannot tell a missing endpoint from a present one.
+
+### Changed
+
+- **A leave request no longer names its employee in the body.**
+  `LeaveRequestCreationDto` has no `employeeId` field;
+  `LeaveRequestControllerWeb.createRequest` takes it as a `@RequestParam`, and its
+  `@PreAuthorize` reads the same parameter. The value was going out twice and being read once.
+
+  `employeeId` stays on `CreateLeaveRequestRequest` and is still required, because
+  `leaveService.createRequest` reads it to build the query string. Nothing about a caller changes.
+
+### Fixed
+
+- **The request-contract pass reads eleven call sites it used to report as unreadable**, taking
+  checked calls from 90 to 101 and the unreadable list from 17 to 6. It now follows a serializer
+  that delegates to another one (the finance expense, receipt and journal modules share a body
+  between create and update), reads the interface a body parameter is declared with when the call
+  posts that parameter straight through (labour and two leave calls), unions the branches of a
+  conditionally built body, renders a path helper such as `budgetBase(projectId)`, and ignores a
+  `return` belonging to a callback rather than to the serializer.
+
+  The six that remain are not a syntax gap. Two are a `FormData` the caller assembles, two post an
+  array with no top-level field names, and two put their payload in a URL-encoded query parameter
+  rather than in a body. `etc/request-contract.md` now says so, so the next reader does not
+  rediscover it.
+
 ## [v5.3.0] - 2026-09-06
 
 The materials totals, computed where the rows are. A console adding up the material list it holds
@@ -35,6 +100,41 @@ types, one new hook, one new cache key.
 - **`useMaterialStockSummary(params)`** — the hook, and **`materialsKeys.stockSummary(params)`**,
   its cache key. The scope is in the key, so a project's totals and the organization's never share
   an entry.
+## [v5.2.0] - 2026-09-01
+
+Site transfers become the two-step document echno-backend#660 made them. Creating a cross-project
+transfer posts only the outbound leg, and the receiving project's stock does not move until
+somebody there records what turned up. This package had no way to say any of that.
+
+### Added
+
+- **`siteTransfersService.receive(id, dto)` and `cancel(id, dto)`**, with `useReceiveSiteTransfer`
+  and `useCancelSiteTransfer`. Neither payload carries an actor: who confirmed a delivery comes
+  from the session, so a receipt is the caller's own statement.
+
+  `allowOverReceipt` is omitted from the body unless the caller names it, rather than sent as
+  `false`. An explicit false is somebody who read the figures and declined; a first attempt has
+  been shown nothing.
+
+- **`receivedQuantity` and `inTransitQuantity` on `SiteTransferItem`**, both read-only.
+  `receivedQuantity` is `number | null` and the parser keeps the null rather than folding it to
+  zero, because "nobody has confirmed this line" and "the lorry came empty" are different
+  statements and only the absent field separates them.
+
+- **`CANCELLED` on `SiteTransferStatus`.** The parser falls back to `PENDING` on an unrecognised
+  status, so without the member a cancelled transfer read as one still in transit and a screen
+  would go on offering to cancel it.
+
+- **`getStatusHistory` and `useSiteTransferStatusHistory`**, over a new shared `types/history`
+  module. `StatusTransitionSource` carries `SYSTEM` and `BASELINE` alongside the two a person
+  makes, and `isPersonsChange` is what lets a screen tell them apart: a migration that corrected a
+  status is not somebody's act, and rendering it as one attributes it to a colleague.
+
+### Fixed
+
+- **`isSiteTransferListCache` is an allowlist.** It matched everything under the namespace bar
+  `detail`, and every caller maps over what it matches. The status trail is a page object, so it
+  would have been handed to `.map` on the success path of a receipt.
 
 ## [v5.1.0] - 2026-09-01
 
