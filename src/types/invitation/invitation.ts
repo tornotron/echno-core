@@ -29,6 +29,7 @@ import {
   nullableBoolean,
   nullableNumber,
   nullableString,
+  nullableStringOrNumber,
   optionalNumericId,
 } from '../../lib/validation/backend-schema';
 
@@ -99,7 +100,10 @@ const EmployeeDetailsResponseSchema = z.object({
 
 const InvitationResponseSchema = z.object({
   id: optionalNumericId,
-  code: nullableString,
+  // The backend's `ProjectInviteCodeDto.code` is an `int`, so this arrives as a
+  // JSON number today; the domain type is a string and stays one. See
+  // `nullableStringOrNumber` for why this is a union and not a coercion.
+  code: nullableStringOrNumber,
   expiryDate: backendDate,
   maxUses: nullableNumber,
   currentUses: nullableNumber,

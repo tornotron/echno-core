@@ -5,6 +5,34 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
+## [v8.2.1] - 2026-09-07
+
+The invite code parses again.
+
+`ProjectInviteCodeDto.code` is an `int` on the backend, so Jackson writes a JSON number, and
+`docs/openapi.json` records it as `"type": "integer", "format": "int32"`. The wire schema here
+asked for `z.string().nullish()`, which accepts a string, `null` or `undefined` and nothing else.
+So `parseInvitation` threw on every real payload, `safeParseInvitation` turned the throw into
+`ApiError('Failed to process invitation data. Please try again.', 422)`, and both
+`invitationService.generateCode()` and `invitationService.getByOrganization()` failed for reasons
+that had nothing to do with the request. The defensive `String(raw.code)` further down was written
+for exactly this case and was unreachable, because the schema ran first. `validateCode()` was
+unaffected: it builds its `Invitation` by hand from the organization the backend returns.
+
+The unit test passed throughout because it fed `code: 'ABC123'`, a shape the backend does not send.
+
+The schema now accepts a string or a number and leaves the domain type a `string`, which is what
+both clients already use and where the backend contract is heading: echno-backend#699 has the
+five-digit integer under discussion for widening to an opaque string, and this parses that too
+without a further change. A union rather than `z.coerce.string()`, because coercion would also
+accept an object and stringify it to `'[object Object]'`, which is the silently fabricated value
+the validation boundary exists to prevent.
+
+### Fixed
+
+- **`Invitation.inviteCode`** parses the numeric `code` the backend sends today, and the string it
+  is expected to send later, instead of rejecting both cases the backend actually produces.
+
 ## [v8.2.0] - 2026-09-06
 
 An attendance approver can find what is waiting on them.
