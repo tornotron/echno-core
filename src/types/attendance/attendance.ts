@@ -73,6 +73,16 @@ const AttendanceResponseSchema = z.object({
 
 
 /**
+ * Where a day sits in the approval workflow.
+ *
+ * Lower case here and SCREAMING_SNAKE_CASE on the wire, like every other
+ * enumeration in this package. Note that `'pending'` is the state a record is
+ * created in, so it says nothing about whether anyone is expected to look at
+ * the day; {@link Attendance.requiresGeofenceApproval} is what says that.
+ */
+export type AttendanceApprovalStatus = 'pending' | 'approved' | 'rejected';
+
+/**
  * A single day's attendance for one employee on one project.
  *
  * Aggregates the day's clock events, derived work duration and flags, any
@@ -141,7 +151,7 @@ export interface Attendance {
   movements?: MovementRecord[];
 
   /** Approval workflow state for the day. */
-  approvalStatus: 'pending' | 'approved' | 'rejected';
+  approvalStatus: AttendanceApprovalStatus;
 
   /** Name of the approver, once approved or rejected. */
   approvedBy?: string;
