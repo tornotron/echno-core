@@ -5,6 +5,16 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
+## [v8.4.0] - 2026-09-08
+
+The storekeeper role can be named.
+
+echno-backend#650 added `store-keeper` to the backend's `OrgRole`, and echno-backend#727 gave it
+94 grants across the stores workflow. This carries the member across so the console can label it
+and its permission helpers answer for it, rather than falling back to the raw wire string.
+
+Additive: no existing member changed, and nothing that reads `OrgRole` needs updating.
+
 ## [v8.3.0] - 2026-09-07
 
 The project attendance listing can ask for the days that were held.
