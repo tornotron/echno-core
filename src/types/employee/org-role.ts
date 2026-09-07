@@ -70,6 +70,19 @@ export enum OrgRole {
   /** Office assistant / clerical support. */
   OFFICE_ASSISTANT = 'OFFICE_ASSISTANT',
 
+  // ── Stores & Materials ──
+  /**
+   * Runs the site store: books goods receipts in, issues material out,
+   * despatches and confirms site transfers, and raises the stock
+   * adjustments that reconcile a shelf to the ledger.
+   *
+   * Backed by the backend's `store-keeper` org role, which grants those
+   * documents and the catalogue, location and ledger reads their forms
+   * need, and deliberately not the approval of a stock adjustment: that
+   * is the second pair of eyes on somebody else's count.
+   */
+  STORE_KEEPER = 'STORE_KEEPER',
+
   // ── Leadership ──
   /** Board / executive director — admin tier. */
   DIRECTOR = 'DIRECTOR',
@@ -155,6 +168,7 @@ const ORG_ROLE_LABELS: Record<OrgRole, string> = {
   [OrgRole.DOCUMENT_CONTROLLER]: 'Document Controller',
   [OrgRole.IT_SUPPORT]: 'IT Support',
   [OrgRole.OFFICE_ASSISTANT]: 'Office Assistant',
+  [OrgRole.STORE_KEEPER]: 'Storekeeper',
   [OrgRole.DIRECTOR]: 'Director',
   [OrgRole.SYSTEM_ADMIN]: 'System Administrator',
   [OrgRole.CIVIL_ENGINEER]: 'Civil Engineer',
@@ -245,6 +259,7 @@ export const NORMAL_ROLES: ReadonlySet<OrgRole> = new Set([
   OrgRole.DOCUMENT_CONTROLLER,
   OrgRole.IT_SUPPORT,
   OrgRole.OFFICE_ASSISTANT,
+  OrgRole.STORE_KEEPER,
   OrgRole.CONTRACTOR,
   OrgRole.SUB_CONTRACTOR,
   OrgRole.MATERIAL_SUPPLIER,
