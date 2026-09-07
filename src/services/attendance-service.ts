@@ -45,6 +45,7 @@ import {
   attendanceListParamsToQuery,
   createClockEventToJson,
   type Attendance,
+  type AttendanceApprovalStatus,
   type AttendanceSummary,
   type AttendanceCheckInRequest,
   type AttendanceListParams,
@@ -299,10 +300,8 @@ function parseAttendance(raw: any): Attendance {
     movements: Array.isArray(raw.movements)
       ? raw.movements.map((element: unknown) => parseMovement(element))
       : undefined,
-    approvalStatus: (raw.approvalStatus?.toLowerCase() ?? 'pending') as
-      | 'pending'
-      | 'approved'
-      | 'rejected',
+    approvalStatus: (raw.approvalStatus?.toLowerCase() ??
+      'pending') as AttendanceApprovalStatus,
     approvedBy: raw.approvedBy ?? undefined,
     // Left undefined when the server says nothing, for the same reason the
     // geo-fence verdict on a clock event is: a manufactured false here would

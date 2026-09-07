@@ -5,6 +5,40 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
+## [v8.3.0] - 2026-09-07
+
+The project attendance listing can ask for the days that were held.
+
+echno-backend#712 added two optional query parameters to
+`GET /attendance/web/project/{projectId}`: `requiresApproval`, the
+`requiresGeofenceApproval` flag, and `approvalStatus`, which is the only way to ask for the days
+that have already been decided. `attendanceListParamsToQuery` emitted `date`, `status`, `search`,
+`page` and `size`, so neither could be sent from here and no client could offer the filter.
+
+`requiresApproval` is the one that earns its place. A check-in creates every record `PENDING` and
+nothing moves it until somebody decides, so `approvalStatus=PENDING` matches nearly the whole
+table: on the backend's seeded integration-test day it returns 8 rows of 9, where `requiresApproval`
+returns 2. They stay two independent parameters rather than one four-valued enum so that "held, and
+already approved" remains askable, and a caller that collapses them into a single control gives
+that up.
+
+Neither is the approval queue. `GET /attendance/web/pending-approvals` (v8.2.0) is the caller's own
+queue, self-excluding and capped. This pair is one site on one date, paged, and shows every held day
+whoever is expected to decide it.
+
+`requiresApproval` is compared against `undefined` rather than tested for truth, because `false` is
+a filter in its own right: it asks for the ordinary days, and a truthiness test would drop it and
+return the unfiltered list under a filter the user had set.
+
+### Added
+
+- **`AttendanceListParams.requiresApproval`** (`boolean`) and
+  **`AttendanceListParams.approvalStatus`** (`'pending' | 'approved' | 'rejected'`), both emitted by
+  `attendanceListParamsToQuery` only when set, so an existing caller sends exactly the request it
+  sent before. `approvalStatus` is mapped to the backend's SCREAMING_SNAKE_CASE enum on the way out.
+- **`AttendanceApprovalStatus`**, the approval-state union named at last. `Attendance.approvalStatus`
+  had it written inline; it is now the same exported type the new filter takes.
+
 ## [v8.2.1] - 2026-09-07
 
 The invite code parses again.

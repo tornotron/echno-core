@@ -43,6 +43,7 @@ Entry points: 135
 - attachmentToJson
 - AttachmentType
 - Attendance
+- AttendanceApprovalStatus
 - AttendanceCheckInRequest
 - attendanceCheckInToJson
 - attendanceKeys
@@ -1231,6 +1232,7 @@ Entry points: 135
 ## `@tornotron/echno-core/attendance/types`
 
 - Attendance
+- AttendanceApprovalStatus
 - AttendanceCheckInRequest
 - attendanceCheckInToJson
 - AttendanceListParams
