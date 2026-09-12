@@ -8,6 +8,7 @@ import { parseInspectionDefect, parseNcr, CheckItemStatus, DefectSeverity } from
 import {
   ObservationDecision,
   ObservationOutcomeKind,
+  type ObservationOutcomeRequest,
   ObservationReviewStatus,
   ObservationSource,
   createObservationToJson,
@@ -97,6 +98,15 @@ describe('parseObservation', () => {
     expect(obs.reviewChanges).toEqual([]);
   });
 
+  test('a stringly attachmentId is coerced and a foreign ref keeps its shape', () => {
+    const obs = parseObservation({
+      ...aiRow,
+      evidenceRefs: [{ attachmentId: '41' }, { frame: 12 }],
+    });
+    expect(observationAttachmentIds(obs)).toEqual([41]);
+    expect(obs.evidenceRefs[1]).toEqual({ frame: 12 });
+  });
+
   test('refuses a row with no id', () => {
     expect(() => parseObservation({ title: 'x' })).toThrow(TypeError);
   });
@@ -157,6 +167,21 @@ describe('reviewObservationToJson', () => {
       kind: 'defect',
       defect: { description: 'Honeycombing', correctiveAction: 'Grout', severity: 'major' },
     });
+  });
+
+  test('a defect outcome is attach or create, never both', () => {
+    const attach = reviewObservationToJson({
+      decision: ObservationDecision.ACCEPT,
+      outcome: { kind: ObservationOutcomeKind.DEFECT, defectId: ITEM },
+    });
+    expect(attach.outcome).toEqual({ kind: 'defect', defectId: ITEM });
+    // @ts-expect-error the two DEFECT shapes are exclusive
+    const both: ObservationOutcomeRequest = {
+      kind: ObservationOutcomeKind.DEFECT,
+      defectId: ITEM,
+      defect: { description: 'x', correctiveAction: 'y' },
+    };
+    expect(both.kind).toBe(ObservationOutcomeKind.DEFECT);
   });
 
   test('reject needs a note and drops the outcome', () => {

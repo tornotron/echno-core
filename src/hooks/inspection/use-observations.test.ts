@@ -29,6 +29,7 @@ describe('observation mutations', () => {
     expect(body).toInclude('inspectionKeys.detail(observation.inspectionId)');
     expect(body).toInclude('inspectionKeys.detail(observation.outcomeRef)');
     expect(body).toInclude('ncrKeys.lists()');
+    expect(body).toInclude('ncrKeys.detail(observation.outcomeRef)');
   });
 
   test('every mutation goes through that invalidation', () => {
