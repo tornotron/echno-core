@@ -147,6 +147,12 @@ const PINNED: Record<string, Record<string, string>> = {
     QUALITY: 'quality',
     SAFETY: 'safety',
   },
+  // inspection/ReinspectionOutcome.java
+  ReinspectionOutcome: {
+    PENDING: 'pending',
+    PASSED: 'passed',
+    FAILED: 'failed',
+  },
   // inspection/NcrStatus.java
   NcrStatus: {
     OPEN: 'open',

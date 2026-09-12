@@ -5,6 +5,38 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
+## [v8.7.0] - 2026-09-12
+
+Reinspection attempts and the inspection event log.
+
+echno-backend#771, #774 and #776 (spec `docs/specs/2026-09-12-qaqc-reinspection-audit-log.md`)
+gave the NCR lifecycle two records it lacked. A `Reinspection` row ties an NCR or a resolved
+defect to the new inspection that re-checks it and stores the outcome, numbered per NCR so the
+count of rows is the number of times the work went back. An append-only `InspectionEvent` log
+records who changed what and when, with the changed fields as a before and an after, across
+inspections, check items, defects, NCRs and reinspections.
+
+- `types/inspection`: `Reinspection`, `ReinspectionOutcome` (`pending | passed | failed` on the
+  wire), `ScheduleReinspectionRequest`, `ReinspectionOutcomeRequest` and their serializers;
+  `passedReinspections` and `hasPendingReinspection`. `InspectionEvent` with its subject and
+  actor types (upper case on the wire, so string unions rather than enums), `inspectionEventChanges`,
+  `inspectionEventEmployeeId` and `inspectionEventTypeLabel`.
+- `VerifyNcrRequest` extends `NcrRemarksRequest` with an optional `reinspectionId`;
+  `ncrService.verify` takes it and `verifyNcrToJson` sends it. The backend answers 400 when the
+  attempt is another NCR's or has not passed.
+- `reinspectionService`: `getByNcr`, `getById`, `scheduleForNcr`, `scheduleForDefect`,
+  `recordOutcome`. `inspectionEventService`: `getByInspection`, `getByNcr`, `query`, each
+  returning a `PagedInspectionEvents` envelope.
+- `hooks/inspection` (new subpath `@tornotron/echno-core/inspection/hooks`):
+  `useReinspectionsByNcr`, `useReinspection`, `useScheduleReinspectionForNcr`,
+  `useScheduleReinspectionForDefect`, `useRecordReinspectionOutcome`, `useInspectionEvents`,
+  `useNcrEvents`, `useInspectionEventQuery`, with `reinspectionKeys` and `inspectionEventKeys`.
+  The mutations also invalidate the `['ncrs']` and `['inspections']` detail and list shapes
+  the console keys by, exported here as `ncrKeys` and `inspectionKeys`.
+
+Additive. The spec's `NcrDto.reinspections` summary did not land on the backend, so `Ncr` has no
+such field; read the attempts with `useReinspectionsByNcr`.
+
 ## [v8.6.0] - 2026-09-12
 
 A project's site structure, and the spatial reference on inspection entities.

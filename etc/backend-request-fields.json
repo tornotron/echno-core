@@ -3,7 +3,7 @@
     "repository": "tornotron/echno-backend",
     "ref": "development",
     "path": "docs/openapi.json",
-    "sha256": "7f78f8bb18c19a270f0714114efb7b883e4225b764025b00f20a3ee0a1bbd93c"
+    "sha256": "2791d576f4125971c137c6b61d8220fe3f4bf7ed5df58c9bb277e6a01164cfe4"
   },
   "operations": {
     "POST /api/v1/assets/web": {
@@ -1594,6 +1594,27 @@
       "required": [],
       "acceptsAnyField": false
     },
+    "POST /api/v1/inspections/web/defects/{defectId}/reinspections": {
+      "schema": "ScheduleReinspectionRequest",
+      "fields": [
+        "assignedInspectorId",
+        "copyAllItems",
+        "targetDate"
+      ],
+      "required": [],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/inspections/web/reinspections/{id}/outcome": {
+      "schema": "ReinspectionOutcomeRequest",
+      "fields": [
+        "outcome",
+        "remarks"
+      ],
+      "required": [
+        "outcome"
+      ],
+      "acceptsAnyField": false
+    },
     "POST /api/v1/inspections/web/trades": {
       "schema": "CreateTradeRequest",
       "fields": [
@@ -2696,9 +2717,20 @@
       "acceptsAnyField": false
     },
     "POST /api/v1/ncrs/web/{id}/verify": {
-      "schema": "NcrRemarksRequest",
+      "schema": "VerifyNcrRequest",
       "fields": [
+        "reinspectionId",
         "remarks"
+      ],
+      "required": [],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/ncrs/web/{ncrId}/reinspections": {
+      "schema": "ScheduleReinspectionRequest",
+      "fields": [
+        "assignedInspectorId",
+        "copyAllItems",
+        "targetDate"
       ],
       "required": [],
       "acceptsAnyField": false

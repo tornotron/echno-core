@@ -4,7 +4,7 @@
      Run `bun run api:snapshot` after an intended public-API change and commit the diff.
      See docs/API-STABILITY.md. -->
 
-Entry points: 143
+Entry points: 147
 
 ## `@tornotron/echno-core`
 
@@ -307,6 +307,7 @@ Entry points: 143
 - GroupedLeaveCalendarEntry
 - HalfDayType
 - hasAllRoles
+- hasPendingReinspection
 - hasRole
 - Indent
 - IndentItem
@@ -319,12 +320,29 @@ Entry points: 143
 - indentStatusLabels
 - InlinePurchaseOrderItemInput
 - Inspection
+- INSPECTION_EVENT_ACTOR_TYPES
+- INSPECTION_EVENT_SUBJECT_TYPES
 - InspectionCategory
 - inspectionCategoryLabels
 - InspectionCheckItem
 - InspectionCheckItemRequest
 - InspectionDefect
 - InspectionDefectRequest
+- InspectionEvent
+- InspectionEventActorType
+- inspectionEventActorTypeLabels
+- InspectionEventChange
+- inspectionEventChanges
+- inspectionEventEmployeeId
+- inspectionEventKeys
+- InspectionEventPageParams
+- InspectionEventQueryParams
+- inspectionEventService
+- InspectionEventState
+- InspectionEventSubjectType
+- inspectionEventSubjectTypeLabels
+- inspectionEventTypeLabel
+- inspectionKeys
 - InspectionListParams
 - InspectionOrigin
 - InspectionResult
@@ -448,6 +466,7 @@ Entry points: 143
 - NcrAction
 - ncrActionLabels
 - ncrDaysOverdue
+- ncrKeys
 - NcrListParams
 - NcrRemarksRequest
 - ncrRemarksToJson
@@ -468,6 +487,7 @@ Entry points: 143
 - PagedAttendance
 - PagedEmployee
 - PagedExpense
+- PagedInspectionEvents
 - PagedInvoice
 - PagedIssue
 - PagedLowStockMaterials
@@ -528,6 +548,9 @@ Entry points: 143
 - parseInspectionCategory
 - parseInspectionCheckItem
 - parseInspectionDefect
+- parseInspectionEvent
+- parseInspectionEventActorType
+- parseInspectionEventSubjectType
 - parseInspectionOrigin
 - parseInspectionResult
 - parseInspectionStatus
@@ -584,6 +607,8 @@ Entry points: 143
 - parseReceipt
 - parseReceiptStatus
 - parseReceiptType
+- parseReinspection
+- parseReinspectionOutcome
 - parseShiftTiming
 - parseSiteTransfer
 - parseSiteTransferItem
@@ -604,6 +629,7 @@ Entry points: 143
 - parseUuid
 - parseVendor
 - parseWorkCategory
+- passedReinspections
 - Payment
 - PAYMENT_TERMS_LABELS
 - PaymentTerms
@@ -648,6 +674,13 @@ Entry points: 143
 - recordPaymentToJson
 - RegisterUploadRequest
 - RegularizationDetail
+- Reinspection
+- reinspectionKeys
+- ReinspectionOutcome
+- reinspectionOutcomeLabels
+- ReinspectionOutcomeRequest
+- reinspectionOutcomeToJson
+- reinspectionService
 - removeMember
 - ReplaceAnnotationsRequest
 - replaceAnnotationsToJson
@@ -655,6 +688,8 @@ Entry points: 143
 - ReverseJournalArgs
 - ReverseJournalRequest
 - roleManagementService
+- ScheduleReinspectionRequest
+- scheduleReinspectionToJson
 - SEARCH_HIT_TYPES
 - SEARCH_MIN_TERM_LENGTH
 - SearchHit
@@ -956,6 +991,8 @@ Entry points: 143
 - useIndentItemsByIndent
 - useIndents
 - useIndentsPaginated
+- useInspectionEventQuery
+- useInspectionEvents
 - useInstalledModules
 - useInventoryTransaction
 - useInventoryTransactions
@@ -1009,6 +1046,7 @@ Entry points: 143
 - useMovementById
 - useMovementsByAttendance
 - useMoveSpatialNode
+- useNcrEvents
 - useOrganization
 - useOrganizationCalendar
 - useOrganizationRequests
@@ -1048,7 +1086,10 @@ Entry points: 143
 - useRecordClockEvent
 - useRecordConstructionInvoicePayment
 - useRecordPayment
+- useRecordReinspectionOutcome
 - useRegularizationById
+- useReinspection
+- useReinspectionsByNcr
 - useRejectLeaveRequest
 - useRemoveEmployeeFromProject
 - useRemoveManager
@@ -1064,6 +1105,8 @@ Entry points: 143
 - userRoleFromString
 - userService
 - userToJson
+- useScheduleReinspectionForDefect
+- useScheduleReinspectionForNcr
 - useSearch
 - useSeedDefaultCostCategories
 - useSetVendorPaymentTerms
@@ -1165,6 +1208,8 @@ Entry points: 143
 - VendorSummary
 - VendorTaxIdentifier
 - VendorType
+- VerifyNcrRequest
+- verifyNcrToJson
 - whatsappMessage
 - WorkCategory
 - workCategoryKeys
@@ -1797,6 +1842,35 @@ Entry points: 143
 - UpdateIndentRequest
 - updateIndentToJson
 
+## `@tornotron/echno-core/inspection-event/services`
+
+- InspectionEventPageParams
+- InspectionEventQueryParams
+- inspectionEventService
+- PagedInspectionEvents
+
+## `@tornotron/echno-core/inspection/hooks`
+
+- inspectionEventKeys
+- inspectionKeys
+- ncrKeys
+- reinspectionKeys
+- useInspectionEventQuery
+- useInspectionEvents
+- useNcrEvents
+- useRecordReinspectionOutcome
+- useReinspection
+- useReinspectionsByNcr
+- useScheduleReinspectionForDefect
+- useScheduleReinspectionForNcr
+
+## `@tornotron/echno-core/inspection/hooks/keys`
+
+- inspectionEventKeys
+- inspectionKeys
+- ncrKeys
+- reinspectionKeys
+
 ## `@tornotron/echno-core/inspection/services`
 
 - AnnotationListParams
@@ -1830,13 +1904,26 @@ Entry points: 143
 - defectSeverityLabels
 - DefectStatus
 - defectStatusLabels
+- hasPendingReinspection
 - Inspection
+- INSPECTION_EVENT_ACTOR_TYPES
+- INSPECTION_EVENT_SUBJECT_TYPES
 - InspectionCategory
 - inspectionCategoryLabels
 - InspectionCheckItem
 - InspectionCheckItemRequest
 - InspectionDefect
 - InspectionDefectRequest
+- InspectionEvent
+- InspectionEventActorType
+- inspectionEventActorTypeLabels
+- InspectionEventChange
+- inspectionEventChanges
+- inspectionEventEmployeeId
+- InspectionEventState
+- InspectionEventSubjectType
+- inspectionEventSubjectTypeLabels
+- inspectionEventTypeLabel
 - InspectionOrigin
 - InspectionResult
 - InspectionStatus
@@ -1870,6 +1957,9 @@ Entry points: 143
 - parseInspectionCategory
 - parseInspectionCheckItem
 - parseInspectionDefect
+- parseInspectionEvent
+- parseInspectionEventActorType
+- parseInspectionEventSubjectType
 - parseInspectionOrigin
 - parseInspectionResult
 - parseInspectionStatus
@@ -1878,13 +1968,25 @@ Entry points: 143
 - parseNcr
 - parseNcrStatus
 - parseNcrType
+- parseReinspection
+- parseReinspectionOutcome
 - parseStarterChecklistTemplate
+- passedReinspections
+- Reinspection
+- ReinspectionOutcome
+- reinspectionOutcomeLabels
+- ReinspectionOutcomeRequest
+- reinspectionOutcomeToJson
 - ReplaceAnnotationsRequest
 - replaceAnnotationsToJson
+- ScheduleReinspectionRequest
+- scheduleReinspectionToJson
 - SETTLED_NCR_STATUSES
 - StarterChecklistTemplate
 - UpdateInspectionRequest
 - updateInspectionToJson
+- VerifyNcrRequest
+- verifyNcrToJson
 
 ## `@tornotron/echno-core/inventory-transactions/hooks`
 
@@ -2433,6 +2535,10 @@ Entry points: 143
 - updatePurchaseOrderItemToJson
 - UpdatePurchaseOrderRequest
 - updatePurchaseOrderToJson
+
+## `@tornotron/echno-core/reinspection/services`
+
+- reinspectionService
 
 ## `@tornotron/echno-core/role-management/hooks`
 

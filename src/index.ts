@@ -194,6 +194,9 @@ export * from './hooks/finance';
 export * from './types/inspection';
 export * from './services/inspection-service';
 export * from './services/ncr-service';
+export * from './services/reinspection-service';
+export * from './services/inspection-event-service';
+export * from './hooks/inspection';
 export * from './services/checklist-template-service';
 
 // Module — the registry descriptor for pluggable frontend modules
