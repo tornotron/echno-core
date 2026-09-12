@@ -5,6 +5,36 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
+## [v8.6.0] - 2026-09-12
+
+A project's site structure, and the spatial reference on inspection entities.
+
+echno-backend#768, #773 and #775 added the `Building > Floor > Zone > Element` tree under
+`/project/{projectId}/spatial` and gave inspections, defects and check items a nullable
+`spatialNodeId` with a `spatialPath` breadcrumb (spec
+`docs/specs/2026-09-12-qaqc-spatial-hierarchy.md`). This carries the contract across:
+
+- `types/spatial`: `SpatialLevel`, `SpatialNode`, `SpatialTreeNode`, `SpatialPathSegment`,
+  the create/update/move/import request types, their serializers and non-strict parsers,
+  plus `formatSpatialPath` and `childSpatialLevel` for pickers and breadcrumbs.
+- `spatialService`: tree, node, create, update, move, archive, restore and bulk import.
+- `hooks/spatial`: `useSpatialTree`, `useSpatialNode` and one mutation hook per write, each
+  invalidating the project's spatial prefix.
+- `Inspection`, `InspectionDefect` and `InspectionCheckItem` gain optional `spatialNodeId`
+  and a `spatialPath` array (empty when unset); the matching requests accept `spatialNodeId`.
+  `InspectionListParams.spatialNodeId` filters a list to a node's subtree.
+
+Additive: the free-text `location` fields stay as the fallback and nothing existing changed.
+
+## [v8.5.0] - 2026-09-12
+
+The module registry descriptor.
+
+`types/module`, `moduleService` and `hooks/module` for `GET /modules/web` and
+`/modules/web/enabled` (echno-backend#747): the descriptor a pluggable frontend module
+publishes, parsed non-strictly, with a malformed list reported as a failed parse rather
+than as zero modules.
+
 ## [v8.4.0] - 2026-09-08
 
 The storekeeper role can be named.
