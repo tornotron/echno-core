@@ -18,7 +18,14 @@ type ApiResponse = any;
 
 function safeParseModuleDescriptors(data: ApiResponse[]): ModuleDescriptor[] {
   if (!Array.isArray(data)) {
-    return [];
+    logger.error(
+      'Failed to parse module descriptors:',
+      new Error('Expected an array of module descriptors')
+    );
+    throw new ApiError(
+      'Failed to process module data. Please try again.',
+      422
+    );
   }
   try {
     return data.map((item) => parseModuleDescriptor(item));
