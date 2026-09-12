@@ -21,6 +21,7 @@
  */
 
 import { z } from 'zod';
+import { InspectionTrade, parseInspectionTrade } from './trade';
 import { parseUuid } from '../../lib/utils/parse-id';
 import {
   SpatialPathSegment,
@@ -62,31 +63,6 @@ export enum InspectionCategory {
   OTHER = 'other',
 }
 
-/**
- * The construction stage or trade a QA/QC inspection is carried out against.
- * Unset on safety and compliance inspections; populated for the QA/QC and other
- * categories. Also the key a {@link ChecklistTemplate} is defined against, one
- * template per trade per organization.
- */
-export enum InspectionTrade {
-  PRE_CONSTRUCTION_DOCUMENTATION = 'pre-construction-documentation',
-  SHUTTERING_FORMWORK = 'shuttering-formwork',
-  REINFORCEMENT = 'reinforcement',
-  RCC = 'rcc',
-  MASONRY = 'masonry',
-  PLASTERING = 'plastering',
-  WATERPROOFING = 'waterproofing',
-  FLOORING = 'flooring',
-  FABRICATION = 'fabrication',
-  ALUMINIUM_UPVC = 'aluminium-upvc',
-  ELECTRICAL_FIXTURES = 'electrical-fixtures',
-  PLUMBING_FIXTURES = 'plumbing-fixtures',
-  SANITARY_FIXTURES = 'sanitary-fixtures',
-  FINISHING = 'finishing',
-  DIMENSIONAL_CHECK = 'dimensional-check',
-  PROGRESS_CHECK = 'progress-check',
-}
-
 /** Human-readable label for each {@link InspectionCategory}. */
 export const inspectionCategoryLabels: Record<InspectionCategory, string> = {
   [InspectionCategory.SAFETY]: 'Safety',
@@ -94,51 +70,6 @@ export const inspectionCategoryLabels: Record<InspectionCategory, string> = {
   [InspectionCategory.COMPLIANCE]: 'Compliance',
   [InspectionCategory.OTHER]: 'Other',
 };
-
-/** Human-readable label for each {@link InspectionTrade}. */
-export const inspectionTradeLabels: Record<InspectionTrade, string> = {
-  [InspectionTrade.PRE_CONSTRUCTION_DOCUMENTATION]:
-    'Pre-construction Documentation',
-  [InspectionTrade.SHUTTERING_FORMWORK]: 'Shuttering / Formwork',
-  [InspectionTrade.REINFORCEMENT]: 'Reinforcement',
-  [InspectionTrade.RCC]: 'RCC',
-  [InspectionTrade.MASONRY]: 'Masonry',
-  [InspectionTrade.PLASTERING]: 'Plastering',
-  [InspectionTrade.WATERPROOFING]: 'Waterproofing',
-  [InspectionTrade.FLOORING]: 'Flooring',
-  [InspectionTrade.FABRICATION]: 'Fabrication',
-  [InspectionTrade.ALUMINIUM_UPVC]: 'Aluminium / uPVC',
-  [InspectionTrade.ELECTRICAL_FIXTURES]: 'Electrical Fixtures',
-  [InspectionTrade.PLUMBING_FIXTURES]: 'Plumbing Fixtures',
-  [InspectionTrade.SANITARY_FIXTURES]: 'Sanitary Fixtures',
-  [InspectionTrade.FINISHING]: 'Finishing',
-  [InspectionTrade.DIMENSIONAL_CHECK]: 'Dimensional Check',
-  [InspectionTrade.PROGRESS_CHECK]: 'Progress Check',
-};
-
-/**
- * The trades in the order site work reaches them, for grouped pickers. The enum
- * declaration order is not load-bearing anywhere else, so this list is what a
- * consumer should iterate rather than `Object.values(InspectionTrade)`.
- */
-export const inspectionTradeOrder: readonly InspectionTrade[] = [
-  InspectionTrade.PRE_CONSTRUCTION_DOCUMENTATION,
-  InspectionTrade.SHUTTERING_FORMWORK,
-  InspectionTrade.REINFORCEMENT,
-  InspectionTrade.RCC,
-  InspectionTrade.MASONRY,
-  InspectionTrade.PLASTERING,
-  InspectionTrade.WATERPROOFING,
-  InspectionTrade.FLOORING,
-  InspectionTrade.FABRICATION,
-  InspectionTrade.ALUMINIUM_UPVC,
-  InspectionTrade.ELECTRICAL_FIXTURES,
-  InspectionTrade.PLUMBING_FIXTURES,
-  InspectionTrade.SANITARY_FIXTURES,
-  InspectionTrade.FINISHING,
-  InspectionTrade.DIMENSIONAL_CHECK,
-  InspectionTrade.PROGRESS_CHECK,
-];
 
 /** Lifecycle state of an inspection. */
 export enum InspectionStatus {
@@ -301,19 +232,6 @@ export function parseInspectionCategory(
 }
 
 /**
- * Narrows an untyped backend string to {@link InspectionTrade}, or `undefined`
- * when the value is absent or unrecognized. The trade is genuinely optional:
- * safety and compliance inspections leave it unset, so a missing value is
- * preserved rather than defaulted.
- */
-export function parseInspectionTrade(raw: unknown): InspectionTrade | undefined {
-  return typeof raw === 'string' &&
-    (Object.values(InspectionTrade) as string[]).includes(raw)
-    ? (raw as InspectionTrade)
-    : undefined;
-}
-
-/**
  * Narrows an untyped backend string to {@link InspectionStatus}, defaulting to
  * `SCHEDULED` when the value is absent or unrecognized.
  */
@@ -458,6 +376,9 @@ const InspectionSchema = z.object({
   type: opaque,
   category: opaque,
   trade: opaque,
+  tradeId: nullableString,
+  tradeName: nullableString,
+  tradeGroup: nullableString,
   status: opaque,
   result: opaque,
   projectId: optionalNumericId,
@@ -600,10 +521,16 @@ export interface Inspection {
    */
   category: InspectionCategory;
   /**
-   * QA/QC stage or trade the inspection covers. Unset on safety and compliance
-   * inspections.
+   * QA/QC stage or trade the inspection covers, as its slug. Unset on safety
+   * and compliance inspections.
    */
   trade?: InspectionTrade;
+  /** Id of the organization's trade row behind `trade`. */
+  tradeId?: string;
+  /** Display name of the trade, from the organization's row. */
+  tradeName?: string;
+  /** Group code of the trade (`structural`, `mep`, ...). */
+  tradeGroup?: string;
   /** Lifecycle status. */
   status: InspectionStatus;
   /** Outcome (unset until the inspection is concluded). */
@@ -768,6 +695,9 @@ export function parseInspection(json: unknown): Inspection {
     type,
     category: parseInspectionCategory(raw.category, type),
     trade: parseInspectionTrade(raw.trade),
+    tradeId: raw.tradeId ?? undefined,
+    tradeName: raw.tradeName ?? undefined,
+    tradeGroup: raw.tradeGroup ?? undefined,
     status: parseInspectionStatus(raw.status),
     result: parseInspectionResult(raw.result),
     projectId: raw.projectId ?? undefined,
@@ -895,8 +825,13 @@ export interface CreateInspectionRequest {
   type: InspectionType;
   /** Top-level grouping. Derived from the type server-side when omitted. */
   category?: InspectionCategory;
-  /** QA/QC stage or trade covered. Left unset for safety and compliance. */
+  /**
+   * QA/QC stage or trade covered, as its slug, resolved against the
+   * organization's trades. Left unset for safety and compliance.
+   */
   trade?: InspectionTrade;
+  /** Id of the organization's trade row. Takes precedence over `trade` when both are sent. */
+  tradeId?: string;
   /** Project the inspection belongs to. */
   projectId?: number;
   /** Site location (max 300). */
@@ -950,8 +885,13 @@ export interface UpdateInspectionRequest {
   type: InspectionType;
   /** Top-level grouping. Derived from the type server-side when omitted. */
   category?: InspectionCategory;
-  /** QA/QC stage or trade covered. Left unset for safety and compliance. */
+  /**
+   * QA/QC stage or trade covered, as its slug, resolved against the
+   * organization's trades. Left unset for safety and compliance.
+   */
   trade?: InspectionTrade;
+  /** Id of the organization's trade row. Takes precedence over `trade` when both are sent. */
+  tradeId?: string;
   /** Lifecycle status. Required. */
   status: InspectionStatus;
   /** Outcome (set once concluded). */
@@ -1063,6 +1003,7 @@ function inspectionCommonToJson(
   json.inspectorId = dto.inspectorId;
   if (dto.category !== undefined) json.category = dto.category;
   if (dto.trade !== undefined) json.trade = dto.trade;
+  if (dto.tradeId !== undefined) json.tradeId = dto.tradeId;
   if (dto.projectId !== undefined) json.projectId = dto.projectId;
   if (dto.location !== undefined) json.location = dto.location;
   if (dto.areaInspected !== undefined) json.areaInspected = dto.areaInspected;

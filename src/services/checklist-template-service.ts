@@ -32,6 +32,7 @@ import {
   parseStarterChecklistTemplate,
   StarterChecklistTemplate,
 } from '../types/inspection';
+import { ProjectType } from '../types/project/project-type';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ApiResponse = any;
@@ -205,6 +206,30 @@ export const checklistTemplateService = {
         422
       );
     }
+  },
+
+  /**
+   * Suggests the organization's active templates whose applicability admits
+   * an element type and a project type; a template with no applicability set
+   * admits everything. Both parameters are optional. Suggestion only: any
+   * template may still be used on any element.
+   *
+   * `GET /checklist-templates/web/applicable?elementType=&projectType=` →
+   * `ChecklistTemplateDto[]`.
+   *
+   * @param params - The element type code and / or project type to match.
+   * @returns The applicable {@link ChecklistTemplate} rows.
+   * @throws {ApiError} On non-2xx responses or if a row fails to parse.
+   */
+  async getApplicable(params: {
+    elementType?: string;
+    projectType?: ProjectType;
+  }): Promise<ChecklistTemplate[]> {
+    const query: Record<string, string | number | boolean> = {};
+    if (params.elementType !== undefined) query.elementType = params.elementType;
+    if (params.projectType !== undefined) query.projectType = params.projectType;
+    const data = await api.get<ApiResponse>(`${BASE}/applicable`, query);
+    return safeParseTemplates(data);
   },
 
   /**

@@ -198,6 +198,7 @@ export * from './services/reinspection-service';
 export * from './services/inspection-event-service';
 export * from './hooks/inspection';
 export * from './services/checklist-template-service';
+export * from './services/trade-service';
 
 // Module — the registry descriptor for pluggable frontend modules
 // (spec `echno-backend/docs/specs/2026-08-26-modular-plugin-architecture.md`

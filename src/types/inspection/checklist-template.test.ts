@@ -5,7 +5,7 @@ import {
   parseChecklistTemplateItem,
   parseStarterChecklistTemplate,
 } from './checklist-template';
-import { InspectionTrade } from './inspection';
+import { InspectionTrade } from './trade';
 
 const UUID = '11111111-1111-1111-1111-111111111111';
 const ITEM_A = '22222222-2222-2222-2222-222222222222';

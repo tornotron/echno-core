@@ -32,7 +32,8 @@ import {
   nullableString,
   opaque,
 } from '../../lib/validation/backend-schema';
-import { InspectionTrade, parseInspectionTrade } from './inspection';
+import { ProjectType, parseProjectType } from '../project/project-type';
+import { InspectionTrade, parseInspectionTrade } from './trade';
 
 const ChecklistTemplateItemSchema = z.object({
   id: z.string().nullish(),
@@ -50,6 +51,11 @@ const ChecklistTemplateItemSchema = z.object({
 const ChecklistTemplateSchema = z.object({
   id: z.string().nullish(),
   trade: opaque,
+  tradeId: nullableString,
+  tradeName: nullableString,
+  tradeGroup: nullableString,
+  applicableElementTypes: z.array(z.unknown()).nullish(),
+  applicableProjectTypes: z.array(z.unknown()).nullish(),
   name: nullableString,
   description: nullableString,
   active: nullableBoolean,
@@ -101,11 +107,24 @@ export interface ChecklistTemplate {
   /** UUID primary key. */
   id: string;
   /**
-   * Trade the checklist covers. Fixed at creation; an update may not change it.
-   * Optional here only because the parser refuses to invent a value it does not
-   * recognize: the backend column is non-null, so a live template always has one.
+   * Slug of the trade the checklist covers. Fixed at creation; an update may
+   * not change it. Optional because the column became nullable with the trade
+   * catalogue; `tradeId` is the reference that always resolves.
    */
   trade?: InspectionTrade;
+  /** Id of the organization's trade row. */
+  tradeId?: string;
+  /** Display name of the trade, from the organization's row. */
+  tradeName?: string;
+  /** Group code of the trade. */
+  tradeGroup?: string;
+  /**
+   * Element type codes the template suits. Unset means any. A suggestion
+   * filter only: any template may still be used on any element.
+   */
+  applicableElementTypes?: string[];
+  /** Project types the template suits. Unset means any. */
+  applicableProjectTypes?: ProjectType[];
   /** Name of the checklist. */
   name: string;
   /** What the checklist covers and when it is used. */
@@ -185,6 +204,24 @@ function parseItems(raw: unknown): ChecklistTemplateItem[] {
     .sort((a, b) => a.lineOrder - b.lineOrder);
 }
 
+/** Element type codes as sent; `null` (any) and an empty list both become unset. */
+function parseCodes(raw: unknown[] | null | undefined): string[] | undefined {
+  if (!raw || raw.length === 0) return undefined;
+  const codes = raw.filter((c): c is string => typeof c === 'string');
+  return codes.length > 0 ? codes : undefined;
+}
+
+/** Project types as sent; unknown values are dropped, an empty result is unset. */
+function parseProjectTypes(
+  raw: unknown[] | null | undefined
+): ProjectType[] | undefined {
+  if (!raw || raw.length === 0) return undefined;
+  const types = raw
+    .map((t) => parseProjectType(t))
+    .filter((t): t is ProjectType => t !== undefined);
+  return types.length > 0 ? types : undefined;
+}
+
 /**
  * Parses a raw checklist-template payload into a typed
  * {@link ChecklistTemplate}.
@@ -198,6 +235,11 @@ export function parseChecklistTemplate(json: unknown): ChecklistTemplate {
   return {
     id: parseUuid(raw.id, 'parseChecklistTemplate.id'),
     trade: parseInspectionTrade(raw.trade),
+    tradeId: raw.tradeId ?? undefined,
+    tradeName: raw.tradeName ?? undefined,
+    tradeGroup: raw.tradeGroup ?? undefined,
+    applicableElementTypes: parseCodes(raw.applicableElementTypes),
+    applicableProjectTypes: parseProjectTypes(raw.applicableProjectTypes),
     name: raw.name ?? '',
     description: raw.description ?? undefined,
     // Absent means active: the backend column is non-null and defaults to true,
@@ -260,8 +302,17 @@ export interface ChecklistTemplateItemRequest {
  * version is a server-side counter and is not accepted here.
  */
 export interface ChecklistTemplateRequest {
-  /** Trade the checklist covers. Required. */
-  trade: InspectionTrade;
+  /**
+   * Slug of the trade the checklist covers, resolved against the
+   * organization's trades. Either this or `tradeId` is required.
+   */
+  trade?: InspectionTrade;
+  /** Id of the organization's trade row. Takes precedence over `trade` when both are sent. */
+  tradeId?: string;
+  /** Element type codes the template suits. Omit or send empty for any. */
+  applicableElementTypes?: string[];
+  /** Project types the template suits. Omit or send empty for any. */
+  applicableProjectTypes?: ProjectType[];
   /** Name of the checklist (max 200). Required. */
   name: string;
   /** What the checklist covers and when it is used. */
@@ -304,10 +355,15 @@ export function checklistTemplateToJson(
   dto: ChecklistTemplateRequest
 ): Record<string, unknown> {
   const json: Record<string, unknown> = {
-    trade: dto.trade,
     name: dto.name,
     items: dto.items.map((item) => checklistTemplateItemToJson(item)),
   };
+  if (dto.trade !== undefined) json.trade = dto.trade;
+  if (dto.tradeId !== undefined) json.tradeId = dto.tradeId;
+  if (dto.applicableElementTypes !== undefined)
+    json.applicableElementTypes = dto.applicableElementTypes;
+  if (dto.applicableProjectTypes !== undefined)
+    json.applicableProjectTypes = dto.applicableProjectTypes;
   if (dto.description !== undefined) json.description = dto.description;
   if (dto.active !== undefined) json.active = dto.active;
   return json;

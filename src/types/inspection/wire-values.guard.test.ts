@@ -61,25 +61,9 @@ const PINNED: Record<string, Record<string, string>> = {
     COMPLIANCE: 'compliance',
     OTHER: 'other',
   },
-  // inspection/InspectionTrade.java, one value per FR-QA requirement.
-  InspectionTrade: {
-    PRE_CONSTRUCTION_DOCUMENTATION: 'pre-construction-documentation',
-    SHUTTERING_FORMWORK: 'shuttering-formwork',
-    REINFORCEMENT: 'reinforcement',
-    RCC: 'rcc',
-    MASONRY: 'masonry',
-    PLASTERING: 'plastering',
-    WATERPROOFING: 'waterproofing',
-    FLOORING: 'flooring',
-    FABRICATION: 'fabrication',
-    ALUMINIUM_UPVC: 'aluminium-upvc',
-    ELECTRICAL_FIXTURES: 'electrical-fixtures',
-    PLUMBING_FIXTURES: 'plumbing-fixtures',
-    SANITARY_FIXTURES: 'sanitary-fixtures',
-    FINISHING: 'finishing',
-    DIMENSIONAL_CHECK: 'dimensional-check',
-    PROGRESS_CHECK: 'progress-check',
-  },
+  // InspectionTrade is no longer an enum: it widened to a string slug with the
+  // trade catalogue (echno-backend#769). The sixteen legacy constants are
+  // pinned in trade.test.ts instead.
   // inspection/InspectionStatus.java
   InspectionStatus: {
     SCHEDULED: 'scheduled',
