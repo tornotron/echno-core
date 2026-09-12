@@ -4,7 +4,7 @@
      Run `bun run api:snapshot` after an intended public-API change and commit the diff.
      See docs/API-STABILITY.md. -->
 
-Entry points: 148
+Entry points: 149
 
 ## `@tornotron/echno-core`
 
@@ -165,6 +165,8 @@ Entry points: 148
 - createMovementToJson
 - CreateNcrRequest
 - createNcrToJson
+- CreateObservationRequest
+- createObservationToJson
 - CreateOrganizationRequest
 - createOrganizationToJson
 - CreateProjectRequest
@@ -321,6 +323,7 @@ Entry points: 148
 - GroupedLeaveCalendarEntry
 - HalfDayType
 - hasAllRoles
+- hasObservationChanges
 - hasPendingReinspection
 - hasRole
 - Indent
@@ -342,6 +345,7 @@ Entry points: 148
 - InspectionCheckItemRequest
 - InspectionDefect
 - InspectionDefectRequest
+- inspectionDefectRequestToJson
 - InspectionEvent
 - InspectionEventActorType
 - inspectionEventActorTypeLabels
@@ -399,6 +403,7 @@ Entry points: 148
 - isManager
 - isManagerOrAbove
 - isNcrOverdue
+- isObservationPending
 - isPersonsChange
 - Issue
 - IssueComment
@@ -494,6 +499,22 @@ Entry points: 148
 - ncrTypeLabels
 - noCacheQueryOptions
 - NORMAL_ROLES
+- Observation
+- observationAttachmentIds
+- ObservationDecision
+- ObservationEvidenceRef
+- observationKeys
+- ObservationListParams
+- ObservationOutcomeKind
+- observationOutcomeKindLabels
+- ObservationOutcomeRequest
+- ObservationReviewChange
+- ObservationReviewChanges
+- ObservationReviewStatus
+- observationReviewStatusLabels
+- observationService
+- ObservationSource
+- observationSourceLabels
 - Organization
 - OrganizationFiles
 - organizationKeys
@@ -513,6 +534,7 @@ Entry points: 148
 - PagedLowStockMaterials
 - PagedMaterialMovementHistory
 - PagedMaterials
+- PagedObservations
 - PagedReceipt
 - PagedStatusTransition
 - PagedTask
@@ -611,6 +633,10 @@ Entry points: 148
 - parseNcr
 - parseNcrStatus
 - parseNcrType
+- parseObservation
+- parseObservationOutcomeKind
+- parseObservationReviewStatus
+- parseObservationSource
 - parseOrganization
 - parseOrgElementType
 - parseOrgTrade
@@ -711,6 +737,8 @@ Entry points: 148
 - resolveAttendanceRole
 - ReverseJournalArgs
 - ReverseJournalRequest
+- ReviewObservationRequest
+- reviewObservationToJson
 - roleManagementService
 - ScheduleReinspectionRequest
 - scheduleReinspectionToJson
@@ -931,6 +959,7 @@ Entry points: 148
 - useCreateLeavePolicy
 - useCreateLeaveRequest
 - useCreateMaterial
+- useCreateObservation
 - useCreateOrganization
 - useCreatePOItem
 - useCreateProject
@@ -1085,6 +1114,9 @@ Entry points: 148
 - useMovementsByAttendance
 - useMoveSpatialNode
 - useNcrEvents
+- useObservation
+- useObservationEvidence
+- useObservations
 - useOrganization
 - useOrganizationCalendar
 - useOrganizationRequests
@@ -1137,6 +1169,7 @@ Entry points: 148
 - useResendInvitation
 - useRestoreSpatialNode
 - useReverseJournalEntry
+- useReviewObservation
 - UserFiles
 - userInitials
 - userKeys
@@ -1899,20 +1932,26 @@ Entry points: 148
 - inspectionEventKeys
 - inspectionKeys
 - ncrKeys
+- observationKeys
 - reinspectionKeys
 - tradeKeys
 - useApplicableChecklistTemplates
 - useCreateElementType
+- useCreateObservation
 - useCreateTrade
 - useElementTypeCatalogue
 - useInspectionEventQuery
 - useInspectionEvents
 - useNcrEvents
+- useObservation
+- useObservationEvidence
+- useObservations
 - useOrgElementTypes
 - useOrgTrades
 - useRecordReinspectionOutcome
 - useReinspection
 - useReinspectionsByNcr
+- useReviewObservation
 - useScheduleReinspectionForDefect
 - useScheduleReinspectionForNcr
 - useTradeCatalogue
@@ -1926,6 +1965,7 @@ Entry points: 148
 - inspectionEventKeys
 - inspectionKeys
 - ncrKeys
+- observationKeys
 - reinspectionKeys
 - tradeKeys
 
@@ -1960,6 +2000,8 @@ Entry points: 148
 - createInspectionToJson
 - CreateNcrRequest
 - createNcrToJson
+- CreateObservationRequest
+- createObservationToJson
 - CreateTradeRequest
 - createTradeToJson
 - defaultInspectionCategoryFor
@@ -1973,6 +2015,7 @@ Entry points: 148
 - defectStatusLabels
 - ElementTypeCatalogueEntry
 - groupCatalogueRows
+- hasObservationChanges
 - hasPendingReinspection
 - Inspection
 - INSPECTION_EVENT_ACTOR_TYPES
@@ -1983,6 +2026,7 @@ Entry points: 148
 - InspectionCheckItemRequest
 - InspectionDefect
 - InspectionDefectRequest
+- inspectionDefectRequestToJson
 - InspectionEvent
 - InspectionEventActorType
 - inspectionEventActorTypeLabels
@@ -2004,6 +2048,7 @@ Entry points: 148
 - isAnnotationWithinImage
 - isLegacyInspectionTrade
 - isNcrOverdue
+- isObservationPending
 - LegacyInspectionTrade
 - MAX_DEFECT_ANNOTATIONS
 - Ncr
@@ -2016,6 +2061,19 @@ Entry points: 148
 - ncrStatusLabels
 - NcrType
 - ncrTypeLabels
+- Observation
+- observationAttachmentIds
+- ObservationDecision
+- ObservationEvidenceRef
+- ObservationOutcomeKind
+- observationOutcomeKindLabels
+- ObservationOutcomeRequest
+- ObservationReviewChange
+- ObservationReviewChanges
+- ObservationReviewStatus
+- observationReviewStatusLabels
+- ObservationSource
+- observationSourceLabels
 - OrgCatalogueRow
 - OrgElementType
 - OrgTrade
@@ -2044,6 +2102,10 @@ Entry points: 148
 - parseNcr
 - parseNcrStatus
 - parseNcrType
+- parseObservation
+- parseObservationOutcomeKind
+- parseObservationReviewStatus
+- parseObservationSource
 - parseOrgElementType
 - parseOrgTrade
 - parseReinspection
@@ -2058,6 +2120,8 @@ Entry points: 148
 - reinspectionOutcomeToJson
 - ReplaceAnnotationsRequest
 - replaceAnnotationsToJson
+- ReviewObservationRequest
+- reviewObservationToJson
 - ScheduleReinspectionRequest
 - scheduleReinspectionToJson
 - SETTLED_NCR_STATUSES
@@ -2479,6 +2543,12 @@ Entry points: 148
 
 - NcrListParams
 - ncrService
+
+## `@tornotron/echno-core/observation/services`
+
+- ObservationListParams
+- observationService
+- PagedObservations
 
 ## `@tornotron/echno-core/organization/hooks`
 
