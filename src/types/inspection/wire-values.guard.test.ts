@@ -147,6 +147,35 @@ const PINNED: Record<string, Record<string, string>> = {
     REJECTED: 'rejected',
     REOPENED: 'reopened',
   },
+  // inspection/ObservationSource.java
+  ObservationSource: {
+    HUMAN: 'human',
+    AI: 'ai',
+    DRONE: 'drone',
+    ROBOT: 'robot',
+    FIXED_CAMERA: 'fixed-camera',
+  },
+  // inspection/ObservationReviewStatus.java
+  ObservationReviewStatus: {
+    PENDING: 'pending',
+    ACCEPTED: 'accepted',
+    REJECTED: 'rejected',
+    MODIFIED: 'modified',
+  },
+  // inspection/ObservationOutcomeKind.java
+  ObservationOutcomeKind: {
+    NONE: 'none',
+    CHECK_ITEM: 'check-item',
+    DEFECT: 'defect',
+    NCR: 'ncr',
+    INSPECTION: 'inspection',
+  },
+  // ReviewObservationRequest.Decision (request-only enum)
+  ObservationDecision: {
+    ACCEPT: 'accept',
+    REJECT: 'reject',
+    MODIFY: 'modify',
+  },
 };
 
 /**

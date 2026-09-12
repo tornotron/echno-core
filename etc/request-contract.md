@@ -6,24 +6,24 @@
 
 Checked against `tornotron/echno-backend` `development`, reduced into `etc/backend-request-fields.json` by `scripts/backend-contract.ts`.
 
-Write calls in `src/services`: 151
+Write calls in `src/services`: 155
 
 ## Coverage
 
 | outcome | calls |
 | --- | --- |
-| checked | 112 |
+| checked | 114 |
 | sends nothing | 33 |
 | endpoint accepts any field name | 0 |
 | endpoint documents no request body | 0 |
 | endpoint not in the document | 0 |
-| not readable | 6 |
+| not readable | 8 |
 
 ## Findings (0)
 
 None.
 
-## Call sites this pass cannot read (6)
+## Call sites this pass cannot read (8)
 
 Not checked, and not claimed to be. Each one is a place a wrong field name would
 go unnoticed.
@@ -34,6 +34,8 @@ go unnoticed.
 - src/services/attendance-service.ts:410  POST /api/v1/attendance/web/check-in  (the payload travels in the query string, not the body)
 - src/services/attendance-service.ts:433  POST /api/v1/attendance/web/clock-event  (the payload travels in the query string, not the body)
 - src/services/finance-account-service.ts:216  POST /api/v1/finance/accounts/web/import  (body is a FormData assembled by the caller)
+- src/services/observation-service.ts:274  POST /api/v1/inspections/web/observations/{}/evidence/presign  (body is an array, which has no top-level field names)
+- src/services/observation-service.ts:297  POST /api/v1/inspections/web/observations/{}/evidence/register  (body is an array, which has no top-level field names)
 
 These are not a backlog. The list stood at seventeen until the pass learned to follow a
 serializer that delegates to another one, to read the interface a body parameter is

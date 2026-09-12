@@ -5,6 +5,34 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
+## [v8.9.0] - 2026-09-13
+
+Observation: a finding from any source with a persistent id ahead of the human decision.
+
+echno-backend#778, #780 and #781 (spec `docs/specs/2026-09-12-qaqc-observation.md`) added the
+`Observation` entity to the inspections module. A person, the compliance model, a drone, a robot
+or a fixed camera records the same row; the source is metadata. Machine findings land pending and
+a reviewer accepts, modifies or rejects them, linking the record they become (a check item
+result, a defect, an inspection). Human observations are created accepted; failed check items,
+defects and NCRs raised through the existing forms now carry an implicit one.
+
+- `types/inspection/observation`: `Observation`, `ObservationSource`, `ObservationReviewStatus`,
+  `ObservationOutcomeKind`, `ObservationDecision` with labels and parsers, `parseObservation`,
+  `observationAttachmentIds`, `isObservationPending`; `CreateObservationRequest` /
+  `createObservationToJson`; `ReviewObservationRequest` with `ObservationReviewChanges` and the
+  `ObservationOutcomeRequest` union, `reviewObservationToJson` and `hasObservationChanges`.
+  The serializer refuses a rejection without a note and a modification without a change before
+  the round trip, matching the backend's 400s.
+- `InspectionDefect.observationId` and `Ncr.observationId`, the reverse links.
+- `inspectionDefectRequestToJson` is now exported (the review outcome reuses it).
+- `observationService`: `list` (paged, filtered by project, review status, source, inspection,
+  spatial subtree, dates), `getById`, `create`, `review`, `getEvidence`, `presignEvidence`,
+  `registerEvidence`. The machine intake endpoint is not wrapped; it is for service accounts.
+- `hooks/inspection`: `useObservations`, `useObservation`, `useObservationEvidence`,
+  `useCreateObservation`, `useReviewObservation`, with `observationKeys`. Mutations invalidate
+  the observations, the event log, the inspection touched and the NCR lists where the outcome
+  made a defect.
+
 ## [v8.8.0] - 2026-09-12
 
 The inspection ontology as data: trades and element types as organization catalogues.

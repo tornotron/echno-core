@@ -110,6 +110,7 @@ const NcrSchema = z.object({
   type: opaque,
   inspectionId: z.string().nullish(),
   defectId: nullableString,
+  observationId: nullableString,
   title: nullableString,
   description: nullableString,
   severity: opaque,
@@ -150,6 +151,12 @@ export interface Ncr {
    * a live reference: an inspection's defects are rebuilt on every save.
    */
   defectId?: string;
+  /**
+   * The observation behind the non-conformance: the defect's when raised
+   * from a defect, otherwise its own. Unset on reports raised before
+   * observations existed.
+   */
+  observationId?: string;
   /** Short title of the non-conformance. */
   title: string;
   /** What does not conform, and against what requirement. */
@@ -203,6 +210,7 @@ export function parseNcr(json: unknown): Ncr {
     type: parseNcrType(raw.type),
     inspectionId: parseUuid(raw.inspectionId, 'parseNcr.inspectionId'),
     defectId: raw.defectId ?? undefined,
+    observationId: raw.observationId ?? undefined,
     title: raw.title ?? '',
     description: raw.description ?? '',
     severity: parseDefectSeverity(raw.severity),
