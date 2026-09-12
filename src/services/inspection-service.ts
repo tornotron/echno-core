@@ -56,6 +56,8 @@ export interface InspectionListParams {
    * Only QA/QC and other-category inspections carry one.
    */
   trade?: string;
+  /** Restrict to the organization's trade row with this id. */
+  tradeId?: string;
   /** Restrict to a result (hyphenated wire value, e.g. `passed-with-remarks`). */
   result?: string;
   /**
@@ -171,6 +173,7 @@ export const inspectionService = {
     if (params.type !== undefined) query.type = params.type;
     if (params.category !== undefined) query.category = params.category;
     if (params.trade !== undefined) query.trade = params.trade;
+    if (params.tradeId !== undefined) query.tradeId = params.tradeId;
     if (params.result !== undefined) query.result = params.result;
     if (params.spatialNodeId !== undefined)
       query.spatialNodeId = params.spatialNodeId;

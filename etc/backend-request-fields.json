@@ -3,7 +3,7 @@
     "repository": "tornotron/echno-backend",
     "ref": "development",
     "path": "docs/openapi.json",
-    "sha256": "2791d576f4125971c137c6b61d8220fe3f4bf7ed5df58c9bb277e6a01164cfe4"
+    "sha256": "5f50c05e1856c8217a65b827efba266fc60c154f0a42b932859cf74d4d6a793f"
   },
   "operations": {
     "POST /api/v1/assets/web": {
@@ -645,6 +645,8 @@
       "schema": "ChecklistTemplateRequest",
       "fields": [
         "active",
+        "applicableElementTypes",
+        "applicableProjectTypes",
         "description",
         "items",
         "name",
@@ -667,6 +669,8 @@
       "schema": "ChecklistTemplateRequest",
       "fields": [
         "active",
+        "applicableElementTypes",
+        "applicableProjectTypes",
         "description",
         "items",
         "name",
@@ -1600,6 +1604,34 @@
         "assignedInspectorId",
         "copyAllItems",
         "targetDate"
+      ],
+      "required": [],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/inspections/web/element-types": {
+      "schema": "CreateElementTypeRequest",
+      "fields": [
+        "code",
+        "description",
+        "groupCode",
+        "name",
+        "sortOrder"
+      ],
+      "required": [
+        "code",
+        "groupCode",
+        "name"
+      ],
+      "acceptsAnyField": false
+    },
+    "PATCH /api/v1/inspections/web/element-types/{id}": {
+      "schema": "UpdateElementTypeRequest",
+      "fields": [
+        "active",
+        "description",
+        "groupCode",
+        "name",
+        "sortOrder"
       ],
       "required": [],
       "acceptsAnyField": false

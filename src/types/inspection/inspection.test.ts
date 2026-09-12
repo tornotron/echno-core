@@ -10,11 +10,11 @@ import {
   InspectionResult,
   InspectionOrigin,
   InspectionCategory,
-  InspectionTrade,
   ComplianceRiskLevel,
   CompliancePhase,
   CheckItemStatus,
 } from './inspection';
+import { InspectionTrade } from './trade';
 
 const UUID = '11111111-1111-1111-1111-111111111111';
 const ITEM_UUID = '22222222-2222-2222-2222-222222222222';

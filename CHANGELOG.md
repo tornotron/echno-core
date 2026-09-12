@@ -5,6 +5,42 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
+## [v8.8.0] - 2026-09-12
+
+The inspection ontology as data: trades and element types as organization catalogues.
+
+echno-backend#769, #777 and #779 (spec `docs/specs/2026-09-12-qaqc-ontology-as-data.md`)
+replaced the fixed `InspectionTrade` enum with a seeded, organization-extensible trade catalogue,
+added an element type catalogue on the same pattern, and gave checklist templates an
+applicability filter. The sixteen shipped trades carry the same wire strings they always did;
+five new ones (`tiling`, `painting`, `ceilings`, `doors-windows`, `fire-systems`) ship with
+starter checklists, and an organization defines its own without a release.
+
+- `InspectionTrade` is now a `string` slug type, with the sixteen legacy codes kept as named
+  constants on the `InspectionTrade` object (`InspectionTrade.REINFORCEMENT` still works) and as
+  the `LegacyInspectionTrade` union. `parseInspectionTrade` accepts any well-formed slug.
+  `inspectionTradeLabels` and `inspectionTradeOrder` are typed over the legacy union;
+  `inspectionTradeLabel(code, name?)` labels any slug; `isLegacyInspectionTrade` narrows.
+- `types/inspection/trade`: `OrgTrade`, `TradeCatalogueEntry`, `OrgElementType`,
+  `ElementTypeCatalogueEntry`, their parsers, `CreateTradeRequest` / `UpdateTradeRequest` /
+  `CreateElementTypeRequest` / `UpdateElementTypeRequest` and serializers, `groupCatalogueRows`,
+  `catalogueGroupLabel`, `templateApplies`.
+- `Inspection` and `ChecklistTemplate` gain optional `tradeId`, `tradeName`, `tradeGroup`;
+  `ChecklistTemplate` also `applicableElementTypes` and `applicableProjectTypes`. The create and
+  update requests accept `tradeId` beside `trade`; `ChecklistTemplateRequest.trade` is optional
+  (either it or `tradeId`) and carries the applicability lists. `InspectionListParams.tradeId`.
+- `tradeService` and `elementTypeService`: `list(includeInactive)`, `catalogue()`, `create`,
+  `update`. `checklistTemplateService.getApplicable({ elementType, projectType })`.
+- `hooks/inspection`: `useOrgTrades`, `useTradeCatalogue`, `useCreateTrade`, `useUpdateTrade`,
+  `useOrgElementTypes`, `useElementTypeCatalogue`, `useCreateElementType`,
+  `useUpdateElementType`, `useApplicableChecklistTemplates`, with `tradeKeys`, `elementTypeKeys`
+  and `checklistTemplateKeys`.
+
+Breaking in type only: `InspectionTrade` is no longer an enum, so an exhaustive `switch` over it
+needs a default branch, `Record<InspectionTrade, string>` is now `Record<string, string>`, and
+`ChecklistTemplate.trade` may be unset on a live row (the column is nullable since the catalogue;
+`tradeId` always resolves). Backend contract record and public API snapshot regenerated.
+
 ## [v8.7.0] - 2026-09-12
 
 Reinspection attempts and the inspection event log.

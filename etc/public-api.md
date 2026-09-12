@@ -4,7 +4,7 @@
      Run `bun run api:snapshot` after an intended public-API change and commit the diff.
      See docs/API-STABILITY.md. -->
 
-Entry points: 147
+Entry points: 148
 
 ## `@tornotron/echno-core`
 
@@ -75,11 +75,15 @@ Entry points: 147
 - CancelConstructionInvoiceArgs
 - CancelSiteTransferRequest
 - cancelSiteTransferToJson
+- CatalogueEntry
+- CatalogueGroup
+- catalogueGroupLabel
 - categoryId
 - CheckItemStatus
 - ChecklistTemplate
 - ChecklistTemplateItem
 - ChecklistTemplateItemRequest
+- checklistTemplateKeys
 - ChecklistTemplateListParams
 - ChecklistTemplateRequest
 - checklistTemplateService
@@ -116,6 +120,8 @@ Entry points: 147
 - createAccountToJson
 - CreateAttendanceProfileRequest
 - createAttendanceProfileToJson
+- CreateCatalogueRowRequest
+- createCatalogueRowToJson
 - CreateClockEventRequest
 - createClockEventToJson
 - CreateCompanyBankAccountRequest
@@ -128,6 +134,8 @@ Entry points: 147
 - createCostCategoryToJson
 - CreateCustomerRequest
 - createCustomerToJson
+- CreateElementTypeRequest
+- createElementTypeToJson
 - CreateExpenseRequest
 - createExpenseToJson
 - CreateGrnItemRequest
@@ -181,6 +189,8 @@ Entry points: 147
 - createStorageLocationToJson
 - CreateTaskRequest
 - createTaskToJson
+- CreateTradeRequest
+- createTradeToJson
 - CreateVendorBankAccountRequest
 - createVendorBankAccountToJson
 - CreateVendorContactRequest
@@ -211,6 +221,9 @@ Entry points: 147
 - DirectUploadError
 - DirectUploadResult
 - DirectUploadStage
+- ElementTypeCatalogueEntry
+- elementTypeKeys
+- elementTypeService
 - emailBody
 - emailSubject
 - Employee
@@ -304,6 +317,7 @@ Entry points: 147
 - GrnItem
 - grnKeys
 - grnService
+- groupCatalogueRows
 - GroupedLeaveCalendarEntry
 - HalfDayType
 - hasAllRoles
@@ -349,6 +363,7 @@ Entry points: 147
 - inspectionService
 - InspectionStatus
 - InspectionTrade
+- inspectionTradeLabel
 - inspectionTradeLabels
 - inspectionTradeOrder
 - InspectionType
@@ -380,6 +395,7 @@ Entry points: 147
 - isInspector
 - isInvitationValid
 - isLateArrival
+- isLegacyInspectionTrade
 - isManager
 - isManagerOrAbove
 - isNcrOverdue
@@ -428,6 +444,7 @@ Entry points: 147
 - leaveService
 - LeaveStatus
 - LeaveTransaction
+- LegacyInspectionTrade
 - LocationMaterialStock
 - LocationStock
 - logger
@@ -482,8 +499,11 @@ Entry points: 147
 - organizationKeys
 - organizationService
 - organizationToJson
+- OrgCatalogueRow
+- OrgElementType
 - OrgRole
 - orgRoleFromString
+- OrgTrade
 - PagedAttendance
 - PagedEmployee
 - PagedExpense
@@ -532,6 +552,7 @@ Entry points: 147
 - parseDefectPhotoAnnotation
 - parseDefectSeverity
 - parseDefectStatus
+- parseElementTypeCatalogueEntry
 - parseEmployee
 - parseEmployeeLookup
 - parseExpense
@@ -591,6 +612,8 @@ Entry points: 147
 - parseNcrStatus
 - parseNcrType
 - parseOrganization
+- parseOrgElementType
+- parseOrgTrade
 - parsePayment
 - parsePositiveInt
 - parsePostingAccountMapping
@@ -622,6 +645,7 @@ Entry points: 147
 - parseStorageLocation
 - parseStorageLocationStock
 - parseTask
+- parseTradeCatalogueEntry
 - parseTrialBalanceReport
 - parseTrialBalanceRow
 - parseUser
@@ -752,8 +776,12 @@ Entry points: 147
 - taskToJson
 - TaskType
 - taskTypeFromString
+- templateApplies
 - toLocalDateAtMidnight
 - toLocalDateTimeString
+- TradeCatalogueEntry
+- tradeKeys
+- tradeService
 - TransactionType
 - TrialBalanceReport
 - TrialBalanceRow
@@ -762,6 +790,8 @@ Entry points: 147
 - updateAccountToJson
 - UpdateAttendanceProfileRequest
 - updateAttendanceProfileToJson
+- UpdateCatalogueRowRequest
+- updateCatalogueRowToJson
 - UpdateConstructionInvoiceRequest
 - updateConstructionInvoiceToJson
 - UpdateConstructionPaymentRequest
@@ -771,6 +801,8 @@ Entry points: 147
 - updateCostCategoryToJson
 - UpdateCustomerRequest
 - updateCustomerToJson
+- UpdateElementTypeRequest
+- updateElementTypeToJson
 - UpdateEmployeeRequest
 - updateEmployeeToJson
 - UpdateExpenseArgs
@@ -813,6 +845,8 @@ Entry points: 147
 - updateStorageLocationToJson
 - UpdateTaskRequest
 - updateTaskToJson
+- UpdateTradeRequest
+- updateTradeToJson
 - UpdateUserRequest
 - updateUserToJson
 - UpdateVendorBankAccountRequest
@@ -844,6 +878,7 @@ Entry points: 147
 - useAdjustBalance
 - useAllLeavePolicies
 - useAllMaterialConsumptions
+- useApplicableChecklistTemplates
 - useApprovalChain
 - useApprovalHistory
 - useApprovalsForApprover
@@ -885,6 +920,7 @@ Entry points: 147
 - useCreateCostCategory
 - useCreateCustomer
 - useCreateDraftInvoice
+- useCreateElementType
 - useCreateExpense
 - useCreateGRN
 - useCreateIndent
@@ -906,6 +942,7 @@ Entry points: 147
 - useCreateSpatialNode
 - useCreateStorageLocation
 - useCreateTask
+- useCreateTrade
 - useCreateVendor
 - useCreateWorkCategory
 - useCurrentUserEmployee
@@ -948,6 +985,7 @@ Entry points: 147
 - useDepartmentCalendar
 - useDownloadAttachment
 - useDuplicateLeavePolicy
+- useElementTypeCatalogue
 - useEmployee
 - useEmployeeBalances
 - useEmployeeBalanceSummary
@@ -1051,7 +1089,9 @@ Entry points: 147
 - useOrganizationCalendar
 - useOrganizationRequests
 - useOrganizations
+- useOrgElementTypes
 - useOrgSettings
+- useOrgTrades
 - usePendingApprovals
 - usePendingApprovalsCount
 - usePendingRegularizations
@@ -1132,6 +1172,7 @@ Entry points: 147
 - useTasksByProject
 - useTasksPage
 - useTeamCalendar
+- useTradeCatalogue
 - useTransactionHistory
 - useTrialBalance
 - useUnassignRole
@@ -1141,6 +1182,7 @@ Entry points: 147
 - useUpdateAttendanceProfile
 - useUpdateCostCategory
 - useUpdateCustomer
+- useUpdateElementType
 - useUpdateEmployee
 - useUpdateExpense
 - useUpdateFinanceSettings
@@ -1164,6 +1206,7 @@ Entry points: 147
 - useUpdateSpatialNode
 - useUpdateStorageLocation
 - useUpdateTask
+- useUpdateTrade
 - useUpdateUser
 - useUpdateUserOrganization
 - useUpdateUserWithFiles
@@ -1851,25 +1894,40 @@ Entry points: 147
 
 ## `@tornotron/echno-core/inspection/hooks`
 
+- checklistTemplateKeys
+- elementTypeKeys
 - inspectionEventKeys
 - inspectionKeys
 - ncrKeys
 - reinspectionKeys
+- tradeKeys
+- useApplicableChecklistTemplates
+- useCreateElementType
+- useCreateTrade
+- useElementTypeCatalogue
 - useInspectionEventQuery
 - useInspectionEvents
 - useNcrEvents
+- useOrgElementTypes
+- useOrgTrades
 - useRecordReinspectionOutcome
 - useReinspection
 - useReinspectionsByNcr
 - useScheduleReinspectionForDefect
 - useScheduleReinspectionForNcr
+- useTradeCatalogue
+- useUpdateElementType
+- useUpdateTrade
 
 ## `@tornotron/echno-core/inspection/hooks/keys`
 
+- checklistTemplateKeys
+- elementTypeKeys
 - inspectionEventKeys
 - inspectionKeys
 - ncrKeys
 - reinspectionKeys
+- tradeKeys
 
 ## `@tornotron/echno-core/inspection/services`
 
@@ -1883,6 +1941,9 @@ Entry points: 147
 - AssignNcrRequest
 - assignNcrToJson
 - availableNcrActions
+- CatalogueEntry
+- CatalogueGroup
+- catalogueGroupLabel
 - CheckItemStatus
 - ChecklistTemplate
 - ChecklistTemplateItem
@@ -1891,10 +1952,16 @@ Entry points: 147
 - checklistTemplateToJson
 - CompliancePhase
 - ComplianceRiskLevel
+- CreateCatalogueRowRequest
+- createCatalogueRowToJson
+- CreateElementTypeRequest
+- createElementTypeToJson
 - CreateInspectionRequest
 - createInspectionToJson
 - CreateNcrRequest
 - createNcrToJson
+- CreateTradeRequest
+- createTradeToJson
 - defaultInspectionCategoryFor
 - DefectAnnotationShape
 - defectAnnotationShapeLabels
@@ -1904,6 +1971,8 @@ Entry points: 147
 - defectSeverityLabels
 - DefectStatus
 - defectStatusLabels
+- ElementTypeCatalogueEntry
+- groupCatalogueRows
 - hasPendingReinspection
 - Inspection
 - INSPECTION_EVENT_ACTOR_TYPES
@@ -1928,11 +1997,14 @@ Entry points: 147
 - InspectionResult
 - InspectionStatus
 - InspectionTrade
+- inspectionTradeLabel
 - inspectionTradeLabels
 - inspectionTradeOrder
 - InspectionType
 - isAnnotationWithinImage
+- isLegacyInspectionTrade
 - isNcrOverdue
+- LegacyInspectionTrade
 - MAX_DEFECT_ANNOTATIONS
 - Ncr
 - NcrAction
@@ -1944,6 +2016,9 @@ Entry points: 147
 - ncrStatusLabels
 - NcrType
 - ncrTypeLabels
+- OrgCatalogueRow
+- OrgElementType
+- OrgTrade
 - parseCheckItemStatus
 - parseChecklistTemplate
 - parseChecklistTemplateItem
@@ -1953,6 +2028,7 @@ Entry points: 147
 - parseDefectPhotoAnnotation
 - parseDefectSeverity
 - parseDefectStatus
+- parseElementTypeCatalogueEntry
 - parseInspection
 - parseInspectionCategory
 - parseInspectionCheckItem
@@ -1968,9 +2044,12 @@ Entry points: 147
 - parseNcr
 - parseNcrStatus
 - parseNcrType
+- parseOrgElementType
+- parseOrgTrade
 - parseReinspection
 - parseReinspectionOutcome
 - parseStarterChecklistTemplate
+- parseTradeCatalogueEntry
 - passedReinspections
 - Reinspection
 - ReinspectionOutcome
@@ -1983,8 +2062,16 @@ Entry points: 147
 - scheduleReinspectionToJson
 - SETTLED_NCR_STATUSES
 - StarterChecklistTemplate
+- templateApplies
+- TradeCatalogueEntry
+- UpdateCatalogueRowRequest
+- updateCatalogueRowToJson
+- UpdateElementTypeRequest
+- updateElementTypeToJson
 - UpdateInspectionRequest
 - updateInspectionToJson
+- UpdateTradeRequest
+- updateTradeToJson
 - VerifyNcrRequest
 - verifyNcrToJson
 
@@ -2763,6 +2850,11 @@ Entry points: 147
 - taskTypeFromString
 - UpdateTaskRequest
 - updateTaskToJson
+
+## `@tornotron/echno-core/trade/services`
+
+- elementTypeService
+- tradeService
 
 ## `@tornotron/echno-core/user/hooks`
 

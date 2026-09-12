@@ -23,3 +23,4 @@ export * from './ncr';
 export * from './checklist-template';
 export * from './reinspection';
 export * from './inspection-event';
+export * from './trade';

@@ -75,3 +75,31 @@ export const inspectionKeys = {
   /** One inspection. */
   detail: (id: string) => [...inspectionKeys.all, 'detail', id] as const,
 };
+
+/** Query keys for the organization's trade list and the trade catalogue. */
+export const tradeKeys = {
+  all: ['inspection-trades'] as const,
+  list: (includeInactive = false) =>
+    [...tradeKeys.all, 'list', includeInactive] as const,
+  catalogue: () => [...tradeKeys.all, 'catalogue'] as const,
+};
+
+/** Query keys for the organization's element types and their catalogue. */
+export const elementTypeKeys = {
+  all: ['element-types'] as const,
+  list: (includeInactive = false) =>
+    [...elementTypeKeys.all, 'list', includeInactive] as const,
+  catalogue: () => [...elementTypeKeys.all, 'catalogue'] as const,
+};
+
+/** Query keys for checklist template suggestions by applicability. */
+export const checklistTemplateKeys = {
+  all: ['checklist-templates'] as const,
+  applicable: (params: { elementType?: string; projectType?: string }) =>
+    [
+      ...checklistTemplateKeys.all,
+      'applicable',
+      params.elementType ?? null,
+      params.projectType ?? null,
+    ] as const,
+};
