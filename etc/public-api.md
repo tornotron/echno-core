@@ -4,7 +4,7 @@
      Run `bun run api:snapshot` after an intended public-API change and commit the diff.
      See docs/API-STABILITY.md. -->
 
-Entry points: 135
+Entry points: 139
 
 ## `@tornotron/echno-core`
 
@@ -429,6 +429,11 @@ Entry points: 135
 - MaterialWithStock
 - MAX_DEFECT_ANNOTATIONS
 - mergePreservingNested
+- ModuleDescriptor
+- ModuleId
+- moduleKeys
+- ModuleNavDescriptor
+- moduleService
 - movementKeys
 - MovementRecord
 - movementService
@@ -551,6 +556,7 @@ Entry points: 135
 - parseMaterialStock
 - parseMaterialStockSummary
 - parseMaterialWithStock
+- parseModuleDescriptor
 - parseMovementRecord
 - parseNcr
 - parseNcrStatus
@@ -890,6 +896,7 @@ Entry points: 135
 - useEmployees
 - useEmployeesByProject
 - useEmployeesPage
+- useEnabledModules
 - useExpense
 - useExpenses
 - useExpensesPage
@@ -919,6 +926,7 @@ Entry points: 135
 - useIndentItemsByIndent
 - useIndents
 - useIndentsPaginated
+- useInstalledModules
 - useInventoryTransaction
 - useInventoryTransactions
 - useInventoryTransactionsByDateRange
@@ -2205,6 +2213,27 @@ Entry points: 135
 - parseMaterialWithStock
 - UpdateMaterialRequest
 - updateMaterialToJson
+
+## `@tornotron/echno-core/module/hooks`
+
+- moduleKeys
+- useEnabledModules
+- useInstalledModules
+
+## `@tornotron/echno-core/module/hooks/keys`
+
+- moduleKeys
+
+## `@tornotron/echno-core/module/services`
+
+- moduleService
+
+## `@tornotron/echno-core/module/types`
+
+- ModuleDescriptor
+- ModuleId
+- ModuleNavDescriptor
+- parseModuleDescriptor
 
 ## `@tornotron/echno-core/movement/hooks`
 
