@@ -195,3 +195,10 @@ export * from './types/inspection';
 export * from './services/inspection-service';
 export * from './services/ncr-service';
 export * from './services/checklist-template-service';
+
+// Module — the registry descriptor for pluggable frontend modules
+// (spec `echno-backend/docs/specs/2026-08-26-modular-plugin-architecture.md`
+// section 8). Backed by tornotron/echno-backend#747.
+export * from './types/module';
+export * from './services/module-service';
+export * from './hooks/module';
