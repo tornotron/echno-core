@@ -23,6 +23,10 @@
 import { z } from 'zod';
 import { parseUuid } from '../../lib/utils/parse-id';
 import {
+  SpatialPathSegment,
+  parseSpatialPathSegment,
+} from '../spatial/spatial';
+import {
   backendDate,
   nullableBoolean,
   nullableNumber,
@@ -427,6 +431,8 @@ const InspectionCheckItemSchema = z.object({
   deviation: z.coerce.number().nullish(),
   bimElementGuid: nullableString,
   priority: nullableString,
+  spatialNodeId: nullableString,
+  spatialPath: z.array(z.unknown()).nullish(),
 });
 
 const InspectionDefectSchema = z.object({
@@ -435,6 +441,8 @@ const InspectionDefectSchema = z.object({
   description: nullableString,
   severity: nullableString,
   location: nullableString,
+  spatialNodeId: nullableString,
+  spatialPath: z.array(z.unknown()).nullish(),
   photos: z.array(z.string()).nullish(),
   correctiveAction: nullableString,
   responsibleParty: nullableString,
@@ -456,6 +464,8 @@ const InspectionSchema = z.object({
   location: nullableString,
   areaInspected: nullableString,
   drawingReference: nullableString,
+  spatialNodeId: nullableString,
+  spatialPath: z.array(z.unknown()).nullish(),
   scheduledDate: backendDate,
   scheduledTime: nullableString,
   actualStartTime: backendDate,
@@ -525,6 +535,16 @@ export interface InspectionCheckItem {
   bimElementGuid?: string;
   /** Priority (free text). */
   priority?: string;
+  /**
+   * Site structure node this check point points at, or `undefined` where only the
+   * free-text location was recorded.
+   */
+  spatialNodeId?: string;
+  /**
+   * Ordered ancestors from the building down to `spatialNodeId`, for a
+   * breadcrumb with no second call. Empty when `spatialNodeId` is unset.
+   */
+  spatialPath: SpatialPathSegment[];
 }
 
 /** A defect recorded against an inspection. */
@@ -551,6 +571,16 @@ export interface InspectionDefect {
   status?: string;
   /** Date the defect was resolved (`YYYY-MM-DD`). */
   resolvedDate?: string;
+  /**
+   * Site structure node this defect points at, or `undefined` where only the
+   * free-text location was recorded.
+   */
+  spatialNodeId?: string;
+  /**
+   * Ordered ancestors from the building down to `spatialNodeId`, for a
+   * breadcrumb with no second call. Empty when `spatialNodeId` is unset.
+   */
+  spatialPath: SpatialPathSegment[];
 }
 
 /** A site inspection with its check points and recorded defects. */
@@ -656,6 +686,16 @@ export interface Inspection {
   createdAt?: string;
   /** Last-update timestamp (ISO string). */
   updatedAt?: string;
+  /**
+   * Site structure node this inspection points at, or `undefined` where only the
+   * free-text location was recorded.
+   */
+  spatialNodeId?: string;
+  /**
+   * Ordered ancestors from the building down to `spatialNodeId`, for a
+   * breadcrumb with no second call. Empty when `spatialNodeId` is unset.
+   */
+  spatialPath: SpatialPathSegment[];
 }
 
 /**
@@ -680,6 +720,10 @@ export function parseInspectionCheckItem(json: unknown): InspectionCheckItem {
     deviation: raw.deviation ?? undefined,
     bimElementGuid: raw.bimElementGuid ?? undefined,
     priority: raw.priority ?? undefined,
+    spatialNodeId: raw.spatialNodeId ?? undefined,
+    spatialPath: (raw.spatialPath ?? []).map((segment) =>
+      parseSpatialPathSegment(segment)
+    ),
   };
 }
 
@@ -700,6 +744,10 @@ export function parseInspectionDefect(json: unknown): InspectionDefect {
     targetDate: raw.targetDate ?? undefined,
     status: raw.status ?? undefined,
     resolvedDate: raw.resolvedDate ?? undefined,
+    spatialNodeId: raw.spatialNodeId ?? undefined,
+    spatialPath: (raw.spatialPath ?? []).map((segment) =>
+      parseSpatialPathSegment(segment)
+    ),
   };
 }
 
@@ -726,6 +774,10 @@ export function parseInspection(json: unknown): Inspection {
     location: raw.location ?? undefined,
     areaInspected: raw.areaInspected ?? undefined,
     drawingReference: raw.drawingReference ?? undefined,
+    spatialNodeId: raw.spatialNodeId ?? undefined,
+    spatialPath: (raw.spatialPath ?? []).map((segment) =>
+      parseSpatialPathSegment(segment)
+    ),
     scheduledDate: raw.scheduledDate ?? undefined,
     scheduledTime: raw.scheduledTime ?? undefined,
     actualStartTime: raw.actualStartTime ?? undefined,
@@ -793,6 +845,11 @@ export interface InspectionCheckItemRequest {
   bimElementGuid?: string;
   /** Priority (max 20, free text). */
   priority?: string;
+  /**
+   * Site structure node this check point points at, a zone or element of the project. Omit or pass `null` to
+   * keep the free-text location as the only place.
+   */
+  spatialNodeId?: string | null;
 }
 
 /**
@@ -820,6 +877,11 @@ export interface InspectionDefectRequest {
   status?: string;
   /** Date the defect was resolved (`YYYY-MM-DD`). */
   resolvedDate?: string;
+  /**
+   * Site structure node this defect points at, a zone or element of the project. Omit or pass `null` to
+   * keep the free-text location as the only place.
+   */
+  spatialNodeId?: string | null;
 }
 
 /**
@@ -869,6 +931,11 @@ export interface CreateInspectionRequest {
   checkItems?: InspectionCheckItemRequest[];
   /** Defects recorded. */
   defects?: InspectionDefectRequest[];
+  /**
+   * Site structure node this inspection points at, any level of the project tree. Omit or pass `null` to
+   * keep the free-text location as the only place.
+   */
+  spatialNodeId?: string | null;
 }
 
 /**
@@ -923,6 +990,11 @@ export interface UpdateInspectionRequest {
   checkItems?: InspectionCheckItemRequest[];
   /** Defects recorded. */
   defects?: InspectionDefectRequest[];
+  /**
+   * Site structure node this inspection points at, any level of the project tree. Omit or pass `null` to
+   * keep the free-text location as the only place.
+   */
+  spatialNodeId?: string | null;
 }
 
 /**
@@ -938,6 +1010,7 @@ function inspectionCheckItemToJson(
     status: item.status,
     photosRequired: item.photosRequired,
   };
+  if (item.spatialNodeId !== undefined) json.spatialNodeId = item.spatialNodeId;
   if (item.specification !== undefined) json.specification = item.specification;
   if (item.remarks !== undefined) json.remarks = item.remarks;
   if (item.photos !== undefined) json.photos = item.photos;
@@ -966,6 +1039,7 @@ function inspectionDefectToJson(
   if (defect.category !== undefined) json.category = defect.category;
   if (defect.severity !== undefined) json.severity = defect.severity;
   if (defect.location !== undefined) json.location = defect.location;
+  if (defect.spatialNodeId !== undefined) json.spatialNodeId = defect.spatialNodeId;
   if (defect.photos !== undefined) json.photos = defect.photos;
   if (defect.responsibleParty !== undefined)
     json.responsibleParty = defect.responsibleParty;
@@ -1006,6 +1080,7 @@ function inspectionCommonToJson(
   if (dto.weatherConditions !== undefined)
     json.weatherConditions = dto.weatherConditions;
   if (dto.temperature !== undefined) json.temperature = dto.temperature;
+  if (dto.spatialNodeId !== undefined) json.spatialNodeId = dto.spatialNodeId;
   if (dto.checkItems !== undefined)
     json.checkItems = dto.checkItems.map((item) =>
       inspectionCheckItemToJson(item)

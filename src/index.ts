@@ -202,3 +202,11 @@ export * from './services/checklist-template-service';
 export * from './types/module';
 export * from './services/module-service';
 export * from './hooks/module';
+
+// Spatial — a project's site structure (Building > Floor > Zone > Element),
+// the stable ids inspections, defects and check items point at (spec
+// `echno-backend/docs/specs/2026-09-12-qaqc-spatial-hierarchy.md`).
+// Backed by tornotron/echno-backend#768, #773 and #775.
+export * from './types/spatial';
+export * from './services/spatial-service';
+export * from './hooks/spatial';

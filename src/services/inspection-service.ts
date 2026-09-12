@@ -58,6 +58,11 @@ export interface InspectionListParams {
   trade?: string;
   /** Restrict to a result (hyphenated wire value, e.g. `passed-with-remarks`). */
   result?: string;
+  /**
+   * Restrict to a site structure node: matches inspections on it and on
+   * every node under it (the subtree).
+   */
+  spatialNodeId?: string;
 }
 
 /** Optional paging for the annotation list. */
@@ -167,6 +172,8 @@ export const inspectionService = {
     if (params.category !== undefined) query.category = params.category;
     if (params.trade !== undefined) query.trade = params.trade;
     if (params.result !== undefined) query.result = params.result;
+    if (params.spatialNodeId !== undefined)
+      query.spatialNodeId = params.spatialNodeId;
     const data = await api.get<ApiResponse>(BASE, query);
     return safeParseInspections(data);
   },
