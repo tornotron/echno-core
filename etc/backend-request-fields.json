@@ -3,7 +3,7 @@
     "repository": "tornotron/echno-backend",
     "ref": "development",
     "path": "docs/openapi.json",
-    "sha256": "44354fa58226935bc6b37175218085a354a64c1857ade21326b1aacebaf38859"
+    "sha256": "7f78f8bb18c19a270f0714114efb7b883e4225b764025b00f20a3ee0a1bbd93c"
   },
   "operations": {
     "POST /api/v1/assets/web": {
@@ -528,19 +528,7 @@
       ],
       "acceptsAnyField": false
     },
-    "POST /api/v1/billing/subscriptions/web/usage": {
-      "schema": "UsageRecordDto",
-      "fields": [
-        "amount",
-        "featureCode"
-      ],
-      "required": [
-        "amount",
-        "featureCode"
-      ],
-      "acceptsAnyField": false
-    },
-    "POST /api/v1/billing/subscriptions/web/user/{userId}": {
+    "POST /api/v1/billing/subscriptions/web/organization/{organizationId}": {
       "schema": "SubscriptionCreateDto",
       "fields": [
         "billingPeriod",
@@ -551,7 +539,7 @@
       ],
       "acceptsAnyField": false
     },
-    "POST /api/v1/billing/subscriptions/web/user/{userId}/cancel": {
+    "POST /api/v1/billing/subscriptions/web/organization/{organizationId}/cancel": {
       "schema": "SubscriptionCancelDto",
       "fields": [
         "immediate",
@@ -560,13 +548,25 @@
       "required": [],
       "acceptsAnyField": false
     },
-    "PUT /api/v1/billing/subscriptions/web/user/{userId}/change-plan": {
+    "PUT /api/v1/billing/subscriptions/web/organization/{organizationId}/change-plan": {
       "schema": "SubscriptionChangeDto",
       "fields": [
         "newPlanCode"
       ],
       "required": [
         "newPlanCode"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/billing/subscriptions/web/usage": {
+      "schema": "UsageRecordDto",
+      "fields": [
+        "amount",
+        "featureCode"
+      ],
+      "required": [
+        "amount",
+        "featureCode"
       ],
       "acceptsAnyField": false
     },
@@ -648,12 +648,12 @@
         "description",
         "items",
         "name",
-        "trade"
+        "trade",
+        "tradeId"
       ],
       "required": [
         "items",
-        "name",
-        "trade"
+        "name"
       ],
       "acceptsAnyField": false
     },
@@ -670,12 +670,12 @@
         "description",
         "items",
         "name",
-        "trade"
+        "trade",
+        "tradeId"
       ],
       "required": [
         "items",
-        "name",
-        "trade"
+        "name"
       ],
       "acceptsAnyField": false
     },
@@ -1566,9 +1566,11 @@
         "projectId",
         "scheduledDate",
         "scheduledTime",
+        "spatialNodeId",
         "temperature",
         "title",
         "trade",
+        "tradeId",
         "type",
         "weatherConditions"
       ],
@@ -1592,6 +1594,34 @@
       "required": [],
       "acceptsAnyField": false
     },
+    "POST /api/v1/inspections/web/trades": {
+      "schema": "CreateTradeRequest",
+      "fields": [
+        "code",
+        "description",
+        "groupCode",
+        "name",
+        "sortOrder"
+      ],
+      "required": [
+        "code",
+        "groupCode",
+        "name"
+      ],
+      "acceptsAnyField": false
+    },
+    "PATCH /api/v1/inspections/web/trades/{id}": {
+      "schema": "UpdateTradeRequest",
+      "fields": [
+        "active",
+        "description",
+        "groupCode",
+        "name",
+        "sortOrder"
+      ],
+      "required": [],
+      "acceptsAnyField": false
+    },
     "PUT /api/v1/inspections/web/{id}": {
       "schema": "UpdateInspectionRequest",
       "fields": [
@@ -1612,10 +1642,12 @@
         "result",
         "scheduledDate",
         "scheduledTime",
+        "spatialNodeId",
         "status",
         "temperature",
         "title",
         "trade",
+        "tradeId",
         "type",
         "weatherConditions"
       ],
@@ -1742,6 +1774,16 @@
       "required": [
         "comment",
         "issueId"
+      ],
+      "acceptsAnyField": false
+    },
+    "PATCH /api/v1/issues/comments/web/{id}": {
+      "schema": "IssueCommentUpdateDto",
+      "fields": [
+        "comment"
+      ],
+      "required": [
+        "comment"
       ],
       "acceptsAnyField": false
     },
@@ -2894,6 +2936,72 @@
       "required": [],
       "acceptsAnyField": false
     },
+    "POST /api/v1/project/{projectId}/spatial/import": {
+      "schema": "SpatialImportRequest",
+      "fields": [
+        "rows"
+      ],
+      "required": [
+        "rows"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/project/{projectId}/spatial/nodes": {
+      "schema": "CreateSpatialNodeRequest",
+      "fields": [
+        "bimElementGuid",
+        "code",
+        "elementType",
+        "externalRef",
+        "level",
+        "levelIndex",
+        "name",
+        "parentId",
+        "sortOrder"
+      ],
+      "required": [
+        "code",
+        "level",
+        "name"
+      ],
+      "acceptsAnyField": false
+    },
+    "PATCH /api/v1/project/{projectId}/spatial/nodes/{nodeId}": {
+      "schema": "UpdateSpatialNodeRequest",
+      "fields": [
+        "bimElementGuid",
+        "code",
+        "elementType",
+        "externalRef",
+        "levelIndex",
+        "name",
+        "sortOrder"
+      ],
+      "required": [],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/project/{projectId}/spatial/nodes/{nodeId}/archive": {
+      "schema": null,
+      "fields": [],
+      "required": [],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/project/{projectId}/spatial/nodes/{nodeId}/move": {
+      "schema": "MoveSpatialNodeRequest",
+      "fields": [
+        "parentId"
+      ],
+      "required": [
+        "parentId"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/project/{projectId}/spatial/nodes/{nodeId}/restore": {
+      "schema": null,
+      "fields": [],
+      "required": [],
+      "acceptsAnyField": false
+    },
     "POST /api/v1/project/{projectId}/wbs": {
       "schema": "WbsElementCreationDto",
       "fields": [
@@ -3428,6 +3536,8 @@
         "physicalCountDate",
         "primaryReason",
         "projectId",
+        "sourceDocumentId",
+        "sourceDocumentType",
         "status",
         "submittedBy",
         "totalAdjustmentValue",
@@ -3453,6 +3563,8 @@
         "physicalCountDate",
         "primaryReason",
         "projectId",
+        "sourceDocumentId",
+        "sourceDocumentType",
         "status",
         "submittedBy",
         "totalAdjustmentValue",

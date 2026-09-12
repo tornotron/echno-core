@@ -4,7 +4,7 @@
      Run `bun run api:snapshot` after an intended public-API change and commit the diff.
      See docs/API-STABILITY.md. -->
 
-Entry points: 139
+Entry points: 143
 
 ## `@tornotron/echno-core`
 
@@ -84,6 +84,7 @@ Entry points: 139
 - ChecklistTemplateRequest
 - checklistTemplateService
 - checklistTemplateToJson
+- childSpatialLevel
 - ClockEvent
 - clockEventToJson
 - ClockEventType
@@ -174,6 +175,8 @@ Entry points: 139
 - createSiteTransferItemToJson
 - CreateSiteTransferRequest
 - createSiteTransferToJson
+- CreateSpatialNodeRequest
+- createSpatialNodeToJson
 - CreateStorageLocationRequest
 - createStorageLocationToJson
 - CreateTaskRequest
@@ -245,6 +248,7 @@ Entry points: 139
 - financeSettingsService
 - formatDateForBackend
 - formatFileSize
+- formatSpatialPath
 - GenerateInviteCodeRequest
 - generateInviteCodeToJson
 - GeoLocation
@@ -438,6 +442,8 @@ Entry points: 139
 - MovementRecord
 - movementService
 - MovementType
+- MoveSpatialNodeRequest
+- moveSpatialNodeToJson
 - Ncr
 - NcrAction
 - ncrActionLabels
@@ -581,6 +587,11 @@ Entry points: 139
 - parseShiftTiming
 - parseSiteTransfer
 - parseSiteTransferItem
+- parseSpatialImportResult
+- parseSpatialLevel
+- parseSpatialNode
+- parseSpatialPathSegment
+- parseSpatialTreeNode
 - parseStarterChecklistTemplate
 - parseStatusTransition
 - parseStorageLocation
@@ -666,6 +677,20 @@ Entry points: 139
 - siteTransferStatusBadgeColors
 - siteTransferStatusLabels
 - SkillLevel
+- SpatialImportRequest
+- SpatialImportResult
+- SpatialImportRow
+- spatialImportRowToJson
+- spatialImportToJson
+- spatialKeys
+- SpatialLevel
+- spatialLevelLabels
+- spatialLevels
+- SpatialNode
+- SpatialNodeBase
+- SpatialPathSegment
+- spatialService
+- SpatialTreeNode
 - standardQueryOptions
 - StarterChecklistTemplate
 - staticQueryOptions
@@ -747,6 +772,8 @@ Entry points: 139
 - updateReceiptToJson
 - UpdateShiftTimingRequest
 - updateShiftTimingToJson
+- UpdateSpatialNodeRequest
+- updateSpatialNodeToJson
 - UpdateStorageLocationRequest
 - updateStorageLocationToJson
 - UpdateTaskRequest
@@ -789,6 +816,7 @@ Entry points: 139
 - useApproveConstructionInvoice
 - useApproveLeaveRequest
 - useApproverRequests
+- useArchiveSpatialNode
 - useAssignManager
 - useAssignRole
 - useAttachmentByEntity
@@ -840,6 +868,7 @@ Entry points: 139
 - useCreateReceipt
 - useCreateShift
 - useCreateSiteTransfer
+- useCreateSpatialNode
 - useCreateStorageLocation
 - useCreateTask
 - useCreateVendor
@@ -920,6 +949,7 @@ Entry points: 139
 - useGRNsPaginated
 - useGroupedCalendar
 - useImportChartOfAccounts
+- useImportSpatialRows
 - useIndent
 - useIndentItem
 - useIndentItems
@@ -978,6 +1008,7 @@ Entry points: 139
 - useMaterialWithStock
 - useMovementById
 - useMovementsByAttendance
+- useMoveSpatialNode
 - useOrganization
 - useOrganizationCalendar
 - useOrganizationRequests
@@ -1023,6 +1054,7 @@ Entry points: 139
 - useRemoveManager
 - useRequestRegularization
 - useResendInvitation
+- useRestoreSpatialNode
 - useReverseJournalEntry
 - UserFiles
 - userInitials
@@ -1044,6 +1076,8 @@ Entry points: 139
 - useSiteTransfersByStatus
 - useSiteTransfersPaginated
 - useSiteTransferStatusHistory
+- useSpatialNode
+- useSpatialTree
 - useStorageLocation
 - useStorageLocations
 - useStorageLocationStock
@@ -1084,6 +1118,7 @@ Entry points: 139
 - useUpdateReceipt
 - useUpdateShift
 - useUpdateSiteTransferStatus  [deprecated]
+- useUpdateSpatialNode
 - useUpdateStorageLocation
 - useUpdateTask
 - useUpdateUser
@@ -2497,6 +2532,54 @@ Entry points: 139
 - SiteTransferStatus
 - siteTransferStatusBadgeColors
 - siteTransferStatusLabels
+
+## `@tornotron/echno-core/spatial/hooks`
+
+- spatialKeys
+- useArchiveSpatialNode
+- useCreateSpatialNode
+- useImportSpatialRows
+- useMoveSpatialNode
+- useRestoreSpatialNode
+- useSpatialNode
+- useSpatialTree
+- useUpdateSpatialNode
+
+## `@tornotron/echno-core/spatial/hooks/keys`
+
+- spatialKeys
+
+## `@tornotron/echno-core/spatial/services`
+
+- spatialService
+
+## `@tornotron/echno-core/spatial/types`
+
+- childSpatialLevel
+- CreateSpatialNodeRequest
+- createSpatialNodeToJson
+- formatSpatialPath
+- MoveSpatialNodeRequest
+- moveSpatialNodeToJson
+- parseSpatialImportResult
+- parseSpatialLevel
+- parseSpatialNode
+- parseSpatialPathSegment
+- parseSpatialTreeNode
+- SpatialImportRequest
+- SpatialImportResult
+- SpatialImportRow
+- spatialImportRowToJson
+- spatialImportToJson
+- SpatialLevel
+- spatialLevelLabels
+- spatialLevels
+- SpatialNode
+- SpatialNodeBase
+- SpatialPathSegment
+- SpatialTreeNode
+- UpdateSpatialNodeRequest
+- updateSpatialNodeToJson
 
 ## `@tornotron/echno-core/storage-locations/hooks`
 
