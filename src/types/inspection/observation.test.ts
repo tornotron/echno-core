@@ -175,10 +175,10 @@ describe('reviewObservationToJson', () => {
       outcome: { kind: ObservationOutcomeKind.DEFECT, defectId: ITEM },
     });
     expect(attach.outcome).toEqual({ kind: 'defect', defectId: ITEM });
-    // @ts-expect-error the two DEFECT shapes are exclusive
     const both: ObservationOutcomeRequest = {
       kind: ObservationOutcomeKind.DEFECT,
       defectId: ITEM,
+      // @ts-expect-error the two DEFECT shapes are exclusive
       defect: { description: 'x', correctiveAction: 'y' },
     };
     expect(both.kind).toBe(ObservationOutcomeKind.DEFECT);
