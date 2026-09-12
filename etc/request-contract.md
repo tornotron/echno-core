@@ -6,13 +6,13 @@
 
 Checked against `tornotron/echno-backend` `development`, reduced into `etc/backend-request-fields.json` by `scripts/backend-contract.ts`.
 
-Write calls in `src/services`: 144
+Write calls in `src/services`: 147
 
 ## Coverage
 
 | outcome | calls |
 | --- | --- |
-| checked | 105 |
+| checked | 108 |
 | sends nothing | 33 |
 | endpoint accepts any field name | 0 |
 | endpoint documents no request body | 0 |

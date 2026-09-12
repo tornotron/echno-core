@@ -30,6 +30,7 @@ import {
   opaque,
 } from '../../lib/validation/backend-schema';
 import { DefectSeverity, parseDefectSeverity } from './inspection';
+import type { Reinspection } from './reinspection';
 
 /**
  * Whether a non-conformance is a quality or a safety matter. Not a label: it
@@ -262,6 +263,19 @@ export interface NcrRemarksRequest {
 }
 
 /**
+ * The verifier's note, and optionally the passed reinspection the acceptance
+ * rests on. Naming one ties the verification to a recorded re-check: the
+ * backend requires it to belong to this NCR and to have passed (400
+ * otherwise), and takes the verifier and the time from its outcome. Without
+ * one the verification stands on the caller, which is still allowed this
+ * release and is logged as its own event type.
+ */
+export interface VerifyNcrRequest extends NcrRemarksRequest {
+  /** The passed {@link Reinspection} this verification rests on. */
+  reinspectionId?: string;
+}
+
+/**
  * Serializes a {@link CreateNcrRequest} into the backend request body. Required
  * fields are always emitted; optional inputs only when set.
  *
@@ -307,6 +321,20 @@ export function ncrRemarksToJson(
 ): Record<string, unknown> {
   const json: Record<string, unknown> = {};
   if (dto?.remarks !== undefined) json.remarks = dto.remarks;
+  return json;
+}
+
+/**
+ * Serializes a {@link VerifyNcrRequest} into the backend request body. Always
+ * returns an object, so a bare verification still sends a valid body.
+ *
+ * @param dto - The note and the reinspection, or nothing.
+ * @returns A plain object matching the backend `VerifyNcrRequest`.
+ */
+export function verifyNcrToJson(dto?: VerifyNcrRequest): Record<string, unknown> {
+  const json: Record<string, unknown> = {};
+  if (dto?.remarks !== undefined) json.remarks = dto.remarks;
+  if (dto?.reinspectionId !== undefined) json.reinspectionId = dto.reinspectionId;
   return json;
 }
 

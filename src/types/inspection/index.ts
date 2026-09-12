@@ -11,9 +11,15 @@
  * non-conformance reports raised from it ({@link Ncr}), and the reusable
  * per-trade {@link ChecklistTemplate} an inspection's check points are created
  * from.
+ *
+ * And the two records that turn the NCR lifecycle into evidence: the
+ * {@link Reinspection} attempt that re-checks a non-conformance and the
+ * {@link InspectionEvent} log of who changed what, when.
  */
 
 export * from './inspection';
 export * from './defect-annotation';
 export * from './ncr';
 export * from './checklist-template';
+export * from './reinspection';
+export * from './inspection-event';

@@ -36,6 +36,8 @@ import {
   NcrRemarksRequest,
   ncrRemarksToJson,
   parseNcr,
+  VerifyNcrRequest,
+  verifyNcrToJson,
 } from '../types/inspection';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -236,15 +238,19 @@ export const ncrService = {
    * `POST /ncrs/web/{id}/verify` → `NcrDto` (full). Verification is not closure:
    * closing is a separate, role-gated act.
    *
+   * Naming a passed reinspection in `req.reinspectionId` ties the acceptance
+   * to that re-check; the backend answers 400 when the attempt is another
+   * NCR's or has not passed.
+   *
    * @param id - UUID of the report.
-   * @param req - The verifier's note. Optional.
+   * @param req - The verifier's note and the reinspection it rests on. Optional.
    * @returns The updated {@link Ncr}.
    * @throws {ApiError} On non-2xx responses or if the response fails to parse.
    */
-  async verify(id: string, req?: NcrRemarksRequest): Promise<Ncr> {
+  async verify(id: string, req?: VerifyNcrRequest): Promise<Ncr> {
     const data = await api.post<ApiResponse>(
       `${BASE}/${id}/verify`,
-      ncrRemarksToJson(req)
+      verifyNcrToJson(req)
     );
     return safeParseNcr(data);
   },
