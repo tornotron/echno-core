@@ -182,6 +182,10 @@ export type ObservationEvidenceRef = Record<string, unknown> & {
   attachmentId?: number;
 };
 
+const ObservationEvidenceRefSchema = z
+  .object({ attachmentId: z.coerce.number().int().positive().optional() })
+  .catchall(z.unknown());
+
 const ObservationSchema = z.object({
   id: z.string().nullish(),
   projectId: optionalNumericId,
@@ -203,7 +207,7 @@ const ObservationSchema = z.object({
   description: nullableString,
   category: nullableString,
   suggestedSeverity: opaque,
-  evidenceRefs: z.array(z.record(z.string(), z.unknown())).nullish(),
+  evidenceRefs: z.array(ObservationEvidenceRefSchema).nullish(),
   reviewStatus: opaque,
   reviewedById: optionalNumericId,
   reviewedAt: backendDate,
@@ -322,7 +326,7 @@ export function parseObservation(json: unknown): Observation {
       raw.suggestedSeverity == null
         ? undefined
         : parseDefectSeverity(raw.suggestedSeverity),
-    evidenceRefs: (raw.evidenceRefs ?? []) as ObservationEvidenceRef[],
+    evidenceRefs: raw.evidenceRefs ?? [],
     reviewStatus: parseObservationReviewStatus(raw.reviewStatus),
     reviewedById: raw.reviewedById ?? undefined,
     reviewedAt: raw.reviewedAt ?? undefined,
@@ -442,8 +446,12 @@ export type ObservationOutcomeRequest =
       checkItemId: string;
       status: CheckItemStatus;
     }
-  | { kind: ObservationOutcomeKind.DEFECT; defectId: string }
-  | { kind: ObservationOutcomeKind.DEFECT; defect: InspectionDefectRequest }
+  | { kind: ObservationOutcomeKind.DEFECT; defectId: string; defect?: never }
+  | {
+      kind: ObservationOutcomeKind.DEFECT;
+      defect: InspectionDefectRequest;
+      defectId?: never;
+    }
   | { kind: ObservationOutcomeKind.INSPECTION; inspectionId: string };
 
 /**
@@ -480,8 +488,9 @@ function outcomeToJson(
     json.checkItemId = outcome.checkItemId;
     json.status = outcome.status;
   }
-  if ('defectId' in outcome) json.defectId = outcome.defectId;
-  if ('defect' in outcome)
+  if ('defectId' in outcome && outcome.defectId !== undefined)
+    json.defectId = outcome.defectId;
+  if ('defect' in outcome && outcome.defect !== undefined)
     json.defect = inspectionDefectRequestToJson(outcome.defect);
   if ('inspectionId' in outcome) json.inspectionId = outcome.inspectionId;
   return json;

@@ -112,6 +112,14 @@ function useObservationInvalidation() {
     ) {
       queryClient.invalidateQueries({ queryKey: ncrKeys.lists() });
     }
+    if (
+      observation.outcomeKind === ObservationOutcomeKind.NCR &&
+      observation.outcomeRef
+    ) {
+      queryClient.invalidateQueries({
+        queryKey: ncrKeys.detail(observation.outcomeRef),
+      });
+    }
   };
 }
 
