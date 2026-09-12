@@ -18,7 +18,12 @@ import type {
   UpdateTradeRequest,
 } from '../../types/inspection/trade';
 import type { ProjectType } from '../../types/project/project-type';
-import { checklistTemplateKeys, elementTypeKeys, tradeKeys } from './keys';
+import {
+  checklistTemplateKeys,
+  elementTypeKeys,
+  inspectionKeys,
+  tradeKeys,
+} from './keys';
 
 /** The organization's trades, for pickers and the management tab. */
 export function useOrgTrades(includeInactive = false, enabled = true) {
@@ -50,12 +55,22 @@ export function useCreateTrade() {
   });
 }
 
+/**
+ * A rename or regroup also changes the `tradeName` and `tradeGroup` that
+ * templates and inspections carry, so their cached shapes are invalidated
+ * alongside the trade list.
+ */
 export function useUpdateTrade() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdateTradeRequest }) =>
       tradeService.update(id, data),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: tradeKeys.all }),
+    onSuccess: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: tradeKeys.all }),
+        queryClient.invalidateQueries({ queryKey: checklistTemplateKeys.all }),
+        queryClient.invalidateQueries({ queryKey: inspectionKeys.all }),
+      ]),
   });
 }
 
