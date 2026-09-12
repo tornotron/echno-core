@@ -196,6 +196,7 @@ export * from './services/inspection-service';
 export * from './services/ncr-service';
 export * from './services/reinspection-service';
 export * from './services/inspection-event-service';
+export * from './services/observation-service';
 export * from './hooks/inspection';
 export * from './services/checklist-template-service';
 export * from './services/trade-service';

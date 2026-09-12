@@ -15,6 +15,10 @@
  * And the two records that turn the NCR lifecycle into evidence: the
  * {@link Reinspection} attempt that re-checks a non-conformance and the
  * {@link InspectionEvent} log of who changed what, when.
+ *
+ * And the {@link Observation}: a finding from any source, human or machine,
+ * with a persistent id ahead of the human decision that turns it into one of
+ * the records above.
  */
 
 export * from './inspection';
@@ -24,3 +28,4 @@ export * from './checklist-template';
 export * from './reinspection';
 export * from './inspection-event';
 export * from './trade';
+export * from './observation';

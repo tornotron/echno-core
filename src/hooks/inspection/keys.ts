@@ -24,6 +24,28 @@
  * in step if either side changes.
  */
 import type { InspectionEventPageParams, InspectionEventQueryParams } from '../../services/inspection-event-service';
+import type { ObservationListParams } from '../../services/observation-service';
+
+/**
+ * Query keys for observations.
+ * - `['observations']` — namespace root, invalidation prefix only.
+ * - `['observations', 'list', params]` — one filtered page (consumed by {@link useObservations}).
+ * - `['observations', 'detail', id]` — one observation.
+ * - `['observations', 'evidence', id]` — the attachments it cites.
+ */
+export const observationKeys = {
+  /** Invalidation prefix only. */
+  all: ['observations'] as const,
+  /** Invalidation prefix for every list page. */
+  lists: () => [...observationKeys.all, 'list'] as const,
+  /** One filtered page. */
+  list: (params: ObservationListParams) =>
+    [...observationKeys.lists(), params] as const,
+  /** One observation. */
+  detail: (id: string) => [...observationKeys.all, 'detail', id] as const,
+  /** The attachments one observation cites as evidence. */
+  evidence: (id: string) => [...observationKeys.all, 'evidence', id] as const,
+};
 
 export const reinspectionKeys = {
   /** Invalidation prefix only. */

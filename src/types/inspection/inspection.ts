@@ -367,6 +367,7 @@ const InspectionDefectSchema = z.object({
   targetDate: backendDate,
   status: nullableString,
   resolvedDate: backendDate,
+  observationId: nullableString,
 });
 
 const InspectionSchema = z.object({
@@ -502,6 +503,11 @@ export interface InspectionDefect {
    * breadcrumb with no second call. Empty when `spatialNodeId` is unset.
    */
   spatialPath: SpatialPathSegment[];
+  /**
+   * The observation the defect was raised from, or `undefined` on defects
+   * recorded before observations existed.
+   */
+  observationId?: string;
 }
 
 /** A site inspection with its check points and recorded defects. */
@@ -675,6 +681,7 @@ export function parseInspectionDefect(json: unknown): InspectionDefect {
     spatialPath: (raw.spatialPath ?? []).map((segment) =>
       parseSpatialPathSegment(segment)
     ),
+    observationId: raw.observationId ?? undefined,
   };
 }
 
@@ -969,7 +976,7 @@ function inspectionCheckItemToJson(
  * Serializes an {@link InspectionDefectRequest} into a backend defect object.
  * Required fields are always emitted; optional inputs only when set.
  */
-function inspectionDefectToJson(
+export function inspectionDefectRequestToJson(
   defect: InspectionDefectRequest
 ): Record<string, unknown> {
   const json: Record<string, unknown> = {
@@ -1027,7 +1034,7 @@ function inspectionCommonToJson(
       inspectionCheckItemToJson(item)
     );
   if (dto.defects !== undefined)
-    json.defects = dto.defects.map((defect) => inspectionDefectToJson(defect));
+    json.defects = dto.defects.map((defect) => inspectionDefectRequestToJson(defect));
 }
 
 /**

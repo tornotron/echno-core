@@ -3,7 +3,7 @@
     "repository": "tornotron/echno-backend",
     "ref": "development",
     "path": "docs/openapi.json",
-    "sha256": "5f50c05e1856c8217a65b827efba266fc60c154f0a42b932859cf74d4d6a793f"
+    "sha256": "c83a63a080ccfeb50578fb03fae89902d7f0554ad0c299c93df95da47b093976"
   },
   "operations": {
     "POST /api/v1/assets/web": {
@@ -1636,6 +1636,51 @@
       "required": [],
       "acceptsAnyField": false
     },
+    "POST /api/v1/inspections/web/observations": {
+      "schema": "CreateObservationRequest",
+      "fields": [
+        "category",
+        "description",
+        "evidenceAttachmentIds",
+        "inspectionId",
+        "locationNote",
+        "observedAt",
+        "projectId",
+        "spatialNodeId",
+        "suggestedSeverity",
+        "title"
+      ],
+      "required": [
+        "projectId",
+        "title"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/inspections/web/observations/{id}/evidence/presign": {
+      "schema": null,
+      "fields": [],
+      "required": [],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/inspections/web/observations/{id}/evidence/register": {
+      "schema": null,
+      "fields": [],
+      "required": [],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/inspections/web/observations/{id}/review": {
+      "schema": "ReviewObservationRequest",
+      "fields": [
+        "changes",
+        "decision",
+        "note",
+        "outcome"
+      ],
+      "required": [
+        "decision"
+      ],
+      "acceptsAnyField": false
+    },
     "POST /api/v1/inspections/web/reinspections/{id}/outcome": {
       "schema": "ReinspectionOutcomeRequest",
       "fields": [
@@ -2789,6 +2834,37 @@
       "schema": null,
       "fields": [],
       "required": [],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/observations/intake": {
+      "schema": "IntakeObservationRequest",
+      "fields": [
+        "captureRef",
+        "category",
+        "confidence",
+        "description",
+        "evidenceRefs",
+        "externalRef",
+        "locationNote",
+        "missionRef",
+        "modelName",
+        "modelVersion",
+        "observedAt",
+        "projectId",
+        "source",
+        "sourceDeviceId",
+        "spatialNodeId",
+        "suggestedSeverity",
+        "title"
+      ],
+      "required": [
+        "externalRef",
+        "observedAt",
+        "projectId",
+        "source",
+        "sourceDeviceId",
+        "title"
+      ],
       "acceptsAnyField": false
     },
     "POST /api/v1/organization": {
