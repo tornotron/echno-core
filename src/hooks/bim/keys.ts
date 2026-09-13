@@ -3,6 +3,7 @@
  *
  * Key shapes:
  * - `['bim']` — namespace root; invalidation prefix.
+ * - `['bim', 'project']` — every project's model list; invalidation prefix.
  * - `['bim', 'project', projectId, 'models']` — a project's models.
  * - `['bim', 'model', modelId]` — one model; prefix for its versions, elements and tiles.
  * - `['bim', 'model', modelId, 'version', versionId]` — one version.
@@ -14,8 +15,9 @@
  */
 export const bimKeys = {
   all: ['bim'] as const,
+  projects: () => [...bimKeys.all, 'project'] as const,
   projectModels: (projectId: number) =>
-    [...bimKeys.all, 'project', projectId, 'models'] as const,
+    [...bimKeys.projects(), projectId, 'models'] as const,
   model: (modelId: string) => [...bimKeys.all, 'model', modelId] as const,
   version: (modelId: string, versionId: string) =>
     [...bimKeys.model(modelId), 'version', versionId] as const,

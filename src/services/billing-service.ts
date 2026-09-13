@@ -129,13 +129,18 @@ export const billingService = {
     return parseOrThrow('subscription', () => parseSubscription(data));
   },
 
-  /** `POST /billing/subscriptions/web/cancel`. */
-  async cancelSubscription(request: CancelSubscriptionRequest = {}): Promise<Subscription> {
+  /**
+   * `POST /billing/subscriptions/web/cancel`. The backend answers with a
+   * `{ message }` acknowledgement, not the subscription; callers refetch
+   * {@link getCurrentSubscription} to see the cancelled row.
+   */
+  async cancelSubscription(request: CancelSubscriptionRequest = {}): Promise<{ message: string }> {
     const data = await api.post<ApiResponse>('/billing/subscriptions/web/cancel', {
       immediate: request.immediate ?? false,
       reason: request.reason,
     });
-    return parseOrThrow('subscription', () => parseSubscription(data));
+    const message = typeof data?.message === 'string' ? data.message : '';
+    return { message };
   },
 
   // Checkout (Phase 2 backend surface) --------------------------------------

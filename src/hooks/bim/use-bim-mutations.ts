@@ -2,8 +2,13 @@
  * @module use-bim-mutations
  *
  * Mutation hooks for the BIM module. Each invalidates the prefix it changed:
- * the project's model list on create, the model on any version or hierarchy
- * change, the project's spatial tree on a confirmed hierarchy.
+ * the project's model list on create, the model and the project's model list
+ * on any version or hierarchy change (the list carries the nested versions and
+ * status the web renders), the project's spatial tree on a confirmed hierarchy.
+ *
+ * `bimKeys.model(id)` does not nest under the project list, so every
+ * model-level hook takes an optional `projectId`; without it the whole
+ * `['bim', 'project']` prefix is invalidated instead.
  */
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -17,6 +22,20 @@ import {
 } from '../../types/bim/bim';
 import { bimKeys } from './keys';
 
+/** Invalidates a model and the list of the project it belongs to. */
+function invalidateModel(
+  queryClient: ReturnType<typeof useQueryClient>,
+  modelId: string,
+  projectId?: number
+): Promise<void> {
+  return Promise.all([
+    queryClient.invalidateQueries({ queryKey: bimKeys.model(modelId) }),
+    queryClient.invalidateQueries({
+      queryKey: projectId === undefined ? bimKeys.projects() : bimKeys.projectModels(projectId),
+    }),
+  ]).then(() => undefined);
+}
+
 /** Registers a model on a project. Mutate with the {@link CreateBimModelRequest}. */
 export function useCreateBimModel(projectId: number) {
   const queryClient = useQueryClient();
@@ -28,46 +47,46 @@ export function useCreateBimModel(projectId: number) {
 }
 
 /** Creates the next version and returns its presigned PUT. Mutate with the request. */
-export function usePresignBimSource(modelId: string) {
+export function usePresignBimSource(modelId: string, projectId?: number) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (req: PresignBimSourceRequest) => bimService.presignSource(modelId, req),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: bimKeys.model(modelId) }),
+    onSuccess: () => invalidateModel(queryClient, modelId, projectId),
   });
 }
 
 /** Confirms the PUT landed. Mutate with `{ versionId }`. */
-export function useRegisterBimSource(modelId: string) {
+export function useRegisterBimSource(modelId: string, projectId?: number) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ versionId }: { versionId: string }) =>
       bimService.registerSource(modelId, versionId),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: bimKeys.model(modelId) }),
+    onSuccess: () => invalidateModel(queryClient, modelId, projectId),
   });
 }
 
 /** Queues the worker import of a version. Mutate with `{ versionId }`. */
-export function useEnqueueBimImport(modelId: string) {
+export function useEnqueueBimImport(modelId: string, projectId?: number) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ versionId }: { versionId: string }) =>
       bimService.enqueueImport(modelId, versionId),
     onSuccess: (job) => {
       queryClient.setQueryData(bimKeys.job(job.id), job);
-      return queryClient.invalidateQueries({ queryKey: bimKeys.model(modelId) });
+      return invalidateModel(queryClient, modelId, projectId);
     },
   });
 }
 
 /** Regenerates the hierarchy proposal of a version. Mutate with `{ versionId }`. */
-export function useRegenerateBimHierarchyProposal(modelId: string) {
+export function useRegenerateBimHierarchyProposal(modelId: string, projectId?: number) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ versionId }: { versionId: string }) =>
       bimService.regenerateHierarchyProposal(modelId, versionId),
     onSuccess: (proposal, { versionId }) => {
       queryClient.setQueryData(bimKeys.proposal(modelId, versionId), proposal);
-      return queryClient.invalidateQueries({ queryKey: bimKeys.model(modelId) });
+      return invalidateModel(queryClient, modelId, projectId);
     },
   });
 }
@@ -90,7 +109,7 @@ export function useConfirmBimHierarchy(modelId: string, projectId: number) {
     onSuccess: (proposal, { versionId }) => {
       queryClient.setQueryData(bimKeys.proposal(modelId, versionId), proposal);
       return Promise.all([
-        queryClient.invalidateQueries({ queryKey: bimKeys.model(modelId) }),
+        invalidateModel(queryClient, modelId, projectId),
         queryClient.invalidateQueries({ queryKey: spatialKeys.project(projectId) }),
       ]);
     },
@@ -98,7 +117,7 @@ export function useConfirmBimHierarchy(modelId: string, projectId: number) {
 }
 
 /** Merges a retired element into its replacement. Mutate with `{ elementId, data }`. */
-export function useMergeBimElement(modelId: string) {
+export function useMergeBimElement(modelId: string, projectId?: number) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ elementId, data }: { elementId: string; data: MergeBimElementRequest }) =>
@@ -107,7 +126,7 @@ export function useMergeBimElement(modelId: string) {
       queryClient.setQueryData(bimKeys.element(elementId), element);
       return Promise.all([
         queryClient.invalidateQueries({ queryKey: bimKeys.element(data.intoElementId) }),
-        queryClient.invalidateQueries({ queryKey: bimKeys.model(modelId) }),
+        invalidateModel(queryClient, modelId, projectId),
       ]);
     },
   });

@@ -12,17 +12,16 @@ Write calls in `src/services`: 167
 
 | outcome | calls |
 | --- | --- |
-| checked | 121 |
+| checked | 123 |
 | sends nothing | 36 |
 | endpoint accepts any field name | 0 |
 | endpoint documents no request body | 0 |
-| endpoint not in the document | 2 |
+| endpoint not in the document | 0 |
 | not readable | 8 |
 
-## Findings (2)
+## Findings (0)
 
-- src/services/billing-service.ts:155  POST /api/v1/billing/checkout/web/sessions  is not an endpoint in the document
-- src/services/billing-service.ts:169  POST /api/v1/billing/checkout/web/verify  is not an endpoint in the document
+None.
 
 ## Call sites this pass cannot read (8)
 

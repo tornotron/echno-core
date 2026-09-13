@@ -12,6 +12,15 @@ const ITEM_A = '22222222-2222-2222-2222-222222222222';
 const ITEM_B = '33333333-3333-3333-3333-333333333333';
 
 describe('parseChecklistTemplate', () => {
+  test('a scope of only unknown project types stays scoped instead of widening', () => {
+    const template = parseChecklistTemplate({
+      id: UUID,
+      applicableProjectTypes: ['SPACE_ELEVATOR'],
+    });
+    expect(template.applicableProjectTypes).toEqual([]);
+    expect(parseChecklistTemplate({ id: UUID, applicableProjectTypes: [] }).applicableProjectTypes).toBeUndefined();
+  });
+
   test('parses a full payload', () => {
     const template = parseChecklistTemplate({
       id: UUID,

@@ -41,6 +41,8 @@ jobs:
 
       - name: Public API snapshot up to date
         run: bun run api:check
+      - name: Request contract check
+        run: bun run contract:check
 
       - name: Test
         run: bun test

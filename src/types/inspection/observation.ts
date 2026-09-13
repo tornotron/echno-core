@@ -182,8 +182,24 @@ export type ObservationEvidenceRef = Record<string, unknown> & {
   attachmentId?: number;
 };
 
+/**
+ * `attachmentId` only when the producer sent a positive integer (or its
+ * string form). Anything else (`null`, a frame label, 0) is a ref outside
+ * the Echno store and is left in place without an attachment id, instead
+ * of failing the whole observation.
+ */
+function positiveIntegerOrUndefined(value: unknown): number | undefined {
+  const n =
+    typeof value === 'number'
+      ? value
+      : typeof value === 'string' && value.trim() !== ''
+        ? Number(value)
+        : Number.NaN;
+  return Number.isInteger(n) && n > 0 ? n : undefined;
+}
+
 const ObservationEvidenceRefSchema = z
-  .object({ attachmentId: z.coerce.number().int().positive().optional() })
+  .object({ attachmentId: z.preprocess(positiveIntegerOrUndefined, z.number().optional()) })
   .catchall(z.unknown());
 
 const ObservationSchema = z.object({

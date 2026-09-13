@@ -211,15 +211,19 @@ function parseCodes(raw: unknown[] | null | undefined): string[] | undefined {
   return codes.length > 0 ? codes : undefined;
 }
 
-/** Project types as sent; unknown values are dropped, an empty result is unset. */
+/**
+ * Project types as sent; an empty list is unset (applies everywhere).
+ * Unknown values are dropped, but a non-empty list that loses every entry
+ * stays `[]`: the template is scoped to a type this client does not know,
+ * so it must not widen to every project.
+ */
 function parseProjectTypes(
   raw: unknown[] | null | undefined
 ): ProjectType[] | undefined {
   if (!raw || raw.length === 0) return undefined;
-  const types = raw
+  return raw
     .map((t) => parseProjectType(t))
     .filter((t): t is ProjectType => t !== undefined);
-  return types.length > 0 ? types : undefined;
 }
 
 /**
