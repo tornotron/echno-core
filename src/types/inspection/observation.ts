@@ -195,7 +195,7 @@ function positiveIntegerOrUndefined(value: unknown): number | undefined {
       : typeof value === 'string' && value.trim() !== ''
         ? Number(value)
         : Number.NaN;
-  return Number.isInteger(n) && n > 0 ? n : undefined;
+  return Number.isSafeInteger(n) && n > 0 ? n : undefined;
 }
 
 const ObservationEvidenceRefSchema = z
