@@ -32,10 +32,16 @@ export async function invalidateEntitlements(queryClient: QueryClient): Promise<
   ]);
 }
 
-/** Opens a checkout with the provider. Nothing to invalidate until it is verified. */
+/**
+ * Opens a checkout with the provider. The backend opens a pending
+ * subscription row at this point, so the subscription surfaces are
+ * refreshed even though entitlement waits on verification.
+ */
 export function useCreateCheckoutSession() {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (req: CreateCheckoutSessionRequest) => billingService.createCheckoutSession(req),
+    onSuccess: () => invalidateEntitlements(queryClient),
   });
 }
 

@@ -3,7 +3,7 @@
     "repository": "tornotron/echno-backend",
     "ref": "development",
     "path": "docs/openapi.json",
-    "sha256": "e725d1e2f912eff63a18821c3aef8d18efa68d18c4e77f22e3696ec846313185"
+    "sha256": "2167d1bf05e586dec41dc1613163e0634393c07032bbb4c2e6a4541069a9627a"
   },
   "operations": {
     "POST /api/v1/assets/web": {
@@ -399,6 +399,45 @@
       ],
       "acceptsAnyField": false
     },
+    "POST /api/v1/billing/checkout/web/mandate": {
+      "schema": "MandateAcknowledgeDto",
+      "fields": [
+        "acceptPerChargeAfa",
+        "billingPeriod",
+        "method",
+        "planCode"
+      ],
+      "required": [
+        "planCode"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/billing/checkout/web/sessions": {
+      "schema": "CheckoutSessionCreateDto",
+      "fields": [
+        "acceptPerChargeAfa",
+        "billingPeriod",
+        "planCode"
+      ],
+      "required": [
+        "planCode"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/billing/checkout/web/verify": {
+      "schema": "VerifyCheckoutDto",
+      "fields": [
+        "providerOrderId",
+        "providerPaymentId",
+        "providerSignature",
+        "providerSubscriptionId"
+      ],
+      "required": [
+        "providerPaymentId",
+        "providerSignature"
+      ],
+      "acceptsAnyField": false
+    },
     "POST /api/v1/billing/features/web": {
       "schema": "FeatureCreateDto",
       "fields": [
@@ -568,6 +607,12 @@
         "amount",
         "featureCode"
       ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/billing/web/events/{id}/retry": {
+      "schema": null,
+      "fields": [],
+      "required": [],
       "acceptsAnyField": false
     },
     "POST /api/v1/bim/elements/{elementId}/merge": {
@@ -1654,6 +1699,12 @@
       "acceptsAnyField": false
     },
     "POST /api/v1/inspections/web/compliance/regenerate": {
+      "schema": null,
+      "fields": [],
+      "required": [],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/inspections/web/dataset-export/runs": {
       "schema": null,
       "fields": [],
       "required": [],
@@ -2983,6 +3034,16 @@
         "organizationWebsite"
       ],
       "required": [],
+      "acceptsAnyField": false
+    },
+    "PUT /api/v1/organization/web/{id}/dataset-consent": {
+      "schema": "DatasetConsentUpdateDto",
+      "fields": [
+        "datasetConsent"
+      ],
+      "required": [
+        "datasetConsent"
+      ],
       "acceptsAnyField": false
     },
     "POST /api/v1/payables": {

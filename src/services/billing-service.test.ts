@@ -65,11 +65,16 @@ describe('billingService subscription', () => {
     expect(api.put).toHaveBeenCalledWith('/billing/subscriptions/web/change-plan', {
       newPlanCode: 'PRO',
     });
-    await billingService.cancelSubscription({ reason: 'Moving on' });
+  });
+
+  test('cancel accepts the backend acknowledgement instead of a subscription', async () => {
+    spyOn(api, 'post').mockResolvedValue({ message: 'Subscription will end at period close' });
+    const result = await billingService.cancelSubscription({ reason: 'Moving on' });
     expect(api.post).toHaveBeenCalledWith('/billing/subscriptions/web/cancel', {
       immediate: false,
       reason: 'Moving on',
     });
+    expect(result).toEqual({ message: 'Subscription will end at period close' });
   });
 });
 

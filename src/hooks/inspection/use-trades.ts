@@ -11,6 +11,7 @@ import { checklistTemplateService } from '../../services/checklist-template-serv
 import { elementTypeService, tradeService } from '../../services/trade-service';
 import { shouldRetry } from '../../lib/query/retry';
 import { standardQueryOptions } from '../../lib/query/options';
+import { spatialKeys } from '../spatial/keys';
 import type {
   CreateElementTypeRequest,
   CreateTradeRequest,
@@ -117,7 +118,12 @@ export function useUpdateElementType() {
       data: UpdateElementTypeRequest;
     }) => elementTypeService.update(id, data),
     onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: elementTypeKeys.all }),
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: elementTypeKeys.all }),
+        queryClient.invalidateQueries({ queryKey: checklistTemplateKeys.all }),
+        queryClient.invalidateQueries({ queryKey: inspectionKeys.all }),
+        queryClient.invalidateQueries({ queryKey: spatialKeys.all }),
+      ]),
   });
 }
 

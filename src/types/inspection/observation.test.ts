@@ -107,6 +107,16 @@ describe('parseObservation', () => {
     expect(obs.evidenceRefs[1]).toEqual({ frame: 12 });
   });
 
+  test('a producer-shaped attachmentId is dropped without failing the row', () => {
+    const obs = parseObservation({
+      ...aiRow,
+      evidenceRefs: [{ attachmentId: null }, { attachmentId: 'frame-12' }, { attachmentId: 0 }],
+    });
+    expect(observationAttachmentIds(obs)).toEqual([]);
+    expect(obs.evidenceRefs).toHaveLength(3);
+    expect(obs.evidenceRefs[1]).toEqual({ attachmentId: undefined });
+  });
+
   test('refuses a row with no id', () => {
     expect(() => parseObservation({ title: 'x' })).toThrow(TypeError);
   });
