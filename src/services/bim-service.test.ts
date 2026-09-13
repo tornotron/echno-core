@@ -118,8 +118,8 @@ describe('job polling', () => {
   });
 
   test('keys nest under the model so one invalidation refreshes versions, tiles and elements', () => {
-    expect(bimKeys.tiles(MODEL, V1).slice(0, 3)).toEqual(bimKeys.model(MODEL));
-    expect(bimKeys.elements(MODEL, { storeyGlobalId: 'S0' }).slice(0, 3)).toEqual(bimKeys.model(MODEL));
+    expect([...bimKeys.tiles(MODEL, V1)].slice(0, 3)).toEqual([...bimKeys.model(MODEL)]);
+    expect([...bimKeys.elements(MODEL, { storeyGlobalId: 'S0' })].slice(0, 3)).toEqual([...bimKeys.model(MODEL)]);
     expect(bimKeys.job(JOB)).toEqual(['bim', 'job', JOB]);
   });
 });
