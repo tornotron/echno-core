@@ -208,6 +208,14 @@ export * from './types/module';
 export * from './services/module-service';
 export * from './hooks/module';
 
+// Billing — plan catalog, the organization's subscription (the entitlement
+// projection), feature access, and the Razorpay checkout / mandate contract
+// (spec `echno-backend/docs/specs/2026-08-26-payment-integration-razorpay.md`
+// section 9). Backed by tornotron/echno-backend#799 and #800.
+export * from './types/billing';
+export * from './services/billing-service';
+export * from './hooks/billing';
+
 // Spatial — a project's site structure (Building > Floor > Zone > Element),
 // the stable ids inspections, defects and check items point at (spec
 // `echno-backend/docs/specs/2026-09-12-qaqc-spatial-hierarchy.md`).

@@ -6,22 +6,23 @@
 
 Checked against `tornotron/echno-backend` `development`, reduced into `etc/backend-request-fields.json` by `scripts/backend-contract.ts`.
 
-Write calls in `src/services`: 162
+Write calls in `src/services`: 167
 
 ## Coverage
 
 | outcome | calls |
 | --- | --- |
-| checked | 118 |
+| checked | 121 |
 | sends nothing | 36 |
 | endpoint accepts any field name | 0 |
 | endpoint documents no request body | 0 |
-| endpoint not in the document | 0 |
+| endpoint not in the document | 2 |
 | not readable | 8 |
 
-## Findings (0)
+## Findings (2)
 
-None.
+- src/services/billing-service.ts:155  POST /api/v1/billing/checkout/web/sessions  is not an endpoint in the document
+- src/services/billing-service.ts:169  POST /api/v1/billing/checkout/web/verify  is not an endpoint in the document
 
 ## Call sites this pass cannot read (8)
 
