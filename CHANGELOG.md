@@ -5,6 +5,36 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
+## [v8.10.0] - 2026-09-13
+
+BIM: models, versions, import jobs, elements and tiles of the `MODULE_BIM` module.
+
+echno-backend's `modules/bim` (design note `echno-roadmap/bim/bim-ingestion-viewer-element-identity.md`)
+serves one surface at `/api/v1/bim` with permissions `bim.view` and `bim.manage`. An IFC is
+uploaded through a presigned PUT (attachment owner `BIM_MODEL`, 1 GB cap), imported by the
+worker into per-storey glTF tiles and an element table, and its spatial containment proposed
+into the QA/QC site structure. An element keeps its IFC GlobalId across versions and bridges to
+the ELEMENT-level spatial node it became through `spatialNodeId`.
+
+- `types/bim`: `BimModel`, `BimModelVersion` (`BimVersionStatus`), `BimImportJob`
+  (`BimImportJobStatus`, `isBimJobActive`), `BimElement` with `BimBoundingBox` and
+  `BimElementPage`, `BimTileManifest` with one presigned url per storey plus coarse and
+  unassigned, `BimHierarchyProposal` down to `ProposedBimElement` with
+  `BimHierarchyConfirmResult`, `BimSourceUpload`, the request types and their `*ToJson`
+  serializers, `BIM_SOURCE_MAX_BYTES`. Parsers are non-strict.
+- `services/bim-service`: `bimService` covering every route of the surface, plus
+  `findElementByGlobalId`, which pages a storey (or the model) because the backend has no
+  by-GlobalId route.
+- `hooks/bim`: `bimKeys`; `useBimModels`, `useBimModel`, `useBimModelVersion`,
+  `useBimImportJobs`, `useBimImportJob` (polls every 3 s while QUEUED or RUNNING, stops at DONE
+  or FAILED; `bimJobRefetchInterval` is exported for tests), `useBimElements`, `useBimElement`,
+  `useBimElementByGlobalId`, `useBimTiles` (stale a minute before the urls expire),
+  `useBimHierarchyProposal`; mutations `useCreateBimModel`, `usePresignBimSource`,
+  `useRegisterBimSource`, `useEnqueueBimImport`, `useRegenerateBimHierarchyProposal`,
+  `useConfirmBimHierarchy` (also invalidates the project's spatial tree), `useMergeBimElement`.
+- `etc/backend-request-fields.json` refreshed from the backend document that carries the
+  BIM routes.
+
 ## [v8.9.0] - 2026-09-13
 
 Observation: a finding from any source with a persistent id ahead of the human decision.

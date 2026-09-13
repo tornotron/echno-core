@@ -4,7 +4,7 @@
      Run `bun run api:snapshot` after an intended public-API change and commit the diff.
      See docs/API-STABILITY.md. -->
 
-Entry points: 149
+Entry points: 153
 
 ## `@tornotron/echno-core`
 
@@ -65,6 +65,27 @@ Entry points: 149
 - attendanceToJson
 - availableNcrActions
 - BalanceSheetReport
+- BIM_JOB_POLL_INTERVAL_MS
+- BIM_SOURCE_MAX_BYTES
+- BimBoundingBox
+- BimElement
+- BimElementListParams
+- BimElementPage
+- BimHierarchyConfirmResult
+- BimHierarchyProposal
+- BimImportJob
+- BimImportJobStatus
+- bimImportJobStatuses
+- bimJobRefetchInterval
+- bimKeys
+- BimModel
+- BimModelVersion
+- bimService
+- BimSourceUpload
+- BimStoreyTile
+- BimTileManifest
+- BimVersionStatus
+- bimVersionStatuses
 - BudgetAllocation
 - CalculateDays
 - CalculateDaysResponse
@@ -96,6 +117,8 @@ Entry points: 149
 - CompanyBankAccount
 - CompliancePhase
 - ComplianceRiskLevel
+- ConfirmBimHierarchyRequest
+- confirmBimHierarchyToJson
 - ConflictCheckResponse
 - ConstructionInvoice
 - ConstructionInvoiceLine
@@ -120,6 +143,8 @@ Entry points: 149
 - createAccountToJson
 - CreateAttendanceProfileRequest
 - createAttendanceProfileToJson
+- CreateBimModelRequest
+- createBimModelToJson
 - CreateCatalogueRowRequest
 - createCatalogueRowToJson
 - CreateClockEventRequest
@@ -393,6 +418,8 @@ Entry points: 149
 - isActive
 - isAdmin
 - isAnnotationWithinImage
+- isBimJobActive
+- isBimVersionInProgress
 - isEarlyCheckout
 - isEngineer
 - isExpired
@@ -472,6 +499,8 @@ Entry points: 149
 - MaterialStockSummary
 - MaterialWithStock
 - MAX_DEFECT_ANNOTATIONS
+- MergeBimElementRequest
+- mergeBimElementToJson
 - mergePreservingNested
 - ModuleDescriptor
 - ModuleId
@@ -549,6 +578,15 @@ Entry points: 149
 - parseAttendanceProfile
 - parseAttendanceRegularization
 - parseBalanceSheetReport
+- parseBimBoundingBox
+- parseBimElement
+- parseBimElementPage
+- parseBimHierarchyProposal
+- parseBimImportJob
+- parseBimModel
+- parseBimModelVersion
+- parseBimSourceUpload
+- parseBimTileManifest
 - parseBudgetAllocation
 - parseCheckItemStatus
 - parseChecklistTemplate
@@ -691,6 +729,8 @@ Entry points: 149
 - postingRoleLabels
 - PostJournalRequest
 - postJournalToJson
+- PresignBimSourceRequest
+- presignBimSourceToJson
 - PresignedUpload
 - ProfitAndLossReport
 - Project
@@ -703,6 +743,10 @@ Entry points: 149
 - ProjectStatus
 - projectToJson
 - ProjectType
+- ProposedBimBuilding
+- ProposedBimElement
+- ProposedBimFloor
+- ProposedBimZone
 - PurchaseOrder
 - PurchaseOrderItem
 - purchaseOrderItemsService
@@ -927,6 +971,16 @@ Entry points: 149
 - useAttendanceProfiles
 - useAttendanceSummary
 - useBalanceSheet
+- useBimElement
+- useBimElementByGlobalId
+- useBimElements
+- useBimHierarchyProposal
+- useBimImportJob
+- useBimImportJobs
+- useBimModel
+- useBimModels
+- useBimModelVersion
+- useBimTiles
 - useCalculateDays
 - useCanApprove
 - useCancelConstructionInvoice
@@ -935,6 +989,7 @@ Entry points: 149
 - useCancelSiteTransfer
 - useCheckConflicts
 - useCheckIn
+- useConfirmBimHierarchy
 - useConsumptionsByDateRange
 - useConsumptionsByMaterial
 - useConsumptionsByTask
@@ -944,6 +999,7 @@ Entry points: 149
 - useCreateAccount
 - useCreateAttendanceProfile
 - useCreateBankAccount
+- useCreateBimModel
 - useCreateConsumption
 - useCreateCostCategory
 - useCreateCustomer
@@ -1028,6 +1084,7 @@ Entry points: 149
 - useEmployeesByProject
 - useEmployeesPage
 - useEnabledModules
+- useEnqueueBimImport
 - useExpense
 - useExpenses
 - useExpensesPage
@@ -1110,6 +1167,7 @@ Entry points: 149
 - useMaterialStock
 - useMaterialStockSummary
 - useMaterialWithStock
+- useMergeBimElement
 - useMovementById
 - useMovementsByAttendance
 - useMoveSpatialNode
@@ -1137,6 +1195,7 @@ Entry points: 149
 - usePrefetchIssue
 - usePrefetchProject
 - usePrefetchTask
+- usePresignBimSource
 - useProcessRegularization
 - useProfitAndLoss
 - useProject
@@ -1159,6 +1218,8 @@ Entry points: 149
 - useRecordConstructionInvoicePayment
 - useRecordPayment
 - useRecordReinspectionOutcome
+- useRegenerateBimHierarchyProposal
+- useRegisterBimSource
 - useRegularizationById
 - useReinspection
 - useReinspectionsByNcr
@@ -1451,6 +1512,80 @@ Entry points: 149
 - UpdateAttendanceProfileRequest
 - updateAttendanceProfileToJson
 - WorkDuration
+
+## `@tornotron/echno-core/bim/hooks`
+
+- BIM_JOB_POLL_INTERVAL_MS
+- bimJobRefetchInterval
+- bimKeys
+- useBimElement
+- useBimElementByGlobalId
+- useBimElements
+- useBimHierarchyProposal
+- useBimImportJob
+- useBimImportJobs
+- useBimModel
+- useBimModels
+- useBimModelVersion
+- useBimTiles
+- useConfirmBimHierarchy
+- useCreateBimModel
+- useEnqueueBimImport
+- useMergeBimElement
+- usePresignBimSource
+- useRegenerateBimHierarchyProposal
+- useRegisterBimSource
+
+## `@tornotron/echno-core/bim/hooks/keys`
+
+- bimKeys
+
+## `@tornotron/echno-core/bim/services`
+
+- bimService
+
+## `@tornotron/echno-core/bim/types`
+
+- BIM_SOURCE_MAX_BYTES
+- BimBoundingBox
+- BimElement
+- BimElementListParams
+- BimElementPage
+- BimHierarchyConfirmResult
+- BimHierarchyProposal
+- BimImportJob
+- BimImportJobStatus
+- bimImportJobStatuses
+- BimModel
+- BimModelVersion
+- BimSourceUpload
+- BimStoreyTile
+- BimTileManifest
+- BimVersionStatus
+- bimVersionStatuses
+- ConfirmBimHierarchyRequest
+- confirmBimHierarchyToJson
+- CreateBimModelRequest
+- createBimModelToJson
+- isBimJobActive
+- isBimVersionInProgress
+- MergeBimElementRequest
+- mergeBimElementToJson
+- parseBimBoundingBox
+- parseBimElement
+- parseBimElementPage
+- parseBimHierarchyProposal
+- parseBimImportJob
+- parseBimModel
+- parseBimModelVersion
+- parseBimSourceUpload
+- parseBimTileManifest
+- PresignBimSourceRequest
+- presignBimSourceToJson
+- ProposedBimBuilding
+- ProposedBimElement
+- ProposedBimFloor
+- ProposedBimZone
 
 ## `@tornotron/echno-core/checklist-template/services`
 
