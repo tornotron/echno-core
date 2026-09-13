@@ -4,7 +4,7 @@
      Run `bun run api:snapshot` after an intended public-API change and commit the diff.
      See docs/API-STABILITY.md. -->
 
-Entry points: 153
+Entry points: 157
 
 ## `@tornotron/echno-core`
 
@@ -65,6 +65,15 @@ Entry points: 153
 - attendanceToJson
 - availableNcrActions
 - BalanceSheetReport
+- BILLING_NOT_CONFIGURED
+- BILLING_PERIODS
+- BILLING_PROVIDERS
+- BillingEventSummary
+- billingKeys
+- BillingPeriod
+- BillingProvider
+- BillingProviderInfo
+- billingService
 - BIM_JOB_POLL_INTERVAL_MS
 - BIM_SOURCE_MAX_BYTES
 - BimBoundingBox
@@ -96,10 +105,12 @@ Entry points: 153
 - CancelConstructionInvoiceArgs
 - CancelSiteTransferRequest
 - cancelSiteTransferToJson
+- CancelSubscriptionRequest
 - CatalogueEntry
 - CatalogueGroup
 - catalogueGroupLabel
 - categoryId
+- ChangePlanRequest
 - CheckItemStatus
 - ChecklistTemplate
 - ChecklistTemplateItem
@@ -109,6 +120,8 @@ Entry points: 153
 - ChecklistTemplateRequest
 - checklistTemplateService
 - checklistTemplateToJson
+- CheckoutMandateTerms
+- CheckoutSession
 - childSpatialLevel
 - ClockEvent
 - clockEventToJson
@@ -147,6 +160,7 @@ Entry points: 153
 - createBimModelToJson
 - CreateCatalogueRowRequest
 - createCatalogueRowToJson
+- CreateCheckoutSessionRequest
 - CreateClockEventRequest
 - createClockEventToJson
 - CreateCompanyBankAccountRequest
@@ -214,6 +228,7 @@ Entry points: 153
 - createSpatialNodeToJson
 - CreateStorageLocationRequest
 - createStorageLocationToJson
+- CreateSubscriptionRequest
 - CreateTaskRequest
 - createTaskToJson
 - CreateTradeRequest
@@ -232,6 +247,7 @@ Entry points: 153
 - Customer
 - CustomerListParams
 - DailyMovementSummary
+- DEFAULT_AFA_CAP_PAISE
 - defaultInspectionCategoryFor
 - DefectAnnotationShape
 - defectAnnotationShapeLabels
@@ -264,11 +280,17 @@ Entry points: 153
 - employeeToJson
 - EmploymentType
 - ENGINEERING_ROLES
+- Entitlements
+- exceedsAfaCap
 - Expense
 - ExpenseCategory
 - ExpensePageParams
 - ExpenseStatus
 - ExpenseType
+- Feature
+- FEATURE_TYPES
+- FeatureAccessResult
+- FeatureType
 - financeAccountService
 - financeBankAccountService
 - financeConstructionInvoiceService
@@ -397,6 +419,7 @@ Entry points: 153
 - inspectionTradeOrder
 - InspectionType
 - INSPECTOR_ROLES
+- invalidateEntitlements
 - InventoryTransaction
 - inventoryTransactionKeys
 - inventoryTransactionsService
@@ -422,6 +445,7 @@ Entry points: 153
 - isBimVersionInProgress
 - isEarlyCheckout
 - isEngineer
+- isEntitledStatus
 - isExpired
 - isInspector
 - isInvitationValid
@@ -483,6 +507,11 @@ Entry points: 153
 - LowStockMaterial
 - LowStockParams
 - MANAGER_ROLES
+- Mandate
+- MANDATE_METHODS
+- MANDATE_STATUSES
+- MandateMethod
+- MandateStatus
 - Material
 - MaterialConsumption
 - materialConsumptionService
@@ -578,6 +607,8 @@ Entry points: 153
 - parseAttendanceProfile
 - parseAttendanceRegularization
 - parseBalanceSheetReport
+- parseBillingEventSummary
+- parseBillingProviderInfo
 - parseBimBoundingBox
 - parseBimElement
 - parseBimElementPage
@@ -591,6 +622,7 @@ Entry points: 153
 - parseCheckItemStatus
 - parseChecklistTemplate
 - parseChecklistTemplateItem
+- parseCheckoutSession
 - parseClockEvent
 - parseCoaImportSummary
 - parseCompanyBankAccount
@@ -619,6 +651,8 @@ Entry points: 153
 - parseExpenseCategory
 - parseExpenseStatus
 - parseExpenseType
+- parseFeature
+- parseFeatureAccessResult
 - parseFinanceSettings
 - parseGoodsReceivedNote
 - parseGrnItem
@@ -659,6 +693,7 @@ Entry points: 153
 - parseLocalDate
 - parseLocalDateTime
 - parseLowStockMaterial
+- parseMandate
 - parseMaterial
 - parseMaterialConsumption
 - parseMaterialLocationThreshold
@@ -679,6 +714,8 @@ Entry points: 153
 - parseOrgElementType
 - parseOrgTrade
 - parsePayment
+- parsePlan
+- parsePlanFeature
 - parsePositiveInt
 - parsePostingAccountMapping
 - parsePostingAccountSource
@@ -708,6 +745,7 @@ Entry points: 153
 - parseStatusTransition
 - parseStorageLocation
 - parseStorageLocationStock
+- parseSubscription
 - parseTask
 - parseTradeCatalogueEntry
 - parseTrialBalanceReport
@@ -721,6 +759,10 @@ Entry points: 153
 - Payment
 - PAYMENT_TERMS_LABELS
 - PaymentTerms
+- Plan
+- planCycleAmountPaise
+- PlanFeature
+- planIncludesFeature
 - poItemKeys
 - poKeys
 - PostingAccountMapping
@@ -729,6 +771,7 @@ Entry points: 153
 - postingRoleLabels
 - PostJournalRequest
 - postJournalToJson
+- PRE_DEBIT_NOTICE_HOURS
 - PresignBimSourceRequest
 - presignBimSourceToJson
 - PresignedUpload
@@ -754,6 +797,8 @@ Entry points: 153
 - PurchaseOrderStatus
 - purchaseOrderStatusBadgeColors
 - purchaseOrderStatusLabels
+- QUOTA_PERIODS
+- QuotaPeriod
 - realtimeQueryOptions
 - Receipt
 - ReceiptPageParams
@@ -836,6 +881,9 @@ Entry points: 153
 - storageLocationsService
 - StorageLocationStock
 - StorageLocationType
+- Subscription
+- SUBSCRIPTION_STATUSES
+- SubscriptionStatus
 - SUPERVISOR_ROLES
 - Task
 - TaskFiles
@@ -971,6 +1019,8 @@ Entry points: 153
 - useAttendanceProfiles
 - useAttendanceSummary
 - useBalanceSheet
+- useBillingEvents
+- useBillingProvider
 - useBimElement
 - useBimElementByGlobalId
 - useBimElements
@@ -987,6 +1037,8 @@ Entry points: 153
 - useCancelInvoice
 - useCancelLeaveRequest
 - useCancelSiteTransfer
+- useCancelSubscription
+- useChangePlan
 - useCheckConflicts
 - useCheckIn
 - useConfirmBimHierarchy
@@ -1000,6 +1052,7 @@ Entry points: 153
 - useCreateAttendanceProfile
 - useCreateBankAccount
 - useCreateBimModel
+- useCreateCheckoutSession
 - useCreateConsumption
 - useCreateCostCategory
 - useCreateCustomer
@@ -1026,10 +1079,12 @@ Entry points: 153
 - useCreateSiteTransfer
 - useCreateSpatialNode
 - useCreateStorageLocation
+- useCreateSubscription
 - useCreateTask
 - useCreateTrade
 - useCreateVendor
 - useCreateWorkCategory
+- useCurrentSubscription
 - useCurrentUserEmployee
 - useDeactivateAccount
 - useDeactivateBankAccount
@@ -1085,9 +1140,11 @@ Entry points: 153
 - useEmployeesPage
 - useEnabledModules
 - useEnqueueBimImport
+- useEntitlements
 - useExpense
 - useExpenses
 - useExpensesPage
+- useFeatureAccess
 - useFinanceAccount
 - useFinanceAccountByCode
 - useFinanceAccounts
@@ -1151,6 +1208,7 @@ Entry points: 153
 - useManagerName
 - useManagerNames
 - useManagers
+- useMandate
 - useMarkAbsent
 - useMarkAllNotificationsAsRead
 - useMarkIndentItemConverted
@@ -1185,6 +1243,7 @@ Entry points: 153
 - usePendingApprovals
 - usePendingApprovalsCount
 - usePendingRegularizations
+- usePlan
 - usePOItem
 - usePOItemsByPurchaseOrder
 - usePOsByIndent
@@ -1205,6 +1264,7 @@ Entry points: 153
 - useProjectsByEmployee
 - useProjectsByOrganization
 - useProjectSettings
+- usePublicPlans
 - usePurchaseOrder
 - usePurchaseOrders
 - usePurchaseOrdersPaginated
@@ -1261,6 +1321,7 @@ Entry points: 153
 - useSubmitConstructionInvoice
 - useSubmitLeaveRequest
 - useSubordinates
+- useSubscriptionHistory
 - useTask
 - useTasks
 - useTasksByProject
@@ -1326,6 +1387,7 @@ Entry points: 153
 - useVendorsPaginated
 - useVendorSummary
 - useVendorTaxIdentifiers
+- useVerifyCheckout
 - useVerifyMovement
 - useWithdrawLeaveRequest
 - useWorkCategories
@@ -1345,6 +1407,7 @@ Entry points: 153
 - VendorSummary
 - VendorTaxIdentifier
 - VendorType
+- VerifyCheckoutRequest
 - VerifyNcrRequest
 - verifyNcrToJson
 - whatsappMessage
@@ -1512,6 +1575,82 @@ Entry points: 153
 - UpdateAttendanceProfileRequest
 - updateAttendanceProfileToJson
 - WorkDuration
+
+## `@tornotron/echno-core/billing/hooks`
+
+- billingKeys
+- Entitlements
+- invalidateEntitlements
+- useBillingEvents
+- useBillingProvider
+- useCancelSubscription
+- useChangePlan
+- useCreateCheckoutSession
+- useCreateSubscription
+- useCurrentSubscription
+- useEntitlements
+- useFeatureAccess
+- useMandate
+- usePlan
+- usePublicPlans
+- useSubscriptionHistory
+- useVerifyCheckout
+
+## `@tornotron/echno-core/billing/hooks/keys`
+
+- billingKeys
+
+## `@tornotron/echno-core/billing/services`
+
+- billingService
+
+## `@tornotron/echno-core/billing/types`
+
+- BILLING_NOT_CONFIGURED
+- BILLING_PERIODS
+- BILLING_PROVIDERS
+- BillingEventSummary
+- BillingPeriod
+- BillingProvider
+- BillingProviderInfo
+- CancelSubscriptionRequest
+- ChangePlanRequest
+- CheckoutMandateTerms
+- CheckoutSession
+- CreateCheckoutSessionRequest
+- CreateSubscriptionRequest
+- DEFAULT_AFA_CAP_PAISE
+- exceedsAfaCap
+- Feature
+- FEATURE_TYPES
+- FeatureAccessResult
+- FeatureType
+- isEntitledStatus
+- Mandate
+- MANDATE_METHODS
+- MANDATE_STATUSES
+- MandateMethod
+- MandateStatus
+- parseBillingEventSummary
+- parseBillingProviderInfo
+- parseCheckoutSession
+- parseFeature
+- parseFeatureAccessResult
+- parseMandate
+- parsePlan
+- parsePlanFeature
+- parseSubscription
+- Plan
+- planCycleAmountPaise
+- PlanFeature
+- planIncludesFeature
+- PRE_DEBIT_NOTICE_HOURS
+- QUOTA_PERIODS
+- QuotaPeriod
+- Subscription
+- SUBSCRIPTION_STATUSES
+- SubscriptionStatus
+- VerifyCheckoutRequest
 
 ## `@tornotron/echno-core/bim/hooks`
 

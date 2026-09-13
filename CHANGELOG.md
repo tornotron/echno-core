@@ -5,6 +5,29 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
+## [v8.11.0] - 2026-09-13
+
+Billing: the plan catalog, the organization's subscription and feature access, and the
+Razorpay checkout / mandate contract (Payments Phase 2, spec
+`echno-backend/docs/specs/2026-08-26-payment-integration-razorpay.md` section 9.1).
+
+- `types/billing`: `Plan`, `PlanFeature`, `Feature`, `Subscription` (status enum incl.
+  `PAST_DUE`, provider fields defaulting to `NONE` when the backend does not send them),
+  `FeatureAccessResult`, `BillingProviderInfo`, `CheckoutSession`, `Mandate`,
+  `BillingEventSummary`, the request shapes, non-strict parsers, and the AFA-cap helpers
+  (`planCycleAmountPaise`, `exceedsAfaCap`, `DEFAULT_AFA_CAP_PAISE`, `PRE_DEBIT_NOTICE_HOURS`).
+- `services/billing-service`: plans, current subscription and history, feature access,
+  create / change-plan / cancel, provider info, checkout session, verify, mandate, events.
+  The provider, checkout, mandate and events paths are the Phase 2 backend surface and are
+  listed as such in `etc/request-contract.md` until the backend publishes them.
+- `hooks/billing`: `billingKeys`, `usePublicPlans`, `usePlan`, `useCurrentSubscription`,
+  `useSubscriptionHistory`, `useFeatureAccess`, `useBillingProvider` (resolves to
+  `BILLING_NOT_CONFIGURED` on any failure, so checkout is enabled only on a positive answer),
+  `useMandate`, `useBillingEvents`, `useEntitlements`, and the mutations
+  `useCreateCheckoutSession`, `useVerifyCheckout`, `useCreateSubscription`, `useChangePlan`,
+  `useCancelSubscription`, each invalidating the billing namespace and the enabled-module set
+  through `invalidateEntitlements`.
+
 ## [v8.10.1] - 2026-09-13
 
 - `types/bim`: an unrecognised version or job status now parses to `UNKNOWN` instead of
