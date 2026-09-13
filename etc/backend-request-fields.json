@@ -3,7 +3,7 @@
     "repository": "tornotron/echno-backend",
     "ref": "development",
     "path": "docs/openapi.json",
-    "sha256": "c83a63a080ccfeb50578fb03fae89902d7f0554ad0c299c93df95da47b093976"
+    "sha256": "e725d1e2f912eff63a18821c3aef8d18efa68d18c4e77f22e3696ec846313185"
   },
   "operations": {
     "POST /api/v1/assets/web": {
@@ -567,6 +567,67 @@
       "required": [
         "amount",
         "featureCode"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/bim/elements/{elementId}/merge": {
+      "schema": "MergeBimElementRequest",
+      "fields": [
+        "intoElementId"
+      ],
+      "required": [
+        "intoElementId"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/bim/models/{modelId}/versions/presign": {
+      "schema": "PresignBimSourceRequest",
+      "fields": [
+        "contentType",
+        "fileSize",
+        "filename"
+      ],
+      "required": [
+        "fileSize",
+        "filename"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/bim/models/{modelId}/versions/{versionId}/hierarchy/confirm": {
+      "schema": "ConfirmBimHierarchyRequest",
+      "fields": [
+        "elementGlobalIds",
+        "includeElements"
+      ],
+      "required": [],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/bim/models/{modelId}/versions/{versionId}/hierarchy/proposal": {
+      "schema": null,
+      "fields": [],
+      "required": [],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/bim/models/{modelId}/versions/{versionId}/jobs": {
+      "schema": null,
+      "fields": [],
+      "required": [],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/bim/models/{modelId}/versions/{versionId}/register": {
+      "schema": null,
+      "fields": [],
+      "required": [],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/bim/projects/{projectId}/models": {
+      "schema": "CreateBimModelRequest",
+      "fields": [
+        "description",
+        "name"
+      ],
+      "required": [
+        "name"
       ],
       "acceptsAnyField": false
     },

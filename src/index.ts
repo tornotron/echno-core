@@ -215,3 +215,11 @@ export * from './hooks/module';
 export * from './types/spatial';
 export * from './services/spatial-service';
 export * from './hooks/spatial';
+
+// ---------------------------------------------------------------------------
+// BIM — models, versions, import jobs, elements and tiles of the BIM module
+// (`MODULE_BIM`; design note echno-roadmap/bim/bim-ingestion-viewer-element-identity.md)
+// ---------------------------------------------------------------------------
+export * from './types/bim';
+export * from './services/bim-service';
+export * from './hooks/bim';
