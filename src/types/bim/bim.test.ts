@@ -59,13 +59,14 @@ describe('parseBimModel', () => {
     expect(model).not.toHaveProperty('extra');
   });
 
-  test('an unknown version status reads as UPLOADED, never throws', () => {
+  test('an unknown version status reads as UNKNOWN and is not in progress', () => {
     const model = parseBimModel({
       id: MODEL,
       versions: [{ id: V1, status: 'SOMETHING_NEW' }],
     });
-    expect(model.versions[0].status).toBe('UPLOADED');
-    expect(isBimVersionInProgress(model.versions[0].status)).toBe(true);
+    expect(model.versions[0].status).toBe('UNKNOWN');
+    expect(isBimVersionInProgress(model.versions[0].status)).toBe(false);
+    expect(isBimVersionInProgress('PROCESSING')).toBe(true);
     expect(isBimVersionInProgress('READY')).toBe(false);
   });
 
@@ -92,6 +93,12 @@ describe('parseBimImportJob', () => {
     expect(isBimJobActive('DONE')).toBe(false);
     expect(isBimJobActive('FAILED')).toBe(false);
     expect(isBimJobActive(undefined)).toBe(false);
+  });
+
+  test('an unknown job status is not polled', () => {
+    const job = parseBimImportJob({ id: JOB, status: 'PAUSED' });
+    expect(job.status).toBe('UNKNOWN');
+    expect(isBimJobActive(job.status)).toBe(false);
   });
 });
 
@@ -122,6 +129,11 @@ describe('parseBimElement', () => {
     ).toEqual({ min: [1, 2, 3], max: [4, 5, 6] });
     expect(parseBimBoundingBox({ min: [1, 2] })).toBeUndefined();
     expect(parseBimBoundingBox(null)).toBeUndefined();
+    expect(parseBimBoundingBox({ min: [null, 0, 0], max: [1, 1, 1] })).toBeUndefined();
+    expect(parseBimBoundingBox({ min: ['', 0, 0], max: [1, 1, 1] })).toBeUndefined();
+    expect(
+      parseBimBoundingBox({ minX: null, minY: 0, minZ: 0, maxX: 1, maxY: 1, maxZ: 1 })
+    ).toBeUndefined();
   });
 
   test('a retired element with no node parses with the defaults', () => {

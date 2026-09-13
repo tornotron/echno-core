@@ -5,6 +5,14 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
+## [v8.10.1] - 2026-09-13
+
+- `types/bim`: an unrecognised version or job status now parses to `UNKNOWN` instead of
+  `UPLOADED` / `QUEUED`, so a new backend state is never treated as in progress or polled
+  without end. `parseBimBoundingBox` rejects null and empty coordinates instead of reading
+  them as zero.
+- `hooks/bim`: `useMergeBimElement` also invalidates the replacement element.
+
 ## [v8.10.0] - 2026-09-13
 
 BIM: models, versions, import jobs, elements and tiles of the `MODULE_BIM` module.
