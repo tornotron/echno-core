@@ -103,9 +103,12 @@ export function useMergeBimElement(modelId: string) {
   return useMutation({
     mutationFn: ({ elementId, data }: { elementId: string; data: MergeBimElementRequest }) =>
       bimService.mergeElement(elementId, data),
-    onSuccess: (element, { elementId }) => {
+    onSuccess: (element, { elementId, data }) => {
       queryClient.setQueryData(bimKeys.element(elementId), element);
-      return queryClient.invalidateQueries({ queryKey: bimKeys.model(modelId) });
+      return Promise.all([
+        queryClient.invalidateQueries({ queryKey: bimKeys.element(data.intoElementId) }),
+        queryClient.invalidateQueries({ queryKey: bimKeys.model(modelId) }),
+      ]);
     },
   });
 }

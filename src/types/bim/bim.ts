@@ -29,14 +29,19 @@ import {
 // Enums
 // ---------------------------------------------------------------------------
 
-/** How far an uploaded IFC got. `READY` is the only state the viewer opens. */
+/**
+ * How far an uploaded IFC got. `READY` is the only state the viewer opens.
+ * `UNKNOWN` is what a value this client does not recognise parses to, so a
+ * new backend state is never mistaken for one still in progress.
+ */
 export type BimVersionStatus =
   | 'UPLOADED'
   | 'QUEUED'
   | 'PROCESSING'
   | 'INGESTING'
   | 'READY'
-  | 'FAILED';
+  | 'FAILED'
+  | 'UNKNOWN';
 
 export const bimVersionStatuses: readonly BimVersionStatus[] = [
   'UPLOADED',
@@ -47,8 +52,11 @@ export const bimVersionStatuses: readonly BimVersionStatus[] = [
   'FAILED',
 ];
 
-/** Lifecycle of one worker job. Poll while `QUEUED` or `RUNNING`. */
-export type BimImportJobStatus = 'QUEUED' | 'RUNNING' | 'DONE' | 'FAILED';
+/**
+ * Lifecycle of one worker job. Poll while `QUEUED` or `RUNNING`; an
+ * unrecognised value parses to `UNKNOWN`, which is not polled.
+ */
+export type BimImportJobStatus = 'QUEUED' | 'RUNNING' | 'DONE' | 'FAILED' | 'UNKNOWN';
 
 export const bimImportJobStatuses: readonly BimImportJobStatus[] = [
   'QUEUED',
@@ -157,7 +165,7 @@ export function parseBimModelVersion(json: unknown): BimModelVersion {
     id: parseUuid(raw.id, 'parseBimModelVersion.id'),
     modelId: raw.modelId ?? '',
     versionNumber: raw.versionNumber ?? 0,
-    status: parseEnum(raw.status, bimVersionStatuses, 'UPLOADED'),
+    status: parseEnum(raw.status, bimVersionStatuses, 'UNKNOWN'),
     sourceFilename: raw.sourceFilename ?? undefined,
     sourceSizeBytes: raw.sourceSizeBytes ?? undefined,
     ifcSchema: raw.ifcSchema ?? undefined,
@@ -235,7 +243,7 @@ export function parseBimImportJob(json: unknown): BimImportJob {
     id: parseUuid(raw.id, 'parseBimImportJob.id'),
     modelId: raw.modelId ?? '',
     versionId: raw.versionId ?? '',
-    status: parseEnum(raw.status, bimImportJobStatuses, 'QUEUED'),
+    status: parseEnum(raw.status, bimImportJobStatuses, 'UNKNOWN'),
     attempt: raw.attempt ?? 0,
     maxAttempts: raw.maxAttempts ?? 0,
     workerId: raw.workerId ?? undefined,
@@ -318,10 +326,19 @@ const BimElementPageSchema = z.object({
   totalPages: nullableNumber,
 });
 
+function coordinate(raw: unknown): number | undefined {
+  if (typeof raw === 'number') return Number.isFinite(raw) ? raw : undefined;
+  if (typeof raw === 'string' && raw.trim() !== '') {
+    const n = Number(raw);
+    return Number.isFinite(n) ? n : undefined;
+  }
+  return undefined;
+}
+
 function triple(raw: unknown): [number, number, number] | undefined {
   if (!Array.isArray(raw) || raw.length < 3) return undefined;
-  const nums = raw.slice(0, 3).map((v) => Number(v));
-  return nums.every((n) => Number.isFinite(n))
+  const nums = raw.slice(0, 3).map((v) => coordinate(v));
+  return nums.every((n) => n !== undefined)
     ? (nums as [number, number, number])
     : undefined;
 }
@@ -337,13 +354,11 @@ export function parseBimBoundingBox(raw: unknown): BimBoundingBox | undefined {
   const max = triple(r.max);
   if (min && max) return { min, max };
   const flat = ['minX', 'minY', 'minZ', 'maxX', 'maxY', 'maxZ'].map((k) =>
-    Number(r[k])
+    coordinate(r[k])
   );
-  if (flat.every((n) => Number.isFinite(n))) {
-    return {
-      min: [flat[0], flat[1], flat[2]],
-      max: [flat[3], flat[4], flat[5]],
-    };
+  if (flat.every((n) => n !== undefined)) {
+    const f = flat as number[];
+    return { min: [f[0], f[1], f[2]], max: [f[3], f[4], f[5]] };
   }
   return undefined;
 }
