@@ -8,6 +8,8 @@
  * - `['organizations', 'list']` — explicit list key; reserved for future
  *   paginated or filtered list queries.
  * - `['organizations', 'detail', id]` — single organization detail.
+ * - `['organizations', 'detail', id, 'dataset-consent']` — the organization's
+ *   dataset-consent flag.
  *
  * @see {@link useOrganizations}
  * @see {@link useOrganization}
@@ -16,4 +18,6 @@ export const organizationKeys = {
   all: ['organizations'] as const,
   lists: () => [...organizationKeys.all, 'list'] as const,
   detail: (id: number) => [...organizationKeys.all, 'detail', id] as const,
+  datasetConsent: (id: number) =>
+    [...organizationKeys.detail(id), 'dataset-consent'] as const,
 };
