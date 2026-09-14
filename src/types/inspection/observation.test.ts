@@ -248,3 +248,22 @@ describe('reverse links', () => {
     expect(parseNcr({ id: '6f0e0d0c-0b0a-4908-8706-050403020100', inspectionId: INSP }).observationId).toBeUndefined();
   });
 });
+
+describe('spatialNodeId request contract', () => {
+  test('create sends null through as an explicit no-node and omits undefined', () => {
+    const base = { title: 't', projectId: 1 };
+    expect(createObservationToJson({ ...base, spatialNodeId: null })).toHaveProperty(
+      'spatialNodeId',
+      null
+    );
+    expect(createObservationToJson(base)).not.toHaveProperty('spatialNodeId');
+  });
+
+  test('review changes omit an undefined node rather than sending a clear', () => {
+    const json = reviewObservationToJson({
+      decision: ObservationDecision.MODIFY,
+      changes: { title: 'x', spatialNodeId: undefined },
+    });
+    expect(json.changes).toEqual({ title: 'x' });
+  });
+});
