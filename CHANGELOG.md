@@ -17,6 +17,9 @@ that gates the export of inspection evidence into the construction image dataset
 - `hooks/organization`: `organizationKeys.datasetConsent`, `useDatasetConsent` (with an
   `enabled` gate so non-admin screens skip the request) and `useSetDatasetConsent`, which
   writes the stored flag into the cache on success.
+- `types/inspection/observation`: `CreateObservationRequest.spatialNodeId` accepts `null`
+  (explicit no-node, as the backend declares it); the `spatialNodeId` contract is documented on
+  both request shapes: `undefined` omits the field, and a review can move but not clear the node.
 
 ## [v8.12.0] - 2026-09-14
 

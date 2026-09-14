@@ -388,8 +388,12 @@ export interface CreateObservationRequest {
   projectId: number;
   /** Inspection to file it under, when there is one. */
   inspectionId?: string;
-  /** Site structure node. Optional; `locationNote` is the free-text fallback. */
-  spatialNodeId?: string;
+  /**
+   * Site structure node. `undefined` leaves the field out of the request and
+   * `null` sends an explicit "no node" (the backend accepts both and stores
+   * no node either way); `locationNote` is the free-text fallback.
+   */
+  spatialNodeId?: string | null;
   /** Free-text location (max 300). */
   locationNote?: string;
   /** When it was seen (ISO string). Defaults to now on the server. */
@@ -444,6 +448,12 @@ export interface ObservationReviewChanges {
   title?: string;
   description?: string;
   severity?: DefectSeverity;
+  /**
+   * A review can move the observation to another node but cannot clear it:
+   * the backend's `Changes` carries a node id only, so `undefined` here means
+   * "unchanged" and a form that lets the reviewer clear the picker must drop
+   * the field rather than send it.
+   */
   spatialNodeId?: string;
   category?: string;
 }
