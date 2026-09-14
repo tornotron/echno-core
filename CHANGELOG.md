@@ -5,6 +5,23 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
+## [v8.13.0] - 2026-09-14
+
+Organization: the per-organization dataset-consent flag (backend #792), the written consent
+that gates the export of inspection evidence into the construction image dataset.
+
+- `types/organization`: `DatasetConsent`, `DatasetConsentUpdateRequest`, `parseDatasetConsent`
+  (absent flag reads as false, the backend default), `datasetConsentUpdateToJson`.
+- `services/organization-service`: `getDatasetConsent`, `setDatasetConsent`
+  (`GET`/`PUT /organization/web/{id}/dataset-consent`, system-admin only).
+- `hooks/organization`: `organizationKeys.datasetConsent`, `useDatasetConsent` (with an
+  `enabled` gate so non-admin screens skip the request) and `useSetDatasetConsent`, which
+  writes the stored flag into the cache on success.
+
+## [v8.12.0] - 2026-09-14
+
+- `types/inspection/observation`: evidence refs require a safe integer attachment id.
+
 ## [v8.11.0] - 2026-09-13
 
 Billing: the plan catalog, the organization's subscription and feature access, and the

@@ -247,6 +247,9 @@ Entry points: 157
 - Customer
 - CustomerListParams
 - DailyMovementSummary
+- DatasetConsent
+- DatasetConsentUpdateRequest
+- datasetConsentUpdateToJson
 - DEFAULT_AFA_CAP_PAISE
 - defaultInspectionCategoryFor
 - DefectAnnotationShape
@@ -640,6 +643,7 @@ Entry points: 157
 - parseConstructionPaymentVoucherStatus
 - parseCostCategory
 - parseCustomer
+- parseDatasetConsent
 - parseDefectAnnotationShape
 - parseDefectPhotoAnnotation
 - parseDefectSeverity
@@ -1086,6 +1090,7 @@ Entry points: 157
 - useCreateWorkCategory
 - useCurrentSubscription
 - useCurrentUserEmployee
+- useDatasetConsent
 - useDeactivateAccount
 - useDeactivateBankAccount
 - useDeactivateCostCategory
@@ -1303,6 +1308,7 @@ Entry points: 157
 - useScheduleReinspectionForNcr
 - useSearch
 - useSeedDefaultCostCategories
+- useSetDatasetConsent
 - useSetVendorPaymentTerms
 - useShift
 - useShifts
@@ -2828,9 +2834,11 @@ Entry points: 157
 
 - organizationKeys
 - useCreateOrganization
+- useDatasetConsent
 - useDeleteOrganization
 - useOrganization
 - useOrganizations
+- useSetDatasetConsent
 - useUpdateOrganization
 
 ## `@tornotron/echno-core/organization/hooks/keys`
@@ -2845,10 +2853,14 @@ Entry points: 157
 
 - CreateOrganizationRequest
 - createOrganizationToJson
+- DatasetConsent
+- DatasetConsentUpdateRequest
+- datasetConsentUpdateToJson
 - getOrganizationLogo
 - Organization
 - OrganizationFiles
 - organizationToJson
+- parseDatasetConsent
 - parseOrganization
 - UpdateOrganizationRequest
 - updateOrganizationToJson

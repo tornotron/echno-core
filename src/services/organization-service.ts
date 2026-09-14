@@ -23,6 +23,12 @@ import {
   updateOrganizationToJson,
 } from '../types/organization/organization-update';
 import { OrganizationFiles } from '../types/organization/organization-files';
+import {
+  DatasetConsent,
+  DatasetConsentUpdateRequest,
+  datasetConsentUpdateToJson,
+  parseDatasetConsent,
+} from '../types/organization/organization-dataset-consent';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ApiResponse = any;
@@ -34,6 +40,18 @@ function safeParseOrganization(data: ApiResponse): Organization {
     logger.error('Failed to parse organization data:', error);
     throw new ApiError(
       'Failed to process organization data. Please try again.',
+      422
+    );
+  }
+}
+
+function safeParseDatasetConsent(data: ApiResponse): DatasetConsent {
+  try {
+    return parseDatasetConsent(data);
+  } catch (error) {
+    logger.error('Failed to parse dataset consent data:', error);
+    throw new ApiError(
+      'Failed to process dataset consent data. Please try again.',
       422
     );
   }
@@ -146,5 +164,45 @@ export const organizationService = {
    */
   async delete(id: number): Promise<void> {
     await api.delete(`/organization/web/${id}`);
+  },
+
+  /**
+   * Reads whether the organization has consented, in writing, to its
+   * inspection evidence being exported into the construction image dataset.
+   *
+   * `GET /organization/web/{id}/dataset-consent` (system-admin only).
+   *
+   * @param id - Surrogate ID of the organization.
+   * @returns The stored {@link DatasetConsent} flag.
+   * @throws {ApiError} On non-2xx HTTP responses or parse failure.
+   */
+  async getDatasetConsent(id: number): Promise<DatasetConsent> {
+    const data = await api.get<ApiResponse>(
+      `/organization/web/${id}/dataset-consent`
+    );
+    return safeParseDatasetConsent(data);
+  },
+
+  /**
+   * Records (true) or withdraws (false) the organization's written consent
+   * to dataset export. The export job includes the organization only while
+   * the flag is true.
+   *
+   * `PUT /organization/web/{id}/dataset-consent` (system-admin only).
+   *
+   * @param id - Surrogate ID of the organization.
+   * @param dto - The flag to store.
+   * @returns The {@link DatasetConsent} flag as stored.
+   * @throws {ApiError} On non-2xx HTTP responses or parse failure.
+   */
+  async setDatasetConsent(
+    id: number,
+    dto: DatasetConsentUpdateRequest
+  ): Promise<DatasetConsent> {
+    const data = await api.put<ApiResponse>(
+      `/organization/web/${id}/dataset-consent`,
+      datasetConsentUpdateToJson(dto)
+    );
+    return safeParseDatasetConsent(data);
   },
 };
