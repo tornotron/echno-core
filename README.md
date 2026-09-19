@@ -417,11 +417,22 @@ Run `bun install` after changing the path. Revert to the git tag reference befor
 
 ### Adding a new domain module
 
-1. Create `src/types/<module>/index.ts` — define the domain type and a parse function.
-2. Create `src/services/<module>-service.ts` — implement CRUD functions using `api.*`.
-3. Create `src/hooks/<module>/use-<module>.ts` and `use-<module>-mutations.ts`.
-4. Re-export from `src/index.ts`.
-5. Build and fix any errors, then tag a new version.
+Scaffold it, then replace the placeholder fields with the module's real ones:
+
+```bash
+bun run scaffold:domain toolbox-talks "Toolbox Talks"
+```
+
+The id is the module id from the backend manifest (`[a-z][a-z0-9-]*`). The command writes
+`src/types/<id>/` (entity, request types, non-strict parser, tests), `src/services/<id>-service.ts`
+(list, get, create, update against `/<id>/web`, with path tests), `src/hooks/<id>/` (keys, query and
+mutation hooks with invalidation, tests), and appends the three exports to `src/index.ts`. It refuses
+an id that fails the pattern or already exists. Templates live in `scripts/scaffold/templates/`; the
+`scaffold-check` CI job generates a throwaway `ci-probe` domain from them on every PR, so a template
+that drifts from the package fails that PR.
+
+After scaffolding, run `bun run api:snapshot` (the public API grew) and, once the backend endpoints
+are on `development`, `bun run contract:refresh`. Then tag a new version.
 
 ### The request contract
 

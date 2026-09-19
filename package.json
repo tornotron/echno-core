@@ -55,6 +55,7 @@
     "contract:report": "bun scripts/request-contract.ts",
     "contract:check": "bun scripts/request-contract.ts --check",
     "docs:api": "typedoc",
+    "scaffold:domain": "bun scripts/scaffold-domain.ts",
     "prepublishOnly": "npm run build"
   },
   "dependencies": {

@@ -1,0 +1,66 @@
+/**
+ * @module __MODULE_ID__-service
+ *
+ * Typed client for the __MODULE_NAME__ web endpoints
+ * (`/__MODULE_ID__/web`, the twin controller the web app talks to).
+ *
+ * Wraps `api.*` calls and parses raw JSON into typed
+ * {@link __MODULE_PASCAL__} objects. Every function throws {@link ApiError}
+ * on a non-2xx response or a parse failure.
+ */
+
+import { api, ApiError } from '../lib/api/api-client';
+import { logger } from '../lib/logger';
+import {
+  __MODULE_PASCAL__,
+  __MODULE_PASCAL__ListParams,
+  __MODULE_PASCAL__Page,
+  Create__MODULE_PASCAL__Request,
+  Update__MODULE_PASCAL__Request,
+  parse__MODULE_PASCAL__,
+  parse__MODULE_PASCAL__Page,
+} from '../types/__MODULE_ID__/__MODULE_ID__';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type ApiResponse = any;
+
+const BASE = '/__MODULE_ID__/web';
+
+function parseWith<T>(what: string, data: unknown, parse: (raw: unknown) => T): T {
+  try {
+    return parse(data);
+  } catch (error) {
+    logger.error(`Failed to parse ${what}:`, error);
+    throw new ApiError(`Failed to process ${what} data. Please try again.`, 422);
+  }
+}
+
+export const __MODULE_CAMEL__Service = {
+  /** `GET /__MODULE_ID__/web`: one page of records. */
+  async list(params: __MODULE_PASCAL__ListParams = {}): Promise<__MODULE_PASCAL__Page> {
+    const query: Record<string, string | number | boolean> = {};
+    if (params.projectId !== undefined) query.projectId = params.projectId;
+    if (params.page !== undefined) query.page = params.page;
+    if (params.size !== undefined) query.size = params.size;
+    const data = await api.get<ApiResponse>(BASE, query);
+    return parseWith('__MODULE_NAME__ list', data, parse__MODULE_PASCAL__Page);
+  },
+
+  /** `GET /__MODULE_ID__/web/{id}` */
+  async get(id: string): Promise<__MODULE_PASCAL__> {
+    const data = await api.get<ApiResponse>(`${BASE}/${id}`);
+    return parseWith('__MODULE_NAME__', data, parse__MODULE_PASCAL__);
+  },
+
+  /** `POST /__MODULE_ID__/web` */
+  async create(req: Create__MODULE_PASCAL__Request): Promise<__MODULE_PASCAL__> {
+    const data = await api.post<ApiResponse>(BASE, req);
+    return parseWith('__MODULE_NAME__', data, parse__MODULE_PASCAL__);
+  },
+
+  /** `PUT /__MODULE_ID__/web/{id}` */
+  async update(id: string, req: Update__MODULE_PASCAL__Request): Promise<__MODULE_PASCAL__> {
+    const data = await api.put<ApiResponse>(`${BASE}/${id}`, req);
+    return parseWith('__MODULE_NAME__', data, parse__MODULE_PASCAL__);
+  },
+};

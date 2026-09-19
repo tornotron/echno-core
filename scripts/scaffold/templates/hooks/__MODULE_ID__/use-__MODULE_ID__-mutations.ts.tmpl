@@ -1,0 +1,39 @@
+/**
+ * @module use-__MODULE_ID__-mutations
+ *
+ * Mutation hooks for the __MODULE_NAME__ domain. Each invalidates the
+ * domain prefix on success, so every list page and open detail refetch
+ * together.
+ */
+
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { __MODULE_CAMEL__Service } from '../../services/__MODULE_ID__-service';
+import {
+  Create__MODULE_PASCAL__Request,
+  Update__MODULE_PASCAL__Request,
+} from '../../types/__MODULE_ID__/__MODULE_ID__';
+import { __MODULE_CAMEL__Keys } from './keys';
+
+function useInvalidate__MODULE_PASCAL__() {
+  const queryClient = useQueryClient();
+  return () => queryClient.invalidateQueries({ queryKey: __MODULE_CAMEL__Keys.all });
+}
+
+/** Creates a record. Mutate with the {@link Create__MODULE_PASCAL__Request}. */
+export function useCreate__MODULE_PASCAL__() {
+  const invalidate = useInvalidate__MODULE_PASCAL__();
+  return useMutation({
+    mutationFn: (req: Create__MODULE_PASCAL__Request) => __MODULE_CAMEL__Service.create(req),
+    onSuccess: invalidate,
+  });
+}
+
+/** Updates a record. Mutate with `{ id, data }`. */
+export function useUpdate__MODULE_PASCAL__() {
+  const invalidate = useInvalidate__MODULE_PASCAL__();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Update__MODULE_PASCAL__Request }) =>
+      __MODULE_CAMEL__Service.update(id, data),
+    onSuccess: invalidate,
+  });
+}
