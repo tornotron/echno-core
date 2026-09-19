@@ -1,0 +1,27 @@
+import { describe, expect, test } from 'bun:test';
+import { readFileSync } from 'node:fs';
+import { __MODULE_CAMEL__Keys } from './keys';
+
+const source = readFileSync(
+  new URL('./use-__MODULE_ID__-mutations.ts', import.meta.url),
+  'utf8'
+);
+
+describe('__MODULE_CAMEL__Keys', () => {
+  test('list and detail keys share the domain prefix', () => {
+    expect(__MODULE_CAMEL__Keys.list({ page: 0 })).toEqual(['__MODULE_ID__', 'list', { page: 0 }]);
+    expect(__MODULE_CAMEL__Keys.detail('11')).toEqual(['__MODULE_ID__', 'detail', '11']);
+  });
+});
+
+describe('__MODULE_CAMEL__ mutations', () => {
+  test('every mutation invalidates the domain prefix', () => {
+    for (const hook of ['useCreate__MODULE_PASCAL__', 'useUpdate__MODULE_PASCAL__']) {
+      const start = source.indexOf(`export function ${hook}(`);
+      expect(start, hook).toBeGreaterThan(-1);
+      const body = source.slice(start, source.indexOf('\n}\n', start));
+      expect(body, hook).toInclude('onSuccess: invalidate');
+    }
+    expect(source).toInclude('queryKey: __MODULE_CAMEL__Keys.all');
+  });
+});

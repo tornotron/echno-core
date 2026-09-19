@@ -1,0 +1,21 @@
+/**
+ * TanStack Query key factory for the __MODULE_NAME__ domain.
+ *
+ * Key shapes:
+ * - `['__MODULE_ID__']`: namespace root; the invalidation prefix.
+ * - `['__MODULE_ID__', 'list', params]`: one page of the list.
+ * - `['__MODULE_ID__', 'detail', id]`: one record.
+ *
+ * Every mutation invalidates `__MODULE_CAMEL__Keys.all`, so a create or
+ * update refreshes every list page and any open detail in one sweep.
+ */
+import type { __MODULE_PASCAL__ListParams } from '../../types/__MODULE_ID__/__MODULE_ID__';
+
+export const __MODULE_CAMEL__Keys = {
+  all: ['__MODULE_ID__'] as const,
+  lists: () => [...__MODULE_CAMEL__Keys.all, 'list'] as const,
+  list: (params: __MODULE_PASCAL__ListParams = {}) =>
+    [...__MODULE_CAMEL__Keys.lists(), params] as const,
+  details: () => [...__MODULE_CAMEL__Keys.all, 'detail'] as const,
+  detail: (id: string) => [...__MODULE_CAMEL__Keys.details(), id] as const,
+};

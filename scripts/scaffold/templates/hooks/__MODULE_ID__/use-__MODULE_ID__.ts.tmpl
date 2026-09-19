@@ -1,0 +1,30 @@
+/**
+ * @module use-__MODULE_ID__
+ *
+ * Query hooks for the __MODULE_NAME__ domain.
+ */
+
+import { useQuery } from '@tanstack/react-query';
+import { __MODULE_CAMEL__Service } from '../../services/__MODULE_ID__-service';
+import { shouldRetry } from '../../lib/query/retry';
+import type { __MODULE_PASCAL__ListParams } from '../../types/__MODULE_ID__/__MODULE_ID__';
+import { __MODULE_CAMEL__Keys } from './keys';
+
+/** One page of records, keyed on the list params. */
+export function use__MODULE_PASCAL__List(params: __MODULE_PASCAL__ListParams = {}) {
+  return useQuery({
+    queryKey: __MODULE_CAMEL__Keys.list(params),
+    queryFn: () => __MODULE_CAMEL__Service.list(params),
+    retry: shouldRetry,
+  });
+}
+
+/** One record; disabled until an id is known. */
+export function use__MODULE_PASCAL__(id: string | undefined) {
+  return useQuery({
+    queryKey: __MODULE_CAMEL__Keys.detail(id ?? ''),
+    queryFn: () => __MODULE_CAMEL__Service.get(id as string),
+    enabled: Boolean(id),
+    retry: shouldRetry,
+  });
+}
