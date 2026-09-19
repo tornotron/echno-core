@@ -8,15 +8,27 @@ const source = readFileSync(
 );
 
 describe('toolboxTalksKeys', () => {
-  test('list and detail keys share the domain prefix', () => {
-    expect(toolboxTalksKeys.list({ page: 0 })).toEqual(['toolbox-talks', 'list', { page: 0 }]);
-    expect(toolboxTalksKeys.detail('11')).toEqual(['toolbox-talks', 'detail', '11']);
+  test('list, detail and photos keys share the domain prefix', () => {
+    expect(toolboxTalksKeys.list({ projectId: 7, pageNo: 0 })).toEqual([
+      'toolbox-talks',
+      'list',
+      { projectId: 7, pageNo: 0 },
+    ]);
+    expect(toolboxTalksKeys.detail('t1')).toEqual(['toolbox-talks', 'detail', 't1']);
+    expect(toolboxTalksKeys.photos('t1')).toEqual(['toolbox-talks', 'detail', 't1', 'photos']);
   });
 });
 
 describe('toolboxTalks mutations', () => {
   test('every mutation invalidates the domain prefix', () => {
-    for (const hook of ['useCreateToolboxTalks', 'useUpdateToolboxTalks']) {
+    for (const hook of [
+      'useCreateToolboxTalk',
+      'useUpdateToolboxTalk',
+      'useAddToolboxTalkAttendees',
+      'useRemoveToolboxTalkAttendee',
+      'useRecordToolboxTalk',
+      'useRegisterToolboxTalkPhotos',
+    ]) {
       const start = source.indexOf(`export function ${hook}(`);
       expect(start, hook).toBeGreaterThan(-1);
       const body = source.slice(start, source.indexOf('\n}\n', start));

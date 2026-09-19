@@ -3,7 +3,7 @@
     "repository": "tornotron/echno-backend",
     "ref": "development",
     "path": "docs/openapi.json",
-    "sha256": "2167d1bf05e586dec41dc1613163e0634393c07032bbb4c2e6a4541069a9627a"
+    "sha256": "dada034014de52f1a482069e313a45535f88267ee58a55f512420b04bde49285"
   },
   "operations": {
     "POST /api/v1/assets/web": {
@@ -540,6 +540,7 @@
     "POST /api/v1/billing/subscriptions/web": {
       "schema": "SubscriptionCreateDto",
       "fields": [
+        "acceptPerChargeAfa",
         "billingPeriod",
         "planCode"
       ],
@@ -560,6 +561,7 @@
     "PUT /api/v1/billing/subscriptions/web/change-plan": {
       "schema": "SubscriptionChangeDto",
       "fields": [
+        "acceptPerChargeAfa",
         "newPlanCode"
       ],
       "required": [
@@ -570,6 +572,7 @@
     "POST /api/v1/billing/subscriptions/web/organization/{organizationId}": {
       "schema": "SubscriptionCreateDto",
       "fields": [
+        "acceptPerChargeAfa",
         "billingPeriod",
         "planCode"
       ],
@@ -590,6 +593,7 @@
     "PUT /api/v1/billing/subscriptions/web/organization/{organizationId}/change-plan": {
       "schema": "SubscriptionChangeDto",
       "fields": [
+        "acceptPerChargeAfa",
         "newPlanCode"
       ],
       "required": [
@@ -4082,6 +4086,136 @@
         "tags",
         "title"
       ],
+      "required": [],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/toolbox-talks": {
+      "schema": "CreateToolboxTalkRequest",
+      "fields": [
+        "attendeeEmployeeIds",
+        "conductorEmployeeId",
+        "notes",
+        "projectId",
+        "spatialNodeId",
+        "talkDate",
+        "talkTime",
+        "topic"
+      ],
+      "required": [
+        "conductorEmployeeId",
+        "projectId",
+        "talkDate",
+        "topic"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/toolbox-talks/web": {
+      "schema": "CreateToolboxTalkRequest",
+      "fields": [
+        "attendeeEmployeeIds",
+        "conductorEmployeeId",
+        "notes",
+        "projectId",
+        "spatialNodeId",
+        "talkDate",
+        "talkTime",
+        "topic"
+      ],
+      "required": [
+        "conductorEmployeeId",
+        "projectId",
+        "talkDate",
+        "topic"
+      ],
+      "acceptsAnyField": false
+    },
+    "PUT /api/v1/toolbox-talks/web/{id}": {
+      "schema": "UpdateToolboxTalkRequest",
+      "fields": [
+        "conductorEmployeeId",
+        "notes",
+        "spatialNodeId",
+        "talkDate",
+        "talkTime",
+        "topic"
+      ],
+      "required": [
+        "conductorEmployeeId",
+        "talkDate",
+        "topic"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/toolbox-talks/web/{id}/attendees": {
+      "schema": "ToolboxTalkAttendeesRequest",
+      "fields": [
+        "employeeIds"
+      ],
+      "required": [
+        "employeeIds"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/toolbox-talks/web/{id}/photos/presign": {
+      "schema": null,
+      "fields": [],
+      "required": [],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/toolbox-talks/web/{id}/photos/register": {
+      "schema": null,
+      "fields": [],
+      "required": [],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/toolbox-talks/web/{id}/record": {
+      "schema": null,
+      "fields": [],
+      "required": [],
+      "acceptsAnyField": false
+    },
+    "PUT /api/v1/toolbox-talks/{id}": {
+      "schema": "UpdateToolboxTalkRequest",
+      "fields": [
+        "conductorEmployeeId",
+        "notes",
+        "spatialNodeId",
+        "talkDate",
+        "talkTime",
+        "topic"
+      ],
+      "required": [
+        "conductorEmployeeId",
+        "talkDate",
+        "topic"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/toolbox-talks/{id}/attendees": {
+      "schema": "ToolboxTalkAttendeesRequest",
+      "fields": [
+        "employeeIds"
+      ],
+      "required": [
+        "employeeIds"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/toolbox-talks/{id}/photos/presign": {
+      "schema": null,
+      "fields": [],
+      "required": [],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/toolbox-talks/{id}/photos/register": {
+      "schema": null,
+      "fields": [],
+      "required": [],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/toolbox-talks/{id}/record": {
+      "schema": null,
+      "fields": [],
       "required": [],
       "acceptsAnyField": false
     },
