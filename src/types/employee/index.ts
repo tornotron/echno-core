@@ -4,3 +4,4 @@ export * from './employee-lookup';
 export * from './departments';
 export * from './org-role';
 export * from './employee-update';
+export * from './employee-join';

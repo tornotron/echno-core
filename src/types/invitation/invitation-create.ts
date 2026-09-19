@@ -11,7 +11,8 @@
 /**
  * Payload for generating a new employee invite code.
  *
- * `designation` and `department` are required; all other fields are optional.
+ * `designation`, `department` and `managerId` are required; all other fields
+ * are optional.
  */
 export interface GenerateInviteCodeRequest {
   designation: string;
@@ -39,7 +40,16 @@ export interface GenerateInviteCodeRequest {
   joiningDate?: Date;
 
   salary?: number;
-  managerId?: number;
+
+  /**
+   * Reporting manager the invited person will report to once they redeem the
+   * code. A newly created employee must have one (ClickUp 14zdkkvrf25,
+   * backend #823), so the field is required. `null` is accepted for exactly
+   * one case, the first employee of an organization that has no active
+   * employee yet; the backend refuses `null` for any other organization with
+   * a 400 that names `managerId`.
+   */
+  managerId: number | null;
   shiftTimingId?: number | null;
   status?: string;
   validityDays?: number;
@@ -68,7 +78,7 @@ export function generateInviteCodeToJson(
   if (request.email) payload.email = request.email;
   if (request.phone) payload.phone = request.phone;
   if (request.salary !== undefined) payload.salary = request.salary;
-  if (request.managerId !== undefined) payload.managerId = request.managerId;
+  if (request.managerId !== null) payload.managerId = request.managerId;
   if (request.shiftTimingId !== undefined)
     payload.shiftTimingId = request.shiftTimingId;
   if (request.validityDays !== undefined)

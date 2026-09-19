@@ -479,6 +479,7 @@ Entry points: 157
 - isSupervisor
 - isSupervisorOrAbove
 - isWithinGeofence
+- JoinOrganizationRequest
 - JournalEntry
 - JournalEntryLine
 - JournalEntryStatus
@@ -1789,6 +1790,7 @@ Entry points: 157
 - isManagerOrAbove
 - isSupervisor
 - isSupervisorOrAbove
+- JoinOrganizationRequest
 - MANAGER_ROLES
 - NORMAL_ROLES
 - OrgRole
