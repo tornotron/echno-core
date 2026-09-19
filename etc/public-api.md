@@ -4,7 +4,7 @@
      Run `bun run api:snapshot` after an intended public-API change and commit the diff.
      See docs/API-STABILITY.md. -->
 
-Entry points: 157
+Entry points: 161
 
 ## `@tornotron/echno-core`
 
@@ -231,6 +231,7 @@ Entry points: 157
 - CreateSubscriptionRequest
 - CreateTaskRequest
 - createTaskToJson
+- CreateToolboxTalkRequest
 - CreateTradeRequest
 - createTradeToJson
 - CreateVendorBankAccountRequest
@@ -752,6 +753,9 @@ Entry points: 157
 - parseStorageLocationStock
 - parseSubscription
 - parseTask
+- parseToolboxTalk
+- parseToolboxTalkAttendee
+- parseToolboxTalkPage
 - parseTradeCatalogueEntry
 - parseTrialBalanceReport
 - parseTrialBalanceRow
@@ -904,6 +908,14 @@ Entry points: 157
 - templateApplies
 - toLocalDateAtMidnight
 - toLocalDateTimeString
+- ToolboxTalk
+- ToolboxTalkAttendee
+- ToolboxTalkAttendeesRequest
+- ToolboxTalkListParams
+- ToolboxTalkPage
+- toolboxTalksKeys
+- toolboxTalksService
+- ToolboxTalkStatus
 - TradeCatalogueEntry
 - tradeKeys
 - tradeService
@@ -970,6 +982,7 @@ Entry points: 157
 - updateStorageLocationToJson
 - UpdateTaskRequest
 - updateTaskToJson
+- UpdateToolboxTalkRequest
 - UpdateTradeRequest
 - updateTradeToJson
 - UpdateUserRequest
@@ -997,6 +1010,7 @@ Entry points: 157
 - upsertPostingAccountMappingToJson
 - useActivateLeavePolicy
 - useAddEmployeeToProject
+- useAddToolboxTalkAttendees
 - useAddVendorBankAccount
 - useAddVendorContact
 - useAddVendorTaxIdentifier
@@ -1086,6 +1100,7 @@ Entry points: 157
 - useCreateStorageLocation
 - useCreateSubscription
 - useCreateTask
+- useCreateToolboxTalk
 - useCreateTrade
 - useCreateVendor
 - useCreateWorkCategory
@@ -1284,14 +1299,17 @@ Entry points: 157
 - useRecordConstructionInvoicePayment
 - useRecordPayment
 - useRecordReinspectionOutcome
+- useRecordToolboxTalk
 - useRegenerateBimHierarchyProposal
 - useRegisterBimSource
+- useRegisterToolboxTalkPhotos
 - useRegularizationById
 - useReinspection
 - useReinspectionsByNcr
 - useRejectLeaveRequest
 - useRemoveEmployeeFromProject
 - useRemoveManager
+- useRemoveToolboxTalkAttendee
 - useRequestRegularization
 - useResendInvitation
 - useRestoreSpatialNode
@@ -1334,6 +1352,9 @@ Entry points: 157
 - useTasksByProject
 - useTasksPage
 - useTeamCalendar
+- useToolboxTalk
+- useToolboxTalkPhotos
+- useToolboxTalks
 - useTradeCatalogue
 - useTransactionHistory
 - useTrialBalance
@@ -1368,6 +1389,7 @@ Entry points: 157
 - useUpdateSpatialNode
 - useUpdateStorageLocation
 - useUpdateTask
+- useUpdateToolboxTalk
 - useUpdateTrade
 - useUpdateUser
 - useUpdateUserOrganization
@@ -3208,6 +3230,41 @@ Entry points: 157
 - taskTypeFromString
 - UpdateTaskRequest
 - updateTaskToJson
+
+## `@tornotron/echno-core/toolbox-talks/hooks`
+
+- toolboxTalksKeys
+- useAddToolboxTalkAttendees
+- useCreateToolboxTalk
+- useRecordToolboxTalk
+- useRegisterToolboxTalkPhotos
+- useRemoveToolboxTalkAttendee
+- useToolboxTalk
+- useToolboxTalkPhotos
+- useToolboxTalks
+- useUpdateToolboxTalk
+
+## `@tornotron/echno-core/toolbox-talks/hooks/keys`
+
+- toolboxTalksKeys
+
+## `@tornotron/echno-core/toolbox-talks/services`
+
+- toolboxTalksService
+
+## `@tornotron/echno-core/toolbox-talks/types`
+
+- CreateToolboxTalkRequest
+- parseToolboxTalk
+- parseToolboxTalkAttendee
+- parseToolboxTalkPage
+- ToolboxTalk
+- ToolboxTalkAttendee
+- ToolboxTalkAttendeesRequest
+- ToolboxTalkListParams
+- ToolboxTalkPage
+- ToolboxTalkStatus
+- UpdateToolboxTalkRequest
 
 ## `@tornotron/echno-core/trade/services`
 
