@@ -5,6 +5,31 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
+## [v8.15.0] - 2026-09-20
+
+Toolbox Talks: the client half of the reference module the contributor guide is built
+around (`MODULE_TOOLBOX_TALKS`, backend #832, ClickUp 14zdkkvrjf4). The domain was
+generated with `bun run scaffold:domain toolbox-talks` and grown one commit per tutorial
+chapter, so the history reads as the guide does.
+
+- `types/toolbox-talks`: `ToolboxTalk`, `ToolboxTalkAttendee`, `ToolboxTalkStatus`
+  (`DRAFT`/`RECORDED`), `CreateToolboxTalkRequest`, `UpdateToolboxTalkRequest`,
+  `ToolboxTalkAttendeesRequest`, `ToolboxTalkListParams`, `ToolboxTalkPage`; the parsers
+  `parseToolboxTalk`, `parseToolboxTalkAttendee` and `parseToolboxTalkPage` (non-strict; an
+  unknown status reads as a draft, a malformed attendee row is dropped).
+- `services/toolbox-talks-service`: every operation of the `/toolbox-talks/web` twin: `list`
+  (project, date range, status, paging), `get`, `create`, `update`, `addAttendees`,
+  `removeAttendee`, `record`, `getPhotos`, `presignPhotos`, `registerPhotos` (the
+  presigned-upload path keyed on the talk), `downloadPdf` and `pdfPath`.
+- `hooks/toolbox-talks`: `toolboxTalksKeys` (list, detail, photos), `useToolboxTalks`,
+  `useToolboxTalk`, `useToolboxTalkPhotos`, and the mutations `useCreateToolboxTalk`,
+  `useUpdateToolboxTalk`, `useAddToolboxTalkAttendees`, `useRemoveToolboxTalkAttendee`,
+  `useRecordToolboxTalk`, `useRegisterToolboxTalkPhotos`, each invalidating the domain prefix.
+- `etc/backend-request-fields.json` refreshed from the backend snapshot that carries the new
+  endpoints; the request contract check covers the module's write calls.
+
+Additive; nothing existing changes.
+
 ## [v8.14.0] - 2026-09-19
 
 Employee: a newly created employee must have a reporting manager (ClickUp 14zdkkvrf25,
