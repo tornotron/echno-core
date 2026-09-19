@@ -40,6 +40,7 @@ import {
   updateEmployeeToJson,
 } from '../types/employee/employee-update';
 import { EmployeeStatus } from '../types/employee/employee-status';
+import { JoinOrganizationRequest } from '../types/employee/employee-join';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ApiResponse = any;
@@ -261,20 +262,33 @@ export const employeeService = {
    * to the same thing, but the document says required and a client that reads
    * the document has to be able to satisfy it.
    *
+   * A newly created employee must have a reporting manager (ClickUp
+   * 14zdkkvrf25, backend #823), so the body is a {@link JoinOrganizationRequest}
+   * whose `managerId` is required. Passing a bare {@link EmployeeStatus} is
+   * still accepted for the one case the backend exempts, the first employee of
+   * an organization with no active employee yet; for any other organization
+   * the backend answers 400 naming `managerId`.
+   *
    * @param userId - Surrogate ID of the user joining.
    * @param organizationId - Surrogate ID of the target organization.
-   * @param status - Employment status the new record starts in.
+   * @param request - The join details, or a bare status for the first employee.
    * @returns The newly-created {@link Employee} record.
    * @throws {ApiError} On non-2xx transport responses or parse failures (status 422).
    */
   async joinOrganization(
     userId: number,
     organizationId: number,
-    status: EmployeeStatus = EmployeeStatus.active
+    request: EmployeeStatus | JoinOrganizationRequest = EmployeeStatus.active
   ): Promise<Employee> {
+    const body: JoinOrganizationRequest =
+      typeof request === 'string' ? { managerId: null, status: request } : request;
+    const payload: Record<string, unknown> = {
+      status: body.status ?? EmployeeStatus.active,
+    };
+    if (body.managerId !== null) payload.managerId = body.managerId;
     const data = await api.post<ApiResponse>(
       `/employee/web/joinOrganization/userId/${userId}/organizationId/${organizationId}`,
-      { status }
+      payload
     );
     return safeParseEmployee(data);
   },

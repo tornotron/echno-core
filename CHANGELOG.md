@@ -5,6 +5,25 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
+## [v8.14.0] - 2026-09-19
+
+Employee: a newly created employee must have a reporting manager (ClickUp 14zdkkvrf25,
+backend #823). The one exception is the first employee of an organization with no active
+employee yet, which the request shapes express as an explicit `managerId: null`.
+
+- `types/invitation`: `GenerateInviteCodeRequest.managerId` is now required (`number | null`);
+  `generateInviteCodeToJson` sends it when set and omits it for `null`. The invite is where the
+  manager is chosen, and the backend refuses a code minted without one for any organization that
+  already has an active employee.
+- `types/employee`: new `JoinOrganizationRequest` (`managerId: number | null`, optional
+  `status`) for the administrative join.
+- `services/employee-service`: `joinOrganization` accepts a `JoinOrganizationRequest` as its
+  third argument; the bare `EmployeeStatus` form is kept and maps to `managerId: null`, so it now
+  only succeeds for the first employee of an organization.
+
+Existing callers that build a `GenerateInviteCodeRequest` literal must add `managerId`; the
+compiler points at each one.
+
 ## [v8.13.0] - 2026-09-14
 
 Organization: the per-organization dataset-consent flag (backend #792), the written consent

@@ -223,6 +223,7 @@ describe('fields the backend has no column for are no longer sent', () => {
     const json = generateInviteCodeToJson({
       designation: 'Site Engineer',
       department: 'Execution',
+      managerId: 5,
     });
 
     expect(json).not.toHaveProperty('joiningDate');
