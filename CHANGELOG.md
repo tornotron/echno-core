@@ -5,6 +5,25 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
+## [v8.22.0] - 2026-09-20
+
+Checklist gating on inspection submission: the client half of echno-backend#849 (ClickUp
+14zdkkvrghk). An inspection is not completed while a check point is unanswered; a check
+point that could not be carried out is marked not done with a remark, and the submission
+then goes through with that remark on the record.
+
+- `types/inspection`: `CheckItemStatus.NOT_DONE` (`not-done`), `isCheckItemAnswered` and
+  `checklistProgress` (total, answered, pending, notDone), so a screen tallies a checklist
+  the way the backend gate judges it.
+- `types/inspection`: `UnansweredCheckItem`, `ChecklistIncomplete`,
+  `CHECKLIST_INCOMPLETE_TITLE` and `readChecklistIncomplete(error)`, which reads the 422
+  body a refused submission answers with (position, stored id when known, category, check
+  point) out of the thrown `ApiError`; undefined for any other failure.
+- `lib/api`: `ApiError.body` keeps the parsed problem body of a failed response, undefined
+  when the response was not JSON.
+
+Additive.
+
 ## [v8.21.0] - 2026-09-20
 
 Leave module set 1: the client half of the policy configuration rules and the holiday calendar
