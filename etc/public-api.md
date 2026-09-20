@@ -113,6 +113,10 @@ Entry points: 169
 - categoryId
 - ChangePlanRequest
 - CheckItemStatus
+- CHECKLIST_INCOMPLETE_TITLE
+- ChecklistIncomplete
+- checklistProgress
+- ChecklistProgress
 - ChecklistTemplate
 - ChecklistTemplateItem
 - ChecklistTemplateItemRequest
@@ -469,6 +473,7 @@ Entry points: 169
 - isAnnotationWithinImage
 - isBimJobActive
 - isBimVersionInProgress
+- isCheckItemAnswered
 - isEarlyCheckout
 - isEngineer
 - isEntitledStatus
@@ -842,6 +847,7 @@ Entry points: 169
 - purchaseOrderStatusLabels
 - QUOTA_PERIODS
 - QuotaPeriod
+- readChecklistIncomplete
 - realtimeQueryOptions
 - Receipt
 - ReceiptPageParams
@@ -960,6 +966,7 @@ Entry points: 169
 - TransactionType
 - TrialBalanceReport
 - TrialBalanceRow
+- UnansweredCheckItem
 - UpdateAccountArgs
 - UpdateAccountRequest
 - updateAccountToJson
@@ -2420,6 +2427,10 @@ Entry points: 169
 - CatalogueGroup
 - catalogueGroupLabel
 - CheckItemStatus
+- CHECKLIST_INCOMPLETE_TITLE
+- ChecklistIncomplete
+- checklistProgress
+- ChecklistProgress
 - ChecklistTemplate
 - ChecklistTemplateItem
 - ChecklistTemplateItemRequest
@@ -2481,6 +2492,7 @@ Entry points: 169
 - inspectionTradeOrder
 - InspectionType
 - isAnnotationWithinImage
+- isCheckItemAnswered
 - isLegacyInspectionTrade
 - isNcrOverdue
 - isObservationPending
@@ -2548,6 +2560,7 @@ Entry points: 169
 - parseStarterChecklistTemplate
 - parseTradeCatalogueEntry
 - passedReinspections
+- readChecklistIncomplete
 - Reinspection
 - ReinspectionOutcome
 - reinspectionOutcomeLabels
@@ -2563,6 +2576,7 @@ Entry points: 169
 - StarterChecklistTemplate
 - templateApplies
 - TradeCatalogueEntry
+- UnansweredCheckItem
 - UpdateCatalogueRowRequest
 - updateCatalogueRowToJson
 - UpdateElementTypeRequest

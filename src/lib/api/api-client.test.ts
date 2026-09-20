@@ -221,6 +221,32 @@ describe('api error shaping', () => {
     expect(error.details).toBe('uri=/api/v1/leave-requests/9/approve');
   });
 
+  test('keeps the whole problem body for the refusals that carry structure', async () => {
+    const problem = {
+      type: 'about:blank',
+      title: 'Checklist Incomplete',
+      status: 422,
+      detail: 'Inspection INSP-2026-0007 cannot be submitted: 1 check point is still unanswered.',
+      message: 'Inspection INSP-2026-0007 cannot be submitted: 1 check point is still unanswered.',
+      unansweredItems: [{ index: 1, id: null, category: 'Reinforcement', checkPoint: 'Cover blocks' }],
+    };
+    mockFetch(async () => jsonResponse(problem, { status: 422 }));
+
+    const error = (await api.get('/x').catch((error_) => error_)) as ApiError;
+    expect(error.status).toBe(422);
+    expect(error.title).toBe('Checklist Incomplete');
+    expect(error.body).toEqual(problem);
+  });
+
+  test('has no body when the error response was not JSON', async () => {
+    mockFetch(async () => new Response('gateway', { status: 502 }));
+
+    const error = (await api.get('/x').catch((error_) => error_)) as ApiError;
+    expect(error.status).toBe(502);
+    expect(error.body).toBeUndefined();
+    expect(new ApiError('x', 500).body).toBeUndefined();
+  });
+
   test('drops a details payload that is not a string', async () => {
     // The subscription endpoints answer 402 with `details` as a quota object,
     // and `details` is typed as a string for everything downstream.

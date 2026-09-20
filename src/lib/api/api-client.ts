@@ -94,13 +94,22 @@ export class ApiError extends Error {
   isTimeout: boolean;
   /** Per-field validation errors, present on 400/422 responses. */
   errors?: Record<string, string[]>;
+  /**
+   * The parsed error body as the backend sent it, for the refusals that carry
+   * structure beyond a sentence: a 422 that lists the checklist items still
+   * unanswered, for example. Absent when no body was received or it was not
+   * JSON. Read it through a typed reader in the owning domain rather than
+   * directly; the keys are the backend's problem-detail properties.
+   */
+  body?: Record<string, unknown>;
 
   constructor(
     message: string,
     status: number,
     details?: string,
     errors?: Record<string, string[]>,
-    title?: string
+    title?: string,
+    body?: Record<string, unknown>
   ) {
     super(message);
     this.name = 'ApiError';
@@ -108,6 +117,7 @@ export class ApiError extends Error {
     this.title = title;
     this.details = details;
     this.errors = errors;
+    this.body = body;
     this.isAuthError = status === 401 || status === 403;
     this.isNotFound = status === 404;
     this.isServerError = status >= 500;
@@ -147,21 +157,25 @@ export class ApiError extends Error {
  * backend fills it with a quota breakdown rather than a string. Neither shape
  * should reach a consumer typed for a string.
  *
- * @param errorData - The parsed response body.
+ * @param errorData - The parsed response body, or undefined when the response
+ *   was not JSON; the error then carries the status default and no body.
  * @param status - HTTP status of the failed response.
  * @param fallbackMessage - Message to use when the body carries none.
  */
 function apiErrorFrom(
-  errorData: ApiErrorData,
+  errorData: ApiErrorData | undefined,
   status: number,
   fallbackMessage: string
 ): ApiError {
+  const parsed =
+    errorData !== null && typeof errorData === 'object' ? errorData : undefined;
   return new ApiError(
-    errorData.message || fallbackMessage,
+    parsed?.message || fallbackMessage,
     status,
-    typeof errorData.details === 'string' ? errorData.details : undefined,
-    errorData.errors,
-    typeof errorData.title === 'string' ? errorData.title : undefined
+    typeof parsed?.details === 'string' ? parsed.details : undefined,
+    parsed?.errors,
+    typeof parsed?.title === 'string' ? parsed.title : undefined,
+    parsed as unknown as Record<string, unknown> | undefined
   );
 }
 
@@ -264,10 +278,9 @@ class ApiClient {
    */
   private async handleResponse<T>(response: Response): Promise<T> {
     if (!response.ok) {
-      const errorData: ApiErrorData = await response.json().catch(() => ({
-        message: this.getDefaultErrorMessage(response.status),
-        status: response.status,
-      }));
+      const errorData: ApiErrorData | undefined = await response
+        .json()
+        .catch(() => undefined);
 
       throw apiErrorFrom(
         errorData,
@@ -454,10 +467,9 @@ class ApiClient {
     );
 
     if (!response.ok) {
-      const errorData: ApiErrorData = await response.json().catch(() => ({
-        message: this.getDefaultErrorMessage(response.status),
-        status: response.status,
-      }));
+      const errorData: ApiErrorData | undefined = await response
+        .json()
+        .catch(() => undefined);
 
       throw apiErrorFrom(
         errorData,
