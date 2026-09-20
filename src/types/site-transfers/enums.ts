@@ -43,6 +43,16 @@ export enum SiteTransferStatus {
    * fate is a stock adjustment rather than a reversal.
    */
   cancelled = 'CANCELLED',
+
+  /**
+   * Undone under an approved reversal request.
+   *
+   * Every leg the transfer wrote has a correcting ledger entry against it and
+   * each store is back at the balance it held before. The transfer stays on
+   * the record and {@link SiteTransfer.reversalId} names the request that
+   * undid it. Terminal, and only ever written by the reversal service.
+   */
+  reversed = 'REVERSED',
 }
 
 /**
@@ -55,6 +65,7 @@ export const siteTransferStatusLabels: Record<SiteTransferStatus, string> = {
   [SiteTransferStatus.partiallyTransferred]: 'Partially Transferred',
   [SiteTransferStatus.completed]: 'Completed',
   [SiteTransferStatus.cancelled]: 'Cancelled',
+  [SiteTransferStatus.reversed]: 'Reversed',
 };
 
 /**
@@ -73,4 +84,6 @@ export const siteTransferStatusBadgeColors: Record<SiteTransferStatus, string> =
       'bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400',
     [SiteTransferStatus.cancelled]:
       'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400',
+    [SiteTransferStatus.reversed]:
+      'bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400',
   };

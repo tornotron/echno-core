@@ -62,6 +62,13 @@ export enum InventoryTransactionType {
 
   /** Manual adjustment booked by an operator (positive or negative). */
   adjust = 'ADJUST',
+
+  /**
+   * A correcting entry that undoes a reversed document's movement on one
+   * balance row: the opposite of what the document wrote there, referenced
+   * `REV-<document number>`. Signed like {@link InventoryTransactionType.adjust}.
+   */
+  reversal = 'REVERSAL',
 }
 
 /**
@@ -90,6 +97,7 @@ export const inventoryTransactionTypeLabels: Record<
   [InventoryTransactionType.stockTakeLoss]: 'Stock Take Loss',
   [InventoryTransactionType.writeOff]: 'Write Off',
   [InventoryTransactionType.adjust]: 'Adjustment',
+  [InventoryTransactionType.reversal]: 'Reversal',
 };
 
 /**
@@ -118,4 +126,5 @@ export const inventoryTransactionTypeBadgeColors: Record<
   [InventoryTransactionType.stockTakeLoss]: 'bg-red-100 text-red-700',
   [InventoryTransactionType.writeOff]: 'bg-zinc-100 text-zinc-700',
   [InventoryTransactionType.adjust]: 'bg-blue-100 text-blue-700',
+  [InventoryTransactionType.reversal]: 'bg-red-100 text-red-700',
 };

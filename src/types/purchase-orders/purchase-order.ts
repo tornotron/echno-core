@@ -49,6 +49,7 @@ const PurchaseOrderResponseSchema = z.object({
   remarks: nullableString,
   totalAmount: money,
   items: z.array(z.unknown()).nullish(),
+  reversalId: optionalNumericId,
 });
 
 /**
@@ -106,6 +107,12 @@ export interface PurchaseOrder {
 
   /** Line items associated with this PO. */
   items: PurchaseOrderItem[];
+
+  /**
+   * Id of the approved reversal request that undid this order, absent while
+   * it stands. Set together with {@link PurchaseOrderStatus.reversed}.
+   */
+  reversalId?: number;
 }
 
 /**
@@ -157,5 +164,6 @@ export function parsePurchaseOrder(json: unknown): PurchaseOrder {
     items: Array.isArray(raw.items)
       ? raw.items.map((item) => parsePurchaseOrderItem(item))
       : [],
+    reversalId: raw.reversalId ?? undefined,
   };
 }
