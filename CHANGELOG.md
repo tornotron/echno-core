@@ -5,6 +5,25 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
+## [v8.21.0] - 2026-09-20
+
+Leave module set 1: the client half of the policy configuration rules and the holiday calendar
+(backend #838, ClickUp 86d45jxmn).
+
+- `types/leave`: `AccrualMethod` (`MONTHLY`, `IN_FULL_ON_QUALIFYING`), `WeekendHolidayTreatment`
+  (`SANDWICH`, `EXCLUDE_NON_WORKING_DAYS`, `CHARGE_ALL_DAYS`) and `LeaveApproverRole`
+  (`REPORTING_MANAGER`, `HR_ADMIN`, `SYSTEM_ADMIN`) with their display labels. `LeavePolicy` gains
+  `supportingDocumentNote`, `accrualMethod`, `weekendHolidayTreatment` and `approverRole`, each
+  read to the backend default when absent or unknown. `CreateLeavePolicyRequest` and
+  `UpdateLeavePolicyRequest` carry the four plus `multiLevelApprovalEnabled`.
+- `types/holidays`, `services/holidays-service`, `hooks/holidays`: the organisation's holiday
+  calendar (`Holiday`, one per date; `listForYear`, `get`, `create`, `update`, `remove`) and
+  working week (`WorkingWeek`, `DayOfWeek`, `DAYS_OF_WEEK`; `getWorkingWeek`,
+  `updateWorkingWeek`). Keys under `holidaysKeys` (`['holidays']`); every mutation invalidates
+  the prefix.
+
+Additive; nothing existing changes shape.
+
 ## [v8.20.0] - 2026-09-20
 
 NCR traceability: the client half of backend #846 (ClickUp 14zdkkvrfek). An NCR hangs off
