@@ -177,3 +177,47 @@ describe("the fields that came with the server-side evaluation", () => {
     expect(event.isWithinGeofence).toBeUndefined();
   });
 });
+
+describe("a punch a supervisor marked for somebody else", () => {
+  test("carries who marked it, from where, how far out and when", async () => {
+    // echno-backend#839: the supervisor's own position is measured against the
+    // site when they create the entry, and what the server accepted is stored
+    // beside the punch so a screen can say "Marked by X at T from (lat, long)".
+    const event = await firstEvent({
+      isWithinGeofence: null,
+      recordedById: 31,
+      recordedByName: "Anand Rajashekar",
+      recordedByLatitude: 10.028_2,
+      recordedByLongitude: 76.878_8,
+      recordedByDistanceMeters: 23.5,
+      recordedAt: "2026-08-31T03:35:12",
+    });
+
+    expect(event.recordedByName).toBe("Anand Rajashekar");
+    expect(event.recordedByLatitude).toBe(10.028_2);
+    expect(event.recordedByLongitude).toBe(76.878_8);
+    expect(event.recordedByDistanceMeters).toBe(23.5);
+    // Server-set, so read as UTC.
+    expect(event.recordedAt?.toISOString()).toBe("2026-08-31T03:35:12.000Z");
+    // The employee's own verdict is still nobody's claim.
+    expect(event.isWithinGeofence).toBeUndefined();
+  });
+
+  test("keeps the recorder position absent on a self-marked punch", async () => {
+    const event = await firstEvent({
+      isWithinGeofence: true,
+      distanceFromProject: 7.8,
+      recordedById: 12,
+      recordedByName: "Priya Nair",
+      recordedByLatitude: null,
+      recordedByLongitude: null,
+      recordedByDistanceMeters: null,
+    });
+
+    expect(event.recordedByName).toBe("Priya Nair");
+    expect(event.recordedByLatitude).toBeUndefined();
+    expect(event.recordedByLongitude).toBeUndefined();
+    expect(event.recordedByDistanceMeters).toBeUndefined();
+    expect(event.recordedAt).toBeUndefined();
+  });
+});

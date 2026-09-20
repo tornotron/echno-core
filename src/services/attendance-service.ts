@@ -164,6 +164,15 @@ function parseClockEvent(raw: any): ClockEvent {
     // differs from the record's employee, a supervisor entered it and the fence
     // was deliberately not evaluated, because the captured position is theirs.
     recordedById: raw.recordedById ?? undefined,
+    recordedByName: raw.recordedByName ?? undefined,
+    // The supervisor's own position and distance on a punch marked for somebody
+    // else (echno-backend#839). Absent stays absent for the same reason as the
+    // verdict above: a manufactured 0 would put the supervisor on the marker.
+    recordedByLatitude: raw.recordedByLatitude ?? undefined,
+    recordedByLongitude: raw.recordedByLongitude ?? undefined,
+    recordedByDistanceMeters: raw.recordedByDistanceMeters ?? undefined,
+    // Server-set and UTC, like verifiedAt below.
+    recordedAt: parseUTCDate(raw.recordedAt) ?? undefined,
     remarks: raw.remarks ?? undefined,
     verifiedBy: raw.verifiedBy ?? undefined,
     // Server-set, and the server runs in UTC, so a naive value here is UTC. The
