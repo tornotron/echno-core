@@ -77,6 +77,26 @@ describe('parseNcr', () => {
     expect(report.closedById).toBe(9);
   });
 
+  test('carries the inspection and project it traces back to', () => {
+    const report = ncr({
+      inspectionNumber: 'INS-2026-0001',
+      inspectionTitle: 'Slab check',
+      projectId: 3,
+      projectName: 'Tower B',
+    });
+    expect(report.inspectionNumber).toBe('INS-2026-0001');
+    expect(report.inspectionTitle).toBe('Slab check');
+    expect(report.projectId).toBe(3);
+    expect(report.projectName).toBe('Tower B');
+  });
+
+  test('leaves the trace unset where the backend could not resolve it', () => {
+    const report = ncr({ projectId: null, projectName: null });
+    expect(report.inspectionNumber).toBeUndefined();
+    expect(report.projectId).toBeUndefined();
+    expect(report.projectName).toBeUndefined();
+  });
+
   test('leaves verifiedById unset before the work has been accepted', () => {
     const report = ncr({ status: 'assigned', raisedById: 3 });
     expect(report.verifiedById).toBeUndefined();

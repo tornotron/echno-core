@@ -368,6 +368,11 @@ const InspectionDefectSchema = z.object({
   status: nullableString,
   resolvedDate: backendDate,
   observationId: nullableString,
+  inspectionId: nullableString,
+  inspectionNumber: nullableString,
+  inspectionTitle: nullableString,
+  projectId: optionalNumericId,
+  projectName: nullableString,
 });
 
 const InspectionSchema = z.object({
@@ -508,6 +513,22 @@ export interface InspectionDefect {
    * recorded before observations existed.
    */
   observationId?: string;
+  /** The inspection the defect was found on. */
+  inspectionId?: string;
+  /** Document number of that inspection. */
+  inspectionNumber?: string;
+  /** Title of that inspection. */
+  inspectionTitle?: string;
+  /**
+   * The project the defect belongs to: the project of its inspection. Unset
+   * where the inspection was recorded without one.
+   */
+  projectId?: number;
+  /**
+   * Display name of that project. Unset where `projectId` is unset, and on a
+   * defect the backend rendered outside a full inspection view.
+   */
+  projectName?: string;
 }
 
 /** A site inspection with its check points and recorded defects. */
@@ -682,6 +703,11 @@ export function parseInspectionDefect(json: unknown): InspectionDefect {
       parseSpatialPathSegment(segment)
     ),
     observationId: raw.observationId ?? undefined,
+    inspectionId: raw.inspectionId ?? undefined,
+    inspectionNumber: raw.inspectionNumber ?? undefined,
+    inspectionTitle: raw.inspectionTitle ?? undefined,
+    projectId: raw.projectId ?? undefined,
+    projectName: raw.projectName ?? undefined,
   };
 }
 

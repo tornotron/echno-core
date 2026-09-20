@@ -247,6 +247,31 @@ describe('reverse links', () => {
     expect(ncr.observationId).toBe(OBS);
     expect(parseNcr({ id: '6f0e0d0c-0b0a-4908-8706-050403020100', inspectionId: INSP }).observationId).toBeUndefined();
   });
+
+  test('a defect carries the inspection and project it was found on', () => {
+    const defect = parseInspectionDefect({
+      id: '5f0e0d0c-0b0a-4908-8706-050403020100',
+      description: 'Honeycombing',
+      correctiveAction: 'Grout',
+      inspectionId: INSP,
+      inspectionNumber: 'INS-2026-0001',
+      inspectionTitle: 'Slab check',
+      projectId: 3,
+      projectName: 'Tower B',
+    });
+    expect(defect.inspectionId).toBe(INSP);
+    expect(defect.inspectionNumber).toBe('INS-2026-0001');
+    expect(defect.inspectionTitle).toBe('Slab check');
+    expect(defect.projectId).toBe(3);
+    expect(defect.projectName).toBe('Tower B');
+    const bare = parseInspectionDefect({
+      id: '5f0e0d0c-0b0a-4908-8706-050403020100',
+      description: 'Honeycombing',
+      correctiveAction: 'Grout',
+    });
+    expect(bare.projectId).toBeUndefined();
+    expect(bare.inspectionId).toBeUndefined();
+  });
 });
 
 describe('spatialNodeId request contract', () => {

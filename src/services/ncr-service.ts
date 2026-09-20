@@ -47,6 +47,12 @@ const BASE = '/ncrs/web';
 
 /** Optional filters for the NCR list. */
 export interface NcrListParams {
+  /**
+   * Restrict to the reports whose inspection belongs to one project. A report
+   * carries no project of its own, so the backend answers this through the
+   * inspection, the same way each row's `projectId` is filled.
+   */
+  projectId?: number;
   /** Restrict to the reports raised against one inspection (UUID). */
   inspectionId?: string;
   /** Restrict to a discipline (wire value, `quality` or `safety`). */
@@ -129,6 +135,7 @@ function toQuery(
   params: NcrListParams
 ): Record<string, string | number | boolean> {
   const query: Record<string, string | number | boolean> = {};
+  if (params.projectId !== undefined) query.projectId = params.projectId;
   if (params.inspectionId !== undefined) query.inspectionId = params.inspectionId;
   if (params.type !== undefined) query.type = params.type;
   if (params.status !== undefined) query.status = params.status;
