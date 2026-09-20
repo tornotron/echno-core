@@ -5,6 +5,36 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
+## [v8.19.0] - 2026-09-20
+
+Document reversals: the client half of echno-backend#835 (ClickUp 86d49nm6d). Site transfers,
+purchase orders and goods received notes are reversed with approval, never deleted: the person
+who raised the document asks, an administrator or project manager approves or rejects with a
+reason, and on approval the server writes one correcting ledger entry per balance row so every
+affected store returns to what it held before. The document stays, marked reversed and linked to
+the request both ways.
+
+- `types/document-reversals`: `DocumentReversal` with a non-strict `parseDocumentReversal`,
+  `DocumentReversalEligibility` with `parseDocumentReversalEligibility`,
+  `CreateDocumentReversalRequest` and `RejectDocumentReversalRequest` with their serializers,
+  and the `ReversibleDocumentType` and `DocumentReversalStatus` enums with labels and badge
+  colours.
+- `services/document-reversals-service` against `/document-reversals/web`: `request`,
+  `getAllPaginated(pageNo, pageSize, status?)` returning `PagedDocumentReversals`, `getById`,
+  `getByDocument`, `getEligibility`, `approve`, `reject`, `cancel`.
+- `hooks/document-reversals`: `documentReversalKeys`, `useDocumentReversalsPaginated`,
+  `useDocumentReversal`, `useDocumentReversalsByDocument`, `useDocumentReversalEligibility`,
+  `useRequestDocumentReversal`, `useApproveDocumentReversal`, `useRejectDocumentReversal`,
+  `useCancelDocumentReversal`. A decision invalidates the reversal, site-transfer,
+  purchase-order, GRN, material and ledger caches.
+- `SiteTransferStatus.reversed` and `PurchaseOrderStatus.reversed`, with labels and badge
+  colours; `InventoryTransactionType.reversal`.
+- `SiteTransfer`, `PurchaseOrder` and `GoodsReceivedNote` gain an optional `reversalId`, the
+  approved request that undid them, parsed non-strictly.
+
+Additive. The status endpoints refuse `REVERSED` from a payload; only the reversal service
+writes it.
+
 ## [v8.18.0] - 2026-09-20
 
 Mark for Team audit fields: the client half of echno-backend#839 (ClickUp 86d45jzpa). A
