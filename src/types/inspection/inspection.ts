@@ -165,12 +165,141 @@ export const defectStatusLabels: Record<DefectStatus, string> = {
   [DefectStatus.VERIFIED]: 'Verified',
 };
 
-/** Per-check-point outcome within an inspection. */
+/**
+ * Per-check-point outcome within an inspection.
+ *
+ * `PENDING` is the one unanswered state. `NOT_DONE` records that the check could
+ * not be carried out; it is an answer only because of the remark it must carry,
+ * and the backend refuses it without one. A submission (the move into
+ * `COMPLETED` or straight into a verdict) is refused with 422 while any check
+ * point is still `PENDING`; see {@link readChecklistIncomplete}.
+ */
 export enum CheckItemStatus {
   PASSED = 'passed',
   FAILED = 'failed',
   NOT_APPLICABLE = 'not-applicable',
   PENDING = 'pending',
+  NOT_DONE = 'not-done',
+}
+
+/** Whether a check point outcome is an answer. Only `PENDING` is not. */
+export function isCheckItemAnswered(status: CheckItemStatus): boolean {
+  return status !== CheckItemStatus.PENDING;
+}
+
+/** The answered-versus-total tally the checklist screen and the gate agree on. */
+export interface ChecklistProgress {
+  /** Check points in total. */
+  total: number;
+  /** Check points with an outcome, not-done included. */
+  answered: number;
+  /** Check points still pending; the submission is refused while this is above zero. */
+  pending: number;
+  /** Check points marked not done, which the approver reads with their remarks. */
+  notDone: number;
+}
+
+/**
+ * Tallies a checklist the way the backend gate judges it, from any rows that
+ * carry a `status`: stored check items or the request rows being edited.
+ */
+export function checklistProgress(
+  items: ReadonlyArray<{ status: CheckItemStatus }>
+): ChecklistProgress {
+  let answered = 0;
+  let notDone = 0;
+  for (const item of items) {
+    if (isCheckItemAnswered(item.status)) answered += 1;
+    if (item.status === CheckItemStatus.NOT_DONE) notDone += 1;
+  }
+  return {
+    total: items.length,
+    answered,
+    pending: items.length - answered,
+    notDone,
+  };
+}
+
+/** One unanswered check point, as the backend's 422 body lists it. */
+export interface UnansweredCheckItem {
+  /** Position in the submitted checklist, from zero. Always present. */
+  index: number;
+  /**
+   * The stored id of the check point at that position before the refused
+   * update, when the payload carried the checklist back at the same length.
+   * Undefined otherwise, since an update replaces the rows.
+   */
+  id?: string;
+  /** The grouping the check point sits under. */
+  category: string;
+  /** What was being checked. */
+  checkPoint: string;
+}
+
+/** The backend's refusal of a submission with unanswered check points. */
+export interface ChecklistIncomplete {
+  /** The sentence the backend wrote, naming the first few items. */
+  message: string;
+  /** The inspection the refusal is about, when the body named it. */
+  inspectionId?: string;
+  inspectionNumber?: string;
+  /** The unanswered check points, in checklist order. Never empty. */
+  unansweredItems: UnansweredCheckItem[];
+}
+
+/** The problem title the backend puts on a refused submission. */
+export const CHECKLIST_INCOMPLETE_TITLE = 'Checklist Incomplete';
+
+const UnansweredCheckItemSchema = z.object({
+  index: z.coerce.number(),
+  id: z.string().nullish(),
+  category: nullableString,
+  checkPoint: nullableString,
+});
+
+/**
+ * Reads the refusal out of a failed update, or returns undefined for any
+ * other error. Duck-typed on the error's `status` and `body` so it works on
+ * the `ApiError` the client throws without the domain importing the client.
+ */
+export function readChecklistIncomplete(
+  error: unknown
+): ChecklistIncomplete | undefined {
+  if (error === null || typeof error !== 'object') return undefined;
+  const { status, body, message } = error as {
+    status?: unknown;
+    body?: unknown;
+    message?: unknown;
+  };
+  if (status !== 422 || body === null || typeof body !== 'object')
+    return undefined;
+  const raw = body as Record<string, unknown>;
+  if (!Array.isArray(raw.unansweredItems) || raw.unansweredItems.length === 0)
+    return undefined;
+  const parsed = z.array(UnansweredCheckItemSchema).safeParse(raw.unansweredItems);
+  if (!parsed.success) return undefined;
+  return {
+    message:
+      typeof raw.message === 'string'
+        ? raw.message
+        : typeof raw.detail === 'string'
+          ? raw.detail
+          : typeof message === 'string'
+            ? message
+            : '',
+    inspectionId:
+      typeof raw.inspectionId === 'string' ? raw.inspectionId : undefined,
+    inspectionNumber:
+      typeof raw.inspectionNumber === 'string'
+        ? raw.inspectionNumber
+        : undefined,
+    unansweredItems: parsed.data.map((item) => ({
+      index: item.index,
+      id: item.id ?? undefined,
+      category: item.category ?? '',
+      checkPoint: item.checkPoint ?? '',
+    })),
+  };
 }
 
 /**

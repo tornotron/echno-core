@@ -106,6 +106,7 @@ const PINNED: Record<string, Record<string, string>> = {
     FAILED: 'failed',
     NOT_APPLICABLE: 'not-applicable',
     PENDING: 'pending',
+    NOT_DONE: 'not-done',
   },
   // inspection/DefectSeverity.java
   DefectSeverity: {
