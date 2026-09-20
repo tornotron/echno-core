@@ -39,6 +39,10 @@ async function queryFor(params: Parameters<typeof ncrService.getAll>[0]) {
 }
 
 describe('the register can be narrowed to the people on a report', () => {
+  test('projectId reaches the query', async () => {
+    expect(await queryFor({ projectId: 3 })).toEqual({ projectId: 3 });
+  });
+
   test('raisedById reaches the query', async () => {
     expect(await queryFor({ raisedById: 8 })).toEqual({ raisedById: 8 });
   });

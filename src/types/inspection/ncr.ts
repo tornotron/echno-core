@@ -127,6 +127,10 @@ const NcrSchema = z.object({
   closedAt: backendDate,
   createdAt: backendDate,
   updatedAt: backendDate,
+  inspectionNumber: nullableString,
+  inspectionTitle: nullableString,
+  projectId: optionalNumericId,
+  projectName: nullableString,
 });
 
 /**
@@ -192,6 +196,21 @@ export interface Ncr {
   createdAt?: string;
   /** Last-update timestamp (ISO string). */
   updatedAt?: string;
+  /**
+   * Document number of the inspection this report was raised against,
+   * resolved by the backend through `inspectionId`. Unset only where that
+   * inspection is no longer readable.
+   */
+  inspectionNumber?: string;
+  /** Title of that inspection, resolved the same way. */
+  inspectionTitle?: string;
+  /**
+   * The project this report belongs to: the project of its inspection, never a
+   * value a client sent. Unset where the inspection was recorded without one.
+   */
+  projectId?: number;
+  /** Display name of that project. Unset where `projectId` is unset. */
+  projectName?: string;
 }
 
 /**
@@ -227,6 +246,10 @@ export function parseNcr(json: unknown): Ncr {
     closedAt: raw.closedAt ?? undefined,
     createdAt: raw.createdAt ?? undefined,
     updatedAt: raw.updatedAt ?? undefined,
+    inspectionNumber: raw.inspectionNumber ?? undefined,
+    inspectionTitle: raw.inspectionTitle ?? undefined,
+    projectId: raw.projectId ?? undefined,
+    projectName: raw.projectName ?? undefined,
   };
 }
 
