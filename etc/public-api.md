@@ -582,6 +582,7 @@ Entry points: 161
 - OrganizationFiles
 - organizationKeys
 - organizationService
+- OrganizationSummary
 - organizationToJson
 - OrgCatalogueRow
 - OrgElementType
@@ -717,6 +718,7 @@ Entry points: 161
 - parseObservationReviewStatus
 - parseObservationSource
 - parseOrganization
+- parseOrganizationSummary
 - parseOrgElementType
 - parseOrgTrade
 - parsePayment
@@ -1258,6 +1260,7 @@ Entry points: 161
 - useOrganizationCalendar
 - useOrganizationRequests
 - useOrganizations
+- useOrganizationSummaries
 - useOrgElementTypes
 - useOrgSettings
 - useOrgTrades
@@ -2862,6 +2865,7 @@ Entry points: 161
 - useDeleteOrganization
 - useOrganization
 - useOrganizations
+- useOrganizationSummaries
 - useSetDatasetConsent
 - useUpdateOrganization
 
@@ -2883,9 +2887,11 @@ Entry points: 161
 - getOrganizationLogo
 - Organization
 - OrganizationFiles
+- OrganizationSummary
 - organizationToJson
 - parseDatasetConsent
 - parseOrganization
+- parseOrganizationSummary
 - UpdateOrganizationRequest
 - updateOrganizationToJson
 

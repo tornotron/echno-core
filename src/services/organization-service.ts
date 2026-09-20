@@ -15,6 +15,10 @@ import {
   parseOrganization,
 } from '../types/organization/organization';
 import {
+  OrganizationSummary,
+  parseOrganizationSummary,
+} from '../types/organization/organization-summary';
+import {
   CreateOrganizationRequest,
   createOrganizationToJson,
 } from '../types/organization/organization-create';
@@ -72,6 +76,23 @@ function safeParseOrganizations(data: ApiResponse[]): Organization[] {
   }
 }
 
+function safeParseOrganizationSummaries(
+  data: ApiResponse[]
+): OrganizationSummary[] {
+  if (!Array.isArray(data)) {
+    return [];
+  }
+  try {
+    return data.map((item) => parseOrganizationSummary(item));
+  } catch (error) {
+    logger.error('Failed to parse organization summaries:', error);
+    throw new ApiError(
+      'Failed to process organization data. Please try again.',
+      422
+    );
+  }
+}
+
 export const organizationService = {
   /**
    * Fetches all organizations visible to the current user.
@@ -84,6 +105,27 @@ export const organizationService = {
   async getAll(): Promise<Organization[]> {
     const data = await api.get<ApiResponse[]>('/organization/web');
     return safeParseOrganizations(data);
+  },
+
+  /**
+   * Fetches the same organizations as {@link organizationService.getAll},
+   * without their contents.
+   *
+   * `GET /organization/web/summary` → `OrganizationSimpleDto[]`
+   *
+   * `OrganizationDto` carries every project of the organization, each with
+   * its team, tasks and attachments, so the full list pulls the whole tenant
+   * per organization. The summary is the scalar half only. Use it for the
+   * organization picker, membership checks and name lookups; a screen that
+   * counts `employees` or `projects` or renders the logo attachment stays on
+   * `getAll`.
+   *
+   * @returns The resolved {@link OrganizationSummary} list.
+   * @throws {ApiError} On non-2xx HTTP responses or parse failure.
+   */
+  async getAllSummaries(): Promise<OrganizationSummary[]> {
+    const data = await api.get<ApiResponse[]>('/organization/web/summary');
+    return safeParseOrganizationSummaries(data);
   },
 
   /**
