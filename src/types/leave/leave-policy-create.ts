@@ -6,6 +6,12 @@
  * `leave-policy-update.ts` for the patch counterpart.
  */
 
+import type {
+  AccrualMethod,
+  LeaveApproverRole,
+  WeekendHolidayTreatment,
+} from './leave-enums';
+
 /** Fields required to create a leave policy. Optional fields fall back to backend defaults. */
 export interface CreateLeavePolicyRequest {
   /** Owning organization. */
@@ -34,6 +40,16 @@ export interface CreateLeavePolicyRequest {
   requiresAttachment?: boolean;
   /** Days-per-request threshold above which an attachment is required. */
   attachmentRequiredAfterDays?: number;
+  /** Whether requests go through the full multi-level approval chain. */
+  multiLevelApprovalEnabled?: boolean;
+  /** What the supporting document should be, shown when one is required. */
+  supportingDocumentNote?: string;
+  /** How the quota reaches the balance. */
+  accrualMethod?: AccrualMethod;
+  /** How weekends and declared holidays inside a request are charged. */
+  weekendHolidayTreatment?: WeekendHolidayTreatment;
+  /** Which tier approves requests under this policy. */
+  approverRole?: LeaveApproverRole;
   /** Genders the policy applies to. */
   applicableGenders?: string;
   /** Minimum months of service before eligibility. */
@@ -81,6 +97,14 @@ export function createLeavePolicyToJson(
     json.requiresAttachment = dto.requiresAttachment;
   if (dto.attachmentRequiredAfterDays !== undefined)
     json.attachmentRequiredAfterDays = dto.attachmentRequiredAfterDays;
+  if (dto.multiLevelApprovalEnabled !== undefined)
+    json.multiLevelApprovalEnabled = dto.multiLevelApprovalEnabled;
+  if (dto.supportingDocumentNote !== undefined)
+    json.supportingDocumentNote = dto.supportingDocumentNote;
+  if (dto.accrualMethod !== undefined) json.accrualMethod = dto.accrualMethod;
+  if (dto.weekendHolidayTreatment !== undefined)
+    json.weekendHolidayTreatment = dto.weekendHolidayTreatment;
+  if (dto.approverRole !== undefined) json.approverRole = dto.approverRole;
   if (dto.applicableGenders !== undefined)
     json.applicableGenders = dto.applicableGenders;
   if (dto.minServiceMonths !== undefined)

@@ -8,6 +8,11 @@
  */
 
 import { z } from 'zod';
+import {
+  AccrualMethod,
+  LeaveApproverRole,
+  WeekendHolidayTreatment,
+} from './leave-enums';
 import { parsePositiveInt } from '../../lib/utils/parse-id';
 import { parseUTCDate } from '../../lib/utils/date-helpers';
 import {
@@ -33,6 +38,10 @@ const LeavePolicyResponseSchema = z.object({
   advanceNoticeDays: nullableNumber,
   requiresAttachment: nullableBoolean,
   attachmentRequiredAfterDays: nullableNumber,
+  supportingDocumentNote: nullableString,
+  accrualMethod: nullableString,
+  weekendHolidayTreatment: nullableString,
+  approverRole: nullableString,
   applicableGenders: nullableString,
   minServiceMonths: nullableNumber,
   allowHalfDay: nullableBoolean,
@@ -43,6 +52,21 @@ const LeavePolicyResponseSchema = z.object({
   createdAt: backendDate,
   updatedAt: backendDate,
 });
+
+/**
+ * Reads a backend enum name, falling back to the backend's own default when the
+ * value is absent or not one the enum knows, so a policy written before the
+ * rule existed (or by a newer backend) still parses.
+ */
+function enumOr<E extends Record<string, string>>(
+  values: E,
+  raw: string | null | undefined,
+  fallback: E[keyof E]
+): E[keyof E] {
+  return raw && Object.values(values).includes(raw)
+    ? (raw as E[keyof E])
+    : fallback;
+}
 
 /** Rules governing one type of leave for an organization. */
 export interface LeavePolicy {
@@ -74,6 +98,17 @@ export interface LeavePolicy {
   requiresAttachment: boolean;
   /** Days-per-request threshold above which an attachment is required. */
   attachmentRequiredAfterDays?: number;
+  /** What the supporting document should be, shown when one is required. */
+  supportingDocumentNote?: string;
+  /** How the quota reaches the balance. `MONTHLY` when the backend sends none. */
+  accrualMethod: AccrualMethod;
+  /**
+   * How weekends and declared holidays inside a request are charged.
+   * `CHARGE_ALL_DAYS` when the backend sends none.
+   */
+  weekendHolidayTreatment: WeekendHolidayTreatment;
+  /** Which tier approves. `REPORTING_MANAGER` when the backend sends none. */
+  approverRole: LeaveApproverRole;
   /** Genders the policy applies to (e.g. `'ALL'`, `'FEMALE'`). */
   applicableGenders: string;
   /** Minimum months of service before an employee is eligible. */
@@ -128,6 +163,18 @@ export function parseLeavePolicy(json: unknown): LeavePolicy {
     advanceNoticeDays: raw.advanceNoticeDays ?? 0,
     requiresAttachment: raw.requiresAttachment ?? false,
     attachmentRequiredAfterDays: raw.attachmentRequiredAfterDays ?? undefined,
+    supportingDocumentNote: raw.supportingDocumentNote ?? undefined,
+    accrualMethod: enumOr(AccrualMethod, raw.accrualMethod, AccrualMethod.MONTHLY),
+    weekendHolidayTreatment: enumOr(
+      WeekendHolidayTreatment,
+      raw.weekendHolidayTreatment,
+      WeekendHolidayTreatment.CHARGE_ALL_DAYS
+    ),
+    approverRole: enumOr(
+      LeaveApproverRole,
+      raw.approverRole,
+      LeaveApproverRole.REPORTING_MANAGER
+    ),
     applicableGenders: raw.applicableGenders ?? 'ALL',
     minServiceMonths: raw.minServiceMonths ?? 0,
     allowHalfDay: raw.allowHalfDay ?? true,

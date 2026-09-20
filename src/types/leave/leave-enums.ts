@@ -65,6 +65,81 @@ export enum TransactionType {
   EXPIRY = 'EXPIRY',
 }
 
+/** How a policy's annual quota reaches an employee's balance. */
+export enum AccrualMethod {
+  /** One twelfth of the quota per month of service. */
+  MONTHLY = 'MONTHLY',
+  /** The whole quota, credited the month the service requirement is met. */
+  IN_FULL_ON_QUALIFYING = 'IN_FULL_ON_QUALIFYING',
+}
+
+/** How weekends and declared holidays inside a leave request are charged. */
+export enum WeekendHolidayTreatment {
+  /** Charged only when they fall between two charged leave days. */
+  SANDWICH = 'SANDWICH',
+  /** Never charged. */
+  EXCLUDE_NON_WORKING_DAYS = 'EXCLUDE_NON_WORKING_DAYS',
+  /** Every calendar day from start to end is charged. */
+  CHARGE_ALL_DAYS = 'CHARGE_ALL_DAYS',
+}
+
+/** Which tier approves requests raised under a policy. */
+export enum LeaveApproverRole {
+  /** The employee's management line, level by level. */
+  REPORTING_MANAGER = 'REPORTING_MANAGER',
+  /** One employee holding the hr-admin org role. */
+  HR_ADMIN = 'HR_ADMIN',
+  /** One employee holding the system-admin org role. */
+  SYSTEM_ADMIN = 'SYSTEM_ADMIN',
+}
+
+/**
+ * Returns the human-readable label for an accrual method.
+ *
+ * @param method - The method to format.
+ * @returns The display label.
+ */
+export function getAccrualMethodLabel(method: AccrualMethod): string {
+  const labels: Record<AccrualMethod, string> = {
+    [AccrualMethod.MONTHLY]: 'Monthly',
+    [AccrualMethod.IN_FULL_ON_QUALIFYING]: 'In full on qualifying',
+  };
+  return labels[method] ?? String(method);
+}
+
+/**
+ * Returns the human-readable label for a weekend and holiday treatment.
+ *
+ * @param treatment - The treatment to format.
+ * @returns The display label.
+ */
+export function getWeekendHolidayTreatmentLabel(
+  treatment: WeekendHolidayTreatment
+): string {
+  const labels: Record<WeekendHolidayTreatment, string> = {
+    [WeekendHolidayTreatment.SANDWICH]: 'Sandwich rule',
+    [WeekendHolidayTreatment.EXCLUDE_NON_WORKING_DAYS]:
+      'Exclude non-working days',
+    [WeekendHolidayTreatment.CHARGE_ALL_DAYS]: 'Charge all days',
+  };
+  return labels[treatment] ?? String(treatment);
+}
+
+/**
+ * Returns the human-readable label for an approver role.
+ *
+ * @param role - The role to format.
+ * @returns The display label.
+ */
+export function getLeaveApproverRoleLabel(role: LeaveApproverRole): string {
+  const labels: Record<LeaveApproverRole, string> = {
+    [LeaveApproverRole.REPORTING_MANAGER]: 'Reporting manager',
+    [LeaveApproverRole.HR_ADMIN]: 'HR admin',
+    [LeaveApproverRole.SYSTEM_ADMIN]: 'System admin',
+  };
+  return labels[role] ?? String(role);
+}
+
 /** Category of a leave notification. */
 export enum LeaveNotificationType {
   /** A request was submitted. */
