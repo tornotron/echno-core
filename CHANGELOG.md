@@ -54,6 +54,20 @@ Additive. The check-in and clock-event requests already carry `location`; on a r
 for somebody else the backend now reads it as the supervisor's position, so a client marking
 for the team has to send it.
 
+## [v8.18.0] - 2026-09-20
+
+NCR traceability: the client half of backend #846 (ClickUp 14zdkkvrfek). An NCR hangs off
+an inspection and an inspection belongs to a project, and both now say so.
+
+- `types/inspection`: `Ncr` gains `inspectionNumber`, `inspectionTitle`, `projectId` and
+  `projectName`; `InspectionDefect` gains `inspectionId`, `inspectionNumber`,
+  `inspectionTitle`, `projectId` and `projectName`. All optional, filled by the backend
+  through the inspection, never from a client value.
+- `services/ncr-service`: `NcrListParams.projectId`, matching every report whose
+  inspection belongs to that project.
+
+Additive.
+
 ## [v8.17.0] - 2026-09-20
 
 Project and indent summaries: the client half of backend #836, which added the counts the
