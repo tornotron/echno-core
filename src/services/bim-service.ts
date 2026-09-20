@@ -2,7 +2,7 @@
  * @module bim-service
  *
  * Typed client for the BIM module (`/api/v1/bim`, `MODULE_BIM`). One surface,
- * no `/web` twin. Reads need `bim.view`; writes need `bim.manage`.
+ * no `/web` twin. Reads need `bim:view`; writes need `bim:manage`.
  *
  * The upload path is three calls the caller strings together:
  * {@link bimService.presignSource} creates the next version and returns a
