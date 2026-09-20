@@ -5,6 +5,34 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
+## [v8.17.0] - 2026-09-20
+
+Project and indent summaries: the client half of backend #836, which added the counts the
+list screens render to the summary projections. `GET /project/web/summary` and
+`GET /indents/web/summary` have been on the backend since #615; the grid and the list could
+not move because the projections lacked those counts, and the two list-cache predicates
+would have crashed on a page-shaped cache entry.
+
+- `types/project`: `ProjectSummary`, `ProjectSummaryPage`, `parseProjectSummary`
+  (non-strict). Every scalar of `Project` plus `memberCount` and `taskCount`; no
+  `members`, `tasks` or `attachments`.
+- `types/indents`: `IndentSummary`, `IndentSummaryPage`, `parseIndentSummary` (non-strict).
+  The indent without its lines, with `itemCount` and `convertedItemCount` in their place;
+  `createdBy` keeps the `{ id, name }` shape of `Indent`.
+- `types/organization`: `OrganizationSummary` gains the optional `employeeCount`,
+  `projectCount` and `logoUrl` the summary list now returns.
+- `services`: `projectService.getSummaries({ pageNo, pageSize, search })` and
+  `indentsService.getSummaries(pageNo, pageSize)`, both returning the page envelope.
+- `hooks/project`: `projectKeys.summaries()`, `projectKeys.summary(params)`,
+  `useProjectSummaries(params)`. `hooks/indents`: `indentsKeys.summaries()`,
+  `indentsKeys.summary(pageNo, pageSize)`, `useIndentSummaries(pageNo, pageSize)`.
+- The `isProjectListCache` and `isIndentListCache` predicates exclude `summary`, and every
+  mutation that changes a row or a count (project create, update, delete, add and remove
+  employee; indent create, update, delete; every indent-item mutation) invalidates the
+  summary prefix.
+
+Additive; `useProjects`, `useIndentsPaginated` and `useOrganizations` are unchanged.
+
 ## [v8.16.0] - 2026-09-20
 
 Organization summary: the client half of `GET /organization/web/summary` (backend #615,
