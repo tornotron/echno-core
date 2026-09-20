@@ -5,6 +5,26 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
+## [v8.16.0] - 2026-09-20
+
+Organization summary: the client half of `GET /organization/web/summary` (backend #615,
+ClickUp 86d466j5v). The full `OrganizationDto` carries every project of the organization,
+each with its team, tasks and attachments, so the organization picker was pulling the whole
+tenant per organization to render a name. The summary is the scalar half only.
+
+- `types/organization`: `OrganizationSummary` and `parseOrganizationSummary` (non-strict).
+  Every field is also on `Organization` with the same type, so a full `Organization` is
+  assignable to an `OrganizationSummary`; the summary has no `employees`, `projects`,
+  `attachments` or derived `logo`.
+- `services/organization-service`: `getAllSummaries()`.
+- `hooks/organization`: `organizationKeys.summaries()` (`['organizations', 'summary']`,
+  under the root so every `organizationKeys.all` invalidation reaches it) and
+  `useOrganizationSummaries()`. `useCreateOrganization` invalidates the summary list;
+  `useDeleteOrganization` filters the deleted id out of it.
+
+Additive; `useOrganizations` and `getAll` are unchanged for the screens that count members
+or projects or render the logo attachment.
+
 ## [v8.15.0] - 2026-09-20
 
 Toolbox Talks: the client half of the reference module the contributor guide is built
