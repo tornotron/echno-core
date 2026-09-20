@@ -10,3 +10,4 @@ export * from './project-type';
 export * from './project-files';
 export * from './project-create';
 export * from './project-update';
+export * from './project-summary';

@@ -41,8 +41,11 @@ const PROJECT_NESTED_KEYS = [
 
 /**
  * Matches every Project[] list cache under the 'projects' namespace while
- * excluding detail (Project) and members (Employee[]) entries, which live
- * under the same root key but carry a different data shape.
+ * excluding detail (Project), members (Employee[]) and summary
+ * (ProjectSummaryPage) entries, which live under the same root key but
+ * carry a different data shape. Every caller `.map`s or `.filter`s the
+ * matched data as an array, so a page-shaped summary entry has to be kept
+ * out; the mutations invalidate `projectKeys.summaries()` instead.
  */
 function isProjectListCache(query: {
   queryKey: ReadonlyArray<unknown>;
@@ -52,7 +55,8 @@ function isProjectListCache(query: {
     Array.isArray(key) &&
     key[0] === 'projects' &&
     key[1] !== 'detail' &&
-    key[1] !== 'members'
+    key[1] !== 'members' &&
+    key[1] !== 'summary'
   );
 }
 
@@ -91,6 +95,7 @@ export function useCreateProject() {
         projectKeys.detail(newProject.id),
         newProject
       );
+      queryClient.invalidateQueries({ queryKey: projectKeys.summaries() });
     },
     onError: (error) => {
       logger.error('Failed to create project:', error);
@@ -134,6 +139,7 @@ export function useCreateProjectWithFiles() {
         projectKeys.detail(newProject.id),
         newProject
       );
+      queryClient.invalidateQueries({ queryKey: projectKeys.summaries() });
     },
     onError: (error) => {
       logger.error('Failed to create project with files:', error);
@@ -269,6 +275,7 @@ export function useUpdateProject() {
       );
       queryClient.invalidateQueries({ queryKey: projectKeys.detail(id) });
       queryClient.invalidateQueries({ predicate: isProjectListCache });
+      queryClient.invalidateQueries({ queryKey: projectKeys.summaries() });
     },
   });
 }
@@ -399,6 +406,7 @@ export function useUpdateProjectWithFiles() {
       );
       queryClient.invalidateQueries({ queryKey: projectKeys.detail(id) });
       queryClient.invalidateQueries({ predicate: isProjectListCache });
+      queryClient.invalidateQueries({ queryKey: projectKeys.summaries() });
     },
   });
 }
@@ -537,6 +545,7 @@ export function useAddEmployeeToProject() {
         queryKey: projectKeys.detail(projectId),
       });
       queryClient.invalidateQueries({ predicate: isProjectListCache });
+      queryClient.invalidateQueries({ queryKey: projectKeys.summaries() });
       queryClient.invalidateQueries({
         queryKey: projectKeys.members(projectId),
       });
@@ -667,6 +676,8 @@ export function useRemoveEmployeeFromProject() {
         projectKeys.members(projectId),
         (old) => old?.filter((e) => e.id !== employeeId)
       );
+      // The summary pages carry a member count, so they refetch.
+      queryClient.invalidateQueries({ queryKey: projectKeys.summaries() });
       // Invalidate employee module caches — same reason as addEmployee above.
       queryClient.invalidateQueries({ queryKey: employeeKeys.all });
     },
@@ -703,6 +714,7 @@ export function useDeleteProject() {
       );
       // Evict the detail entry — the project no longer exists on the server.
       queryClient.removeQueries({ queryKey: projectKeys.detail(id) });
+      queryClient.invalidateQueries({ queryKey: projectKeys.summaries() });
     },
     onError: (error) => {
       logger.error('Failed to delete project:', error);

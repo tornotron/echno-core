@@ -2,11 +2,11 @@
  * @module organization-summary
  *
  * The scalar half of an organization, as `GET /organization/web/summary`
- * returns it (`OrganizationSimpleDto`). Carries what a picker or a list
- * row needs: id, name, contact fields, active flag. It does not carry
- * `employees`, `projects` or `attachments`, so nothing here can be
- * counted or rendered from those; a screen that needs them stays on the
- * full {@link Organization}.
+ * returns it (`OrganizationSimpleDto`). Carries what a picker or a card
+ * needs: id, name, contact fields, active flag, and since backend #836 the
+ * employee and project counts and the resolved logo URL. It does not carry
+ * `employees`, `projects` or `attachments`; a screen that needs the rows
+ * themselves stays on the full {@link Organization}.
  */
 
 import { z } from 'zod';
@@ -31,15 +31,20 @@ const OrganizationSummaryResponseSchema = z.object({
   creatorId: nullableNumber,
   createdAt: backendDate,
   isActive: nullableBoolean,
+  employeeCount: nullableNumber,
+  projectCount: nullableNumber,
+  logoUrl: nullableString,
 });
 
 /**
  * An organization without its contents.
  *
- * Every field here is also on {@link Organization} with the same type, so a
- * full `Organization` is assignable wherever an `OrganizationSummary` is
- * expected. The reverse is not true: the summary has no nested arrays and
- * no derived `logo` attachment.
+ * Every required field here is also on {@link Organization} with the same
+ * type, so a full `Organization` is assignable wherever an
+ * `OrganizationSummary` is expected. The reverse is not true: the summary
+ * has no nested arrays and no derived `logo` attachment. The counts and the
+ * logo URL are optional because the same DTO is the reply to a create or an
+ * update, which leaves them absent; the summary list always fills them.
  */
 export interface OrganizationSummary {
   /** Unique surrogate identifier. */
@@ -66,6 +71,22 @@ export interface OrganizationSummary {
   createdAt?: Date;
   /** Whether this organization is currently active. */
   isActive: boolean;
+  /**
+   * How many employees the organization has. Present on the summary list;
+   * absent on a create or update reply.
+   */
+  employeeCount?: number;
+  /**
+   * How many projects the organization has. Present on the summary list;
+   * absent on a create or update reply.
+   */
+  projectCount?: number;
+  /**
+   * Signed download URL of the organization's current logo, resolved by
+   * the backend from its latest `ORGANIZATION_LOGO` attachment. Absent
+   * where there is no logo and on a create or update reply.
+   */
+  logoUrl?: string;
 }
 
 /**
@@ -90,5 +111,8 @@ export function parseOrganizationSummary(json: unknown): OrganizationSummary {
     creatorId: raw.creatorId ?? 0,
     createdAt: parseUTCDate(raw.createdAt) ?? undefined,
     isActive: raw.isActive ?? true,
+    employeeCount: raw.employeeCount ?? undefined,
+    projectCount: raw.projectCount ?? undefined,
+    logoUrl: raw.logoUrl ?? undefined,
   };
 }

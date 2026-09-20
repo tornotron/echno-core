@@ -40,6 +40,25 @@ export const useIndentsPaginated = (pageNo = 0, pageSize = 10) =>
   });
 
 /**
+ * Fetches a page of indent summaries: each indent without its lines, with
+ * `itemCount` and `convertedItemCount` in their place.
+ *
+ * `GET /indents/web/summary`. The full list carries a material on every
+ * line, so this is what the indent list should read; the detail page
+ * stays on {@link useIndent}. Cached under `indentsKeys.summary(...)`,
+ * which the indent and indent-item mutations invalidate.
+ *
+ * @param pageNo - Zero-based page number. Defaults to `0`.
+ * @param pageSize - Number of indents per page, at most 500. Defaults to `10`.
+ * @returns A TanStack `UseQueryResult` wrapping `IndentSummaryPage`.
+ */
+export const useIndentSummaries = (pageNo = 0, pageSize = 10) =>
+  useQuery({
+    queryKey: indentsKeys.summary(pageNo, pageSize),
+    queryFn: () => indentsService.getSummaries(pageNo, pageSize),
+  });
+
+/**
  * Fetches a single indent by ID. The query is disabled until `id` is
  * truthy. This detail cache carries the embedded `items` array;
  * line-item mutations patch it in place.

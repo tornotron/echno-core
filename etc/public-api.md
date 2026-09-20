@@ -386,6 +386,8 @@ Entry points: 161
 - IndentStatus
 - indentStatusBadgeColors
 - indentStatusLabels
+- IndentSummary
+- IndentSummaryPage
 - InlinePurchaseOrderItemInput
 - Inspection
 - INSPECTION_EVENT_ACTOR_TYPES
@@ -666,6 +668,7 @@ Entry points: 161
 - parseGroupedLeaveCalendarEntry
 - parseIndent
 - parseIndentItem
+- parseIndentSummary
 - parseInspection
 - parseInspectionCategory
 - parseInspectionCheckItem
@@ -733,6 +736,7 @@ Entry points: 161
 - parseProject
 - parseProjectCostControl
 - parseProjectCostControlLine
+- parseProjectSummary
 - parseProjectType
 - parsePurchaseOrder
 - parsePurchaseOrderItem
@@ -795,6 +799,8 @@ Entry points: 161
 - projectKeys
 - projectService
 - ProjectStatus
+- ProjectSummary
+- ProjectSummaryPage
 - projectToJson
 - ProjectType
 - ProposedBimBuilding
@@ -1195,6 +1201,7 @@ Entry points: 161
 - useIndentItemsByIndent
 - useIndents
 - useIndentsPaginated
+- useIndentSummaries
 - useInspectionEventQuery
 - useInspectionEvents
 - useInstalledModules
@@ -1288,6 +1295,7 @@ Entry points: 161
 - useProjectsByEmployee
 - useProjectsByOrganization
 - useProjectSettings
+- useProjectSummaries
 - usePublicPlans
 - usePurchaseOrder
 - usePurchaseOrders
@@ -2197,6 +2205,7 @@ Entry points: 161
 - useIndent
 - useIndents
 - useIndentsPaginated
+- useIndentSummaries
 - useUpdateIndent
 
 ## `@tornotron/echno-core/indents/hooks/keys`
@@ -2218,8 +2227,11 @@ Entry points: 161
 - IndentStatus
 - indentStatusBadgeColors
 - indentStatusLabels
+- IndentSummary
+- IndentSummaryPage
 - parseIndent
 - parseIndentItem
+- parseIndentSummary
 - UpdateIndentItemRequest
 - updateIndentItemToJson
 - UpdateIndentRequest
@@ -2908,6 +2920,7 @@ Entry points: 161
 - useProjects
 - useProjectsByEmployee
 - useProjectsByOrganization
+- useProjectSummaries
 - useRemoveEmployeeFromProject
 - useUpdateProject
 - useUpdateProjectWithFiles
@@ -2931,10 +2944,13 @@ Entry points: 161
 - getProjectStatusLabel
 - getProjectStatusName
 - parseProject
+- parseProjectSummary
 - parseProjectType
 - Project
 - ProjectFiles
 - ProjectStatus
+- ProjectSummary
+- ProjectSummaryPage
 - projectToJson
 - ProjectType
 - removeMember

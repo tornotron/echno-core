@@ -27,8 +27,11 @@ import { logger } from '../../lib/logger';
  * Matches every `Indent[]` list cache under the `indents` namespace —
  * `lists()` and `paginated({...})`. The service flattens paginated
  * responses to `Indent[]` so both share the same data shape. Excludes
- * `detail(id)` (patched directly by ID) and the `items` sub-namespace
- * (owned by the indent-items module — see {@link indentItemKeys}).
+ * `detail(id)` (patched directly by ID), the `items` sub-namespace
+ * (owned by the indent-items module — see {@link indentItemKeys}) and
+ * `summary` pages, which are page-shaped rather than `Indent[]`: every
+ * caller `.map`s or `.filter`s the matched data as an array, so the
+ * summary is invalidated through `indentsKeys.summaries()` instead.
  *
  * @param query - The TanStack query whose key is being tested.
  * @returns `true` when the key belongs to an indent list cache.
@@ -41,7 +44,8 @@ function isIndentListCache(query: {
     Array.isArray(key) &&
     key[0] === 'indents' &&
     key[1] !== 'detail' &&
-    key[1] !== 'items'
+    key[1] !== 'items' &&
+    key[1] !== 'summary'
   );
 }
 
@@ -84,6 +88,7 @@ export const useCreateIndent = () => {
           q.queryKey[0] === 'indents' &&
           q.queryKey[1] === 'paginated',
       });
+      queryClient.invalidateQueries({ queryKey: indentsKeys.summaries() });
     },
     onError: (error) =>
       logger.error('Failed to create indent:', error),
@@ -125,6 +130,7 @@ export const useUpdateIndent = () => {
       // Cross-namespace: PO entries carry denormalized `indentNumber` /
       // `indentId` references. Invalidate the indent-scoped PO list so the
       // refreshed indent details propagate.
+      queryClient.invalidateQueries({ queryKey: indentsKeys.summaries() });
       queryClient.invalidateQueries({ queryKey: poKeys.byIndent(id) });
     },
     onError: (error) =>
@@ -173,6 +179,7 @@ export const useDeleteIndent = () => {
       // Cross-namespace: PO byIndent(id) cache may still hold references.
       // POs aren't deleted with their source indent (deletion semantics
       // unclear from spec) — invalidate so a stale link is surfaced if any.
+      queryClient.invalidateQueries({ queryKey: indentsKeys.summaries() });
       queryClient.invalidateQueries({ queryKey: poKeys.byIndent(id) });
     },
     onError: (error) =>
