@@ -5,6 +5,21 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
+## [v8.23.0] - 2026-09-20
+
+Leave module set 2: the client half of the weekend and holiday deduction rule (backend #838,
+tornotron/echno-backend#850, ClickUp 86d45jxmn).
+
+- `types/leave`: `CalculateDays` takes `leavePolicyId`, so the day count before submit is the
+  policy's own charge. `CalculateDaysResponse` adds `calendarDays`, `nonWorkingDaysExcluded`
+  and `deductionRule` (defaulted to the total, zero and `CHARGE_ALL_DAYS` for an older backend).
+  `LeaveRequest.deductionRule` names the treatment the charged days were produced under, absent
+  on requests charged before the rule existed. `readTreatment` reads a treatment name off a
+  payload.
+- `services/leave-service`: `calculateDays` sends the policy and parses the new fields.
+
+Additive.
+
 ## [v8.22.0] - 2026-09-20
 
 Checklist gating on inspection submission: the client half of echno-backend#849 (ClickUp
