@@ -37,6 +37,7 @@ describe('parseIndentSummary', () => {
       items: [{ id: 1 }],
     });
     expect(summary.createdBy).toEqual({ id: 0, name: '' });
+    expect(summary.status).toBe(IndentStatus.pending);
     expect(summary.itemCount).toBe(0);
     expect(summary.convertedItemCount).toBe(0);
     expect('items' in summary).toBe(false);

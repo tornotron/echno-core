@@ -19,7 +19,7 @@ import {
   opaque,
   optionalNumericId,
 } from '../../lib/validation/backend-schema';
-import type { IndentStatus } from './enums';
+import { IndentStatus } from './enums';
 
 const IndentSummaryResponseSchema = z.object({
   id: opaque,
@@ -108,7 +108,9 @@ export function parseIndentSummary(json: unknown): IndentSummary {
       id: raw.createdById ?? 0,
       name: raw.createdByName ?? '',
     },
-    status: raw.status as IndentStatus,
+    // The column is non-null on the backend; a payload without it is read as
+    // the state a freshly raised indent starts in rather than as undefined.
+    status: (raw.status as IndentStatus | null | undefined) ?? IndentStatus.pending,
     expectedOn: raw.expectedOn ?? undefined,
     remarks: raw.remarks ?? undefined,
     projectId: raw.projectId ?? undefined,
