@@ -41,6 +41,11 @@ const ClockEventResponseSchema = z.object({
   geofenceRadiusMeters: nullableNumber,
   geofenceExceptionReason: nullableString,
   recordedById: optionalNumericId,
+  recordedByName: nullableString,
+  recordedByLatitude: nullableNumber,
+  recordedByLongitude: nullableNumber,
+  recordedByDistanceMeters: nullableNumber,
+  recordedAt: backendDate,
   remarks: nullableString,
   verifiedBy: nullableString,
   verifiedAt: backendDate,
@@ -155,6 +160,36 @@ export interface ClockEvent {
    * submitter's.
    */
   recordedById?: number;
+  /**
+   * Name of the employee who submitted the punch, so a screen can say who
+   * marked it without a lookup. Set together with {@link recordedById}; show
+   * it where that id differs from the attendance record's employee.
+   */
+  recordedByName?: string;
+  /**
+   * Where the supervisor stood when they marked this punch for somebody else,
+   * or `undefined` on a punch the employee took themselves.
+   *
+   * Kept apart from {@link location}, which describes the punch, so a reader
+   * never has to work out whose position a coordinate pair is. A supervisor
+   * outside the site's geofence is refused (echno-backend#839), so a position
+   * here is always one the server accepted as on site.
+   */
+  recordedByLatitude?: number;
+  /** Longitude half of {@link recordedByLatitude}; the two are set together. */
+  recordedByLongitude?: number;
+  /**
+   * How far the supervisor was from the project marker when they marked this
+   * punch, in metres, or `undefined` on a self-marked punch and where the fence
+   * could not be measured. Never substitute a `0` here.
+   */
+  recordedByDistanceMeters?: number;
+  /**
+   * When the punch was written, in UTC. On a supervisor-marked punch this is
+   * when the supervisor created the entry, which can differ from
+   * {@link timestamp}, the site-local time the punch is recorded as.
+   */
+  recordedAt?: Date;
   /** Optional remarks entered by the employee. */
   remarks?: string;
   /** Name of the admin who verified the punch, if verified. */
@@ -278,6 +313,11 @@ export function parseClockEvent(data: unknown): ClockEvent {
     geofenceRadiusMeters: raw.geofenceRadiusMeters ?? undefined,
     geofenceExceptionReason: raw.geofenceExceptionReason ?? undefined,
     recordedById: raw.recordedById ?? undefined,
+    recordedByName: raw.recordedByName ?? undefined,
+    recordedByLatitude: raw.recordedByLatitude ?? undefined,
+    recordedByLongitude: raw.recordedByLongitude ?? undefined,
+    recordedByDistanceMeters: raw.recordedByDistanceMeters ?? undefined,
+    recordedAt: parseUTCDate(raw.recordedAt) ?? undefined,
   } as ClockEvent;
 }
 
@@ -296,5 +336,6 @@ export function clockEventToJson(event: ClockEvent): Record<string, unknown> {
     ...event,
     timestamp: toLocalDateTimeString(event.timestamp),
     verifiedAt: event.verifiedAt && toLocalDateTimeString(event.verifiedAt),
+    recordedAt: event.recordedAt && toLocalDateTimeString(event.recordedAt),
   };
 }
