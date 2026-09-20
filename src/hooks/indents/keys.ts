@@ -13,10 +13,14 @@
  *   embedded `items`; line-item mutations patch this entry.
  * - `['indents', 'paginated', { pageNo, pageSize }]` — paginated list,
  *   consumed by {@link useIndentsPaginated}.
+ * - `['indents', 'summary', { pageNo, pageSize }]` — one page of
+ *   `IndentSummary` rows, consumed by {@link useIndentSummaries}.
+ *   Page-shaped, not `Indent[]`, so the list predicate skips it and the
+ *   mutations invalidate it instead.
  *
  * The mutation file's `isIndentListCache` predicate matches every
- * `Indent[]` list cache (`list`, `paginated`) but excludes both
- * `detail` and the `items` sub-namespace (which belongs to the
+ * `Indent[]` list cache (`list`, `paginated`) but excludes `detail`,
+ * `summary` and the `items` sub-namespace (which belongs to the
  * indent-items module — see {@link indentItemKeys}).
  */
 
@@ -33,4 +37,11 @@ export const indentsKeys = {
   /** Query key for a paginated indent list. */
   paginated: (pageNo: number, pageSize: number) =>
     [...indentsKeys.all, 'paginated', { pageNo, pageSize }] as const,
+
+  /** Invalidation prefix for every indent summary page. */
+  summaries: () => [...indentsKeys.all, 'summary'] as const,
+
+  /** Query key for one page of indent summaries. */
+  summary: (pageNo: number, pageSize: number) =>
+    [...indentsKeys.summaries(), { pageNo, pageSize }] as const,
 };

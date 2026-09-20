@@ -16,12 +16,15 @@
  * - `['projects', 'employee', employeeId]` — projects an employee belongs to.
  * - `['projects', 'members', projectId]` — standalone member list for a
  *   project (returned by `useEmployeesByProject`).
+ * - `['projects', 'summary', params]` — one page of `ProjectSummary` rows
+ *   (returned by `useProjectSummaries`). Page-shaped, not `Project[]`, so
+ *   the list predicate skips it and mutations invalidate it instead.
  *
  * The `members` shape lives under the `projects` namespace because the
  * data is owned by the project module even though it carries `Employee[]`.
  * Mutations use the `isProjectListCache` predicate to patch every
- * `Project[]` list cache in one pass while skipping `detail` and `members`
- * entries that share the root but carry different shapes.
+ * `Project[]` list cache in one pass while skipping `detail`, `members`
+ * and `summary` entries that share the root but carry different shapes.
  */
 export const projectKeys = {
   /** Invalidation prefix for the entire project namespace. */
@@ -51,4 +54,11 @@ export const projectKeys = {
   /** Standalone member list for a single project. */
   members: (projectId: number) =>
     [...projectKeys.all, 'members', projectId] as const,
+
+  /** Invalidation prefix for every project summary page. */
+  summaries: () => [...projectKeys.all, 'summary'] as const,
+
+  /** One page of project summaries, keyed by its paging and search params. */
+  summary: (params: { pageNo: number; pageSize: number; search?: string }) =>
+    [...projectKeys.summaries(), params] as const,
 };

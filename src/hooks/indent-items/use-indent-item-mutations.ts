@@ -63,6 +63,8 @@ export const useCreateIndentItem = (indentId: number) => {
         old ? { ...old, items: [...old.items, newItem] } : old
       );
       queryClient.invalidateQueries({ queryKey: indentsKeys.detail(indentId) });
+      // The summary pages count the lines and the converted lines, so they refetch.
+      queryClient.invalidateQueries({ queryKey: indentsKeys.summaries() });
     },
     onError: (error) =>
       logger.error('Failed to add item:', error),
@@ -102,6 +104,8 @@ export const useUpdateIndentItem = (indentId: number) => {
           : old
       );
       queryClient.invalidateQueries({ queryKey: indentsKeys.detail(indentId) });
+      // The summary pages count the lines and the converted lines, so they refetch.
+      queryClient.invalidateQueries({ queryKey: indentsKeys.summaries() });
     },
     onError: (error) =>
       logger.error('Failed to update item:', error),
@@ -135,6 +139,8 @@ export const useDeleteIndentItem = (indentId: number) => {
         old ? { ...old, items: old.items.filter((it) => it.id !== id) } : old
       );
       queryClient.invalidateQueries({ queryKey: indentsKeys.detail(indentId) });
+      // The summary pages count the lines and the converted lines, so they refetch.
+      queryClient.invalidateQueries({ queryKey: indentsKeys.summaries() });
     },
     onError: (error) =>
       logger.error('Failed to remove item:', error),
@@ -184,6 +190,8 @@ export const useMarkIndentItemConverted = (indentId: number) => {
           : old
       );
       queryClient.invalidateQueries({ queryKey: indentsKeys.detail(indentId) });
+      // The summary pages count the lines and the converted lines, so they refetch.
+      queryClient.invalidateQueries({ queryKey: indentsKeys.summaries() });
     },
     onError: (error) =>
       logger.error('Failed to convert item:', error),

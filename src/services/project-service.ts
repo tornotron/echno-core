@@ -11,6 +11,11 @@
 import { api, ApiError } from '../lib/api/api-client';
 import { logger } from '../lib/logger';
 import { Project, parseProject } from '../types/project/project';
+import {
+  ProjectSummary,
+  ProjectSummaryPage,
+  parseProjectSummary,
+} from '../types/project/project-summary';
 import { Employee, parseEmployee } from '../types/employee';
 import {
   CreateProjectRequest,
@@ -27,6 +32,7 @@ type ApiResponse = any;
  * Backend response shape audit (per local-docs/backend-api-docs.md):
  *
  *   GET    /project/web                                       → ProjectDto[]      (full)
+ *   GET    /project/web/summary?pageNo&pageSize&search        → Page<ProjectSummaryDto> (scalars + counts, no collections)
  *   GET    /project/web/{id}                                  → ProjectDto        (full)
  *   GET    /project/web/employees/{employeeId}                → ProjectDto[]      (full)
  *   POST   /project/web                                       → ProjectSimpleDto  (partial — no nested)
@@ -69,6 +75,46 @@ function safeParseProjects(data: ApiResponse[]): Project[] {
   }
 }
 
+function safeParseProjectSummaries(data: ApiResponse[]): ProjectSummary[] {
+  if (!Array.isArray(data)) return [];
+  try {
+    return data.map((item) => parseProjectSummary(item));
+  } catch (error) {
+    logger.error('Failed to parse project summaries:', error);
+    throw new ApiError(
+      'Failed to process projects data. Please try again.',
+      422
+    );
+  }
+}
+
+/**
+ * Normalizes a Spring `Page<ProjectSummaryDto>` body (or a bare array, for
+ * resilience) into a {@link ProjectSummaryPage}.
+ */
+function safeParseProjectSummaryPage(
+  data: ApiResponse,
+  size: number
+): ProjectSummaryPage {
+  if (Array.isArray(data)) {
+    const content = safeParseProjectSummaries(data);
+    return {
+      content,
+      totalElements: content.length,
+      totalPages: 1,
+      number: 0,
+      size,
+    };
+  }
+  return {
+    content: safeParseProjectSummaries(data?.content ?? []),
+    totalElements: data?.totalElements ?? 0,
+    totalPages: data?.totalPages ?? 0,
+    number: data?.number ?? 0,
+    size: data?.size ?? size,
+  };
+}
+
 function safeParseEmployees(data: ApiResponse[]): Employee[] {
   if (!Array.isArray(data)) return [];
   try {
@@ -94,6 +140,34 @@ export const projectService = {
   async getAll(): Promise<Project[]> {
     const data = await api.get<ApiResponse[]>('/project/web');
     return safeParseProjects(data);
+  },
+
+  /**
+   * Fetches a page of project summaries.
+   *
+   * `GET /project/web/summary` → `Page<ProjectSummaryDto>`: every scalar of
+   * the full DTO plus `memberCount` and `taskCount`, none of the
+   * collections. The backend reads progress and both counts for the whole
+   * page in one aggregate, so a list of a hundred projects costs a page
+   * read and one grouped query however deep their task graphs are. Use it
+   * for the all-projects grid; a screen that needs the team or the tasks
+   * themselves stays on `getAll` or `getById`.
+   *
+   * @param params.pageNo - Zero-based page index. Defaults to `0`.
+   * @param params.pageSize - Rows per page, at most 500. Defaults to `20`.
+   * @param params.search - Case-insensitive match on the project name.
+   * @returns The resolved {@link ProjectSummaryPage}.
+   * @throws {ApiError} On non-2xx response or unparseable payload.
+   */
+  async getSummaries(
+    params: { pageNo?: number; pageSize?: number; search?: string } = {}
+  ): Promise<ProjectSummaryPage> {
+    const pageNo = params.pageNo ?? 0;
+    const pageSize = params.pageSize ?? 20;
+    const query: Record<string, string | number> = { pageNo, pageSize };
+    if (params.search) query.search = params.search;
+    const data = await api.get<ApiResponse>('/project/web/summary', query);
+    return safeParseProjectSummaryPage(data, pageSize);
   },
 
   /**

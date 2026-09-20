@@ -21,6 +21,9 @@ import {
   UpdateIndentRequest,
   createIndentToJson,
   updateIndentToJson,
+  IndentSummary,
+  IndentSummaryPage,
+  parseIndentSummary,
 } from '../types/indents';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -32,6 +35,7 @@ type Raw = any;
  *   POST   /indents/web                                  → IndentDto     (full; items array embedded)
  *   GET    /indents/web                                  → IndentDto[]   (full list)
  *   GET    /indents/web/all?pageNo&pageSize              → IndentDto[]   (paginated; returned as plain array, no envelope)
+ *   GET    /indents/web/summary?pageNo&pageSize          → Page<IndentSummaryDto> (no lines; counts only)
  *   GET    /indents/web/{id}                             → IndentDto     (full)
  *   PATCH  /indents/web/{id}                             → IndentDto     (full)
  *   DELETE /indents/web/{id}                             → ApiResponse   (ack)
@@ -70,6 +74,43 @@ function safeParseIndents(data: Raw[]): Indent[] {
     logger.error('Failed to parse indents:', error);
     throw new ApiError('Failed to process indents data.', 422);
   }
+}
+
+function safeParseIndentSummaries(data: Raw[]): IndentSummary[] {
+  if (!Array.isArray(data)) return [];
+  try {
+    return data.map((item) => parseIndentSummary(item));
+  } catch (error) {
+    logger.error('Failed to parse indent summaries:', error);
+    throw new ApiError(
+      'Failed to process indents data. Please try again.',
+      422
+    );
+  }
+}
+
+/**
+ * Normalizes a Spring `Page<IndentSummaryDto>` body (or a bare array, for
+ * resilience) into an {@link IndentSummaryPage}.
+ */
+function safeParseIndentSummaryPage(data: Raw, size: number): IndentSummaryPage {
+  if (Array.isArray(data)) {
+    const content = safeParseIndentSummaries(data);
+    return {
+      content,
+      totalElements: content.length,
+      totalPages: 1,
+      number: 0,
+      size,
+    };
+  }
+  return {
+    content: safeParseIndentSummaries(data?.content ?? []),
+    totalElements: data?.totalElements ?? 0,
+    totalPages: data?.totalPages ?? 0,
+    number: data?.number ?? 0,
+    size: data?.size ?? size,
+  };
 }
 
 export const indentsService = {
@@ -112,6 +153,29 @@ export const indentsService = {
   async getAllPaginated(pageNo = 0, pageSize = 10): Promise<Indent[]> {
     const data = await api.get<Raw[]>('/indents/web/all', { pageNo, pageSize });
     return safeParseIndents(data);
+  },
+
+  /**
+   * Fetches a page of indent summaries (`GET /indents/web/summary`).
+   *
+   * Each row is the indent without its lines: the full DTO carries a
+   * material on every line, so a page of indents was reading the material
+   * catalogue to render a column of numbers. The backend counts the lines
+   * and the lines already on a purchase order for the whole page in one
+   * aggregate. Use it for the indent list; the detail page stays on
+   * `getById`.
+   *
+   * @param pageNo - Zero-based page number. Defaults to `0`.
+   * @param pageSize - Number of indents per page, at most 500. Defaults to `10`.
+   * @returns The {@link IndentSummaryPage} for the requested page.
+   * @throws {ApiError} On a non-2xx response or parse failure.
+   */
+  async getSummaries(pageNo = 0, pageSize = 10): Promise<IndentSummaryPage> {
+    const data = await api.get<Raw>('/indents/web/summary', {
+      pageNo,
+      pageSize,
+    });
+    return safeParseIndentSummaryPage(data, pageSize);
   },
 
   /**

@@ -31,6 +31,38 @@ export function useProjects() {
 }
 
 /**
+ * Fetches one page of project summaries: every scalar of the full project
+ * plus `memberCount` and `taskCount`, none of the collections.
+ *
+ * `GET /project/web/summary`. The backend reads progress and both counts
+ * for the whole page in one aggregate, so this is what a grid of project
+ * cards should read. Cached under `projectKeys.summary(params)`, which the
+ * project mutations invalidate; `staleTime` and retries match
+ * {@link useProjects}.
+ *
+ * @param params.pageNo - Zero-based page index. Defaults to `0`.
+ * @param params.pageSize - Rows per page, at most 500. Defaults to `20`.
+ * @param params.search - Case-insensitive match on the project name.
+ * @returns A TanStack `UseQueryResult` wrapping `ProjectSummaryPage`.
+ */
+export function useProjectSummaries(
+  params: { pageNo?: number; pageSize?: number; search?: string } = {}
+) {
+  const key = {
+    pageNo: params.pageNo ?? 0,
+    pageSize: params.pageSize ?? 20,
+    ...(params.search ? { search: params.search } : {}),
+  };
+  return useQuery({
+    queryKey: projectKeys.summary(key),
+    queryFn: () => projectService.getSummaries(key),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: shouldRetry,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30_000),
+  });
+}
+
+/**
  * Fetches a single project by ID.
  *
  * Disabled until `id` is truthy; `staleTime` is 5 minutes; retries follow
