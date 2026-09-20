@@ -5,6 +5,20 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
+## [v8.20.0] - 2026-09-20
+
+NCR traceability: the client half of backend #846 (ClickUp 14zdkkvrfek). An NCR hangs off
+an inspection and an inspection belongs to a project, and both now say so.
+
+- `types/inspection`: `Ncr` gains `inspectionNumber`, `inspectionTitle`, `projectId` and
+  `projectName`; `InspectionDefect` gains `inspectionId`, `inspectionNumber`,
+  `inspectionTitle`, `projectId` and `projectName`. All optional, filled by the backend
+  through the inspection, never from a client value.
+- `services/ncr-service`: `NcrListParams.projectId`, matching every report whose
+  inspection belongs to that project.
+
+Additive.
+
 ## [v8.19.0] - 2026-09-20
 
 Document reversals: the client half of echno-backend#835 (ClickUp 86d49nm6d). Site transfers,
@@ -53,20 +67,6 @@ is stored beside the punch.
 Additive. The check-in and clock-event requests already carry `location`; on a request made
 for somebody else the backend now reads it as the supervisor's position, so a client marking
 for the team has to send it.
-
-## [v8.18.0] - 2026-09-20
-
-NCR traceability: the client half of backend #846 (ClickUp 14zdkkvrfek). An NCR hangs off
-an inspection and an inspection belongs to a project, and both now say so.
-
-- `types/inspection`: `Ncr` gains `inspectionNumber`, `inspectionTitle`, `projectId` and
-  `projectName`; `InspectionDefect` gains `inspectionId`, `inspectionNumber`,
-  `inspectionTitle`, `projectId` and `projectName`. All optional, filled by the backend
-  through the inspection, never from a client value.
-- `services/ncr-service`: `NcrListParams.projectId`, matching every report whose
-  inspection belongs to that project.
-
-Additive.
 
 ## [v8.17.0] - 2026-09-20
 
