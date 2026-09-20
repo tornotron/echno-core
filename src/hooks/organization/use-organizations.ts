@@ -32,6 +32,32 @@ export function useOrganizations() {
 }
 
 /**
+ * Fetches the organizations visible to the current user without their
+ * contents (`GET /organization/web/summary`).
+ *
+ * This is the list to read for the organization picker, the membership
+ * check on first run, and any name lookup by id: the full `Organization`
+ * carries every project with its team, tasks and attachments, and none of
+ * those callers read them. A screen that counts `employees` or `projects`
+ * or renders the logo attachment keeps {@link useOrganizations}.
+ *
+ * Uses the **standard** query profile (`staleTime` 60 s, `gcTime` 5 min,
+ * `refetchOnWindowFocus` in production only). Keyed at
+ * `organizationKeys.summaries()`, under the namespace root, so the
+ * mutations' `organizationKeys.all` invalidations reach it.
+ *
+ * @returns A TanStack `UseQueryResult` wrapping `OrganizationSummary[]`.
+ */
+export function useOrganizationSummaries() {
+  return useQuery({
+    queryKey: organizationKeys.summaries(),
+    queryFn: () => organizationService.getAllSummaries(),
+    ...standardQueryOptions,
+    retry: shouldRetry,
+  });
+}
+
+/**
  * Fetches a single organization by ID.
  *
  * Uses the **standard** query profile (`staleTime` 60 s, `gcTime` 5 min,

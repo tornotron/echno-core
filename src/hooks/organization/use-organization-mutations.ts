@@ -11,7 +11,7 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { organizationService } from '../../services/organization-service';
-import { Organization } from '../../types/organization';
+import { Organization, OrganizationSummary } from '../../types/organization';
 import { CreateOrganizationRequest } from '../../types/organization/organization-create';
 import { UpdateOrganizationRequest } from '../../types/organization/organization-update';
 import { OrganizationFiles } from '../../types/organization/organization-files';
@@ -38,6 +38,8 @@ const ORGANIZATION_NESTED_KEYS = [
  *   detail cache with the server-returned object.
  * - `setQueryData(organizationKeys.all, append)` — appends the new organization
  *   to the list cache.
+ * - `invalidateQueries(organizationKeys.summaries())` — the summary list
+ *   is refetched so the picker shows the new organization.
  * - `invalidateQueries(organizationKeys.detail(newOrg.id))` — triggers a
  *   canonical refetch so server-computed fields (e.g. derived `logo`) are
  *   populated without a hard refresh.
@@ -68,6 +70,11 @@ export function useCreateOrganization() {
       );
       queryClient.invalidateQueries({
         queryKey: organizationKeys.detail(newOrg.id),
+      });
+      // The summary list is a separate cache entry; refetch rather than
+      // append, so the picker shows the new organization.
+      queryClient.invalidateQueries({
+        queryKey: organizationKeys.summaries(),
       });
     },
     onError: (error) => {
@@ -149,6 +156,8 @@ export function useUpdateOrganization() {
  * On success:
  * - `removeQueries(organizationKeys.detail(id))` — evicts the detail cache
  *   (entity deleted; refetch would 404).
+ * - `setQueryData(organizationKeys.summaries(), filter)` — removes it from
+ *   the summary list too.
  * - `setQueryData(organizationKeys.all, filter)` — removes the deleted entry
  *   from the list cache.
  * - `invalidateQueries(userKeys.all)` — cross-namespace: `user.defaultOrganizationId`
@@ -172,6 +181,10 @@ export function useDeleteOrganization() {
       queryClient.removeQueries({ queryKey: organizationKeys.detail(id) });
       queryClient.setQueryData<Organization[]>(organizationKeys.all, (old) =>
         old?.filter((o) => o.id !== id)
+      );
+      queryClient.setQueryData<OrganizationSummary[]>(
+        organizationKeys.summaries(),
+        (old) => old?.filter((o) => o.id !== id)
       );
 
       // Cross-namespace fan-out:
