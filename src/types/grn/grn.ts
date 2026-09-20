@@ -48,6 +48,7 @@ const GoodsReceivedNoteResponseSchema = z.object({
   invoiceAmount: money,
   overReceiptAcknowledged: nullableBoolean,
   items: z.array(z.unknown()).nullish(),
+  reversalId: optionalNumericId,
 });
 
 /**
@@ -125,6 +126,14 @@ export interface GoodsReceivedNote {
 
   /** Line items received as part of this GRN. */
   items: GrnItem[];
+
+  /**
+   * Id of the approved reversal request that undid this receipt, absent while
+   * it stands. A reversed note has its stock taken back off the store and its
+   * quantities taken back off the order; it stays in every list so the
+   * history reads whole.
+   */
+  reversalId?: number;
 }
 
 /**
@@ -169,5 +178,6 @@ export function parseGoodsReceivedNote(json: unknown): GoodsReceivedNote {
     items: Array.isArray(raw.items)
       ? raw.items.map((item) => parseGrnItem(item))
       : [],
+    reversalId: raw.reversalId ?? undefined,
   };
 }

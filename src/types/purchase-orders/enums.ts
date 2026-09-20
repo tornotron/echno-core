@@ -27,6 +27,14 @@ export enum PurchaseOrderStatus {
 
   /** Cancelled before completion. Cannot be re-opened. */
   cancelled = 'CANCELLED',
+
+  /**
+   * Undone under an approved reversal request, before anything was received
+   * against it. The order stays on the record and
+   * {@link PurchaseOrder.reversalId} names the request. Terminal, and refused
+   * by the status endpoint: only the reversal service writes it.
+   */
+  reversed = 'REVERSED',
 }
 
 /**
@@ -40,6 +48,7 @@ export const purchaseOrderStatusLabels: Record<PurchaseOrderStatus, string> = {
   [PurchaseOrderStatus.partiallyReceived]: 'Partially Received',
   [PurchaseOrderStatus.fullyReceived]: 'Fully Received',
   [PurchaseOrderStatus.cancelled]: 'Cancelled',
+  [PurchaseOrderStatus.reversed]: 'Reversed',
 };
 
 /**
@@ -57,4 +66,5 @@ export const purchaseOrderStatusBadgeColors: Record<
   [PurchaseOrderStatus.partiallyReceived]: 'bg-orange-100 text-orange-700',
   [PurchaseOrderStatus.fullyReceived]: 'bg-green-100 text-green-700',
   [PurchaseOrderStatus.cancelled]: 'bg-red-100 text-red-700',
+  [PurchaseOrderStatus.reversed]: 'bg-red-100 text-red-700',
 };

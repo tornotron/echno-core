@@ -3,7 +3,7 @@
     "repository": "tornotron/echno-backend",
     "ref": "development",
     "path": "docs/openapi.json",
-    "sha256": "dada034014de52f1a482069e313a45535f88267ee58a55f512420b04bde49285"
+    "sha256": "59dce1a5d7d19831b77ff818f9be032ce97bb2c854898b36908a9cc4ed6773c2"
   },
   "operations": {
     "POST /api/v1/assets/web": {
@@ -790,6 +790,78 @@
       "required": [
         "items",
         "name"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/document-reversals": {
+      "schema": "DocumentReversalRequestDto",
+      "fields": [
+        "documentId",
+        "documentType",
+        "reason"
+      ],
+      "required": [
+        "documentId",
+        "documentType",
+        "reason"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/document-reversals/web": {
+      "schema": "DocumentReversalRequestDto",
+      "fields": [
+        "documentId",
+        "documentType",
+        "reason"
+      ],
+      "required": [
+        "documentId",
+        "documentType",
+        "reason"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/document-reversals/web/{id}/approve": {
+      "schema": null,
+      "fields": [],
+      "required": [],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/document-reversals/web/{id}/cancel": {
+      "schema": null,
+      "fields": [],
+      "required": [],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/document-reversals/web/{id}/reject": {
+      "schema": "DocumentReversalRejectionRequest",
+      "fields": [
+        "reason"
+      ],
+      "required": [
+        "reason"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/document-reversals/{id}/approve": {
+      "schema": null,
+      "fields": [],
+      "required": [],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/document-reversals/{id}/cancel": {
+      "schema": null,
+      "fields": [],
+      "required": [],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/document-reversals/{id}/reject": {
+      "schema": "DocumentReversalRejectionRequest",
+      "fields": [
+        "reason"
+      ],
+      "required": [
+        "reason"
       ],
       "acceptsAnyField": false
     },

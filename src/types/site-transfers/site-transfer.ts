@@ -48,6 +48,7 @@ const SiteTransferResponseSchema = z.object({
   receivingStorageLocationName: nullableString,
   status: opaque,
   items: z.array(z.unknown()).nullish(),
+  reversalId: optionalNumericId,
 });
 
 /**
@@ -103,6 +104,12 @@ export interface SiteTransfer {
 
   /** Line items moved by this transfer. */
   items: SiteTransferItem[];
+
+  /**
+   * Id of the approved reversal request that undid this transfer, absent
+   * while it stands. Set together with {@link SiteTransferStatus.reversed}.
+   */
+  reversalId?: number;
 }
 
 /**
@@ -148,6 +155,7 @@ export function parseSiteTransfer(json: unknown): SiteTransfer {
     items: Array.isArray(raw.items)
       ? raw.items.map((item) => parseSiteTransferItem(item))
       : [],
+    reversalId: raw.reversalId ?? undefined,
   };
 }
 

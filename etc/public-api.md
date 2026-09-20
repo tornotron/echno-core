@@ -4,7 +4,7 @@
      Run `bun run api:snapshot` after an intended public-API change and commit the diff.
      See docs/API-STABILITY.md. -->
 
-Entry points: 161
+Entry points: 165
 
 ## `@tornotron/echno-core`
 
@@ -173,6 +173,8 @@ Entry points: 161
 - createCostCategoryToJson
 - CreateCustomerRequest
 - createCustomerToJson
+- CreateDocumentReversalRequest
+- createDocumentReversalToJson
 - CreateElementTypeRequest
 - createElementTypeToJson
 - CreateExpenseRequest
@@ -268,6 +270,13 @@ Entry points: 161
 - DirectUploadError
 - DirectUploadResult
 - DirectUploadStage
+- DocumentReversal
+- DocumentReversalEligibility
+- documentReversalKeys
+- documentReversalsService
+- DocumentReversalStatus
+- documentReversalStatusBadgeColors
+- documentReversalStatusLabels
 - ElementTypeCatalogueEntry
 - elementTypeKeys
 - elementTypeService
@@ -592,6 +601,7 @@ Entry points: 161
 - orgRoleFromString
 - OrgTrade
 - PagedAttendance
+- PagedDocumentReversals
 - PagedEmployee
 - PagedExpense
 - PagedInspectionEvents
@@ -653,6 +663,8 @@ Entry points: 161
 - parseDefectPhotoAnnotation
 - parseDefectSeverity
 - parseDefectStatus
+- parseDocumentReversal
+- parseDocumentReversalEligibility
 - parseElementTypeCatalogueEntry
 - parseEmployee
 - parseEmployeeLookup
@@ -837,12 +849,16 @@ Entry points: 161
 - ReinspectionOutcomeRequest
 - reinspectionOutcomeToJson
 - reinspectionService
+- RejectDocumentReversalRequest
+- rejectDocumentReversalToJson
 - removeMember
 - ReplaceAnnotationsRequest
 - replaceAnnotationsToJson
 - resolveAttendanceRole
 - ReverseJournalArgs
 - ReverseJournalRequest
+- ReversibleDocumentType
+- reversibleDocumentTypeLabels
 - ReviewObservationRequest
 - reviewObservationToJson
 - roleManagementService
@@ -1031,6 +1047,7 @@ Entry points: 161
 - useApprovalsForApprover
 - useApproveAttendance
 - useApproveConstructionInvoice
+- useApproveDocumentReversal
 - useApproveLeaveRequest
 - useApproverRequests
 - useArchiveSpatialNode
@@ -1061,6 +1078,7 @@ Entry points: 161
 - useCalculateDays
 - useCanApprove
 - useCancelConstructionInvoice
+- useCancelDocumentReversal
 - useCancelInvoice
 - useCancelLeaveRequest
 - useCancelSiteTransfer
@@ -1152,6 +1170,10 @@ Entry points: 161
 - useDeleteVendorTaxIdentifier
 - useDeleteWorkCategory
 - useDepartmentCalendar
+- useDocumentReversal
+- useDocumentReversalEligibility
+- useDocumentReversalsByDocument
+- useDocumentReversalsPaginated
 - useDownloadAttachment
 - useDuplicateLeavePolicy
 - useElementTypeCatalogue
@@ -1317,10 +1339,12 @@ Entry points: 161
 - useRegularizationById
 - useReinspection
 - useReinspectionsByNcr
+- useRejectDocumentReversal
 - useRejectLeaveRequest
 - useRemoveEmployeeFromProject
 - useRemoveManager
 - useRemoveToolboxTalkAttendee
+- useRequestDocumentReversal
 - useRequestRegularization
 - useResendInvitation
 - useRestoreSpatialNode
@@ -1770,6 +1794,43 @@ Entry points: 161
 
 - ChecklistTemplateListParams
 - checklistTemplateService
+
+## `@tornotron/echno-core/document-reversals/hooks`
+
+- documentReversalKeys
+- useApproveDocumentReversal
+- useCancelDocumentReversal
+- useDocumentReversal
+- useDocumentReversalEligibility
+- useDocumentReversalsByDocument
+- useDocumentReversalsPaginated
+- useRejectDocumentReversal
+- useRequestDocumentReversal
+
+## `@tornotron/echno-core/document-reversals/hooks/keys`
+
+- documentReversalKeys
+
+## `@tornotron/echno-core/document-reversals/services`
+
+- documentReversalsService
+- PagedDocumentReversals
+
+## `@tornotron/echno-core/document-reversals/types`
+
+- CreateDocumentReversalRequest
+- createDocumentReversalToJson
+- DocumentReversal
+- DocumentReversalEligibility
+- DocumentReversalStatus
+- documentReversalStatusBadgeColors
+- documentReversalStatusLabels
+- parseDocumentReversal
+- parseDocumentReversalEligibility
+- RejectDocumentReversalRequest
+- rejectDocumentReversalToJson
+- ReversibleDocumentType
+- reversibleDocumentTypeLabels
 
 ## `@tornotron/echno-core/employee/hooks`
 

@@ -137,6 +137,11 @@ export * from './types/site-transfers';
 export * from './services/site-transfers-service';
 export * from './hooks/site-transfers';
 
+// Document reversals: request / approve / reject for site transfers, purchase orders and GRNs
+export * from './types/document-reversals';
+export * from './services/document-reversals-service';
+export * from './hooks/document-reversals';
+
 
 // Shift Timings
 export * from './types/shift-timing';
