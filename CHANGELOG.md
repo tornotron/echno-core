@@ -5,6 +5,25 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
+## [v8.18.0] - 2026-09-20
+
+Mark for Team audit fields: the client half of echno-backend#839 (ClickUp 86d45jzpa). A
+supervisor marking attendance for a subordinate is no longer asked for the subordinate's
+selfie, and their own position is measured against the site's geofence when the entry is
+created, with a 422 naming the distance when they are outside it. What the server accepted
+is stored beside the punch.
+
+- `types/attendance`: `ClockEvent` gains `recordedByName`, `recordedByLatitude`,
+  `recordedByLongitude`, `recordedByDistanceMeters` and `recordedAt` (UTC). The recorder
+  position and distance are set only on a punch marked for somebody else; `recordedByName`
+  follows `recordedById` on every punch. All optional, parsed non-strictly by both
+  `parseClockEvent` and the attendance service's own parser, and never defaulted.
+- `clockEventToJson` round-trips `recordedAt` as a naive local date-time like `verifiedAt`.
+
+Additive. The check-in and clock-event requests already carry `location`; on a request made
+for somebody else the backend now reads it as the supervisor's position, so a client marking
+for the team has to send it.
+
 ## [v8.17.0] - 2026-09-20
 
 Project and indent summaries: the client half of backend #836, which added the counts the
