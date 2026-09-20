@@ -242,3 +242,10 @@ export * from './hooks/bim';
 export * from './types/toolbox-talks';
 export * from './services/toolbox-talks-service';
 export * from './hooks/toolbox-talks';
+
+// Holiday calendar and working week (backend #838): organization-wide
+// holidays, one per date, and the days of the week the organization works.
+// Both feed the leave deduction rule.
+export * from './types/holidays';
+export * from './services/holidays-service';
+export * from './hooks/holidays';

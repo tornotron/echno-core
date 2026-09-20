@@ -4,7 +4,7 @@
      Run `bun run api:snapshot` after an intended public-API change and commit the diff.
      See docs/API-STABILITY.md. -->
 
-Entry points: 165
+Entry points: 169
 
 ## `@tornotron/echno-core`
 
@@ -13,6 +13,7 @@ Entry points: 165
 - AccountLine
 - AccountTreeNode
 - AccountType
+- AccrualMethod
 - addMember
 - Address
 - addressToJson
@@ -253,6 +254,8 @@ Entry points: 165
 - DatasetConsent
 - DatasetConsentUpdateRequest
 - datasetConsentUpdateToJson
+- DayOfWeek
+- DAYS_OF_WEEK
 - DEFAULT_AFA_CAP_PAISE
 - defaultInspectionCategoryFor
 - DefectAnnotationShape
@@ -327,6 +330,7 @@ Entry points: 165
 - GenerateInviteCodeRequest
 - generateInviteCodeToJson
 - GeoLocation
+- getAccrualMethodLabel
 - getApprovalActionLabel
 - getAttendanceStatusColor
 - getAttendanceStatusLabel
@@ -351,6 +355,7 @@ Entry points: 165
 - getIssueTypeColor
 - getIssueTypeIcon
 - getIssueTypeLabel
+- getLeaveApproverRoleLabel
 - getLeaveStatusColor
 - getLeaveStatusLabel
 - getMovementTypeColor
@@ -375,6 +380,7 @@ Entry points: 165
 - getVendorStatusColor
 - getVendorStatusLabel
 - getVendorTypeLabel
+- getWeekendHolidayTreatmentLabel
 - GoodsReceivedNote
 - GrnItem
 - grnKeys
@@ -386,6 +392,11 @@ Entry points: 165
 - hasObservationChanges
 - hasPendingReinspection
 - hasRole
+- Holiday
+- HolidayRequest
+- holidayRequestToJson
+- holidaysKeys
+- holidaysService
 - Indent
 - IndentItem
 - indentItemKeys
@@ -504,6 +515,7 @@ Entry points: 165
 - LabourUpdateRequest
 - LeaveApproval
 - LeaveApprovalAction
+- LeaveApproverRole
 - LeaveBalance
 - LeaveBalanceSummary
 - LeaveCalendarEntry
@@ -678,6 +690,7 @@ Entry points: 165
 - parseGoodsReceivedNote
 - parseGrnItem
 - parseGroupedLeaveCalendarEntry
+- parseHoliday
 - parseIndent
 - parseIndentItem
 - parseIndentSummary
@@ -782,6 +795,7 @@ Entry points: 165
 - parseUuid
 - parseVendor
 - parseWorkCategory
+- parseWorkingWeek
 - passedReinspections
 - Payment
 - PAYMENT_TERMS_LABELS
@@ -1105,6 +1119,7 @@ Entry points: 165
 - useCreateElementType
 - useCreateExpense
 - useCreateGRN
+- useCreateHoliday
 - useCreateIndent
 - useCreateIndentItem
 - useCreateIssue
@@ -1145,6 +1160,7 @@ Entry points: 165
 - useDeleteEmployee
 - useDeleteExpense
 - useDeleteGRN  [deprecated]
+- useDeleteHoliday
 - useDeleteIndent
 - useDeleteIndentItem
 - useDeleteIssue
@@ -1215,6 +1231,8 @@ Entry points: 165
 - useGRNsByVendor
 - useGRNsPaginated
 - useGroupedCalendar
+- useHoliday
+- useHolidaysForYear
 - useImportChartOfAccounts
 - useImportSpatialRows
 - useIndent
@@ -1405,6 +1423,7 @@ Entry points: 165
 - useUpdateExpense
 - useUpdateFinanceSettings
 - useUpdateGRN
+- useUpdateHoliday
 - useUpdateIndent
 - useUpdateIndentItem
 - useUpdateIssue
@@ -1433,6 +1452,7 @@ Entry points: 165
 - useUpdateVendorBankAccount
 - useUpdateVendorContact
 - useUpdateVendorTaxIdentifier
+- useUpdateWorkingWeek
 - useUploadAttachment
 - useUploadAttachmentsDirect
 - useUpsertBudgetAllocation
@@ -1456,6 +1476,7 @@ Entry points: 165
 - useWithdrawLeaveRequest
 - useWorkCategories
 - useWorkCategory
+- useWorkingWeek
 - ValidateInviteCodeRequest
 - ValidateInviteCodeResponse
 - Vendor
@@ -1474,12 +1495,15 @@ Entry points: 165
 - VerifyCheckoutRequest
 - VerifyNcrRequest
 - verifyNcrToJson
+- WeekendHolidayTreatment
 - whatsappMessage
 - WorkCategory
 - workCategoryKeys
 - workCategoryService
 - workCategoryToJson
 - WorkDuration
+- WorkingWeek
+- WorkingWeekRequest
 
 ## `@tornotron/echno-core/attachment/hooks`
 
@@ -2230,6 +2254,37 @@ Entry points: 165
 - StatusTransitionSource
 - statusTransitionSourceLabels
 
+## `@tornotron/echno-core/holidays/hooks`
+
+- holidaysKeys
+- useCreateHoliday
+- useDeleteHoliday
+- useHoliday
+- useHolidaysForYear
+- useUpdateHoliday
+- useUpdateWorkingWeek
+- useWorkingWeek
+
+## `@tornotron/echno-core/holidays/hooks/keys`
+
+- holidaysKeys
+
+## `@tornotron/echno-core/holidays/services`
+
+- holidaysService
+
+## `@tornotron/echno-core/holidays/types`
+
+- DayOfWeek
+- DAYS_OF_WEEK
+- Holiday
+- HolidayRequest
+- holidayRequestToJson
+- parseHoliday
+- parseWorkingWeek
+- WorkingWeek
+- WorkingWeekRequest
+
 ## `@tornotron/echno-core/indent-items/hooks`
 
 - indentItemKeys
@@ -2752,6 +2807,7 @@ Entry points: 165
 
 ## `@tornotron/echno-core/leave/types`
 
+- AccrualMethod
 - AdjustLeaveBalanceRequest
 - ApprovalAction
 - approvalActionToJson
@@ -2764,13 +2820,17 @@ Entry points: 165
 - createLeavePolicyToJson
 - CreateLeaveRequestRequest
 - createLeaveRequestToJson
+- getAccrualMethodLabel
 - getApprovalActionLabel
+- getLeaveApproverRoleLabel
 - getLeaveStatusColor
 - getLeaveStatusLabel
+- getWeekendHolidayTreatmentLabel
 - GroupedLeaveCalendarEntry
 - HalfDayType
 - LeaveApproval
 - LeaveApprovalAction
+- LeaveApproverRole
 - LeaveBalance
 - LeaveBalanceSummary
 - LeaveCalendarEntry
@@ -2795,6 +2855,7 @@ Entry points: 165
 - updateLeavePolicyToJson
 - UpdateLeaveRequestRequest
 - updateLeaveRequestToJson
+- WeekendHolidayTreatment
 
 ## `@tornotron/echno-core/material-consumption/hooks`
 
