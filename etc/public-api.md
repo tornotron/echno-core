@@ -848,6 +848,7 @@ Entry points: 169
 - QUOTA_PERIODS
 - QuotaPeriod
 - readChecklistIncomplete
+- readTreatment
 - realtimeQueryOptions
 - Receipt
 - ReceiptPageParams
@@ -2864,6 +2865,7 @@ Entry points: 169
 - parseLeavePolicy
 - parseLeaveRequest
 - parseLeaveTransaction
+- readTreatment
 - TransactionType
 - UpdateLeavePolicyRequest
 - updateLeavePolicyToJson

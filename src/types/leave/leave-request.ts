@@ -9,7 +9,11 @@
  */
 
 import { z } from 'zod';
-import { LeaveStatus, HalfDayType } from './leave-enums';
+import {
+  LeaveStatus,
+  HalfDayType,
+  WeekendHolidayTreatment,
+} from './leave-enums';
 import { LeaveApproval, parseLeaveApproval } from './leave-approval';
 import { parsePositiveInt } from '../../lib/utils/parse-id';
 import { parseUTCDate } from '../../lib/utils/date-helpers';
@@ -38,6 +42,7 @@ const LeaveRequestResponseSchema = z.object({
   endDate: backendDate,
   endHalfDayType: nullableString,
   totalDays: nullableNumber,
+  deductionRule: nullableString,
   reason: nullableString,
   contactDuringLeave: nullableString,
   handoverToId: optionalNumericId,
@@ -86,8 +91,13 @@ export interface LeaveRequest {
   endDate: Date;
   /** Half-day type applied to the end day. */
   endHalfDayType?: HalfDayType;
-  /** Total leave days requested (accounts for half-days). */
+  /** Days charged to the balance (accounts for half-days and the policy's treatment). */
   totalDays: number;
+  /**
+   * The weekend and holiday treatment that produced `totalDays`. Absent on
+   * requests charged before the treatment existed, which were counted end to end.
+   */
+  deductionRule?: WeekendHolidayTreatment;
   /** Reason for the request. */
   reason: string;
   /** How to reach the employee during leave. */
@@ -138,12 +148,35 @@ export interface CalculateDays {
   endDate: string;
   /** Half-day type for the end day. */
   endHalfDayType?: HalfDayType | null;
+  /**
+   * The policy the request would be raised under. When given, its weekend and
+   * holiday treatment is applied; when absent every calendar day is charged.
+   */
+  leavePolicyId?: number;
 }
 
 /** Result of the day-count calculation endpoint. */
 export interface CalculateDaysResponse {
-  /** Computed total leave days for the range. */
+  /** Days that would be charged to the balance. */
   totalDays: number;
+  /** Calendar days in the range, less the half-day allowances at either end. */
+  calendarDays: number;
+  /** Weekend and holiday days inside the range the treatment left uncharged. */
+  nonWorkingDaysExcluded: number;
+  /** The treatment applied. */
+  deductionRule: WeekendHolidayTreatment;
+}
+
+/**
+ * Reads a treatment name off a payload, or `undefined` when absent or unknown.
+ */
+export function readTreatment(
+  raw: string | null | undefined
+): WeekendHolidayTreatment | undefined {
+  return raw &&
+    (Object.values(WeekendHolidayTreatment) as string[]).includes(raw)
+    ? (raw as WeekendHolidayTreatment)
+    : undefined;
 }
 
 /** Result of the leave-conflict check endpoint. */
@@ -190,6 +223,7 @@ export function parseLeaveRequest(json: unknown): LeaveRequest {
     endDate: parseUTCDate(raw.endDate) ?? new Date(),
     endHalfDayType: raw.endHalfDayType as HalfDayType,
     totalDays: raw.totalDays ?? 0,
+    deductionRule: readTreatment(raw.deductionRule),
     reason: raw.reason ?? '',
     contactDuringLeave: raw.contactDuringLeave ?? undefined,
     handoverToId: raw.handoverToId ?? undefined,

@@ -38,6 +38,8 @@ import {
   updateLeaveRequestToJson,
   CalculateDays,
   CalculateDaysResponse,
+  readTreatment,
+  WeekendHolidayTreatment,
   ConflictCheckResponse,
   LeaveApproval,
   parseLeaveApproval,
@@ -804,12 +806,25 @@ export const leaveService = {
    * @throws {ApiError} On non-2xx responses.
    */
   async calculateDays(dto: CalculateDays): Promise<CalculateDaysResponse> {
+    const body: Record<string, unknown> = {
+      startDate: dto.startDate,
+      endDate: dto.endDate,
+    };
+    if (dto.startHalfDayType != null) body.startHalfDayType = dto.startHalfDayType;
+    if (dto.endHalfDayType != null) body.endHalfDayType = dto.endHalfDayType;
+    if (dto.leavePolicyId !== undefined) body.leavePolicyId = dto.leavePolicyId;
     const data = await api.post<ApiResponse>(
       '/leave-requests/web/calculate-days',
-      dto
+      body
     );
+    const totalDays = data.totalDays ?? 0;
     return {
-      totalDays: data.totalDays ?? 0,
+      totalDays,
+      calendarDays: data.calendarDays ?? totalDays,
+      nonWorkingDaysExcluded: data.nonWorkingDaysExcluded ?? 0,
+      deductionRule:
+        readTreatment(data.deductionRule) ??
+        WeekendHolidayTreatment.CHARGE_ALL_DAYS,
     };
   },
 
