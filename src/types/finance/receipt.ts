@@ -85,7 +85,9 @@ const ReceiptSchema = z.object({
   projectId: optionalNumericId,
   paymentId: optionalNumericId,
   invoiceId: optionalNumericId,
-  customerId: optionalNumericId,
+  // A finance customer's UUID. A backend from before echno-backend#864 sent a number, which
+  // cannot name a finance customer, so it is read as no customer rather than failing the parse.
+  customerId: z.preprocess((v) => (typeof v === 'number' ? null : v), nullableString),
   organizationId: optionalNumericId,
   createdAt: backendDate,
   updatedAt: backendDate,
@@ -135,8 +137,8 @@ export interface Receipt {
   paymentId?: number;
   /** Id of the invoice this receipt settles. */
   invoiceId?: number;
-  /** Id of the customer the amount was received from. */
-  customerId?: number;
+  /** UUID of the finance customer the amount was received from. */
+  customerId?: string;
   /** Id of the owning organization. */
   organizationId?: number;
   /** Timestamp the receipt was created (server-set). */
@@ -232,8 +234,8 @@ export interface CreateReceiptRequest {
   paymentId?: number;
   /** Id of the invoice this receipt settles. */
   invoiceId?: number;
-  /** Id of the customer the amount was received from. */
-  customerId?: number;
+  /** UUID of the finance customer the amount was received from. */
+  customerId?: string;
 }
 
 /**
