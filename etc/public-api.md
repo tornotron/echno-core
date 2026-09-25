@@ -773,6 +773,7 @@ Entry points: 169
 - parseReceipt
 - parseReceiptStatus
 - parseReceiptType
+- parseRegularizationCalendarDay
 - parseReinspection
 - parseReinspectionOutcome
 - parseShiftTiming
@@ -862,6 +863,10 @@ Entry points: 169
 - RecordPaymentRequest
 - recordPaymentToJson
 - RegisterUploadRequest
+- RegularizationByDateRequest
+- regularizationByDateToJson
+- RegularizationCalendarDay
+- RegularizationCalendarState
 - RegularizationDetail
 - Reinspection
 - reinspectionKeys
@@ -1363,6 +1368,7 @@ Entry points: 169
 - useRegisterBimSource
 - useRegisterToolboxTalkPhotos
 - useRegularizationById
+- useRegularizationCalendar
 - useReinspection
 - useReinspectionsByNcr
 - useRejectDocumentReversal
@@ -1372,6 +1378,7 @@ Entry points: 169
 - useRemoveToolboxTalkAttendee
 - useRequestDocumentReversal
 - useRequestRegularization
+- useRequestRegularizationByDate
 - useResendInvitation
 - useRestoreSpatialNode
 - useReverseJournalEntry
@@ -1562,7 +1569,9 @@ Entry points: 169
 - usePendingRegularizations
 - useProcessRegularization
 - useRegularizationById
+- useRegularizationCalendar
 - useRequestRegularization
+- useRequestRegularizationByDate
 
 ## `@tornotron/echno-core/attendance-regularization/hooks/keys`
 
@@ -1665,7 +1674,12 @@ Entry points: 169
 - parseAttendanceRegularization
 - parseClockEvent
 - parseMovementRecord
+- parseRegularizationCalendarDay
 - ProjectAttendanceSummary
+- RegularizationByDateRequest
+- regularizationByDateToJson
+- RegularizationCalendarDay
+- RegularizationCalendarState
 - RegularizationDetail
 - resolveAttendanceRole
 - UpdateAttendanceProfileRequest
