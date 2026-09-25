@@ -24,7 +24,7 @@ describe('parseReceipt', () => {
       taxRate: '18.00',
       taxType: 'GST',
       projectId: 3,
-      customerId: 12,
+      customerId: '3f2b8c1e-5d4a-4c7e-9b1a-2e6f0d9c8a71',
       createdAt: '2026-08-20T09:00:00',
       updatedAt: '2026-08-22T14:20:00',
     });
@@ -39,7 +39,7 @@ describe('parseReceipt', () => {
     expect(receipt.taxRate).toBe(18);
     expect(receipt.taxType).toBe('GST');
     expect(receipt.projectId).toBe(3);
-    expect(receipt.customerId).toBe(12);
+    expect(receipt.customerId).toBe('3f2b8c1e-5d4a-4c7e-9b1a-2e6f0d9c8a71');
     expect(receipt.receiptDate).toBeInstanceOf(Date);
     expect(receipt.createdAt).toBeInstanceOf(Date);
     // The naive server timestamp is read as UTC.
@@ -70,6 +70,12 @@ describe('parseReceipt', () => {
     expect(receipt.taxAmount).toBeUndefined();
     expect(receipt.receiptDate).toBeUndefined();
     expect(receipt.updatedAt).toBeUndefined();
+  });
+
+  test('reads a numeric customerId from an older backend as no customer', () => {
+    // Finance customers are keyed by UUID (echno-backend#864); a number cannot name one.
+    const receipt = parseReceipt({ id: 1, customerId: 12 });
+    expect(receipt.customerId).toBeUndefined();
   });
 
   test('defaults an absent receivedFrom to an empty string', () => {
