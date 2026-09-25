@@ -5,6 +5,19 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
+## [v8.24.0] - 2026-09-25
+
+Regularization calendar (tornotron/echno-backend#870, ClickUp 86d45k05b).
+
+- `types/attendance`: `RegularizationCalendarDay`, `RegularizationCalendarState` and
+  `parseRegularizationCalendarDay`; `RegularizationByDateRequest` and
+  `regularizationByDateToJson`, which sends the attendance date as the local calendar date.
+- `services/attendance-regularization-service`: `requestByDate` for a day that may have no
+  attendance record, and `getCalendar` for one month of an employee's days.
+- `hooks/attendance-regularization`: `useRegularizationCalendar`,
+  `useRequestRegularizationByDate`, and the `calendar` / `calendars` keys. Deciding a request
+  now also refreshes the calendars.
+
 ## [v8.23.0] - 2026-09-20
 
 Leave module set 2: the client half of the weekend and holiday deduction rule (backend #838,
