@@ -19,6 +19,7 @@ import { attendanceRegularizationService } from '../../services/attendance-regul
 import type {
   Attendance,
   CreateRegularizationRequest,
+  RegularizationByDateRequest,
   RegularizationDetail,
 } from '../../types/attendance';
 import { mergePreservingNested } from '../../lib/query/cache-merge';
@@ -104,6 +105,38 @@ export function useRequestRegularization() {
 }
 
 /**
+ * Raises a regularization for a day by its date, creating the day's record on
+ * the server when there is none.
+ *
+ * On success the new request is seeded into its detail cache, and the pending
+ * queue, every calendar month and the attendance list caches are invalidated:
+ * the day now reads as pending, and may have gained a record.
+ *
+ * @returns A TanStack `UseMutationResult` whose mutate function takes a
+ *   {@link RegularizationByDateRequest}.
+ */
+export function useRequestRegularizationByDate() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (req: RegularizationByDateRequest) =>
+      attendanceRegularizationService.requestByDate(req),
+    onSuccess: (reg) => {
+      queryClient.setQueryData<RegularizationDetail>(
+        attendanceRegularizationKeys.detail(reg.id),
+        (old) => (old ? mergePreservingNested(old, reg, ENRICHED_KEYS) : reg)
+      );
+      queryClient.invalidateQueries({
+        queryKey: attendanceRegularizationKeys.pending(),
+      });
+      queryClient.invalidateQueries({
+        queryKey: attendanceRegularizationKeys.calendars(),
+      });
+      queryClient.invalidateQueries({ predicate: isAttendanceListCache });
+    },
+  });
+}
+
+/**
  * Approves or rejects a pending regularization request.
  *
  * Backend response: `AttendanceRegularizationDto` (partial — enriched context
@@ -159,6 +192,10 @@ export function useProcessRegularization() {
       // Pending queue shrinks once a request is processed.
       queryClient.invalidateQueries({
         queryKey: attendanceRegularizationKeys.pending(),
+      });
+      // The day leaves the pending state on the employee's calendar.
+      queryClient.invalidateQueries({
+        queryKey: attendanceRegularizationKeys.calendars(),
       });
       // Processing a regularization flips the parent attendance status
       // (e.g. PENDING_REGULARIZATION → PRESENT). Refresh affected caches.

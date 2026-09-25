@@ -44,6 +44,30 @@ export function useRegularizationById(id: number | undefined) {
   });
 }
 
+/**
+ * Fetches one month of an employee's regularization calendar.
+ *
+ * Keyed by `attendanceRegularizationKeys.calendar(employeeId, year, month)`.
+ * Disabled until `employeeId` is defined.
+ *
+ * @param employeeId - The employee, or `undefined` to defer.
+ * @param year - Calendar year.
+ * @param month - Month, 1 to 12.
+ * @returns A TanStack `UseQueryResult` wrapping the days of the month.
+ */
+export function useRegularizationCalendar(
+  employeeId: number | undefined,
+  year: number,
+  month: number
+) {
+  return useQuery({
+    queryKey: attendanceRegularizationKeys.calendar(employeeId ?? 0, year, month),
+    queryFn: () =>
+      attendanceRegularizationService.getCalendar(employeeId!, year, month),
+    enabled: employeeId !== undefined && employeeId > 0,
+  });
+}
+
 // NOTE: No dedicated "regularizations by employee" hook — derive from
 // useAttendanceByEmployee + .regularization on each record (see
 // EmployeeRegularizationView).

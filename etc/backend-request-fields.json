@@ -3,7 +3,7 @@
     "repository": "tornotron/echno-backend",
     "ref": "development",
     "path": "docs/openapi.json",
-    "sha256": "0070afb4eb64c3ec036154c0a6af8376c7f6f8bc28b76c6c4281bccbcba639c6"
+    "sha256": "b4da62473c6a1e021cc933e3abf0f972e51f0e57f50fb278c0be1eea09bb9ab8"
   },
   "operations": {
     "POST /api/v1/assets/web": {
@@ -157,6 +157,25 @@
       ],
       "acceptsAnyField": false
     },
+    "POST /api/v1/attendance-regularizations/request-by-date": {
+      "schema": "RegularizationByDateRequestDto",
+      "fields": [
+        "attendanceDate",
+        "clockInTime",
+        "clockOutTime",
+        "employeeId",
+        "projectId",
+        "reason"
+      ],
+      "required": [
+        "attendanceDate",
+        "clockInTime",
+        "employeeId",
+        "projectId",
+        "reason"
+      ],
+      "acceptsAnyField": false
+    },
     "POST /api/v1/attendance-regularizations/web/request": {
       "schema": "RegularizationRequestDto",
       "fields": [
@@ -168,6 +187,25 @@
       "required": [
         "attendanceId",
         "missingEvents",
+        "reason"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/attendance-regularizations/web/request-by-date": {
+      "schema": "RegularizationByDateRequestDto",
+      "fields": [
+        "attendanceDate",
+        "clockInTime",
+        "clockOutTime",
+        "employeeId",
+        "projectId",
+        "reason"
+      ],
+      "required": [
+        "attendanceDate",
+        "clockInTime",
+        "employeeId",
+        "projectId",
         "reason"
       ],
       "acceptsAnyField": false
