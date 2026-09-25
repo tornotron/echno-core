@@ -5,6 +5,17 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
+## [v9.0.0] - 2026-09-25
+
+The receipt's customer is the finance customer's UUID (tornotron/echno-backend#864).
+
+- `types/finance`: `Receipt.customerId` and `CreateReceiptRequest.customerId` change from
+  `number` to `string`, the UUID of a customer from `/finance/web/customers`. The
+  backend keyed this by a number that no finance customer could have, so no existing value named
+  one. `parseReceipt` reads a numeric value from an older backend as no customer.
+
+Breaking: the field's type changes. Code that set or read a numeric `customerId` on a receipt
+must pass the customer's UUID instead.
 ## [v8.24.0] - 2026-09-25
 
 Regularization calendar (tornotron/echno-backend#870, ClickUp 86d45k05b).
