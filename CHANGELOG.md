@@ -5,6 +5,20 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
+## [v10.0.0] - 2026-09-27
+
+Storage location capacity is free text (#148).
+
+- `types/storage-locations`: `StorageLocation.capacity`, `CreateStorageLocationRequest.capacity`
+  and `UpdateStorageLocationRequest.capacity` change from `number` to `string`. The backend
+  stores capacity as free text with its unit (for example `"5000 sq ft"`), and parsing it as a
+  number rejected every location that had one, so the list came back empty and the detail page
+  reported the location as missing. `parseStorageLocation` keeps a numeric value from an older
+  payload as its text and reads a blank one as no capacity.
+
+Breaking: the field's type changes. Code that summed, compared or formatted `capacity` as a
+number must treat it as display text.
+
 ## [v9.0.0] - 2026-09-25
 
 The receipt's customer is the finance customer's UUID (tornotron/echno-backend#864).
