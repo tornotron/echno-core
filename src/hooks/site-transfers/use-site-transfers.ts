@@ -132,3 +132,26 @@ export const useSiteTransferStatusHistory = (
     queryFn: () => siteTransfersService.getStatusHistory(id, pageNo, pageSize),
     enabled: !!id,
   });
+
+/**
+ * Fetches the assets a transfer from one project and storage location can
+ * carry on an asset line. Disabled until `projectId` is set.
+ *
+ * @param projectId - The sending project, or `0`/`undefined` to defer.
+ * @param storageLocationId - The sending storage location, or `null` when the
+ *   transfer names none.
+ * @returns A TanStack `UseQueryResult` wrapping `SiteTransferAssetOption[]`.
+ */
+export const useSendableAssets = (
+  projectId: number | undefined,
+  storageLocationId: number | null | undefined
+) =>
+  useQuery({
+    queryKey: siteTransferKeys.sendableAssets(
+      projectId ?? 0,
+      storageLocationId ?? null
+    ),
+    queryFn: () =>
+      siteTransfersService.getSendableAssets(projectId ?? 0, storageLocationId),
+    enabled: !!projectId,
+  });

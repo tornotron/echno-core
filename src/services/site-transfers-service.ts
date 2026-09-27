@@ -29,6 +29,8 @@ import {
   receiveSiteTransferToJson,
   CancelSiteTransferRequest,
   cancelSiteTransferToJson,
+  SiteTransferAssetOption,
+  parseSiteTransferAssetOption,
 } from '../types/site-transfers';
 import {
   StatusTransition,
@@ -52,6 +54,7 @@ type Raw = any;
  *   POST   /site-transfers/web/{id}/receive                                   → SiteTransferDto    (full; the receiving site's statement of what arrived)
  *   POST   /site-transfers/web/{id}/cancel                                    → SiteTransferDto    (full; reverses the outbound leg)
  *   GET    /site-transfers/web/{id}/status-history?pageNo&pageSize            → Page<StatusTransitionDto>
+ *   GET    /site-transfers/web/sendable-assets?projectId&storageLocationId    → SiteTransferAssetOptionDto[] (capped at 500)
  *   DELETE /site-transfers/web/{id}                                           → (not implemented server-side)
  *
  * The PATCH status endpoint now refuses everything it is handed and names
@@ -414,6 +417,37 @@ export const siteTransfersService = {
    * @throws {ApiError} On a non-2xx response (always, until the
    *   endpoint is implemented).
    */
+  /**
+   * Lists the assets a transfer from one project and storage location can
+   * carry on an asset line: those the asset register places there that are
+   * not already in transit on another transfer. Leaving `storageLocationId`
+   * out lists the project's assets that sit at no storage location, the same
+   * reading the server gives a transfer that names no sending location.
+   *
+   * @param projectId - The sending project.
+   * @param storageLocationId - The sending storage location, if the transfer names one.
+   * @returns Up to 500 assets, by name.
+   * @throws {ApiError} On a non-2xx response or when an entry fails parsing.
+   */
+  async getSendableAssets(
+    projectId: number,
+    storageLocationId?: number | null
+  ): Promise<SiteTransferAssetOption[]> {
+    const params: Record<string, number> = { projectId };
+    if (storageLocationId != null) params.storageLocationId = storageLocationId;
+    const data = await api.get<Raw[]>(
+      '/site-transfers/web/sendable-assets',
+      params
+    );
+    if (!Array.isArray(data)) return [];
+    try {
+      return data.map((row) => parseSiteTransferAssetOption(row));
+    } catch (error) {
+      logger.error('Failed to parse sendable assets:', error);
+      throw new ApiError('Failed to process the assets at this store.', 422);
+    }
+  },
+
   async delete(id: number): Promise<void> {
     await api.delete(`/site-transfers/web/${id}`);
   },
