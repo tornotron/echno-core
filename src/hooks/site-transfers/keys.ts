@@ -61,6 +61,23 @@ export const siteTransferKeys = {
   byReceivingProject: (projectId: number) =>
     [...siteTransferKeys.all, 'receiving-project', projectId] as const,
 
+  /** Invalidation prefix for every sendable-assets list. */
+  sendableAssetLists: () => [...siteTransferKeys.all, 'sendable-assets'] as const,
+
+  /**
+   * Query key for the assets a transfer from one project and storage location
+   * can send. Not a `SiteTransfer[]` cache, so `isSiteTransferListCache`
+   * excludes it; it is invalidated whenever a transfer is created, received or
+   * cancelled, since each of those can change which assets are in transit.
+   */
+  sendableAssets: (projectId: number, storageLocationId: number | null) =>
+    [
+      ...siteTransferKeys.all,
+      'sendable-assets',
+      projectId,
+      storageLocationId,
+    ] as const,
+
   /** Invalidation prefix for every page of one transfer's status trail. */
   statusHistories: (id: number) =>
     [...siteTransferKeys.all, 'status-history', id] as const,

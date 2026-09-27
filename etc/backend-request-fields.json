@@ -3,7 +3,7 @@
     "repository": "tornotron/echno-backend",
     "ref": "development",
     "path": "docs/openapi.json",
-    "sha256": "b4da62473c6a1e021cc933e3abf0f972e51f0e57f50fb278c0be1eea09bb9ab8"
+    "sha256": "5caf0a7e9efcd220316fc30068642e9c4d3a68be9e42b41bdf90ee82e37223c1"
   },
   "operations": {
     "POST /api/v1/assets/web": {

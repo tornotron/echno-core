@@ -56,6 +56,32 @@ export enum SiteTransferStatus {
 }
 
 /**
+ * What a {@link SiteTransferItem} carries.
+ *
+ * One transfer can hold both kinds, so a machine going to a site travels on the
+ * same document as the materials going with it, with the same receipt,
+ * cancellation, reversal and status trail.
+ */
+export enum SiteTransferLineType {
+  /** A quantity of a material, drawn from one stock balance and credited to another. */
+  material = 'MATERIAL',
+
+  /**
+   * One asset from the asset register. Always a single unit. Moving it writes
+   * an entry on the asset's movement ledger rather than a stock movement: at
+   * once between two stores on one project, and when it is received for a
+   * transfer between projects.
+   */
+  asset = 'ASSET',
+}
+
+/** Human-readable label for each {@link SiteTransferLineType}. */
+export const siteTransferLineTypeLabels: Record<SiteTransferLineType, string> = {
+  [SiteTransferLineType.material]: 'Material',
+  [SiteTransferLineType.asset]: 'Asset',
+};
+
+/**
  * Human-readable label for each {@link SiteTransferStatus}. Use this
  * when rendering the enum in the UI; the enum value remains the API
  * of record.

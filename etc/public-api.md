@@ -159,6 +159,7 @@ Entry points: 169
 - CostCategory
 - CreateAccountRequest
 - createAccountToJson
+- CreateAssetTransferLineRequest
 - CreateAttendanceProfileRequest
 - createAttendanceProfileToJson
 - CreateBimModelRequest
@@ -207,6 +208,7 @@ Entry points: 169
 - createMaterialConsumptionToJson
 - CreateMaterialRequest
 - createMaterialToJson
+- CreateMaterialTransferLineRequest
 - CreateMovementRequest
 - createMovementToJson
 - CreateNcrRequest
@@ -471,6 +473,7 @@ Entry points: 169
 - isActive
 - isAdmin
 - isAnnotationWithinImage
+- isAssetTransferLineRequest
 - isBimJobActive
 - isBimVersionInProgress
 - isCheckItemAnswered
@@ -778,6 +781,7 @@ Entry points: 169
 - parseReinspectionOutcome
 - parseShiftTiming
 - parseSiteTransfer
+- parseSiteTransferAssetOption
 - parseSiteTransferItem
 - parseSpatialImportResult
 - parseSpatialLevel
@@ -905,8 +909,11 @@ Entry points: 169
 - shiftTimingService
 - shouldRetry
 - SiteTransfer
+- SiteTransferAssetOption
 - SiteTransferItem
 - siteTransferKeys
+- SiteTransferLineType
+- siteTransferLineTypeLabels
 - siteTransfersService
 - SiteTransferStatus
 - siteTransferStatusBadgeColors
@@ -1395,6 +1402,7 @@ Entry points: 169
 - useScheduleReinspectionForNcr
 - useSearch
 - useSeedDefaultCostCategories
+- useSendableAssets
 - useSetDatasetConsent
 - useSetVendorPaymentTerms
 - useShift
@@ -3243,6 +3251,7 @@ Entry points: 169
 - useCreateSiteTransfer
 - useDeleteSiteTransfer  [deprecated]
 - useReceiveSiteTransfer
+- useSendableAssets
 - useSiteTransfer
 - useSiteTransfers
 - useSiteTransfersByReceivingProject
@@ -3265,17 +3274,24 @@ Entry points: 169
 
 - CancelSiteTransferRequest
 - cancelSiteTransferToJson
+- CreateAssetTransferLineRequest
+- CreateMaterialTransferLineRequest
 - CreateSiteTransferItemRequest
 - createSiteTransferItemToJson
 - CreateSiteTransferRequest
 - createSiteTransferToJson
+- isAssetTransferLineRequest
 - parseSiteTransfer
+- parseSiteTransferAssetOption
 - parseSiteTransferItem
 - ReceiveSiteTransferLine
 - ReceiveSiteTransferRequest
 - receiveSiteTransferToJson
 - SiteTransfer
+- SiteTransferAssetOption
 - SiteTransferItem
+- SiteTransferLineType
+- siteTransferLineTypeLabels
 - SiteTransferStatus
 - siteTransferStatusBadgeColors
 - siteTransferStatusLabels

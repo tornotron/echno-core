@@ -72,13 +72,19 @@ function applyMovedTransfer(
   // MaterialWithStockDto is a different shape from anything a SiteTransfer
   // carries, so only a refetch produces the new balances.
   for (const item of transfer.items) {
-    if (item.materialId !== undefined) {
+    if (item.materialId != null) {
       queryClient.invalidateQueries({
         queryKey: materialsKeys.stock(item.materialId),
       });
     }
   }
   queryClient.invalidateQueries({ queryKey: inventoryTransactionKeys.all });
+
+  // A receipt or cancellation takes an asset out of transit, so it can be
+  // sent again from wherever it now stands.
+  queryClient.invalidateQueries({
+    queryKey: siteTransferKeys.sendableAssetLists(),
+  });
 }
 
 /**
@@ -196,7 +202,7 @@ export const useCreateSiteTransfer = () => {
       // material; `MaterialWithStockDto` shape differs from `Material`, so
       // can't be patched from a SiteTransfer response.
       for (const item of newTransfer.items) {
-        if (item.materialId !== undefined) {
+        if (item.materialId != null) {
           queryClient.invalidateQueries({
             queryKey: materialsKeys.stock(item.materialId),
           });
@@ -209,6 +215,12 @@ export const useCreateSiteTransfer = () => {
       // refresh.
       queryClient.invalidateQueries({
         queryKey: inventoryTransactionKeys.all,
+      });
+
+      // An asset line puts its asset in transit, or moves it to another store,
+      // so the asset is no longer sendable from where it was.
+      queryClient.invalidateQueries({
+        queryKey: siteTransferKeys.sendableAssetLists(),
       });
     },
     onError: (error) => {
@@ -324,7 +336,7 @@ export const useUpdateSiteTransferStatus = () => {
       // and destination are this material's stock view.
       const itemsForStock = cachedDetail?.items ?? [];
       for (const item of itemsForStock) {
-        if (item.materialId !== undefined) {
+        if (item.materialId != null) {
           queryClient.invalidateQueries({
             queryKey: materialsKeys.stock(item.materialId),
           });
