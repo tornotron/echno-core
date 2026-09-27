@@ -126,7 +126,7 @@ describe('a storage location names its project by id', () => {
       locationType: StorageLocationType.PROJECT_SITE,
       projectId: 3,
       projectName: 'Riverside Tower',
-      capacity: 500,
+      capacity: '500 sq ft',
     });
 
     expect(payload).not.toHaveProperty('projectName');
@@ -134,7 +134,7 @@ describe('a storage location names its project by id', () => {
     // it, every location created afterwards would be unattached.
     expect(payload.projectId).toBe(3);
     expect(payload.locationName).toBe('Block A store');
-    expect(payload.capacity).toBe(500);
+    expect(payload.capacity).toBe('500 sq ft');
   });
 
   test('update sends projectId and not projectName', () => {

@@ -36,8 +36,8 @@ export interface UpdateStorageLocationRequest {
    */
   projectName?: string;
 
-  /** New capacity in domain-specific units. */
-  capacity?: number;
+  /** New storage capacity as free text with its unit, for example `"6000 sq ft"`. */
+  capacity?: string;
 
   /** New geographic latitude (decimal degrees). */
   latitude?: number;

@@ -37,8 +37,8 @@ export interface CreateStorageLocationRequest {
    */
   projectName?: string;
 
-  /** Maximum storage capacity in domain-specific units. */
-  capacity?: number;
+  /** Storage capacity as free text with its unit, for example `"5000 sq ft"`. */
+  capacity?: string;
 
   /** Geographic latitude (decimal degrees). */
   latitude?: number;

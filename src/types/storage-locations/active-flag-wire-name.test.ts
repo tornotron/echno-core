@@ -69,12 +69,12 @@ describe('the active flag travels as isActive', () => {
     const body = updateStorageLocationToJson({
       ...base,
       projectId: 12,
-      capacity: 5000,
+      capacity: '5000 sq ft',
       active: true,
     });
 
     expect(body.locationName).toBe('Block A site store');
     expect(body.projectId).toBe(12);
-    expect(body.capacity).toBe(5000);
+    expect(body.capacity).toBe('5000 sq ft');
   });
 });
