@@ -5,6 +5,28 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
+## [v11.0.0] - 2026-09-28
+
+Asset lines on site transfers (ClickUp 86d45vjd0, tornotron/echno-backend#884).
+
+- `types/site-transfers`: `SiteTransferLineType` (`MATERIAL`, `ASSET`) and its labels.
+  `SiteTransferItem` gains `lineType`, `assetId`, `assetCode` and `assetName`. A payload with no
+  `lineType` reads as a material line.
+- `types/site-transfers`: `CreateSiteTransferItemRequest` is now a union of
+  `CreateMaterialTransferLineRequest` and `CreateAssetTransferLineRequest`, with
+  `isAssetTransferLineRequest` to narrow it. An asset line names `assetId` and always goes out with
+  `sentQuantity: 1`; a material line goes out exactly as before.
+- `types/site-transfers`: `SiteTransferAssetOption` and `parseSiteTransferAssetOption`.
+- `services/site-transfers-service`: `getSendableAssets(projectId, storageLocationId?)`, the assets a
+  transfer from one store can carry.
+- `hooks/site-transfers`: `useSendableAssets`, and `siteTransferKeys.sendableAssets`. Creating,
+  receiving and cancelling a transfer invalidate it.
+
+Breaking: `SiteTransferItem.materialId` is `number | null` and `materialName` is `string | null`,
+both `null` on an asset line. Code that reads them must handle an asset line, or narrow on
+`lineType` first. Code that reads `materialId` off a `CreateSiteTransferItemRequest` must narrow on
+`lineType`.
+
 ## [v10.0.0] - 2026-09-27
 
 Storage location capacity is free text (#148).
