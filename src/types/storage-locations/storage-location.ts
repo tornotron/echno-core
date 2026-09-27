@@ -15,6 +15,7 @@ import {
   nullableBoolean,
   nullableNumber,
   nullableString,
+  nullableStringOrNumber,
   opaque,
   optionalNumericId,
 } from '../../lib/validation/backend-schema';
@@ -90,8 +91,13 @@ export interface StorageLocation {
   /** Denormalized project name supplied by the backend for display convenience. */
   projectName?: string;
 
-  /** Maximum storage capacity in domain-specific units (kg, m³, etc.). */
-  capacity?: number;
+  /**
+   * Storage capacity as the user wrote it, units included (for example
+   * `"5000 sq ft"` or `"200 t"`). The backend keeps it as free text because
+   * units vary by material, so it is for display only and is never summed or
+   * compared as a number.
+   */
+  capacity?: string;
 
   /** Geographic latitude (decimal degrees). */
   latitude?: number;
@@ -113,12 +119,22 @@ const StorageLocationResponseSchema = z.object({
   address: nullableString,
   projectId: optionalNumericId,
   projectName: nullableString,
-  capacity: nullableNumber,
+  capacity: nullableStringOrNumber,
   latitude: nullableNumber,
   longitude: nullableNumber,
   storageItemsCount: nullableNumber,
   active: nullableBoolean,
 });
+
+/**
+ * Normalizes the free-text capacity. A number from an older payload is kept
+ * as its text, and a blank string reads as no capacity.
+ */
+function parseCapacity(value: string | number | null | undefined): string | undefined {
+  if (value == null) return undefined;
+  const text = String(value).trim();
+  return text === '' ? undefined : text;
+}
 
 /**
  * Parses a raw API payload into a typed {@link StorageLocation}.
@@ -142,7 +158,7 @@ export function parseStorageLocation(json: unknown): StorageLocation {
     address: raw.address ?? undefined,
     projectId: raw.projectId ?? undefined,
     projectName: raw.projectName ?? undefined,
-    capacity: raw.capacity ?? undefined,
+    capacity: parseCapacity(raw.capacity),
     latitude: raw.latitude ?? undefined,
     longitude: raw.longitude ?? undefined,
     storageItemsCount: raw.storageItemsCount ?? undefined,
