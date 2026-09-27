@@ -3,7 +3,7 @@
     "repository": "tornotron/echno-backend",
     "ref": "development",
     "path": "docs/openapi.json",
-    "sha256": "5caf0a7e9efcd220316fc30068642e9c4d3a68be9e42b41bdf90ee82e37223c1"
+    "sha256": "c45396702ffb5f7b1d6b142f9ae85244c56f38a2bd5f8c28225fb6b25e29f97a"
   },
   "operations": {
     "POST /api/v1/assets/web": {
@@ -3280,6 +3280,74 @@
       ],
       "acceptsAnyField": false
     },
+    "POST /api/v1/progress-inspections": {
+      "schema": "RecordProgressInspectionRequest",
+      "fields": [
+        "actualFinishDate",
+        "actualStartDate",
+        "delayNotes",
+        "delayReason",
+        "forecastFinishDate",
+        "inspectionDate",
+        "outcome",
+        "percentComplete",
+        "remarks",
+        "spatialNodeId",
+        "wbsElementId"
+      ],
+      "required": [
+        "inspectionDate",
+        "outcome",
+        "wbsElementId"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/progress-inspections/web": {
+      "schema": "RecordProgressInspectionRequest",
+      "fields": [
+        "actualFinishDate",
+        "actualStartDate",
+        "delayNotes",
+        "delayReason",
+        "forecastFinishDate",
+        "inspectionDate",
+        "outcome",
+        "percentComplete",
+        "remarks",
+        "spatialNodeId",
+        "wbsElementId"
+      ],
+      "required": [
+        "inspectionDate",
+        "outcome",
+        "wbsElementId"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/progress-inspections/web/{id}/evidence/presign": {
+      "schema": null,
+      "fields": [],
+      "required": [],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/progress-inspections/web/{id}/evidence/register": {
+      "schema": null,
+      "fields": [],
+      "required": [],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/progress-inspections/{id}/evidence/presign": {
+      "schema": null,
+      "fields": [],
+      "required": [],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/progress-inspections/{id}/evidence/register": {
+      "schema": null,
+      "fields": [],
+      "required": [],
+      "acceptsAnyField": false
+    },
     "POST /api/v1/project": {
       "schema": "ProjectCreationDto",
       "fields": [
@@ -3439,7 +3507,10 @@
         "createdBy",
         "description",
         "endDate",
+        "isMilestone",
         "parentId",
+        "responsibleEmployeeId",
+        "responsibleSubContractId",
         "sortOrder",
         "startDate",
         "status",
@@ -3463,6 +3534,20 @@
       ],
       "acceptsAnyField": false
     },
+    "POST /api/v1/project/{projectId}/wbs/dependencies": {
+      "schema": "WbsDependencyCreationDto",
+      "fields": [
+        "lagDays",
+        "predecessorId",
+        "successorId",
+        "type"
+      ],
+      "required": [
+        "predecessorId",
+        "successorId"
+      ],
+      "acceptsAnyField": false
+    },
     "POST /api/v1/project/{projectId}/wbs/web": {
       "schema": "WbsElementCreationDto",
       "fields": [
@@ -3470,7 +3555,10 @@
         "createdBy",
         "description",
         "endDate",
+        "isMilestone",
         "parentId",
+        "responsibleEmployeeId",
+        "responsibleSubContractId",
         "sortOrder",
         "startDate",
         "status",
@@ -3494,6 +3582,20 @@
       ],
       "acceptsAnyField": false
     },
+    "POST /api/v1/project/{projectId}/wbs/web/dependencies": {
+      "schema": "WbsDependencyCreationDto",
+      "fields": [
+        "lagDays",
+        "predecessorId",
+        "successorId",
+        "type"
+      ],
+      "required": [
+        "predecessorId",
+        "successorId"
+      ],
+      "acceptsAnyField": false
+    },
     "PUT /api/v1/project/{projectId}/wbs/web/{elementId}": {
       "schema": "WbsElementUpdateDto",
       "fields": [
@@ -3502,7 +3604,11 @@
         "budgetedCost",
         "description",
         "endDate",
+        "forecastEndDate",
+        "isMilestone",
         "progress",
+        "responsibleEmployeeId",
+        "responsibleSubContractId",
         "sortOrder",
         "startDate",
         "status",
@@ -3536,7 +3642,11 @@
         "budgetedCost",
         "description",
         "endDate",
+        "forecastEndDate",
+        "isMilestone",
         "progress",
+        "responsibleEmployeeId",
+        "responsibleSubContractId",
         "sortOrder",
         "startDate",
         "status",

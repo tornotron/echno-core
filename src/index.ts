@@ -249,3 +249,16 @@ export * from './hooks/toolbox-talks';
 export * from './types/holidays';
 export * from './services/holidays-service';
 export * from './hooks/holidays';
+
+// Project schedule (echno-backend docs/specs/2026-09-28-work-progress-inspection.md): WBS
+// elements as schedule activities with planned, actual and forecast dates, milestones, the
+// responsible party and dependency links. Nothing is rescheduled automatically.
+export * from './types/wbs';
+export * from './services/wbs-service';
+export * from './hooks/wbs';
+
+// Work Progress (`MODULE_WORK_PROGRESS`, same spec): progress inspections of schedule
+// activities, applied to the activity when recorded, with evidence on the attachment store.
+export * from './types/work-progress';
+export * from './services/work-progress-service';
+export * from './hooks/work-progress';
