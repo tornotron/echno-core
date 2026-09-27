@@ -5,6 +5,25 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
+## [v11.1.0] - 2026-09-28
+
+The project schedule and Work Progress inspections, step 1 of work progress inspection
+(tornotron/echno-backend `docs/specs/2026-09-28-work-progress-inspection.md`).
+
+- `types/wbs`, `services/wbs-service`, `hooks/wbs`: a project's WBS elements as schedule
+  activities (`WbsActivity`: planned, actual and forecast dates, milestone flag, responsible
+  employee or sub-contractor by name, `delayDays` against the planned finish) and the dependency
+  links between them (`WbsDependency`, finish-to-start by default, with lag). `useWbsSchedule`
+  reads both in one call; create, update and delete an activity, and add or remove a link.
+  Nothing is rescheduled by the backend: a delay shows as a forecast finish.
+- `types/work-progress`, `services/work-progress-service`, `hooks/work-progress`: progress
+  inspections (`MODULE_WORK_PROGRESS`). `useRecordProgressInspection` records whether an
+  activity was done, partly done or not done on a date, with actual dates, a forecast finish and
+  the reason for a delay; the backend applies it to the activity at once. Evidence goes through
+  presign and register on the record. Recording invalidates the schedule as well.
+
+Additive only.
+
 ## [v11.0.0] - 2026-09-28
 
 Asset lines on site transfers (ClickUp 86d45vjd0, tornotron/echno-backend#884).

@@ -6,24 +6,24 @@
 
 Checked against `tornotron/echno-backend` `development`, reduced into `etc/backend-request-fields.json` by `scripts/backend-contract.ts`.
 
-Write calls in `src/services`: 182
+Write calls in `src/services`: 188
 
 ## Coverage
 
 | outcome | calls |
 | --- | --- |
-| checked | 133 |
+| checked | 137 |
 | sends nothing | 39 |
 | endpoint accepts any field name | 0 |
 | endpoint documents no request body | 0 |
 | endpoint not in the document | 0 |
-| not readable | 10 |
+| not readable | 12 |
 
 ## Findings (0)
 
 None.
 
-## Call sites this pass cannot read (10)
+## Call sites this pass cannot read (12)
 
 Not checked, and not claimed to be. Each one is a place a wrong field name would
 go unnoticed.
@@ -38,6 +38,8 @@ go unnoticed.
 - src/services/observation-service.ts:297  POST /api/v1/inspections/web/observations/{}/evidence/register  (body is an array, which has no top-level field names)
 - src/services/toolbox-talks-service.ts:145  POST /api/v1/toolbox-talks/web/{}/photos/presign  (body is an array, which has no top-level field names)
 - src/services/toolbox-talks-service.ts:157  POST /api/v1/toolbox-talks/web/{}/photos/register  (body is an array, which has no top-level field names)
+- src/services/work-progress-service.ts:108  POST /api/v1/progress-inspections/web/{}/evidence/presign  (body is an array, which has no top-level field names)
+- src/services/work-progress-service.ts:114  POST /api/v1/progress-inspections/web/{}/evidence/register  (body is an array, which has no top-level field names)
 
 These are not a backlog. The list stood at seventeen until the pass learned to follow a
 serializer that delegates to another one, to read the interface a body parameter is
