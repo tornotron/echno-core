@@ -16,8 +16,9 @@ Running account and milestone billing (tornotron/echno-backend
   (`Bill`) through Draft, Submitted, Verified, Certified and Approved, with Returned and
   Cancelled. Hooks cover the BOQ, rules and requirements, opening a bill, the claim, the joint
   measurement, manual adjustments, each workflow step (`useBillStep`), return for correction,
-  notes, supporting documents under a document type, and the PDF. Every billing mutation
-  invalidates the `contract-billing` prefix.
+  notes and supporting documents under a document type; the PDF is
+  `contractBillingService.downloadPdf`. Every billing mutation invalidates the
+  `contract-billing` prefix.
 - `Attachment.documentType`: the kind of document a file is, where the server sends one.
 
 Additive only.
