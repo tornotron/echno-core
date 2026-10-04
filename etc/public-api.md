@@ -4,7 +4,7 @@
      Run `bun run api:snapshot` after an intended public-API change and commit the diff.
      See docs/API-STABILITY.md. -->
 
-Entry points: 181
+Entry points: 185
 
 ## `@tornotron/echno-core`
 
@@ -18,6 +18,8 @@ Entry points: 181
 - Address
 - addressToJson
 - AdjustLeaveBalanceRequest
+- AdjustmentEffect
+- AdjustmentSource
 - ADMIN_ROLES
 - Allocation
 - AllocationRequest
@@ -66,15 +68,31 @@ Entry points: 181
 - attendanceToJson
 - availableNcrActions
 - BalanceSheetReport
+- Bill
+- BILL_DOCUMENT_TYPES
+- BillAdjustment
+- BillDocumentType
+- BillEvent
+- BillEventType
 - BILLING_NOT_CONFIGURED
 - BILLING_PERIODS
 - BILLING_PROVIDERS
 - BillingEventSummary
 - billingKeys
+- BillingMilestone
+- BillingModel
+- BillingOverview
+- BillingPage
 - BillingPeriod
 - BillingProvider
 - BillingProviderInfo
 - billingService
+- BillLine
+- BillLineStatus
+- BillListParams
+- BillStatus
+- BillStep
+- BillSummary
 - BIM_JOB_POLL_INTERVAL_MS
 - BIM_SOURCE_MAX_BYTES
 - BimBoundingBox
@@ -96,6 +114,8 @@ Entry points: 181
 - BimTileManifest
 - BimVersionStatus
 - bimVersionStatuses
+- BoqItem
+- BoqItemRequest
 - BudgetAllocation
 - CalculateDays
 - CalculateDaysResponse
@@ -128,6 +148,7 @@ Entry points: 181
 - CheckoutMandateTerms
 - CheckoutSession
 - childSpatialLevel
+- ClaimLineRequest
 - ClockEvent
 - clockEventToJson
 - ClockEventType
@@ -153,6 +174,11 @@ Entry points: 181
 - ConstructionPaymentVoucherStatus
 - ConsumptionType
 - consumptionTypeLabels
+- ContractBillingDetail
+- contractBillingKeys
+- ContractBillingListParams
+- contractBillingService
+- ContractBillingSummary
 - copyIssue
 - copyTask
 - CorrectedClockEvent
@@ -162,6 +188,7 @@ Entry points: 181
 - CreateAssetTransferLineRequest
 - CreateAttendanceProfileRequest
 - createAttendanceProfileToJson
+- CreateBillRequest
 - CreateBimModelRequest
 - createBimModelToJson
 - CreateCatalogueRowRequest
@@ -264,6 +291,10 @@ Entry points: 181
 - datasetConsentUpdateToJson
 - DayOfWeek
 - DAYS_OF_WEEK
+- DeductionBasis
+- DeductionKind
+- DeductionRule
+- DeductionRuleRequest
 - DEFAULT_AFA_CAP_PAISE
 - defaultInspectionCategoryFor
 - DefectAnnotationShape
@@ -478,6 +509,8 @@ Entry points: 181
 - isAdmin
 - isAnnotationWithinImage
 - isAssetTransferLineRequest
+- isBillEditable
+- isBillOpen
 - isBimJobActive
 - isBimVersionInProgress
 - isCheckItemAnswered
@@ -552,6 +585,7 @@ Entry points: 181
 - MANDATE_STATUSES
 - MandateMethod
 - MandateStatus
+- ManualAdjustmentRequest
 - Material
 - MaterialConsumption
 - materialConsumptionService
@@ -568,9 +602,13 @@ Entry points: 181
 - MaterialStockSummary
 - MaterialWithStock
 - MAX_DEFECT_ANNOTATIONS
+- MeasurementLineRequest
+- MeasurementRequest
 - MergeBimElementRequest
 - mergeBimElementToJson
 - mergePreservingNested
+- MilestoneRequirement
+- MilestoneRequirementRequest
 - ModuleDescriptor
 - ModuleId
 - moduleKeys
@@ -649,8 +687,14 @@ Entry points: 181
 - parseAttendanceProfile
 - parseAttendanceRegularization
 - parseBalanceSheetReport
+- parseBill
+- parseBillEvent
 - parseBillingEventSummary
+- parseBillingMilestone
+- parseBillingOverview
+- parseBillingPage
 - parseBillingProviderInfo
+- parseBillSummary
 - parseBimBoundingBox
 - parseBimElement
 - parseBimElementPage
@@ -660,6 +704,7 @@ Entry points: 181
 - parseBimModelVersion
 - parseBimSourceUpload
 - parseBimTileManifest
+- parseBoqItem
 - parseBudgetAllocation
 - parseCheckItemStatus
 - parseChecklistTemplate
@@ -680,9 +725,12 @@ Entry points: 181
 - parseConstructionPaymentMethod
 - parseConstructionPaymentType
 - parseConstructionPaymentVoucherStatus
+- parseContractBillingDetail
+- parseContractBillingSummary
 - parseCostCategory
 - parseCustomer
 - parseDatasetConsent
+- parseDeductionRule
 - parseDefectAnnotationShape
 - parseDefectPhotoAnnotation
 - parseDefectSeverity
@@ -748,6 +796,7 @@ Entry points: 181
 - parseMaterialStock
 - parseMaterialStockSummary
 - parseMaterialWithStock
+- parseMilestoneRequirement
 - parseModuleDescriptor
 - parseMovementRecord
 - parseNcr
@@ -900,6 +949,8 @@ Entry points: 181
 - removeMember
 - ReplaceAnnotationsRequest
 - replaceAnnotationsToJson
+- RequirementStatus
+- RequirementType
 - resolveAttendanceRole
 - ReverseJournalArgs
 - ReverseJournalRequest
@@ -1015,6 +1066,7 @@ Entry points: 181
 - updateAccountToJson
 - UpdateAttendanceProfileRequest
 - updateAttendanceProfileToJson
+- UpdateBillRequest
 - UpdateCatalogueRowRequest
 - updateCatalogueRowToJson
 - UpdateConstructionInvoiceRequest
@@ -1098,7 +1150,11 @@ Entry points: 181
 - UpsertPostingAccountMappingRequest
 - upsertPostingAccountMappingToJson
 - useActivateLeavePolicy
+- useAddBillNote
+- useAddBoqItem
+- useAddDeductionRule
 - useAddEmployeeToProject
+- useAddMilestoneRequirement
 - useAddToolboxTalkAttendees
 - useAddVendorBankAccount
 - useAddVendorContact
@@ -1129,8 +1185,15 @@ Entry points: 181
 - useAttendanceProfiles
 - useAttendanceSummary
 - useBalanceSheet
+- useBill
+- useBillDocuments
+- useBillEvents
+- useBillingContracts
 - useBillingEvents
+- useBillingOverview
 - useBillingProvider
+- useBills
+- useBillStep
 - useBimElement
 - useBimElementByGlobalId
 - useBimElements
@@ -1157,11 +1220,13 @@ Entry points: 181
 - useConsumptionsByMaterial
 - useConsumptionsByTask
 - useConsumptionsByType
+- useContractBilling
 - useCostCategories
 - useCostCategory
 - useCreateAccount
 - useCreateAttendanceProfile
 - useCreateBankAccount
+- useCreateBill
 - useCreateBimModel
 - useCreateCheckoutSession
 - useCreateConsumption
@@ -1210,7 +1275,10 @@ Entry points: 181
 - useDeleteAttachment
 - useDeleteAttendance
 - useDeleteAttendanceProfile
+- useDeleteBillDocument
+- useDeleteBoqItem
 - useDeleteBudgetAllocation
+- useDeleteDeductionRule
 - useDeleteEmployee
 - useDeleteExpense
 - useDeleteGRN  [deprecated]
@@ -1223,6 +1291,7 @@ Entry points: 181
 - useDeleteLeavePolicy
 - useDeleteMaterial
 - useDeleteMaterialLocationThreshold
+- useDeleteMilestoneRequirement
 - useDeleteOrganization
 - useDeletePOItem
 - useDeletePostingAccountMapping
@@ -1413,6 +1482,7 @@ Entry points: 181
 - useRecordReinspectionOutcome
 - useRecordToolboxTalk
 - useRegenerateBimHierarchyProposal
+- useRegisterBillDocuments
 - useRegisterBimSource
 - useRegisterProgressInspectionEvidence
 - useRegisterToolboxTalkPhotos
@@ -1426,11 +1496,13 @@ Entry points: 181
 - useRemoveManager
 - useRemoveToolboxTalkAttendee
 - useRemoveWbsDependency
+- useReplaceBillAdjustments
 - useRequestDocumentReversal
 - useRequestRegularization
 - useRequestRegularizationByDate
 - useResendInvitation
 - useRestoreSpatialNode
+- useReturnBill
 - useReverseJournalEntry
 - useReviewObservation
 - UserFiles
@@ -1443,6 +1515,7 @@ Entry points: 181
 - userRoleFromString
 - userService
 - userToJson
+- useSaveBillMeasurement
 - useScheduleReinspectionForDefect
 - useScheduleReinspectionForNcr
 - useSearch
@@ -1484,8 +1557,11 @@ Entry points: 181
 - useUnreadNotificationsCount
 - useUpdateAccount
 - useUpdateAttendanceProfile
+- useUpdateBill
+- useUpdateBoqItem
 - useUpdateCostCategory
 - useUpdateCustomer
+- useUpdateDeductionRule
 - useUpdateElementType
 - useUpdateEmployee
 - useUpdateExpense
@@ -1499,6 +1575,7 @@ Entry points: 181
 - useUpdateLeavePolicy
 - useUpdateLeaveRequest
 - useUpdateMaterial
+- useUpdateMilestoneRequirement
 - useUpdateOrganization
 - useUpdatePOItem
 - useUpdatePOStatus
@@ -1907,6 +1984,96 @@ Entry points: 181
 
 - ChecklistTemplateListParams
 - checklistTemplateService
+
+## `@tornotron/echno-core/contract-billing/hooks`
+
+- BillStep
+- contractBillingKeys
+- useAddBillNote
+- useAddBoqItem
+- useAddDeductionRule
+- useAddMilestoneRequirement
+- useBill
+- useBillDocuments
+- useBillEvents
+- useBillingContracts
+- useBillingOverview
+- useBills
+- useBillStep
+- useContractBilling
+- useCreateBill
+- useDeleteBillDocument
+- useDeleteBoqItem
+- useDeleteDeductionRule
+- useDeleteMilestoneRequirement
+- useRegisterBillDocuments
+- useReplaceBillAdjustments
+- useReturnBill
+- useSaveBillMeasurement
+- useUpdateBill
+- useUpdateBoqItem
+- useUpdateDeductionRule
+- useUpdateMilestoneRequirement
+
+## `@tornotron/echno-core/contract-billing/hooks/keys`
+
+- contractBillingKeys
+
+## `@tornotron/echno-core/contract-billing/services`
+
+- contractBillingService
+
+## `@tornotron/echno-core/contract-billing/types`
+
+- AdjustmentEffect
+- AdjustmentSource
+- Bill
+- BILL_DOCUMENT_TYPES
+- BillAdjustment
+- BillDocumentType
+- BillEvent
+- BillEventType
+- BillingMilestone
+- BillingModel
+- BillingOverview
+- BillingPage
+- BillLine
+- BillLineStatus
+- BillListParams
+- BillStatus
+- BillSummary
+- BoqItem
+- BoqItemRequest
+- ClaimLineRequest
+- ContractBillingDetail
+- ContractBillingListParams
+- ContractBillingSummary
+- CreateBillRequest
+- DeductionBasis
+- DeductionKind
+- DeductionRule
+- DeductionRuleRequest
+- isBillEditable
+- isBillOpen
+- ManualAdjustmentRequest
+- MeasurementLineRequest
+- MeasurementRequest
+- MilestoneRequirement
+- MilestoneRequirementRequest
+- parseBill
+- parseBillEvent
+- parseBillingMilestone
+- parseBillingOverview
+- parseBillingPage
+- parseBillSummary
+- parseBoqItem
+- parseContractBillingDetail
+- parseContractBillingSummary
+- parseDeductionRule
+- parseMilestoneRequirement
+- RequirementStatus
+- RequirementType
+- UpdateBillRequest
 
 ## `@tornotron/echno-core/document-reversals/hooks`
 

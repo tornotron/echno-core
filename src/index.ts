@@ -268,6 +268,7 @@ export * from './hooks/work-progress';
 export * from './types/risk';
 export * from './services/risk-service';
 export * from './hooks/risk';
+
 // Contract billing (`MODULE_WORK_PROGRESS`; echno-backend docs/specs/2026-10-04-ra-milestone-billing.md):
 // running account and milestone bills on a sub-contract, from the claim through joint measurement
 // and certification to final approval, with the contract BOQ, deduction rules and milestone
