@@ -45,6 +45,12 @@ export interface UpdateTaskRequest {
   /** New work category ID. */
   categoryId?: number;
 
+  /**
+   * New sub-category, standard or free text. `null` or an empty string
+   * clears it.
+   */
+  subCategory?: string | null;
+
   /** New lifecycle state. */
   status?: TaskStatus;
 
@@ -90,6 +96,7 @@ export function updateTaskToJson(
     payload.startDate = toLocalDateAtMidnight(dto.startDate);
   if (dto.endDate !== undefined) payload.endDate = toLocalDateAtMidnight(dto.endDate);
   if (dto.categoryId !== undefined) payload.categoryId = dto.categoryId;
+  if (dto.subCategory !== undefined) payload.subCategory = dto.subCategory;
   if (dto.status !== undefined) payload.status = dto.status;
   if (dto.progress !== undefined) payload.progress = dto.progress;
   if (dto.tags !== undefined) payload.tags = dto.tags;

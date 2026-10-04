@@ -50,6 +50,7 @@ const TaskResponseSchema = z.object({
   creator: opaque,
   assignees: z.array(z.unknown()).nullish(),
   category: opaque,
+  subCategory: nullableString,
   progress: nullableNumber,
   tags: z.array(z.unknown()).nullish(),
   createdAt: dateValue,
@@ -95,6 +96,12 @@ export interface Task {
 
   /** Work category classification. Absent on `TaskSimpleDto` responses. */
   category?: WorkCategory;
+
+  /**
+   * Sub-category within the work category, as text: one of the category's
+   * standard sub-categories or one typed in by hand. Absent when none.
+   */
+  subCategory?: string;
 
   /** Completion progress as a number in `[0, 100]`. */
   progress: number;
@@ -155,6 +162,7 @@ export function parseTask(json: unknown): Task {
       ? raw.assignees.filter(Boolean).map((m) => parseEmployee(m))
       : [],
     category: raw.category ? parseWorkCategory(raw.category) : undefined,
+    subCategory: raw.subCategory ?? undefined,
     progress: Number(raw.progress ?? 0),
     tags: raw.tags ? (raw.tags.filter(Boolean) as string[]) : [],
     createdAt: parseServerInstant(raw.createdAt),
@@ -214,6 +222,7 @@ export function taskToJson(task: Task): Record<string, unknown> {
     creator: task.creator ? employeeToJson(task.creator) : undefined,
     assignees: task.assignees?.map((e) => employeeToJson(e)),
     category: task.category ? workCategoryToJson(task.category) : undefined,
+    subCategory: task.subCategory,
     progress: task.progress,
     tags: task.tags ?? [],
     createdAt: task.createdAt && toLocalDateTimeString(task.createdAt),

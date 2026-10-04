@@ -3,7 +3,7 @@
     "repository": "tornotron/echno-backend",
     "ref": "development",
     "path": "docs/openapi.json",
-    "sha256": "c45396702ffb5f7b1d6b142f9ae85244c56f38a2bd5f8c28225fb6b25e29f97a"
+    "sha256": "7981843e9993c128af6f4facf4ec7f9049b64630bafe4c7c612906b6cc4047ea"
   },
   "operations": {
     "POST /api/v1/assets/web": {
@@ -3434,6 +3434,166 @@
       "required": [],
       "acceptsAnyField": false
     },
+    "POST /api/v1/project/{projectId}/risks": {
+      "schema": "RiskRequest",
+      "fields": [
+        "category",
+        "closedDate",
+        "contingencyPlan",
+        "costImpact",
+        "description",
+        "identifiedDate",
+        "impact",
+        "importRef",
+        "owner",
+        "probability",
+        "residualImpact",
+        "residualProbability",
+        "responseType",
+        "reviewDate",
+        "scheduleImpact",
+        "status",
+        "subCategory",
+        "title",
+        "version"
+      ],
+      "required": [
+        "category",
+        "impact",
+        "probability",
+        "residualImpact",
+        "residualProbability",
+        "responseType",
+        "status",
+        "title"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/project/{projectId}/risks/import": {
+      "schema": "RiskImportRequest",
+      "fields": [
+        "risks"
+      ],
+      "required": [
+        "risks"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/project/{projectId}/risks/web": {
+      "schema": "RiskRequest",
+      "fields": [
+        "category",
+        "closedDate",
+        "contingencyPlan",
+        "costImpact",
+        "description",
+        "identifiedDate",
+        "impact",
+        "importRef",
+        "owner",
+        "probability",
+        "residualImpact",
+        "residualProbability",
+        "responseType",
+        "reviewDate",
+        "scheduleImpact",
+        "status",
+        "subCategory",
+        "title",
+        "version"
+      ],
+      "required": [
+        "category",
+        "impact",
+        "probability",
+        "residualImpact",
+        "residualProbability",
+        "responseType",
+        "status",
+        "title"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/project/{projectId}/risks/web/import": {
+      "schema": "RiskImportRequest",
+      "fields": [
+        "risks"
+      ],
+      "required": [
+        "risks"
+      ],
+      "acceptsAnyField": false
+    },
+    "PUT /api/v1/project/{projectId}/risks/web/{riskId}": {
+      "schema": "RiskRequest",
+      "fields": [
+        "category",
+        "closedDate",
+        "contingencyPlan",
+        "costImpact",
+        "description",
+        "identifiedDate",
+        "impact",
+        "importRef",
+        "owner",
+        "probability",
+        "residualImpact",
+        "residualProbability",
+        "responseType",
+        "reviewDate",
+        "scheduleImpact",
+        "status",
+        "subCategory",
+        "title",
+        "version"
+      ],
+      "required": [
+        "category",
+        "impact",
+        "probability",
+        "residualImpact",
+        "residualProbability",
+        "responseType",
+        "status",
+        "title"
+      ],
+      "acceptsAnyField": false
+    },
+    "PUT /api/v1/project/{projectId}/risks/{riskId}": {
+      "schema": "RiskRequest",
+      "fields": [
+        "category",
+        "closedDate",
+        "contingencyPlan",
+        "costImpact",
+        "description",
+        "identifiedDate",
+        "impact",
+        "importRef",
+        "owner",
+        "probability",
+        "residualImpact",
+        "residualProbability",
+        "responseType",
+        "reviewDate",
+        "scheduleImpact",
+        "status",
+        "subCategory",
+        "title",
+        "version"
+      ],
+      "required": [
+        "category",
+        "impact",
+        "probability",
+        "residualImpact",
+        "residualProbability",
+        "responseType",
+        "status",
+        "title"
+      ],
+      "acceptsAnyField": false
+    },
     "POST /api/v1/project/{projectId}/spatial/import": {
       "schema": "SpatialImportRequest",
       "fields": [
@@ -4300,6 +4460,7 @@
         "projectId",
         "startDate",
         "status",
+        "subCategory",
         "tags",
         "title"
       ],
@@ -4329,6 +4490,7 @@
         "projectId",
         "startDate",
         "status",
+        "subCategory",
         "tags",
         "title"
       ],
@@ -4357,6 +4519,7 @@
         "progress",
         "startDate",
         "status",
+        "subCategory",
         "tags",
         "title"
       ],

@@ -5,6 +5,28 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
+## [v11.2.0] - 2026-10-04
+
+Work sub-categories and the risk register on the server (ClickUp 86d4609f9 and 86d4609hd,
+tornotron/echno-backend#888).
+
+- `types/work-category`: `WorkSubcategory` and `parseWorkSubcategory`.
+  `workCategoryService.getSubcategories(categoryId)` reads
+  `GET /category/web/{id}/subcategories`, and `useWorkSubcategories(categoryId)` caches it under
+  `workCategoryKeys.subcategories(id)`, which deleting the category clears.
+- `types/task`: `Task.subCategory`, and `subCategory` on `CreateTaskRequest` and
+  `UpdateTaskRequest` (`null` or an empty string clears it on an update). Free text: one of the
+  category's sub-categories or one typed in by hand.
+- `types/risk`, `services/risk-service`, `hooks/risk`: a project's risk register
+  (`/project/{projectId}/risks/web`). `Risk` carries the server's R-number, scores and
+  `version`; `RiskRequest` is the body of a create, an update or an import line.
+  `useRisks`, `useRisk`, `useCreateRisk`, `useUpdateRisk` (pass `version` to be refused with a
+  409 on a stale edit), `useDeleteRisk`, and `useImportRisks`, which skips a line whose
+  `importRef` the project already holds. Vocabulary lists (`RISK_PROBABILITIES` and the rest),
+  `riskScore` and `formatRiskNumber` come with it.
+
+Additive only.
+
 ## [v11.1.0] - 2026-09-28
 
 The project schedule and Work Progress inspections, step 1 of work progress inspection

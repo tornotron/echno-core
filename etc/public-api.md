@@ -4,7 +4,7 @@
      Run `bun run api:snapshot` after an intended public-API change and commit the diff.
      See docs/API-STABILITY.md. -->
 
-Entry points: 177
+Entry points: 181
 
 ## `@tornotron/echno-core`
 
@@ -335,6 +335,7 @@ Entry points: 177
 - financeSettingsService
 - formatDateForBackend
 - formatFileSize
+- formatRiskNumber
 - formatSpatialPath
 - GenerateInviteCodeRequest
 - generateInviteCodeToJson
@@ -784,6 +785,7 @@ Entry points: 177
 - parseRegularizationCalendarDay
 - parseReinspection
 - parseReinspectionOutcome
+- parseRisk
 - parseShiftTiming
 - parseSiteTransfer
 - parseSiteTransferAssetOption
@@ -814,6 +816,7 @@ Entry points: 177
 - parseWbsSchedule
 - parseWorkCategory
 - parseWorkingWeek
+- parseWorkSubcategory
 - passedReinspections
 - Payment
 - PAYMENT_TERMS_LABELS
@@ -904,6 +907,20 @@ Entry points: 177
 - reversibleDocumentTypeLabels
 - ReviewObservationRequest
 - reviewObservationToJson
+- Risk
+- RISK_IMPACTS
+- RISK_PROBABILITIES
+- RISK_RESPONSE_TYPES
+- RISK_STATUSES
+- RiskImpact
+- riskKeys
+- RiskProbability
+- RiskRequest
+- riskRequestToJson
+- RiskResponseType
+- riskScore
+- riskService
+- RiskStatus
 - roleManagementService
 - ScheduleReinspectionRequest
 - scheduleReinspectionToJson
@@ -1170,6 +1187,7 @@ Entry points: 177
 - useCreateProjectWithFiles
 - useCreatePurchaseOrder
 - useCreateReceipt
+- useCreateRisk
 - useCreateShift
 - useCreateSiteTransfer
 - useCreateSpatialNode
@@ -1211,6 +1229,7 @@ Entry points: 177
 - useDeleteProject
 - useDeletePurchaseOrder  [deprecated]
 - useDeleteReceipt
+- useDeleteRisk
 - useDeleteShift
 - useDeleteSiteTransfer  [deprecated]
 - useDeleteStorageLocation
@@ -1271,6 +1290,7 @@ Entry points: 177
 - useHoliday
 - useHolidaysForYear
 - useImportChartOfAccounts
+- useImportRisks
 - useImportSpatialRows
 - useIndent
 - useIndentItem
@@ -1415,6 +1435,8 @@ Entry points: 177
 - useReviewObservation
 - UserFiles
 - userInitials
+- useRisk
+- useRisks
 - userKeys
 - useRoleManagement
 - UserRole
@@ -1484,6 +1506,7 @@ Entry points: 177
 - useUpdateProjectWithFiles
 - useUpdatePurchaseOrder
 - useUpdateReceipt
+- useUpdateRisk
 - useUpdateShift
 - useUpdateSiteTransferStatus  [deprecated]
 - useUpdateSpatialNode
@@ -1525,6 +1548,7 @@ Entry points: 177
 - useWorkCategories
 - useWorkCategory
 - useWorkingWeek
+- useWorkSubcategories
 - ValidateInviteCodeRequest
 - ValidateInviteCodeResponse
 - Vendor
@@ -1561,6 +1585,7 @@ Entry points: 177
 - WorkingWeekRequest
 - workProgressKeys
 - workProgressService
+- WorkSubcategory
 
 ## `@tornotron/echno-core/attachment/hooks`
 
@@ -3223,6 +3248,41 @@ Entry points: 177
 
 - reinspectionService
 
+## `@tornotron/echno-core/risk/hooks`
+
+- riskKeys
+- useCreateRisk
+- useDeleteRisk
+- useImportRisks
+- useRisk
+- useRisks
+- useUpdateRisk
+
+## `@tornotron/echno-core/risk/hooks/keys`
+
+- riskKeys
+
+## `@tornotron/echno-core/risk/services`
+
+- riskService
+
+## `@tornotron/echno-core/risk/types`
+
+- formatRiskNumber
+- parseRisk
+- Risk
+- RISK_IMPACTS
+- RISK_PROBABILITIES
+- RISK_RESPONSE_TYPES
+- RISK_STATUSES
+- RiskImpact
+- RiskProbability
+- RiskRequest
+- riskRequestToJson
+- RiskResponseType
+- riskScore
+- RiskStatus
+
 ## `@tornotron/echno-core/role-management/hooks`
 
 - useAssignRole
@@ -3639,6 +3699,7 @@ Entry points: 177
 - useDeleteWorkCategory
 - useWorkCategories
 - useWorkCategory
+- useWorkSubcategories
 - workCategoryKeys
 
 ## `@tornotron/echno-core/work-category/hooks/keys`
@@ -3655,10 +3716,12 @@ Entry points: 177
 - CreateWorkCategoryRequest
 - createWorkCategoryToJson
 - parseWorkCategory
+- parseWorkSubcategory
 - UpdateWorkCategoryRequest
 - updateWorkCategoryToJson
 - WorkCategory
 - workCategoryToJson
+- WorkSubcategory
 
 ## `@tornotron/echno-core/work-progress/hooks`
 

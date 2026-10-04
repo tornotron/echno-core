@@ -52,3 +52,29 @@ export function useWorkCategory(id?: number) {
     retry: shouldRetry,
   });
 }
+
+/**
+ * Fetches the sub-categories of one work category, for the task form's
+ * second dropdown.
+ *
+ * Uses the **static** query profile: the standard list is reference data.
+ * The query is disabled until `categoryId` is truthy.
+ *
+ * @param categoryId - Surrogate ID of the chosen work category, or
+ *   `undefined` while none is chosen.
+ * @returns A TanStack `UseQueryResult` wrapping `WorkSubcategory[]`.
+ */
+export function useWorkSubcategories(categoryId?: number) {
+  return useQuery({
+    queryKey: workCategoryKeys.subcategories(categoryId ?? 0),
+    queryFn: () => {
+      if (!categoryId) {
+        throw new Error('Work category ID is required');
+      }
+      return workCategoryService.getSubcategories(categoryId);
+    },
+    enabled: !!categoryId,
+    ...staticQueryOptions,
+    retry: shouldRetry,
+  });
+}
