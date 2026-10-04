@@ -43,6 +43,8 @@ export interface Attachment {
   updatedAt: Date;
   uploadedBy?: string;
   description?: string;
+  /** What kind of document the file is, where its owner files documents by type (for example a bill's `test-report`). */
+  documentType?: string;
 }
 
 /** Helper: Get file type from mime type */
@@ -130,6 +132,7 @@ const AttachmentResponseSchema = z.object({
   updatedAt: backendDate,
   uploadedBy: nullableString,
   description: nullableString,
+  documentType: nullableString,
 });
 
 /** JSON → Attachment */
@@ -159,6 +162,7 @@ export function parseAttachment(json: unknown): Attachment {
       parseUTCDate(raw.updatedAt) ?? parseUTCDate(raw.createdAt) ?? new Date(),
     uploadedBy: raw.uploadedBy ?? undefined,
     description: raw.description ?? undefined,
+    documentType: raw.documentType ?? undefined,
   };
 }
 
