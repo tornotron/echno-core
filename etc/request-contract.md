@@ -6,24 +6,24 @@
 
 Checked against `tornotron/echno-backend` `development`, reduced into `etc/backend-request-fields.json` by `scripts/backend-contract.ts`.
 
-Write calls in `src/services`: 191
+Write calls in `src/services`: 210
 
 ## Coverage
 
 | outcome | calls |
 | --- | --- |
-| checked | 140 |
-| sends nothing | 39 |
+| checked | 152 |
+| sends nothing | 44 |
 | endpoint accepts any field name | 0 |
 | endpoint documents no request body | 0 |
 | endpoint not in the document | 0 |
-| not readable | 12 |
+| not readable | 14 |
 
 ## Findings (0)
 
 None.
 
-## Call sites this pass cannot read (12)
+## Call sites this pass cannot read (14)
 
 Not checked, and not claimed to be. Each one is a place a wrong field name would
 go unnoticed.
@@ -33,6 +33,8 @@ go unnoticed.
 - src/services/attachment-service.ts:162  POST /api/v1/attachment/web/register/entityId/{}/entityType/{}  (body is an array, which has no top-level field names)
 - src/services/attendance-service.ts:419  POST /api/v1/attendance/web/check-in  (the payload travels in the query string, not the body)
 - src/services/attendance-service.ts:442  POST /api/v1/attendance/web/clock-event  (the payload travels in the query string, not the body)
+- src/services/contract-billing-service.ts:380  POST /api/v1/contract-billing/web/bills/{}/documents/presign  (body is an array, which has no top-level field names)
+- src/services/contract-billing-service.ts:390  POST /api/v1/contract-billing/web/bills/{}/documents/register  (body is an array, which has no top-level field names)
 - src/services/finance-account-service.ts:216  POST /api/v1/finance/accounts/web/import  (body is a FormData assembled by the caller)
 - src/services/observation-service.ts:274  POST /api/v1/inspections/web/observations/{}/evidence/presign  (body is an array, which has no top-level field names)
 - src/services/observation-service.ts:297  POST /api/v1/inspections/web/observations/{}/evidence/register  (body is an array, which has no top-level field names)

@@ -3,7 +3,7 @@
     "repository": "tornotron/echno-backend",
     "ref": "development",
     "path": "docs/openapi.json",
-    "sha256": "7981843e9993c128af6f4facf4ec7f9049b64630bafe4c7c612906b6cc4047ea"
+    "sha256": "e3ffb40bf65bd023b8b6ced65fd4d24ce48efb7cd30b56b8632dfb6d84c5f342"
   },
   "operations": {
     "POST /api/v1/assets/web": {
@@ -828,6 +828,472 @@
       "required": [
         "items",
         "name"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/contract-billing/bills": {
+      "schema": "CreateBillRequest",
+      "fields": [
+        "billingModel",
+        "claimedPercent",
+        "contractMilestoneId",
+        "contractorReference",
+        "location",
+        "periodFrom",
+        "periodTo",
+        "remarks",
+        "subContractId"
+      ],
+      "required": [
+        "billingModel",
+        "subContractId"
+      ],
+      "acceptsAnyField": false
+    },
+    "PUT /api/v1/contract-billing/bills/{id}": {
+      "schema": "UpdateBillRequest",
+      "fields": [
+        "claimedPercent",
+        "contractorReference",
+        "lines",
+        "location",
+        "periodFrom",
+        "periodTo",
+        "remarks"
+      ],
+      "required": [],
+      "acceptsAnyField": false
+    },
+    "PUT /api/v1/contract-billing/bills/{id}/adjustments": {
+      "schema": "ManualAdjustmentsRequest",
+      "fields": [
+        "adjustments"
+      ],
+      "required": [
+        "adjustments"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/contract-billing/bills/{id}/approve": {
+      "schema": null,
+      "fields": [],
+      "required": [],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/contract-billing/bills/{id}/cancel": {
+      "schema": null,
+      "fields": [],
+      "required": [],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/contract-billing/bills/{id}/certify": {
+      "schema": null,
+      "fields": [],
+      "required": [],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/contract-billing/bills/{id}/documents/presign": {
+      "schema": null,
+      "fields": [],
+      "required": [],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/contract-billing/bills/{id}/documents/register": {
+      "schema": null,
+      "fields": [],
+      "required": [],
+      "acceptsAnyField": false
+    },
+    "PUT /api/v1/contract-billing/bills/{id}/measurement": {
+      "schema": "MeasurementRequest",
+      "fields": [
+        "certifiedPercent",
+        "clientRepresentative",
+        "lines",
+        "measuredBy",
+        "measurementDate"
+      ],
+      "required": [],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/contract-billing/bills/{id}/notes": {
+      "schema": "BillCommentRequest",
+      "fields": [
+        "text"
+      ],
+      "required": [
+        "text"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/contract-billing/bills/{id}/return": {
+      "schema": "BillCommentRequest",
+      "fields": [
+        "text"
+      ],
+      "required": [
+        "text"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/contract-billing/bills/{id}/submit": {
+      "schema": null,
+      "fields": [],
+      "required": [],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/contract-billing/bills/{id}/verify": {
+      "schema": null,
+      "fields": [],
+      "required": [],
+      "acceptsAnyField": false
+    },
+    "PUT /api/v1/contract-billing/boq-items/{itemId}": {
+      "schema": "BoqItemRequest",
+      "fields": [
+        "contractQuantity",
+        "description",
+        "itemCode",
+        "rate",
+        "sortOrder",
+        "unit",
+        "wbsElementId"
+      ],
+      "required": [
+        "contractQuantity",
+        "description",
+        "itemCode",
+        "rate",
+        "unit"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/contract-billing/contracts/{subContractId}/boq-items": {
+      "schema": "BoqItemRequest",
+      "fields": [
+        "contractQuantity",
+        "description",
+        "itemCode",
+        "rate",
+        "sortOrder",
+        "unit",
+        "wbsElementId"
+      ],
+      "required": [
+        "contractQuantity",
+        "description",
+        "itemCode",
+        "rate",
+        "unit"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/contract-billing/contracts/{subContractId}/deduction-rules": {
+      "schema": "DeductionRuleRequest",
+      "fields": [
+        "basis",
+        "capAmount",
+        "effect",
+        "enabled",
+        "fixedAmount",
+        "kind",
+        "label",
+        "rate",
+        "sortOrder"
+      ],
+      "required": [
+        "basis",
+        "kind",
+        "label"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/contract-billing/contracts/{subContractId}/milestones/{milestoneId}/requirements": {
+      "schema": "MilestoneRequirementRequest",
+      "fields": [
+        "description",
+        "dueDate",
+        "mandatory",
+        "remarks",
+        "sortOrder",
+        "status",
+        "title",
+        "type"
+      ],
+      "required": [
+        "title",
+        "type"
+      ],
+      "acceptsAnyField": false
+    },
+    "PUT /api/v1/contract-billing/deduction-rules/{ruleId}": {
+      "schema": "DeductionRuleRequest",
+      "fields": [
+        "basis",
+        "capAmount",
+        "effect",
+        "enabled",
+        "fixedAmount",
+        "kind",
+        "label",
+        "rate",
+        "sortOrder"
+      ],
+      "required": [
+        "basis",
+        "kind",
+        "label"
+      ],
+      "acceptsAnyField": false
+    },
+    "PUT /api/v1/contract-billing/requirements/{requirementId}": {
+      "schema": "MilestoneRequirementRequest",
+      "fields": [
+        "description",
+        "dueDate",
+        "mandatory",
+        "remarks",
+        "sortOrder",
+        "status",
+        "title",
+        "type"
+      ],
+      "required": [
+        "title",
+        "type"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/contract-billing/web/bills": {
+      "schema": "CreateBillRequest",
+      "fields": [
+        "billingModel",
+        "claimedPercent",
+        "contractMilestoneId",
+        "contractorReference",
+        "location",
+        "periodFrom",
+        "periodTo",
+        "remarks",
+        "subContractId"
+      ],
+      "required": [
+        "billingModel",
+        "subContractId"
+      ],
+      "acceptsAnyField": false
+    },
+    "PUT /api/v1/contract-billing/web/bills/{id}": {
+      "schema": "UpdateBillRequest",
+      "fields": [
+        "claimedPercent",
+        "contractorReference",
+        "lines",
+        "location",
+        "periodFrom",
+        "periodTo",
+        "remarks"
+      ],
+      "required": [],
+      "acceptsAnyField": false
+    },
+    "PUT /api/v1/contract-billing/web/bills/{id}/adjustments": {
+      "schema": "ManualAdjustmentsRequest",
+      "fields": [
+        "adjustments"
+      ],
+      "required": [
+        "adjustments"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/contract-billing/web/bills/{id}/approve": {
+      "schema": null,
+      "fields": [],
+      "required": [],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/contract-billing/web/bills/{id}/cancel": {
+      "schema": null,
+      "fields": [],
+      "required": [],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/contract-billing/web/bills/{id}/certify": {
+      "schema": null,
+      "fields": [],
+      "required": [],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/contract-billing/web/bills/{id}/documents/presign": {
+      "schema": null,
+      "fields": [],
+      "required": [],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/contract-billing/web/bills/{id}/documents/register": {
+      "schema": null,
+      "fields": [],
+      "required": [],
+      "acceptsAnyField": false
+    },
+    "PUT /api/v1/contract-billing/web/bills/{id}/measurement": {
+      "schema": "MeasurementRequest",
+      "fields": [
+        "certifiedPercent",
+        "clientRepresentative",
+        "lines",
+        "measuredBy",
+        "measurementDate"
+      ],
+      "required": [],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/contract-billing/web/bills/{id}/notes": {
+      "schema": "BillCommentRequest",
+      "fields": [
+        "text"
+      ],
+      "required": [
+        "text"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/contract-billing/web/bills/{id}/return": {
+      "schema": "BillCommentRequest",
+      "fields": [
+        "text"
+      ],
+      "required": [
+        "text"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/contract-billing/web/bills/{id}/submit": {
+      "schema": null,
+      "fields": [],
+      "required": [],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/contract-billing/web/bills/{id}/verify": {
+      "schema": null,
+      "fields": [],
+      "required": [],
+      "acceptsAnyField": false
+    },
+    "PUT /api/v1/contract-billing/web/boq-items/{itemId}": {
+      "schema": "BoqItemRequest",
+      "fields": [
+        "contractQuantity",
+        "description",
+        "itemCode",
+        "rate",
+        "sortOrder",
+        "unit",
+        "wbsElementId"
+      ],
+      "required": [
+        "contractQuantity",
+        "description",
+        "itemCode",
+        "rate",
+        "unit"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/contract-billing/web/contracts/{subContractId}/boq-items": {
+      "schema": "BoqItemRequest",
+      "fields": [
+        "contractQuantity",
+        "description",
+        "itemCode",
+        "rate",
+        "sortOrder",
+        "unit",
+        "wbsElementId"
+      ],
+      "required": [
+        "contractQuantity",
+        "description",
+        "itemCode",
+        "rate",
+        "unit"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/contract-billing/web/contracts/{subContractId}/deduction-rules": {
+      "schema": "DeductionRuleRequest",
+      "fields": [
+        "basis",
+        "capAmount",
+        "effect",
+        "enabled",
+        "fixedAmount",
+        "kind",
+        "label",
+        "rate",
+        "sortOrder"
+      ],
+      "required": [
+        "basis",
+        "kind",
+        "label"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/contract-billing/web/contracts/{subContractId}/milestones/{milestoneId}/requirements": {
+      "schema": "MilestoneRequirementRequest",
+      "fields": [
+        "description",
+        "dueDate",
+        "mandatory",
+        "remarks",
+        "sortOrder",
+        "status",
+        "title",
+        "type"
+      ],
+      "required": [
+        "title",
+        "type"
+      ],
+      "acceptsAnyField": false
+    },
+    "PUT /api/v1/contract-billing/web/deduction-rules/{ruleId}": {
+      "schema": "DeductionRuleRequest",
+      "fields": [
+        "basis",
+        "capAmount",
+        "effect",
+        "enabled",
+        "fixedAmount",
+        "kind",
+        "label",
+        "rate",
+        "sortOrder"
+      ],
+      "required": [
+        "basis",
+        "kind",
+        "label"
+      ],
+      "acceptsAnyField": false
+    },
+    "PUT /api/v1/contract-billing/web/requirements/{requirementId}": {
+      "schema": "MilestoneRequirementRequest",
+      "fields": [
+        "description",
+        "dueDate",
+        "mandatory",
+        "remarks",
+        "sortOrder",
+        "status",
+        "title",
+        "type"
+      ],
+      "required": [
+        "title",
+        "type"
       ],
       "acceptsAnyField": false
     },

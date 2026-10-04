@@ -5,6 +5,23 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
+## [v11.3.0] - 2026-10-04
+
+Running account and milestone billing (tornotron/echno-backend
+`docs/specs/2026-10-04-ra-milestone-billing.md`), in the Work Progress module.
+
+- `types/contract-billing`, `services/contract-billing-service`, `hooks/contract-billing`: the
+  billing home page figures and contracts, one contract's billing (BOQ, deduction rules,
+  milestones with their requirements, bills), and running account and milestone bills
+  (`Bill`) through Draft, Submitted, Verified, Certified and Approved, with Returned and
+  Cancelled. Hooks cover the BOQ, rules and requirements, opening a bill, the claim, the joint
+  measurement, manual adjustments, each workflow step (`useBillStep`), return for correction,
+  notes, supporting documents under a document type, and the PDF. Every billing mutation
+  invalidates the `contract-billing` prefix.
+- `Attachment.documentType`: the kind of document a file is, where the server sends one.
+
+Additive only.
+
 ## [v11.2.0] - 2026-10-04
 
 Work sub-categories and the risk register on the server (ClickUp 86d4609f9 and 86d4609hd,
