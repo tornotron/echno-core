@@ -262,3 +262,9 @@ export * from './hooks/wbs';
 export * from './types/work-progress';
 export * from './services/work-progress-service';
 export * from './hooks/work-progress';
+
+// Risk register: a project's risks kept on the server, with category, sub-category, scores
+// before and after the response, and a one-time import of what a browser held before.
+export * from './types/risk';
+export * from './services/risk-service';
+export * from './hooks/risk';

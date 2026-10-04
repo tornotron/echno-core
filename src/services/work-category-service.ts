@@ -15,6 +15,8 @@ import {
   parseWorkCategory,
   CreateWorkCategoryRequest,
   createWorkCategoryToJson,
+  WorkSubcategory,
+  parseWorkSubcategory,
 } from '../types/work-category';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -27,6 +29,7 @@ type ApiResponse = any;
  *   GET    /category/web/{id}   → CategoryDto         (full)
  *   POST   /category/web        → CategorySimpleDto   (partial — optional scalars may be absent)
  *   DELETE /category/web/{id}   → ApiResponse         (ack only)
+ *   GET    /category/web/{id}/subcategories → WorkSubcategoryDto[] (full)
  *
  * `WorkCategory` is a flat domain type (no nested arrays). Direct
  * `setQueryData` is safe for both the full and partial response shapes;
@@ -152,6 +155,33 @@ export const workCategoryService = {
       createWorkCategoryToJson(dto)
     );
     return safeParseWorkCategory(data);
+  },
+
+  /**
+   * Fetches the sub-categories of one work category, in dropdown order.
+   *
+   * `GET /category/web/{id}/subcategories` → `WorkSubcategoryDto[]`.
+   *
+   * @param categoryId - Surrogate ID of the work category.
+   * @returns Its sub-categories; empty when it has none.
+   * @throws {ApiError} On non-2xx response (404 for a category outside the
+   *   organization) or unparseable payload.
+   */
+  async getSubcategories(categoryId: number): Promise<WorkSubcategory[]> {
+    const data = await api.get<ApiResponse>(`/category/web/${categoryId}/subcategories`);
+    if (!Array.isArray(data)) {
+      logger.warn('getSubcategories: expected an array from the API');
+      throw new ApiError('Expected array from API for work sub-categories', 422);
+    }
+    try {
+      return data.map((item) => parseWorkSubcategory(item));
+    } catch (error) {
+      logger.error('Failed to parse work sub-categories:', error);
+      throw new ApiError(
+        'Failed to process work sub-category data. Please try again.',
+        422
+      );
+    }
   },
 
   /**

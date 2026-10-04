@@ -34,6 +34,13 @@ export interface CreateTaskRequest {
   /** Surrogate ID of the work category. */
   categoryId?: number;
 
+  /**
+   * Sub-category within the work category: a name from
+   * {@link workCategoryService.getSubcategories} or free text, at most 255
+   * characters. Optional; blank is stored as none.
+   */
+  subCategory?: string;
+
   /** Initial lifecycle state. */
   status?: TaskStatus;
 
@@ -98,6 +105,7 @@ export function createTaskToJson(
     payload.startDate = toLocalDateAtMidnight(dto.startDate);
   if (dto.endDate !== undefined) payload.endDate = toLocalDateAtMidnight(dto.endDate);
   if (dto.categoryId !== undefined) payload.categoryId = dto.categoryId;
+  if (dto.subCategory !== undefined) payload.subCategory = dto.subCategory;
   if (dto.status !== undefined) payload.status = dto.status;
   if (dto.progress !== undefined) payload.progress = dto.progress;
   if (dto.tags !== undefined) payload.tags = dto.tags;

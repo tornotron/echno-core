@@ -10,6 +10,8 @@
  *   shared by {@link useWorkCategories}).
  * - `['work-categories', 'detail', id]` — a single category by id, consumed
  *   by {@link useWorkCategory}.
+ * - `['work-categories', 'detail', id, 'subcategories']`: that category's
+ *   sub-categories, consumed by {@link useWorkSubcategories}.
  */
 export const workCategoryKeys = {
   /** Invalidation prefix only — pass to `invalidateQueries` to wipe every cache entry under the namespace. */
@@ -20,4 +22,8 @@ export const workCategoryKeys = {
 
   /** Query key for a single work category by ID. */
   detail: (id: number) => [...workCategoryKeys.all, 'detail', id] as const,
+
+  /** Query key for the sub-categories of one work category. */
+  subcategories: (id: number) =>
+    [...workCategoryKeys.detail(id), 'subcategories'] as const,
 };
