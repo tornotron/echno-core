@@ -168,6 +168,78 @@ describe('api error shaping', () => {
     expect(error.errors).toEqual({ email: ['invalid'] });
   });
 
+  test('a single message per field arrives as a one-item list, whole', async () => {
+    // GlobalExceptionHandler writes Map<String, String>: one string per field.
+    mockFetch(async () =>
+      jsonResponse(
+        {
+          message: 'An account with this email or username already exists.',
+          errors: { email: 'An account with this email already exists.' },
+        },
+        { status: 409 }
+      )
+    );
+
+    const error = (await api.get('/x').catch((error_) => error_)) as ApiError;
+    expect(error.errors).toEqual({
+      email: ['An account with this email already exists.'],
+    });
+    expect(error.errors?.email[0]).toBe(
+      'An account with this email already exists.'
+    );
+  });
+
+  test('a list of messages per field passes through unchanged', async () => {
+    mockFetch(async () =>
+      jsonResponse(
+        {
+          message: 'Validation failed',
+          errors: { password: ['too short', 'needs a digit'] },
+        },
+        { status: 400 }
+      )
+    );
+
+    const error = (await api.get('/x').catch((error_) => error_)) as ApiError;
+    expect(error.errors).toEqual({ password: ['too short', 'needs a digit'] });
+  });
+
+  test('values that are not messages are dropped, and so is a field left empty', async () => {
+    mockFetch(async () =>
+      jsonResponse(
+        {
+          message: 'Validation failed',
+          errors: {
+            name: 'must not be blank',
+            age: 42,
+            nested: { reason: 'x' },
+            nothing: null,
+            mixed: ['kept', 7, ''],
+          },
+        },
+        { status: 400 }
+      )
+    );
+
+    const error = (await api.get('/x').catch((error_) => error_)) as ApiError;
+    expect(error.errors).toEqual({
+      name: ['must not be blank'],
+      mixed: ['kept'],
+    });
+  });
+
+  test('an errors value that is not a map leaves no field errors', async () => {
+    mockFetch(async () =>
+      jsonResponse(
+        { message: 'Validation failed', errors: ['email is invalid'] },
+        { status: 400 }
+      )
+    );
+
+    const error = (await api.get('/x').catch((error_) => error_)) as ApiError;
+    expect(error.errors).toBeUndefined();
+  });
+
   test('falls back to a default message for a 404 with no body message', async () => {
     mockFetch(async () => jsonResponse({}, { status: 404 }));
 
