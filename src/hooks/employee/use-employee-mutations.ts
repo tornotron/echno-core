@@ -51,10 +51,9 @@ function isEmployeeListCache(query: {
 /**
  * Updates an existing employee.
  *
- * Backend response: spec labels `ApiResponse` (ack); the live service
- * parses an `EmployeeDto`-shaped body. The same drift pattern as
- * `useActivateLeavePolicy`, `useUpdatePOStatus`, and
- * `useUpdateSiteTransferStatus`.
+ * Backend response: the PATCH answers with an `ApiResponse` ack, and
+ * {@link employeeService.update} reads the employee back, so `data` is the
+ * saved record. The fallbacks below are kept for a response without an id.
  *
  * On success — 3-way guarded patch, in order:
  * 1. `setQueryData(employeeKeys.detail(id), data)` + predicate-map
@@ -80,9 +79,6 @@ export function useUpdateEmployee() {
     mutationFn: ({ id, data }: { id: number; data: UpdateEmployeeRequest }) =>
       employeeService.update(id, data),
     onSuccess: (data, { id, data: requestData }) => {
-      // FIXME: spec says ApiResponse, service parses as Employee. Confirm
-      // backend response shape and align service signature (Promise<void>)
-      // if spec is authoritative.
       const cachedDetail = queryClient.getQueryData<Employee>(
         employeeKeys.detail(id)
       );

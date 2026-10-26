@@ -220,31 +220,27 @@ export const purchaseOrdersService = {
   },
 
   /**
-   * Transitions a purchase order to a new lifecycle state. The new status
-   * is sent as a query-string parameter; the request body is empty.
+   * Moves a purchase order to a new status and returns the saved order.
    *
-   * `PATCH /purchase-orders/web/{id}/status?status={status}` → spec
-   * defines `ApiResponse` (ack only) but the parser tolerates a full
-   * `PurchaseOrderDto` for forward-compatibility. {@link useUpdatePOStatus}
-   * guards against both shapes at the cache layer.
+   * `PATCH /purchase-orders/web/{id}/status?status={status}` → `ApiResponse`
+   * (`{ message }`), then `GET /purchase-orders/web/{id}` → `PurchaseOrderDto`.
+   *
+   * The PATCH acknowledges the change without echoing the order, so the order
+   * is read back. Parsing the acknowledgement as an order used to fail with a
+   * 422 after the status had already changed.
    *
    * @param id - Surrogate ID of the PO.
    * @param status - The target {@link PurchaseOrderStatus}.
-   * @returns The updated {@link PurchaseOrder} if the backend returns the
-   *   full entity; otherwise the parser may produce a partially-populated
-   *   object — see the guard in {@link useUpdatePOStatus}.
-   * @throws {ApiError} On non-2xx HTTP responses or parser failure.
+   * @returns The {@link PurchaseOrder} as stored after the change.
+   * @throws {ApiError} When the PATCH or the read-back fails, or the
+   *   read-back cannot be parsed (status 422).
    */
   async updateStatus(
     id: number,
     status: PurchaseOrderStatus
   ): Promise<PurchaseOrder> {
-    const data = await api.patch<Raw>(
-      `/purchase-orders/web/${id}/status`,
-      {},
-      { status }
-    );
-    return safeParsePurchaseOrder(data);
+    await api.patch<Raw>(`/purchase-orders/web/${id}/status`, {}, { status });
+    return purchaseOrdersService.getById(id);
   },
 
   /**

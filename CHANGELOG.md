@@ -5,6 +5,16 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
+## [v11.3.1] - 2026-10-26
+
+Fixes a save reported as failed after it was stored (#154, ClickUp 14zdkkvwtpd).
+
+- `employeeService.update` and `purchaseOrdersService.updateStatus`: the backend answers
+  these PATCHes with an `ApiResponse` acknowledgement, which the services parsed as the
+  entity and turned into a 422 ("Failed to process employee data") after the write had
+  succeeded. Both now read the record back with `getById` and return it. Signatures and
+  hooks are unchanged.
+
 ## [v11.3.0] - 2026-10-04
 
 Running account and milestone billing (tornotron/echno-backend
