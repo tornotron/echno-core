@@ -20,10 +20,10 @@
  *    publish a `create` addressing the absent path, plus a hook that threw
  *    rather than call it; both are gone. Whether a web create should exist is
  *    echno-backend#675.
- * 2. `PATCH /employee/web/{id}` is labelled `ApiResponse` (ack) in the spec
- *    but the live backend returns an `EmployeeDto`-shaped body. The service
- *    parses optimistically; mutation hooks apply a 3-way guarded patch to
- *    survive future divergence.
+ * 2. `PATCH /employee/web/{id}` answers with an `ApiResponse` acknowledgement
+ *    (`{ message }`), not the employee. {@link employeeService.update} reads
+ *    the record back with {@link employeeService.getById} after the write, so
+ *    callers still receive the saved {@link Employee}.
  *
  * @see {@link Employee} domain shape
  * @see {@link employeeKeys} React Query key factory for these endpoints
@@ -210,23 +210,28 @@ export const employeeService = {
   },
 
   /**
-   * Updates an existing employee.
+   * Updates an existing employee and returns the saved record.
    *
-   * `PATCH /employee/web/{id}` → spec labels `ApiResponse` (ack); the live
-   * backend returns an `EmployeeDto`-shaped body. The service parses
-   * optimistically.
+   * `PATCH /employee/web/{id}` → `ApiResponse` (`{ message }`), then
+   * `GET /employee/web/{id}` → `EmployeeDto`.
+   *
+   * The PATCH acknowledges the write without echoing the employee, so the
+   * record is read back. Parsing the acknowledgement as an employee used to
+   * fail with a 422 after the save had already gone through, which told the
+   * user the edit was lost when it was not. Everyone the PATCH admits (the employee, a system admin or
+   * an HR admin) may also read the record, so the read-back is never refused
+   * on its own.
    *
    * @param id - Surrogate ID of the employee being updated.
    * @param dto - Partial update payload.
-   * @returns The parsed {@link Employee} from the server response. Mutation
-   *   hooks apply a 3-way guarded patch in case the response shape drifts
-   *   back to spec.
-   * @throws {ApiError} On non-2xx transport responses or parse failures (status 422).
+   * @returns The parsed {@link Employee} as stored after the update.
+   * @throws {ApiError} When the PATCH or the read-back fails, or the
+   *   read-back cannot be parsed (status 422).
    */
   async update(id: number, dto: UpdateEmployeeRequest): Promise<Employee> {
     const payload = updateEmployeeToJson(dto);
-    const data = await api.patch<ApiResponse>(`/employee/web/${id}`, payload);
-    return safeParseEmployee(data);
+    await api.patch<ApiResponse>(`/employee/web/${id}`, payload);
+    return employeeService.getById(id);
   },
 
   /**

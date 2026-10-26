@@ -218,14 +218,9 @@ export const useUpdatePOStatus = () => {
     mutationFn: ({ id, status }: { id: number; status: PurchaseOrderStatus }) =>
       purchaseOrdersService.updateStatus(id, status),
     onSuccess: (data, { id, status }) => {
-      // PATCH /purchase-orders/web/{id}/status → ApiResponse (ack) per spec.
-      // Service `updateStatus` parses the response as PurchaseOrder — same
-      // drift pattern as useActivateLeavePolicy. Guard the patch:
-      //   - If `data.id` is present, treat as the updated PO and patch.
-      //   - Otherwise, patch the status field locally + invalidate the
-      //     status-scoped list (entry should move between byStatus buckets).
-      // FIXME: confirm backend response shape; align service signature
-      // (Promise<void>) if spec is authoritative.
+      // The PATCH answers with an ApiResponse ack; the service reads the PO
+      // back, so `data` is the saved order. The status-only patch below is
+      // kept for a response without an id.
       const cachedDetail = queryClient.getQueryData<PurchaseOrder>(
         poKeys.detail(id)
       );
