@@ -5,6 +5,18 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
+## [v11.3.2] - 2026-10-27
+
+Field-level validation messages showed only their first character (#156).
+
+- `ApiError.errors`: the backend sends one string per field (`Map<String, String>` in
+  `GlobalExceptionHandler`, and the 409 duplicate response from tornotron/echno-backend#903),
+  while the type and every consumer read a list, so `errors.email[0]` was `"A"`.
+  `ApiError` now normalises the map whatever it was given: a string becomes a one-item
+  list, a list keeps its string items, other values are dropped, and a map with no
+  messages left is `undefined`. The constructor also accepts a string per field.
+  `getErrorMessage` no longer throws on a string-valued field.
+
 ## [v11.3.0] - 2026-10-04
 
 Running account and milestone billing (tornotron/echno-backend
