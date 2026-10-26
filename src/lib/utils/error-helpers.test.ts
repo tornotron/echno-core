@@ -132,6 +132,21 @@ describe('getErrorMessage', () => {
     );
   });
 
+  test('a field error sent as one string is appended whole', () => {
+    // The backend sends one string per field. Read as a list, it used to
+    // throw on messages.map.
+    const error = new ApiError(
+      'Account exists',
+      409,
+      undefined,
+      { email: 'An account with this email already exists.' },
+      'Conflict'
+    );
+    expect(getErrorMessage(error)).toBe(
+      'Account exists — email: An account with this email already exists.'
+    );
+  });
+
   test('a structured details payload never reaches the message', () => {
     // The subscription endpoints answer 402 with `details` as a quota object.
     const error = new ApiError('Plan limit reached', 402);
