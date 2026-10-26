@@ -48,8 +48,48 @@ export interface ApiErrorData {
   title?: string;
   /** Request description or structured debugging context. Not user-facing. */
   details?: unknown;
-  /** Per-field validation errors keyed by field name. */
-  errors?: Record<string, string[]>;
+  /**
+   * Per-field validation errors keyed by field name, as the backend sends
+   * them. The backend's `GlobalExceptionHandler` writes one string per field;
+   * other producers may send a list. {@link ApiError} normalises both.
+   */
+  errors?: Record<string, string | string[]>;
+}
+
+/**
+ * Brings a field-error map from a response body to one shape: a list of
+ * messages per field.
+ *
+ * The backend sends `Map<String, String>`, one message per field, while every
+ * consumer reads `errors[field][0]` or maps over the list. Read as a list, a
+ * string yields its first character, so a form showed "A" where the backend
+ * wrote "An account with this email already exists." A string becomes a
+ * one-item list and a list keeps its string items. Anything else (a number,
+ * `null`, a nested object) is dropped: it is not a message the backend writes
+ * for a user, and stringifying it would put `[object Object]` under a field.
+ * A field left with no messages is omitted, and a map with no fields left is
+ * `undefined`, so `if (error.errors)` still means "there is something to show".
+ *
+ * @param raw - The `errors` value from a parsed error body, of any shape.
+ * @returns The messages per field, or `undefined` when there are none.
+ */
+function normalizeFieldErrors(
+  raw: unknown
+): Record<string, string[]> | undefined {
+  if (raw === null || typeof raw !== 'object' || Array.isArray(raw)) {
+    return undefined;
+  }
+  const result: Record<string, string[]> = {};
+  for (const [field, value] of Object.entries(raw)) {
+    const items: unknown[] = Array.isArray(value) ? value : [value];
+    const messages = items.filter(
+      (item): item is string => typeof item === 'string' && item.length > 0
+    );
+    if (messages.length > 0) {
+      result[field] = messages;
+    }
+  }
+  return Object.keys(result).length > 0 ? result : undefined;
 }
 
 /**
@@ -92,7 +132,11 @@ export class ApiError extends Error {
   isServerError: boolean;
   /** `true` when the request was aborted due to a client-side timeout. */
   isTimeout: boolean;
-  /** Per-field validation errors, present on 400/422 responses. */
+  /**
+   * Per-field validation errors, present on 400/422 responses and on a 409
+   * that names the clashing field. Always a list of messages per field, even
+   * when the backend sent a single string.
+   */
   errors?: Record<string, string[]>;
   /**
    * The parsed error body as the backend sent it, for the refusals that carry
@@ -107,7 +151,7 @@ export class ApiError extends Error {
     message: string,
     status: number,
     details?: string,
-    errors?: Record<string, string[]>,
+    errors?: Record<string, string | string[]>,
     title?: string,
     body?: Record<string, unknown>
   ) {
@@ -116,7 +160,7 @@ export class ApiError extends Error {
     this.status = status;
     this.title = title;
     this.details = details;
-    this.errors = errors;
+    this.errors = normalizeFieldErrors(errors);
     this.body = body;
     this.isAuthError = status === 401 || status === 403;
     this.isNotFound = status === 404;
