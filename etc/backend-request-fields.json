@@ -1,11 +1,129 @@
 {
   "source": {
     "repository": "tornotron/echno-backend",
-    "ref": "development",
+    "ref": "access-write-endpoints",
     "path": "docs/openapi.json",
-    "sha256": "e3ffb40bf65bd023b8b6ced65fd4d24ce48efb7cd30b56b8632dfb6d84c5f342"
+    "sha256": "e158b66e1f2781aa137ce85b51ac8669f642621b1dc2f514cbcc565a1fcf93d3"
   },
   "operations": {
+    "POST /api/v1/access/web/groups": {
+      "schema": "AccessGroupRequest",
+      "fields": [
+        "description",
+        "kind",
+        "name"
+      ],
+      "required": [
+        "name"
+      ],
+      "acceptsAnyField": false
+    },
+    "PUT /api/v1/access/web/groups/{groupId}": {
+      "schema": "AccessGroupRequest",
+      "fields": [
+        "description",
+        "kind",
+        "name"
+      ],
+      "required": [
+        "name"
+      ],
+      "acceptsAnyField": false
+    },
+    "PUT /api/v1/access/web/groups/{groupId}/grants": {
+      "schema": "AccessGrantsRequest",
+      "fields": [
+        "grants"
+      ],
+      "required": [
+        "grants"
+      ],
+      "acceptsAnyField": false
+    },
+    "PUT /api/v1/access/web/groups/{groupId}/members": {
+      "schema": "AccessMembersRequest",
+      "fields": [
+        "employeeIds"
+      ],
+      "required": [
+        "employeeIds"
+      ],
+      "acceptsAnyField": false
+    },
+    "PUT /api/v1/access/web/groups/{groupId}/roles": {
+      "schema": "AccessRoleIdsRequest",
+      "fields": [
+        "roleIds"
+      ],
+      "required": [
+        "roleIds"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/access/web/roles": {
+      "schema": "AccessRoleRequest",
+      "fields": [
+        "description",
+        "name",
+        "subtitle"
+      ],
+      "required": [
+        "name"
+      ],
+      "acceptsAnyField": false
+    },
+    "PUT /api/v1/access/web/roles/{roleId}": {
+      "schema": "AccessRoleRequest",
+      "fields": [
+        "description",
+        "name",
+        "subtitle"
+      ],
+      "required": [
+        "name"
+      ],
+      "acceptsAnyField": false
+    },
+    "PUT /api/v1/access/web/roles/{roleId}/grantable-roles": {
+      "schema": "AccessRoleIdsRequest",
+      "fields": [
+        "roleIds"
+      ],
+      "required": [
+        "roleIds"
+      ],
+      "acceptsAnyField": false
+    },
+    "PUT /api/v1/access/web/roles/{roleId}/grants": {
+      "schema": "AccessGrantsRequest",
+      "fields": [
+        "grants"
+      ],
+      "required": [
+        "grants"
+      ],
+      "acceptsAnyField": false
+    },
+    "PUT /api/v1/access/web/users/{employeeId}/grants": {
+      "schema": "AccessGrantsRequest",
+      "fields": [
+        "grants"
+      ],
+      "required": [
+        "grants"
+      ],
+      "acceptsAnyField": false
+    },
+    "PUT /api/v1/access/web/users/{employeeId}/roles": {
+      "schema": "AccessRoleIdsRequest",
+      "fields": [
+        "roleIds"
+      ],
+      "required": [
+        "roleIds"
+      ],
+      "acceptsAnyField": false
+    },
     "POST /api/v1/assets/web": {
       "schema": "AssetCreationDto",
       "fields": [
