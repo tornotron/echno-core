@@ -4,11 +4,14 @@
      Run `bun run api:snapshot` after an intended public-API change and commit the diff.
      See docs/API-STABILITY.md. -->
 
-Entry points: 185
+Entry points: 189
 
 ## `@tornotron/echno-core`
 
 - abbreviatedName
+- accessKeys
+- AccessScope
+- accessService
 - Account
 - AccountLine
 - AccountTreeNode
@@ -283,6 +286,7 @@ Entry points: 185
 - CreateWorkCategoryRequest
 - createWorkCategoryToJson
 - creatorId
+- CurrentUserAccess
 - Customer
 - CustomerListParams
 - DailyMovementSummary
@@ -433,6 +437,7 @@ Entry points: 185
 - hasObservationChanges
 - hasPendingReinspection
 - hasRole
+- holdsPermission
 - Holiday
 - HolidayRequest
 - holidayRequestToJson
@@ -728,6 +733,7 @@ Entry points: 185
 - parseContractBillingDetail
 - parseContractBillingSummary
 - parseCostCategory
+- parseCurrentUserAccess
 - parseCustomer
 - parseDatasetConsent
 - parseDeductionRule
@@ -1265,6 +1271,7 @@ Entry points: 185
 - useCreateWbsActivity
 - useCreateWorkCategory
 - useCurrentSubscription
+- useCurrentUserAccess
 - useCurrentUserEmployee
 - useDatasetConsent
 - useDeactivateAccount
@@ -1663,6 +1670,26 @@ Entry points: 185
 - workProgressKeys
 - workProgressService
 - WorkSubcategory
+
+## `@tornotron/echno-core/access/hooks`
+
+- accessKeys
+- useCurrentUserAccess
+
+## `@tornotron/echno-core/access/hooks/keys`
+
+- accessKeys
+
+## `@tornotron/echno-core/access/services`
+
+- accessService
+
+## `@tornotron/echno-core/access/types`
+
+- AccessScope
+- CurrentUserAccess
+- holdsPermission
+- parseCurrentUserAccess
 
 ## `@tornotron/echno-core/attachment/hooks`
 

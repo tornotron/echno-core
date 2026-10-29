@@ -276,3 +276,9 @@ export * from './hooks/risk';
 export * from './types/contract-billing';
 export * from './services/contract-billing-service';
 export * from './hooks/contract-billing';
+
+// Access — what the signed-in member may do in their current organization, from the access
+// matrix (tornotron/echno-backend#911).
+export * from './types/access';
+export * from './services/access-service';
+export * from './hooks/access';
