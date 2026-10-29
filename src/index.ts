@@ -281,3 +281,4 @@ export * from './hooks/contract-billing';
 // matrix (tornotron/echno-backend#911).
 export * from './types/access';
 export * from './services/access-service';
+export * from './hooks/access';

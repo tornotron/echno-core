@@ -5,6 +5,25 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
+## [v11.4.0] - 2026-10-29
+
+What the signed-in member may do in their current organization, from the access matrix
+(tornotron/echno-backend#911), so the apps can show pages and buttons from permissions instead
+of role names.
+
+- `types/access`: `CurrentUserAccess` (organization, employee id, and each `<area>:<action>`
+  held with its scopes), `AccessScope` (`ALL`, `ASSIGNED_PROJECTS`, `RELATED`, `OWN`),
+  `parseCurrentUserAccess` and `holdsPermission`. A scope the client does not know is dropped.
+- `services/access-service`: `accessService.getCurrentUserAccess()`, reading
+  `GET /api/v1/access/web/current-user-access`.
+- `hooks/access`: `useCurrentUserAccess()`, returning `access`, `can(area, action, scope?)`,
+  `isLoading` and `error`. `can` is false while access loads or fails to load. Key
+  `accessKeys.currentUser()`; invalidate it when callers change their own roles or grants.
+
+The endpoint is not on the deployed backend yet; it ships with the access migration.
+
+Additive only.
+
 ## [v11.3.0] - 2026-10-04
 
 Running account and milestone billing (tornotron/echno-backend

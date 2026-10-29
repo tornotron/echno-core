@@ -4,11 +4,12 @@
      Run `bun run api:snapshot` after an intended public-API change and commit the diff.
      See docs/API-STABILITY.md. -->
 
-Entry points: 187
+Entry points: 189
 
 ## `@tornotron/echno-core`
 
 - abbreviatedName
+- accessKeys
 - AccessScope
 - accessService
 - Account
@@ -1270,6 +1271,7 @@ Entry points: 187
 - useCreateWbsActivity
 - useCreateWorkCategory
 - useCurrentSubscription
+- useCurrentUserAccess
 - useCurrentUserEmployee
 - useDatasetConsent
 - useDeactivateAccount
@@ -1668,6 +1670,15 @@ Entry points: 187
 - workProgressKeys
 - workProgressService
 - WorkSubcategory
+
+## `@tornotron/echno-core/access/hooks`
+
+- accessKeys
+- useCurrentUserAccess
+
+## `@tornotron/echno-core/access/hooks/keys`
+
+- accessKeys
 
 ## `@tornotron/echno-core/access/services`
 
