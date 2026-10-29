@@ -9,9 +9,19 @@ Entry points: 189
 ## `@tornotron/echno-core`
 
 - abbreviatedName
+- AccessArea
+- AccessCatalog
+- AccessGrant
+- AccessGrantRequest
+- AccessGroup
+- AccessGroupKind
+- AccessGroupRequest
 - accessKeys
+- AccessRole
+- AccessRoleRequest
 - AccessScope
 - accessService
+- AccessUser
 - Account
 - AccountLine
 - AccountTreeNode
@@ -681,6 +691,10 @@ Entry points: 189
 - PagedReceipt
 - PagedStatusTransition
 - PagedTask
+- parseAccessCatalog
+- parseAccessGroup
+- parseAccessRole
+- parseAccessUser
 - parseAccount
 - parseAccountLine
 - parseAccountTree
@@ -1686,9 +1700,23 @@ Entry points: 189
 
 ## `@tornotron/echno-core/access/types`
 
+- AccessArea
+- AccessCatalog
+- AccessGrant
+- AccessGrantRequest
+- AccessGroup
+- AccessGroupKind
+- AccessGroupRequest
+- AccessRole
+- AccessRoleRequest
 - AccessScope
+- AccessUser
 - CurrentUserAccess
 - holdsPermission
+- parseAccessCatalog
+- parseAccessGroup
+- parseAccessRole
+- parseAccessUser
 - parseCurrentUserAccess
 
 ## `@tornotron/echno-core/attachment/hooks`
