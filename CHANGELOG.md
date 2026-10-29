@@ -5,6 +5,33 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
+## [v11.5.0] - 2026-10-29
+
+The Roles & Permissions screen's reads and writes on the access matrix
+(tornotron/echno-backend#911 and #912).
+
+- `types/access`: `AccessCatalog` (sections, `AccessArea`s with their actions, and scopes),
+  `AccessGrant` (`permission`, `scope`, `locked`), `AccessRole`, `AccessGroup` (kind
+  `DEPARTMENT` or `GROUP`) and `AccessUser`, with their parsers and the request bodies
+  `AccessRoleRequest`, `AccessGroupRequest` and `AccessGrantRequest`. Role and group ids are
+  UUID strings; people are keyed by employee id. A grant's scope is kept as the server sent
+  it, so writing a list back never drops one.
+- `services/access-service`: `getCatalog`, `getRoles`, `getGroups` and `getUsers`; for roles
+  `createRole`, `updateRole`, `setRoleGrants`, `setRoleGrantableRoles` and `deleteRole`; for
+  departments and groups `createGroup`, `updateGroup`, `setGroupMembers`, `setGroupRoles`,
+  `setGroupGrants` and `deleteGroup`; for people `setUserRoles` and `setUserGrants`. The `set`
+  calls replace the whole list; locked grants stay either way.
+- `hooks/access`: `useAccessCatalog` (static profile), `useAccessRoles`, `useAccessGroups`,
+  `useAccessUsers`, and a mutation hook for each write. Writes replace their row in its list,
+  refresh the list that reads the same membership from the other side, and refresh
+  `useCurrentUserAccess` whenever they can change what someone holds. Keys
+  `accessKeys.catalog()`, `roles()`, `groups()` and `users()`.
+
+Errors to word for the user: 403 (with a message, e.g. giving a grant the caller does not
+hold), 409 (a name already taken) and 422 (deleting a starting role).
+
+Additive only.
+
 ## [v11.4.0] - 2026-10-29
 
 What the signed-in member may do in their current organization, from the access matrix

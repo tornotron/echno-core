@@ -4,15 +4,15 @@
      Run `bun run contract:report` and commit the diff.
      A NEW entry under Findings is a bug to fix, not a file to regenerate. -->
 
-Checked against `tornotron/echno-backend` `development`, reduced into `etc/backend-request-fields.json` by `scripts/backend-contract.ts`.
+Checked against `tornotron/echno-backend` `access-write-endpoints`, reduced into `etc/backend-request-fields.json` by `scripts/backend-contract.ts`.
 
-Write calls in `src/services`: 210
+Write calls in `src/services`: 221
 
 ## Coverage
 
 | outcome | calls |
 | --- | --- |
-| checked | 152 |
+| checked | 163 |
 | sends nothing | 44 |
 | endpoint accepts any field name | 0 |
 | endpoint documents no request body | 0 |

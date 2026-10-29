@@ -9,9 +9,19 @@ Entry points: 189
 ## `@tornotron/echno-core`
 
 - abbreviatedName
+- AccessArea
+- AccessCatalog
+- AccessGrant
+- AccessGrantRequest
+- AccessGroup
+- AccessGroupKind
+- AccessGroupRequest
 - accessKeys
+- AccessRole
+- AccessRoleRequest
 - AccessScope
 - accessService
+- AccessUser
 - Account
 - AccountLine
 - AccountTreeNode
@@ -681,6 +691,10 @@ Entry points: 189
 - PagedReceipt
 - PagedStatusTransition
 - PagedTask
+- parseAccessCatalog
+- parseAccessGroup
+- parseAccessRole
+- parseAccessUser
 - parseAccount
 - parseAccountLine
 - parseAccountTree
@@ -1155,6 +1169,10 @@ Entry points: 189
 - UpsertPostingAccountMappingArgs
 - UpsertPostingAccountMappingRequest
 - upsertPostingAccountMappingToJson
+- useAccessCatalog
+- useAccessGroups
+- useAccessRoles
+- useAccessUsers
 - useActivateLeavePolicy
 - useAddBillNote
 - useAddBoqItem
@@ -1229,6 +1247,8 @@ Entry points: 189
 - useContractBilling
 - useCostCategories
 - useCostCategory
+- useCreateAccessGroup
+- useCreateAccessRole
 - useCreateAccount
 - useCreateAttendanceProfile
 - useCreateBankAccount
@@ -1279,6 +1299,8 @@ Entry points: 189
 - useDeactivateCostCategory
 - useDeactivateCustomer
 - useDelegateApproval
+- useDeleteAccessGroup
+- useDeleteAccessRole
 - useDeleteAttachment
 - useDeleteAttendance
 - useDeleteAttendanceProfile
@@ -1528,6 +1550,13 @@ Entry points: 189
 - useSearch
 - useSeedDefaultCostCategories
 - useSendableAssets
+- useSetAccessGroupGrants
+- useSetAccessGroupMembers
+- useSetAccessGroupRoles
+- useSetAccessRoleGrantableRoles
+- useSetAccessRoleGrants
+- useSetAccessUserGrants
+- useSetAccessUserRoles
 - useSetDatasetConsent
 - useSetVendorPaymentTerms
 - useShift
@@ -1562,6 +1591,8 @@ Entry points: 189
 - useUnassignRole
 - useUnreadNotifications
 - useUnreadNotificationsCount
+- useUpdateAccessGroup
+- useUpdateAccessRole
 - useUpdateAccount
 - useUpdateAttendanceProfile
 - useUpdateBill
@@ -1674,7 +1705,24 @@ Entry points: 189
 ## `@tornotron/echno-core/access/hooks`
 
 - accessKeys
+- useAccessCatalog
+- useAccessGroups
+- useAccessRoles
+- useAccessUsers
+- useCreateAccessGroup
+- useCreateAccessRole
 - useCurrentUserAccess
+- useDeleteAccessGroup
+- useDeleteAccessRole
+- useSetAccessGroupGrants
+- useSetAccessGroupMembers
+- useSetAccessGroupRoles
+- useSetAccessRoleGrantableRoles
+- useSetAccessRoleGrants
+- useSetAccessUserGrants
+- useSetAccessUserRoles
+- useUpdateAccessGroup
+- useUpdateAccessRole
 
 ## `@tornotron/echno-core/access/hooks/keys`
 
@@ -1686,9 +1734,23 @@ Entry points: 189
 
 ## `@tornotron/echno-core/access/types`
 
+- AccessArea
+- AccessCatalog
+- AccessGrant
+- AccessGrantRequest
+- AccessGroup
+- AccessGroupKind
+- AccessGroupRequest
+- AccessRole
+- AccessRoleRequest
 - AccessScope
+- AccessUser
 - CurrentUserAccess
 - holdsPermission
+- parseAccessCatalog
+- parseAccessGroup
+- parseAccessRole
+- parseAccessUser
 - parseCurrentUserAccess
 
 ## `@tornotron/echno-core/attachment/hooks`
