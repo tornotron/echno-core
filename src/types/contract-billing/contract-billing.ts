@@ -11,6 +11,8 @@
  * correction and Cancelled beside them. An RA bill has one line per BOQ item;
  * a milestone bill claims a percent of one contract milestone. Money is in
  * rupees to two places and quantities to three, as the backend rounds them.
+ * An approved bill is then paid against its payable, one attempt at a time
+ * (`docs/specs/2026-11-08-billing-in-inspection-and-payments.md`).
  *
  * The parsers are non-strict: a field the backend adds later never breaks
  * this client. An enum value this client does not know reads as the most
@@ -115,6 +117,52 @@ export enum BillEventType {
   DOCUMENT_ADDED = 'DOCUMENT_ADDED',
   DOCUMENT_REMOVED = 'DOCUMENT_REMOVED',
   NOTE = 'NOTE',
+  PAYMENT_REQUESTED = 'PAYMENT_REQUESTED',
+  PAYMENT_AUTHORIZED = 'PAYMENT_AUTHORIZED',
+  PAYMENT_REJECTED = 'PAYMENT_REJECTED',
+  PAYMENT_SENT = 'PAYMENT_SENT',
+  PAYMENT_SETTLED = 'PAYMENT_SETTLED',
+  PAYMENT_FAILED = 'PAYMENT_FAILED',
+  PAYMENT_REVERSED = 'PAYMENT_REVERSED',
+}
+
+/**
+ * How far an approved bill has been paid, worked out from its payable. Not a
+ * workflow state: the bill stays Approved, so a part-paid bill does not hold
+ * up the next one.
+ */
+export enum BillPaymentState {
+  NOTHING_PAYABLE = 'NOTHING_PAYABLE',
+  UNPAID = 'UNPAID',
+  PART_PAID = 'PART_PAID',
+  PAID = 'PAID',
+}
+
+/** Where a project stands on billing, for the home page. */
+export enum ProjectBillingState {
+  NO_CONTRACTS = 'NO_CONTRACTS',
+  NOT_STARTED = 'NOT_STARTED',
+  IN_PROGRESS = 'IN_PROGRESS',
+  PAYMENT_DUE = 'PAYMENT_DUE',
+  SETTLED = 'SETTLED',
+}
+
+/** Where one attempt to pay a bill stands. */
+export enum BillPaymentStatus {
+  REQUESTED = 'REQUESTED',
+  AUTHORIZED = 'AUTHORIZED',
+  PROCESSING = 'PROCESSING',
+  SETTLED = 'SETTLED',
+  FAILED = 'FAILED',
+  REJECTED = 'REJECTED',
+  REVERSED = 'REVERSED',
+}
+
+/** What carries a bill payment. `MANUAL`: a person pays from the bank and records the reference. `FAKE`: a test, no money moves. */
+export enum BillPaymentProvider {
+  MANUAL = 'MANUAL',
+  FAKE = 'FAKE',
+  RAZORPAY = 'RAZORPAY',
 }
 
 /** The document types a bill's supporting documents are filed under. */
@@ -146,6 +194,112 @@ export interface BillingOverview {
   certifiedToDate: number;
   /** Net payable of approved bills. */
   netApprovedToDate: number;
+  /** Projects with at least one bill other than a cancelled one. */
+  projectsInBilling: number;
+  /** Bills waiting on someone: submitted, verified, certified or returned. */
+  pendingActions: number;
+  /** Paid against approved bills' payables. */
+  paidToDate: number;
+  /** Still due on approved bills' payables. */
+  amountDue: number;
+  /** Payments raised and not yet ended. */
+  paymentsInFlight: number;
+}
+
+/** One project on the billing home page, with its contracts and bills added up. */
+export interface ProjectBillingSummary {
+  projectId: number;
+  projectName: string;
+  city?: string;
+  state?: string;
+  projectStatus?: string;
+  /** The project's inspected progress, as a percent. */
+  progress?: number;
+  contractCount: number;
+  contractValue: number;
+  billCount: number;
+  openBills: number;
+  /** Submitted, verified or certified bills waiting for the next signature. */
+  awaitingSignature: number;
+  certifiedToDate: number;
+  netApprovedToDate: number;
+  paidToDate: number;
+  amountDue: number;
+  /** certifiedToDate as a percent of the contract value. */
+  billedPercent?: number;
+  billingState: ProjectBillingState;
+  lastActivityAt?: string;
+}
+
+/** One recent event on a bill, with the bill and project it belongs to. */
+export interface BillActivity {
+  id: string;
+  billId: string;
+  billNumber: string;
+  billingModel: BillingModel;
+  subContractId: number;
+  contractName?: string;
+  projectId: number;
+  projectName?: string;
+  type: BillEventType;
+  note?: string;
+  actorName?: string;
+  createdAt?: string;
+}
+
+/** One attempt to pay a bill. */
+export interface BillPayment {
+  id: string;
+  billId: string;
+  amount: number;
+  /** What went onto the payable when it settled. Less than the amount when finance has a difference to reconcile. */
+  appliedAmount?: number;
+  status: BillPaymentStatus;
+  provider: BillPaymentProvider;
+  /** True for the test provider: no money moved. */
+  test: boolean;
+  bankReference?: string;
+  paidOn?: string;
+  beneficiaryName?: string;
+  beneficiaryIfsc?: string;
+  /** The last four digits of the account. */
+  beneficiaryAccountLast4?: string;
+  note?: string;
+  /** Why it failed or was rejected. */
+  failureReason?: string;
+  /** Why the last attempt to reach the provider got no answer. Sync tries again safely. */
+  lastError?: string;
+  requestedByName?: string;
+  requestedAt?: string;
+  authorizedByName?: string;
+  authorizedAt?: string;
+  /** True when the same system admin raised and authorized it. */
+  selfAuthorized: boolean;
+  settledAt?: string;
+}
+
+/** A bill's payments and what is left to pay, as the payable has it. */
+export interface BillPayments {
+  billId: string;
+  billNumber: string;
+  /** What would carry a new payment. */
+  provider: BillPaymentProvider;
+  payableId?: number;
+  amountRecorded?: number;
+  amountPaid?: number;
+  amountDue?: number;
+  paymentState?: BillPaymentState;
+  /** True while a payment on this bill has not ended. A bill has one at a time. */
+  inFlight: boolean;
+  /** Whether the contract has the account number and IFSC a provider needs. */
+  beneficiaryReady: boolean;
+  /** Newest first. */
+  payments: BillPayment[];
+}
+
+/** Whether a payment attempt still holds the bill's one payment slot. */
+export function isBillPaymentInFlight(status: BillPaymentStatus): boolean {
+  return status === BillPaymentStatus.REQUESTED || status === BillPaymentStatus.AUTHORIZED || status === BillPaymentStatus.PROCESSING;
 }
 
 /** A bill as a row in a list. */
@@ -171,6 +325,12 @@ export interface BillSummary {
   submittedAt?: string;
   approvedAt?: string;
   createdAt?: string;
+  /** Paid against the payable, once approved. */
+  amountPaid?: number;
+  /** Still due on the payable, once approved. */
+  amountDue?: number;
+  /** How far it has been paid, once approved. */
+  paymentState?: BillPaymentState;
 }
 
 /** One contract on the billing home page. */
@@ -193,6 +353,10 @@ export interface ContractBillingSummary {
   billedPercent?: number;
   openBill?: BillSummary;
   lastApprovedAt?: string;
+  /** Paid against approved bills' payables. */
+  paidToDate: number;
+  /** Still due on approved bills' payables. */
+  amountDue: number;
 }
 
 /** One line of a contract's bill of quantities. */
@@ -369,6 +533,12 @@ export interface Bill {
   payableId?: number;
   createdAt?: string;
   updatedAt?: string;
+  /** Paid against the payable, once approved. */
+  amountPaid?: number;
+  /** Still due on the payable, once approved. */
+  amountDue?: number;
+  /** How far it has been paid, once approved. */
+  paymentState?: BillPaymentState;
 }
 
 /** One entry on a bill's timeline. */
@@ -444,6 +614,8 @@ export interface CreateBillRequest {
   contractorReference?: string;
   location?: string;
   remarks?: string;
+  /** RA only: start each line's claimed quantity from the inspected progress of its linked activity, instead of zero. */
+  draftFromInspections?: boolean;
 }
 
 export interface ClaimLineRequest {
@@ -500,6 +672,29 @@ export interface BillListParams {
   pageSize?: number;
 }
 
+/** Query parameters of `GET /contract-billing/web/projects`. */
+export interface ProjectBillingListParams {
+  /** Part of the project name. */
+  search?: string;
+  pageNo?: number;
+  pageSize?: number;
+}
+
+/** Body of `POST /contract-billing/web/bills/{id}/payments`. */
+export interface RaiseBillPaymentRequest {
+  /** Rupees, up to the amount due. Less than that is a part payment. */
+  amount: number;
+  note?: string;
+}
+
+/** Body of `POST /contract-billing/web/bill-payments/{id}/record`. */
+export interface RecordBillPaymentRequest {
+  /** The bank's reference for the transfer. */
+  bankReference: string;
+  /** `YYYY-MM-DD`; not in the future. */
+  paidOn: string;
+}
+
 /** Query parameters of `GET /contract-billing/web/contracts`. */
 export interface ContractBillingListParams {
   projectId?: number;
@@ -536,6 +731,13 @@ const parseRequirementType = oneOf(RequirementType, RequirementType.SCOPE);
 const parseRequirementStatus = oneOf(RequirementStatus, RequirementStatus.PENDING);
 const parseLineStatus = oneOf(BillLineStatus, BillLineStatus.UNDER_REVIEW);
 const parseEventType = oneOf(BillEventType, BillEventType.NOTE);
+const parseOptionalPaymentState = optionalOneOf(BillPaymentState);
+// An unknown billing state reads as in progress, which claims nothing about money.
+const parseProjectState = oneOf(ProjectBillingState, ProjectBillingState.IN_PROGRESS);
+// An unknown payment status reads as processing: the client offers no action that
+// would start another payment, and the server refuses anything out of turn.
+const parsePaymentStatus = oneOf(BillPaymentStatus, BillPaymentStatus.PROCESSING);
+const parsePaymentProvider = oneOf(BillPaymentProvider, BillPaymentProvider.MANUAL);
 
 const OverviewSchema = z.object({
   openBills: nullableNumber,
@@ -547,6 +749,11 @@ const OverviewSchema = z.object({
   approvedBills: nullableNumber,
   certifiedToDate: money,
   netApprovedToDate: money,
+  projectsInBilling: nullableNumber,
+  pendingActions: nullableNumber,
+  paidToDate: money,
+  amountDue: money,
+  paymentsInFlight: nullableNumber,
 });
 
 /** Parses the home page figures. */
@@ -562,6 +769,174 @@ export function parseBillingOverview(json: unknown): BillingOverview {
     approvedBills: raw.approvedBills ?? 0,
     certifiedToDate: raw.certifiedToDate ?? 0,
     netApprovedToDate: raw.netApprovedToDate ?? 0,
+    projectsInBilling: raw.projectsInBilling ?? 0,
+    pendingActions: raw.pendingActions ?? 0,
+    paidToDate: raw.paidToDate ?? 0,
+    amountDue: raw.amountDue ?? 0,
+    paymentsInFlight: raw.paymentsInFlight ?? 0,
+  };
+}
+
+const ProjectSummarySchema = z.object({
+  projectId: numeric,
+  projectName: nullableString,
+  city: nullableString,
+  state: nullableString,
+  projectStatus: nullableString,
+  progress: money,
+  contractCount: nullableNumber,
+  contractValue: money,
+  billCount: nullableNumber,
+  openBills: nullableNumber,
+  awaitingSignature: nullableNumber,
+  certifiedToDate: money,
+  netApprovedToDate: money,
+  paidToDate: money,
+  amountDue: money,
+  billedPercent: money,
+  billingState: nullableString,
+  lastActivityAt: backendDate,
+});
+
+/** Parses one project's billing summary. `projectId` is required. */
+export function parseProjectBillingSummary(json: unknown): ProjectBillingSummary {
+  const raw = ProjectSummarySchema.parse(json);
+  return {
+    projectId: raw.projectId,
+    projectName: raw.projectName ?? '',
+    city: raw.city ?? undefined,
+    state: raw.state ?? undefined,
+    projectStatus: raw.projectStatus ?? undefined,
+    progress: raw.progress ?? undefined,
+    contractCount: raw.contractCount ?? 0,
+    contractValue: raw.contractValue ?? 0,
+    billCount: raw.billCount ?? 0,
+    openBills: raw.openBills ?? 0,
+    awaitingSignature: raw.awaitingSignature ?? 0,
+    certifiedToDate: raw.certifiedToDate ?? 0,
+    netApprovedToDate: raw.netApprovedToDate ?? 0,
+    paidToDate: raw.paidToDate ?? 0,
+    amountDue: raw.amountDue ?? 0,
+    billedPercent: raw.billedPercent ?? undefined,
+    billingState: parseProjectState(raw.billingState),
+    lastActivityAt: raw.lastActivityAt ?? undefined,
+  };
+}
+
+const ActivitySchema = z.object({
+  id,
+  billId: id,
+  billNumber: nullableString,
+  billingModel: nullableString,
+  subContractId: numeric.nullish(),
+  contractName: nullableString,
+  projectId: numeric.nullish(),
+  projectName: nullableString,
+  type: nullableString,
+  note: nullableString,
+  actorName: nullableString,
+  createdAt: backendDate,
+});
+
+/** Parses a recent bill event. `id` and `billId` are required. */
+export function parseBillActivity(json: unknown): BillActivity {
+  const raw = ActivitySchema.parse(json);
+  return {
+    id: String(raw.id),
+    billId: String(raw.billId),
+    billNumber: raw.billNumber ?? '',
+    billingModel: parseModel(raw.billingModel),
+    subContractId: raw.subContractId ?? 0,
+    contractName: raw.contractName ?? undefined,
+    projectId: raw.projectId ?? 0,
+    projectName: raw.projectName ?? undefined,
+    type: parseEventType(raw.type),
+    note: raw.note ?? undefined,
+    actorName: raw.actorName ?? undefined,
+    createdAt: raw.createdAt ?? undefined,
+  };
+}
+
+const PaymentSchema = z.object({
+  id,
+  billId: id,
+  amount: money,
+  appliedAmount: money,
+  status: nullableString,
+  provider: nullableString,
+  test: nullableBoolean,
+  bankReference: nullableString,
+  paidOn: backendDate,
+  beneficiaryName: nullableString,
+  beneficiaryIfsc: nullableString,
+  beneficiaryAccountLast4: nullableString,
+  note: nullableString,
+  failureReason: nullableString,
+  lastError: nullableString,
+  requestedByName: nullableString,
+  requestedAt: backendDate,
+  authorizedByName: nullableString,
+  authorizedAt: backendDate,
+  selfAuthorized: nullableBoolean,
+  settledAt: backendDate,
+});
+
+function parseBillPayment(json: unknown): BillPayment {
+  const raw = PaymentSchema.parse(json);
+  return {
+    id: String(raw.id),
+    billId: String(raw.billId),
+    amount: raw.amount ?? 0,
+    appliedAmount: raw.appliedAmount ?? undefined,
+    status: parsePaymentStatus(raw.status),
+    provider: parsePaymentProvider(raw.provider),
+    test: raw.test ?? false,
+    bankReference: raw.bankReference ?? undefined,
+    paidOn: raw.paidOn ?? undefined,
+    beneficiaryName: raw.beneficiaryName ?? undefined,
+    beneficiaryIfsc: raw.beneficiaryIfsc ?? undefined,
+    beneficiaryAccountLast4: raw.beneficiaryAccountLast4 ?? undefined,
+    note: raw.note ?? undefined,
+    failureReason: raw.failureReason ?? undefined,
+    lastError: raw.lastError ?? undefined,
+    requestedByName: raw.requestedByName ?? undefined,
+    requestedAt: raw.requestedAt ?? undefined,
+    authorizedByName: raw.authorizedByName ?? undefined,
+    authorizedAt: raw.authorizedAt ?? undefined,
+    selfAuthorized: raw.selfAuthorized ?? false,
+    settledAt: raw.settledAt ?? undefined,
+  };
+}
+
+const PaymentsSchema = z.object({
+  billId: id,
+  billNumber: nullableString,
+  provider: nullableString,
+  payableId: numeric.nullish(),
+  amountRecorded: money,
+  amountPaid: money,
+  amountDue: money,
+  paymentState: nullableString,
+  inFlight: nullableBoolean,
+  beneficiaryReady: nullableBoolean,
+  payments: z.array(z.unknown()).nullish(),
+});
+
+/** Parses a bill's payments and what is left to pay. `billId` is required. */
+export function parseBillPayments(json: unknown): BillPayments {
+  const raw = PaymentsSchema.parse(json);
+  return {
+    billId: String(raw.billId),
+    billNumber: raw.billNumber ?? '',
+    provider: parsePaymentProvider(raw.provider),
+    payableId: raw.payableId ?? undefined,
+    amountRecorded: raw.amountRecorded ?? undefined,
+    amountPaid: raw.amountPaid ?? undefined,
+    amountDue: raw.amountDue ?? undefined,
+    paymentState: parseOptionalPaymentState(raw.paymentState),
+    inFlight: raw.inFlight ?? false,
+    beneficiaryReady: raw.beneficiaryReady ?? false,
+    payments: (raw.payments ?? []).map(parseBillPayment),
   };
 }
 
@@ -585,6 +960,9 @@ const BillSummarySchema = z.object({
   submittedAt: backendDate,
   approvedAt: backendDate,
   createdAt: backendDate,
+  amountPaid: money,
+  amountDue: money,
+  paymentState: nullableString,
 });
 
 /** Parses a bill list row. Only `id` is required. */
@@ -610,6 +988,9 @@ export function parseBillSummary(json: unknown): BillSummary {
     submittedAt: raw.submittedAt ?? undefined,
     approvedAt: raw.approvedAt ?? undefined,
     createdAt: raw.createdAt ?? undefined,
+    amountPaid: raw.amountPaid ?? undefined,
+    amountDue: raw.amountDue ?? undefined,
+    paymentState: parseOptionalPaymentState(raw.paymentState),
   };
 }
 
@@ -630,6 +1011,8 @@ const ContractSummarySchema = z.object({
   billedPercent: money,
   openBill: z.unknown().nullish(),
   lastApprovedAt: backendDate,
+  paidToDate: money,
+  amountDue: money,
 });
 
 /** Parses one contract's billing summary. `subContractId` is required. */
@@ -652,6 +1035,8 @@ export function parseContractBillingSummary(json: unknown): ContractBillingSumma
     billedPercent: raw.billedPercent ?? undefined,
     openBill: raw.openBill ? parseBillSummary(raw.openBill) : undefined,
     lastApprovedAt: raw.lastApprovedAt ?? undefined,
+    paidToDate: raw.paidToDate ?? 0,
+    amountDue: raw.amountDue ?? 0,
   };
 }
 
@@ -923,6 +1308,9 @@ const BillSchema = BillSummarySchema.extend({
   selfApproved: nullableBoolean,
   payableId: numeric.nullish(),
   updatedAt: backendDate,
+  amountPaid: money,
+  amountDue: money,
+  paymentState: nullableString,
 });
 
 /** Parses a full bill. Only `id` is required. */
@@ -980,6 +1368,9 @@ export function parseBill(json: unknown): Bill {
     payableId: raw.payableId ?? undefined,
     createdAt: raw.createdAt ?? undefined,
     updatedAt: raw.updatedAt ?? undefined,
+    amountPaid: raw.amountPaid ?? undefined,
+    amountDue: raw.amountDue ?? undefined,
+    paymentState: parseOptionalPaymentState(raw.paymentState),
   };
 }
 

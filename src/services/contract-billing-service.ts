@@ -7,6 +7,9 @@
  *
  * Endpoints:
  * - `GET    /contract-billing/web/overview`                                   home page figures
+ * - `GET    /contract-billing/web/projects`                                   projects with billing added up, paged
+ * - `GET    /contract-billing/web/projects/{id}`                              one project's figures
+ * - `GET    /contract-billing/web/activity`                                   recent bill events
  * - `GET    /contract-billing/web/contracts`                                  contracts, paged
  * - `GET    /contract-billing/web/contracts/{id}`                             one contract's billing
  * - `GET    /contract-billing/web/contracts/{id}/boq-items`                   its BOQ
@@ -36,6 +39,9 @@
  * - `POST   /contract-billing/web/bills/{id}/documents/presign`               step 1 of upload
  * - `POST   /contract-billing/web/bills/{id}/documents/register`              step 3, with a document type
  * - `DELETE /contract-billing/web/bills/{id}/documents/{attachmentId}`        remove one
+ * - `GET    /contract-billing/web/bills/{id}/payments`                        its payments and what is left to pay
+ * - `POST   /contract-billing/web/bills/{id}/payments`                        raise a payment
+ * - `POST   /contract-billing/web/bill-payments/{id}/authorize|reject|record|sync`
  *
  * Every function throws {@link ApiError} on a non-2xx response or a parse
  * failure. The server's message is on the error, for the failure toast.
@@ -55,7 +61,9 @@ import {
   Bill,
   BillDocumentType,
   BillEvent,
+  BillActivity,
   BillListParams,
+  BillPayments,
   BillSummary,
   BillingOverview,
   BillingPage,
@@ -71,9 +79,15 @@ import {
   MeasurementRequest,
   MilestoneRequirement,
   MilestoneRequirementRequest,
+  ProjectBillingListParams,
+  ProjectBillingSummary,
+  RaiseBillPaymentRequest,
+  RecordBillPaymentRequest,
   UpdateBillRequest,
   parseBill,
+  parseBillActivity,
   parseBillEvent,
+  parseBillPayments,
   parseBillSummary,
   parseBillingOverview,
   parseBillingPage,
@@ -82,6 +96,7 @@ import {
   parseContractBillingSummary,
   parseDeductionRule,
   parseMilestoneRequirement,
+  parseProjectBillingSummary,
 } from '../types/contract-billing/contract-billing';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -160,6 +175,31 @@ export const contractBillingService = {
   async getOverview(): Promise<BillingOverview> {
     const data = await api.get<ApiResponse>(`${BASE}/overview`);
     return parseWith('billing overview', data, parseBillingOverview);
+  },
+
+  /** `GET /contract-billing/web/projects`: one page, by project name, with contracts and bills added up. */
+  async listProjects(params: ProjectBillingListParams = {}): Promise<BillingPage<ProjectBillingSummary>> {
+    const query: Record<string, string | number | boolean> = {};
+    if (params.search !== undefined) query.search = params.search;
+    if (params.pageNo !== undefined) query.pageNo = params.pageNo;
+    if (params.pageSize !== undefined) query.pageSize = params.pageSize;
+    const data = await api.get<ApiResponse>(`${BASE}/projects`, query);
+    return parseWith('billing projects', data, (raw) => parseBillingPage(raw, parseProjectBillingSummary));
+  },
+
+  /** `GET /contract-billing/web/projects/{id}` */
+  async getProject(projectId: number): Promise<ProjectBillingSummary> {
+    const data = await api.get<ApiResponse>(`${BASE}/projects/${projectId}`);
+    return parseWith('billing project', data, parseProjectBillingSummary);
+  },
+
+  /** `GET /contract-billing/web/activity`: the latest bill events, across the organization or for one project. */
+  async listActivity(params: { projectId?: number; limit?: number } = {}): Promise<BillActivity[]> {
+    const query: Record<string, string | number | boolean> = {};
+    if (params.projectId !== undefined) query.projectId = params.projectId;
+    if (params.limit !== undefined) query.limit = params.limit;
+    const data = await api.get<ApiResponse>(`${BASE}/activity`, query);
+    return parseArrayWith('billing activity', data, parseBillActivity);
   },
 
   /** `GET /contract-billing/web/contracts`: one page, newest contract first. */
@@ -275,6 +315,7 @@ export const contractBillingService = {
     if (req.contractorReference !== undefined) payload.contractorReference = req.contractorReference;
     if (req.location !== undefined) payload.location = req.location;
     if (req.remarks !== undefined) payload.remarks = req.remarks;
+    if (req.draftFromInspections !== undefined) payload.draftFromInspections = req.draftFromInspections;
     const data = await api.post<ApiResponse>(`${BASE}/bills`, payload);
     return parseWith('bill', data, parseBill);
   },
@@ -393,5 +434,51 @@ export const contractBillingService = {
 
   async deleteDocument(id: string, attachmentId: number): Promise<void> {
     await api.delete(`${BASE}/bills/${id}/documents/${attachmentId}`);
+  },
+
+  // ---------------------------------------------------------------- payments
+
+  /** `GET /contract-billing/web/bills/{id}/payments`: the figures are the payable's. */
+  async getBillPayments(billId: string): Promise<BillPayments> {
+    const data = await api.get<ApiResponse>(`${BASE}/bills/${billId}/payments`);
+    return parseWith('bill payments', data, parseBillPayments);
+  },
+
+  /** `POST /contract-billing/web/bills/{id}/payments`: raises a payment for the second signature. */
+  async raiseBillPayment(billId: string, req: RaiseBillPaymentRequest): Promise<BillPayments> {
+    const payload: Record<string, unknown> = {};
+    payload.amount = req.amount;
+    if (req.note !== undefined) payload.note = req.note;
+    const data = await api.post<ApiResponse>(`${BASE}/bills/${billId}/payments`, payload);
+    return parseWith('bill payments', data, parseBillPayments);
+  },
+
+  /** `POST /contract-billing/web/bill-payments/{id}/authorize`: also sends it when a provider carries it. */
+  async authorizeBillPayment(paymentId: string): Promise<BillPayments> {
+    const data = await api.post<ApiResponse>(`${BASE}/bill-payments/${paymentId}/authorize`);
+    return parseWith('bill payments', data, parseBillPayments);
+  },
+
+  /** `POST /contract-billing/web/bill-payments/{id}/reject`, with a reason. */
+  async rejectBillPayment(paymentId: string, text: string): Promise<BillPayments> {
+    const payload: Record<string, unknown> = {};
+    payload.text = text;
+    const data = await api.post<ApiResponse>(`${BASE}/bill-payments/${paymentId}/reject`, payload);
+    return parseWith('bill payments', data, parseBillPayments);
+  },
+
+  /** `POST /contract-billing/web/bill-payments/{id}/record`: says a manual payment was made. */
+  async recordBillPayment(paymentId: string, req: RecordBillPaymentRequest): Promise<BillPayments> {
+    const payload: Record<string, unknown> = {};
+    payload.bankReference = req.bankReference;
+    payload.paidOn = req.paidOn;
+    const data = await api.post<ApiResponse>(`${BASE}/bill-payments/${paymentId}/record`, payload);
+    return parseWith('bill payments', data, parseBillPayments);
+  },
+
+  /** `POST /contract-billing/web/bill-payments/{id}/sync`: sends again, or asks the provider where it stands. */
+  async syncBillPayment(paymentId: string): Promise<BillPayments> {
+    const data = await api.post<ApiResponse>(`${BASE}/bill-payments/${paymentId}/sync`);
+    return parseWith('bill payments', data, parseBillPayments);
   },
 };

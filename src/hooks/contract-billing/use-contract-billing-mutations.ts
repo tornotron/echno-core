@@ -18,6 +18,8 @@ import type {
   ManualAdjustmentRequest,
   MeasurementRequest,
   MilestoneRequirementRequest,
+  RaiseBillPaymentRequest,
+  RecordBillPaymentRequest,
   UpdateBillRequest,
 } from '../../types/contract-billing/contract-billing';
 import { contractBillingKeys } from './keys';
@@ -210,6 +212,54 @@ export function useDeleteBillDocument() {
   return useMutation({
     mutationFn: ({ id, attachmentId }: { id: string; attachmentId: number }) =>
       contractBillingService.deleteDocument(id, attachmentId),
+    onSuccess: invalidate,
+  });
+}
+
+/** Raises a payment on an approved bill. Mutate with `{ billId, req }`. */
+export function useRaiseBillPayment() {
+  const invalidate = useInvalidateBilling();
+  return useMutation({
+    mutationFn: ({ billId, req }: { billId: string; req: RaiseBillPaymentRequest }) =>
+      contractBillingService.raiseBillPayment(billId, req),
+    onSuccess: invalidate,
+  });
+}
+
+/** Gives a payment its second signature, which also sends it when a provider carries it. Mutate with the payment id. */
+export function useAuthorizeBillPayment() {
+  const invalidate = useInvalidateBilling();
+  return useMutation({
+    mutationFn: (paymentId: string) => contractBillingService.authorizeBillPayment(paymentId),
+    onSuccess: invalidate,
+  });
+}
+
+/** Declines a payment before a provider has acknowledged it. Mutate with `{ paymentId, text }`. */
+export function useRejectBillPayment() {
+  const invalidate = useInvalidateBilling();
+  return useMutation({
+    mutationFn: ({ paymentId, text }: { paymentId: string; text: string }) =>
+      contractBillingService.rejectBillPayment(paymentId, text),
+    onSuccess: invalidate,
+  });
+}
+
+/** Says a manual payment was made from the bank. Mutate with `{ paymentId, req }`. */
+export function useRecordBillPayment() {
+  const invalidate = useInvalidateBilling();
+  return useMutation({
+    mutationFn: ({ paymentId, req }: { paymentId: string; req: RecordBillPaymentRequest }) =>
+      contractBillingService.recordBillPayment(paymentId, req),
+    onSuccess: invalidate,
+  });
+}
+
+/** Sends a payment again, or asks the provider where it stands. Mutate with the payment id. */
+export function useSyncBillPayment() {
+  const invalidate = useInvalidateBilling();
+  return useMutation({
+    mutationFn: (paymentId: string) => contractBillingService.syncBillPayment(paymentId),
     onSuccess: invalidate,
   });
 }

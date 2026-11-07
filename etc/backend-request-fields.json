@@ -3,7 +3,7 @@
     "repository": "tornotron/echno-backend",
     "ref": "development",
     "path": "docs/openapi.json",
-    "sha256": "e3ffb40bf65bd023b8b6ced65fd4d24ce48efb7cd30b56b8632dfb6d84c5f342"
+    "sha256": "ee62cca5e5c7e4534cca1a67c6f47a088c3808d81c8edc9db6981b07e2d81b57"
   },
   "operations": {
     "POST /api/v1/assets/web": {
@@ -831,6 +831,40 @@
       ],
       "acceptsAnyField": false
     },
+    "POST /api/v1/contract-billing/bill-payments/{paymentId}/authorize": {
+      "schema": null,
+      "fields": [],
+      "required": [],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/contract-billing/bill-payments/{paymentId}/record": {
+      "schema": "RecordBillPaymentRequest",
+      "fields": [
+        "bankReference",
+        "paidOn"
+      ],
+      "required": [
+        "bankReference",
+        "paidOn"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/contract-billing/bill-payments/{paymentId}/reject": {
+      "schema": "BillCommentRequest",
+      "fields": [
+        "text"
+      ],
+      "required": [
+        "text"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/contract-billing/bill-payments/{paymentId}/sync": {
+      "schema": null,
+      "fields": [],
+      "required": [],
+      "acceptsAnyField": false
+    },
     "POST /api/v1/contract-billing/bills": {
       "schema": "CreateBillRequest",
       "fields": [
@@ -838,6 +872,7 @@
         "claimedPercent",
         "contractMilestoneId",
         "contractorReference",
+        "draftFromInspections",
         "location",
         "periodFrom",
         "periodTo",
@@ -923,6 +958,17 @@
       ],
       "required": [
         "text"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/contract-billing/bills/{id}/payments": {
+      "schema": "RaiseBillPaymentRequest",
+      "fields": [
+        "amount",
+        "note"
+      ],
+      "required": [
+        "amount"
       ],
       "acceptsAnyField": false
     },
@@ -1064,6 +1110,40 @@
       ],
       "acceptsAnyField": false
     },
+    "POST /api/v1/contract-billing/web/bill-payments/{paymentId}/authorize": {
+      "schema": null,
+      "fields": [],
+      "required": [],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/contract-billing/web/bill-payments/{paymentId}/record": {
+      "schema": "RecordBillPaymentRequest",
+      "fields": [
+        "bankReference",
+        "paidOn"
+      ],
+      "required": [
+        "bankReference",
+        "paidOn"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/contract-billing/web/bill-payments/{paymentId}/reject": {
+      "schema": "BillCommentRequest",
+      "fields": [
+        "text"
+      ],
+      "required": [
+        "text"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/contract-billing/web/bill-payments/{paymentId}/sync": {
+      "schema": null,
+      "fields": [],
+      "required": [],
+      "acceptsAnyField": false
+    },
     "POST /api/v1/contract-billing/web/bills": {
       "schema": "CreateBillRequest",
       "fields": [
@@ -1071,6 +1151,7 @@
         "claimedPercent",
         "contractMilestoneId",
         "contractorReference",
+        "draftFromInspections",
         "location",
         "periodFrom",
         "periodTo",
@@ -1156,6 +1237,17 @@
       ],
       "required": [
         "text"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/contract-billing/web/bills/{id}/payments": {
+      "schema": "RaiseBillPaymentRequest",
+      "fields": [
+        "amount",
+        "note"
+      ],
+      "required": [
+        "amount"
       ],
       "acceptsAnyField": false
     },
@@ -2374,6 +2466,7 @@
         "locationNote",
         "observedAt",
         "projectId",
+        "regions",
         "spatialNodeId",
         "suggestedSeverity",
         "title"
@@ -2402,7 +2495,8 @@
         "changes",
         "decision",
         "note",
-        "outcome"
+        "outcome",
+        "rejectReason"
       ],
       "required": [
         "decision"
@@ -3597,6 +3691,7 @@
         "modelVersion",
         "observedAt",
         "projectId",
+        "regions",
         "source",
         "sourceDeviceId",
         "spatialNodeId",
