@@ -2,12 +2,22 @@ import { afterEach, describe, expect, spyOn, test } from 'bun:test';
 
 import { api, ApiError } from '../lib/api/api-client';
 import {
+  BillEventType,
+  BillPaymentProvider,
+  BillPaymentState,
+  BillPaymentStatus,
   BillStatus,
   BillingModel,
   DeductionBasis,
   DeductionKind,
+  ProjectBillingState,
+  isBillPaymentInFlight,
   parseBill,
+  parseBillActivity,
+  parseBillPayments,
+  parseBillingOverview,
   parseContractBillingSummary,
+  parseProjectBillingSummary,
 } from '../types/contract-billing/contract-billing';
 import { contractBillingService } from './contract-billing-service';
 
@@ -101,6 +111,106 @@ describe('contractBillingService paths', () => {
     await expect(contractBillingService.getBill(ID)).rejects.toBeInstanceOf(ApiError);
     spyOn(api, 'get').mockResolvedValue({ not: 'an array' });
     await expect(contractBillingService.getEvents(ID)).rejects.toBeInstanceOf(ApiError);
+  });
+});
+
+describe('project billing and payment paths', () => {
+  const PAYMENTS = { billId: ID, billNumber: 'RA-01', provider: 'MANUAL', payments: [] };
+
+  test('projects and activity read the web twin with the filters given', async () => {
+    const get = spyOn(api, 'get').mockResolvedValue({ content: [], totalElements: 0, totalPages: 0 } as never);
+    await contractBillingService.listProjects({ search: 'tower', pageNo: 1, pageSize: 12 });
+    expect(get).toHaveBeenCalledWith('/contract-billing/web/projects', { search: 'tower', pageNo: 1, pageSize: 12 });
+    get.mockResolvedValue({ projectId: 7 } as never);
+    expect((await contractBillingService.getProject(7)).projectId).toBe(7);
+    expect(get).toHaveBeenLastCalledWith('/contract-billing/web/projects/7');
+    get.mockResolvedValue([] as never);
+    await contractBillingService.listActivity({ projectId: 7, limit: 8 });
+    expect(get).toHaveBeenCalledWith('/contract-billing/web/activity', { projectId: 7, limit: 8 });
+  });
+
+  test('a bill drafted from inspections says so, and an ordinary bill does not', async () => {
+    const post = spyOn(api, 'post').mockResolvedValue({ id: ID } as never);
+    await contractBillingService.createBill({ subContractId: 1, billingModel: BillingModel.RUNNING_ACCOUNT, draftFromInspections: true });
+    expect(post.mock.calls[0]?.[1]).toEqual({ subContractId: 1, billingModel: 'RUNNING_ACCOUNT', draftFromInspections: true });
+    await contractBillingService.createBill({ subContractId: 1, billingModel: BillingModel.RUNNING_ACCOUNT });
+    expect(post.mock.calls[1]?.[1]).toEqual({ subContractId: 1, billingModel: 'RUNNING_ACCOUNT' });
+  });
+
+  test('each payment step posts to its own path with the payment id', async () => {
+    const post = spyOn(api, 'post').mockResolvedValue(PAYMENTS as never);
+    await contractBillingService.raiseBillPayment(ID, { amount: 250000.5, note: 'First part' });
+    expect(post).toHaveBeenLastCalledWith(`/contract-billing/web/bills/${ID}/payments`, { amount: 250000.5, note: 'First part' });
+    await contractBillingService.raiseBillPayment(ID, { amount: 10 });
+    expect(post).toHaveBeenLastCalledWith(`/contract-billing/web/bills/${ID}/payments`, { amount: 10 });
+    await contractBillingService.authorizeBillPayment('p1');
+    expect(post).toHaveBeenLastCalledWith('/contract-billing/web/bill-payments/p1/authorize');
+    await contractBillingService.rejectBillPayment('p1', 'Wrong amount');
+    expect(post).toHaveBeenLastCalledWith('/contract-billing/web/bill-payments/p1/reject', { text: 'Wrong amount' });
+    await contractBillingService.recordBillPayment('p1', { bankReference: 'UTR-1', paidOn: '2026-11-08' });
+    expect(post).toHaveBeenLastCalledWith('/contract-billing/web/bill-payments/p1/record', { bankReference: 'UTR-1', paidOn: '2026-11-08' });
+    await contractBillingService.syncBillPayment('p1');
+    expect(post).toHaveBeenLastCalledWith('/contract-billing/web/bill-payments/p1/sync');
+  });
+
+  test('a malformed payments payload is an ApiError', async () => {
+    spyOn(api, 'get').mockResolvedValue({ payments: 'nope' } as never);
+    await expect(contractBillingService.getBillPayments(ID)).rejects.toBeInstanceOf(ApiError);
+  });
+});
+
+describe('project billing and payment parsers', () => {
+  test('a project reads its figures and an unknown state as in progress, which claims nothing about money', () => {
+    const row = parseProjectBillingSummary({
+      projectId: 7,
+      projectName: 'Tower A',
+      contractValue: '1000000.00',
+      amountDue: '40.50',
+      billingState: 'PAYMENT_DUE',
+    });
+    expect(row.contractValue).toBe(1000000);
+    expect(row.amountDue).toBe(40.5);
+    expect(row.billingState).toBe(ProjectBillingState.PAYMENT_DUE);
+    expect(row.city).toBeUndefined();
+    expect(parseProjectBillingSummary({ projectId: 7, billingState: 'NEW' }).billingState).toBe(ProjectBillingState.IN_PROGRESS);
+  });
+
+  test('payments read as numbers, and an unknown status is treated as still in flight', () => {
+    const view = parseBillPayments({
+      billId: ID,
+      billNumber: 'RA-01',
+      provider: 'FAKE',
+      amountDue: '600.00',
+      paymentState: 'PART_PAID',
+      inFlight: false,
+      payments: [
+        { id: 'p1', billId: ID, amount: '400.00', status: 'SETTLED', provider: 'FAKE', test: true, bankReference: 'TEST-1' },
+        { id: 'p2', billId: ID, amount: '1.00', status: 'SOMETHING_NEW' },
+      ],
+    });
+    expect(view.provider).toBe(BillPaymentProvider.FAKE);
+    expect(view.amountDue).toBe(600);
+    expect(view.paymentState).toBe(BillPaymentState.PART_PAID);
+    expect(view.payments[0]?.amount).toBe(400);
+    expect(view.payments[0]?.test).toBe(true);
+    expect(isBillPaymentInFlight(view.payments[0]?.status as BillPaymentStatus)).toBe(false);
+    expect(view.payments[1]?.status).toBe(BillPaymentStatus.PROCESSING);
+    expect(view.payments[1]?.provider).toBe(BillPaymentProvider.MANUAL);
+    expect(isBillPaymentInFlight(view.payments[1]?.status as BillPaymentStatus)).toBe(true);
+  });
+
+  test('a recent event names its bill, and a payment event is not read as a note', () => {
+    const event = parseBillActivity({ id: 'e1', billId: ID, billNumber: 'RA-01', type: 'PAYMENT_SETTLED', projectId: 7 });
+    expect(event.type).toBe(BillEventType.PAYMENT_SETTLED);
+    expect(event.billId).toBe(ID);
+  });
+
+  test('the overview and a contract default their new figures, for a backend that has not sent them yet', () => {
+    expect(parseBillingOverview({}).paidToDate).toBe(0);
+    expect(parseBillingOverview({ paymentsInFlight: 2 }).paymentsInFlight).toBe(2);
+    expect(parseContractBillingSummary({ subContractId: 1 }).amountDue).toBe(0);
+    expect(parseBill({ id: ID, amountPaid: '5.00', paymentState: 'UNPAID' }).amountPaid).toBe(5);
+    expect(parseBill({ id: ID }).paymentState).toBeUndefined();
   });
 });
 

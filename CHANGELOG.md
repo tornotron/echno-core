@@ -5,6 +5,25 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
+## [v11.4.0] - 2026-11-08
+
+Billing grouped by project, and paying an approved bill (#164; backend design note
+`docs/specs/2026-11-08-billing-in-inspection-and-payments.md`). Additive: nothing existing changes
+shape, and every new figure on an existing type defaults when the backend has not sent it yet.
+
+- Projects: `useBillingProjects`, `useBillingProject` and `contractBillingService.listProjects` /
+  `getProject`, with `ProjectBillingSummary` and `ProjectBillingState`.
+- Recent activity: `useBillingActivity` and `listActivity`, with `BillActivity`.
+- Payments: `useBillPayments`, `useRaiseBillPayment`, `useAuthorizeBillPayment`, `useRejectBillPayment`,
+  `useRecordBillPayment`, `useSyncBillPayment` and the matching service functions, with `BillPayments`,
+  `BillPayment`, `BillPaymentStatus`, `BillPaymentProvider` and `isBillPaymentInFlight`. An unknown
+  payment status reads as `PROCESSING`, so the client offers nothing that would start another payment.
+- `Bill` and `BillSummary` gain `amountPaid`, `amountDue` and `paymentState`; `ContractBillingSummary`
+  gains `paidToDate` and `amountDue`; `BillingOverview` gains `projectsInBilling`, `pendingActions`,
+  `paidToDate`, `amountDue` and `paymentsInFlight`. `BillEventType` gains the `PAYMENT_*` events.
+- `CreateBillRequest.draftFromInspections`: start a running account bill's claimed quantities from the
+  inspected progress of each BOQ item's linked activity.
+
 ## [v11.3.2] - 2026-10-27
 
 Field-level validation messages showed only their first character (#156).

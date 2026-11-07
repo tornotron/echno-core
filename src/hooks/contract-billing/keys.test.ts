@@ -9,6 +9,9 @@ describe('contract billing keys', () => {
     expect(contractBillingKeys.contract(3)).toEqual(['contract-billing', 'contract', 3]);
     expect(contractBillingKeys.events('b1')).toEqual(['contract-billing', 'bill', 'b1', 'events']);
     expect(contractBillingKeys.bills({ projectId: 7 })).toEqual(['contract-billing', 'bills', { projectId: 7 }]);
+    expect(contractBillingKeys.projects({ search: 'a' })).toEqual(['contract-billing', 'projects', { search: 'a' }]);
+    expect(contractBillingKeys.activity({ limit: 5 })).toEqual(['contract-billing', 'activity', { limit: 5 }]);
+    expect(contractBillingKeys.payments('b1')).toEqual(['contract-billing', 'bill', 'b1', 'payments']);
   });
 
   test('every billing mutation invalidates the billing prefix', () => {

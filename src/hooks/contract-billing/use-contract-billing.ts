@@ -7,7 +7,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { contractBillingService } from '../../services/contract-billing-service';
 import { shouldRetry } from '../../lib/query/retry';
-import type { BillListParams, ContractBillingListParams } from '../../types/contract-billing/contract-billing';
+import type { BillListParams, ContractBillingListParams, ProjectBillingListParams } from '../../types/contract-billing/contract-billing';
 import { contractBillingKeys } from './keys';
 
 /** Organization-wide figures for the billing home page. */
@@ -16,6 +16,46 @@ export function useBillingOverview(options: { enabled?: boolean } = {}) {
     queryKey: contractBillingKeys.overview(),
     queryFn: () => contractBillingService.getOverview(),
     enabled: options.enabled ?? true,
+    retry: shouldRetry,
+  });
+}
+
+/** One page of projects with their contracts and bills added up. */
+export function useBillingProjects(params: ProjectBillingListParams = {}, options: { enabled?: boolean } = {}) {
+  return useQuery({
+    queryKey: contractBillingKeys.projects(params),
+    queryFn: () => contractBillingService.listProjects(params),
+    enabled: options.enabled ?? true,
+    retry: shouldRetry,
+  });
+}
+
+/** One project's billing figures. Disabled until an id is known. */
+export function useBillingProject(projectId: number | undefined) {
+  return useQuery({
+    queryKey: contractBillingKeys.project(projectId ?? 0),
+    queryFn: () => contractBillingService.getProject(projectId as number),
+    enabled: Boolean(projectId),
+    retry: shouldRetry,
+  });
+}
+
+/** The latest bill events, across the organization or for one project. */
+export function useBillingActivity(params: { projectId?: number; limit?: number } = {}, options: { enabled?: boolean } = {}) {
+  return useQuery({
+    queryKey: contractBillingKeys.activity(params),
+    queryFn: () => contractBillingService.listActivity(params),
+    enabled: options.enabled ?? true,
+    retry: shouldRetry,
+  });
+}
+
+/** A bill's payments and what is left to pay. Disabled until an id is known. */
+export function useBillPayments(billId: string | undefined, options: { enabled?: boolean } = {}) {
+  return useQuery({
+    queryKey: contractBillingKeys.payments(billId ?? ''),
+    queryFn: () => contractBillingService.getBillPayments(billId as string),
+    enabled: (options.enabled ?? true) && Boolean(billId),
     retry: shouldRetry,
   });
 }
