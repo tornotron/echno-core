@@ -170,8 +170,11 @@ describe('an organization takes its owner from the token', () => {
   });
 });
 
-describe("an issue's project comes from its task", () => {
-  test('create sends taskId and not projectId', () => {
+describe("an issue carries its task and its project", () => {
+  // projectId used to be left out, because the backend took an issue's project
+  // from its task alone. Since ClickUp 14zdkkvzx60 an issue can be raised
+  // without a task, so the project is a field of IssueCreationDto and is sent.
+  test('create sends taskId and projectId', () => {
     const payload = createIssueToJson({
       title: 'Honeycombing on the block A raft',
       issueType: IssueType.quality,
@@ -180,9 +183,7 @@ describe("an issue's project comes from its task", () => {
       assigneeId: 8,
     });
 
-    expect(payload).not.toHaveProperty('projectId');
-    // `taskId` is what the backend walks to reach the project, so losing it
-    // alongside `projectId` would leave the issue attached to nothing.
+    expect(payload.projectId).toBe(3);
     expect(payload.taskId).toBe(17);
     expect(payload.type).toBe(IssueType.quality);
     expect(payload.assignedToId).toBe(8);

@@ -2,8 +2,8 @@
  * @module types/issue/issue
  *
  * Domain type and JSON converters for an issue — a tracked work-blocker,
- * defect, or coordination item that may optionally belong to a {@link Task}
- * and always belongs to a project.
+ * defect, or coordination item that may belong to a {@link Task}, and
+ * belongs to a project, a domain (work category), or both.
  */
 import { z } from 'zod';
 import { IssuePriority, issuePriorityFromString } from './issue-priority';
@@ -34,6 +34,10 @@ const IssueResponseSchema = z.object({
   id: opaque,
   taskId: optionalNumericId,
   taskName: nullableString,
+  projectId: optionalNumericId,
+  projectName: nullableString,
+  categoryId: optionalNumericId,
+  categoryName: nullableString,
   title: nullableString,
   description: nullableString,
   type: z.string(),
@@ -63,6 +67,21 @@ export interface Issue {
 
   /** Denormalised parent-task name for list-view rendering. May be absent on partial DTOs. */
   taskName?: string;
+
+  /**
+   * The project the issue belongs to. Absent on an issue with no project (one
+   * raised against a domain only) and on a backend older than the field.
+   */
+  projectId?: number;
+
+  /** Denormalised project name. Absent on the simple view. */
+  projectName?: string;
+
+  /** The issue's domain: the id of the work category it concerns. */
+  categoryId?: number;
+
+  /** Denormalised domain (work category) name. Absent on the simple view. */
+  categoryName?: string;
 
   /** Short human-readable summary. */
   title: string;
@@ -130,6 +149,10 @@ export function parseIssue(json: unknown): Issue {
     id,
     taskId: raw.taskId ?? undefined,
     taskName: raw.taskName ?? undefined,
+    projectId: raw.projectId ?? undefined,
+    projectName: raw.projectName ?? undefined,
+    categoryId: raw.categoryId ?? undefined,
+    categoryName: raw.categoryName ?? undefined,
     title: raw.title ?? '',
     description: raw.description ?? undefined,
     type: issueTypeFromString(raw.type),

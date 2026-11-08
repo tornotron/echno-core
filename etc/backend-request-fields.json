@@ -2794,8 +2794,10 @@
       "schema": "IssueCreationDto",
       "fields": [
         "assignedToId",
+        "categoryId",
         "description",
         "priority",
+        "projectId",
         "status",
         "taskId",
         "title",
@@ -2846,8 +2848,10 @@
       "schema": "IssueCreationDto",
       "fields": [
         "assignedToId",
+        "categoryId",
         "description",
         "priority",
+        "projectId",
         "status",
         "taskId",
         "title",
@@ -2864,9 +2868,12 @@
       "schema": "IssueUpdateFieldsDto",
       "fields": [
         "assignedToId",
+        "categoryId",
         "description",
         "priority",
+        "projectId",
         "status",
+        "taskId",
         "title",
         "type"
       ],
@@ -2877,9 +2884,12 @@
       "schema": "IssueUpdateFieldsDto",
       "fields": [
         "assignedToId",
+        "categoryId",
         "description",
         "priority",
+        "projectId",
         "status",
+        "taskId",
         "title",
         "type"
       ],

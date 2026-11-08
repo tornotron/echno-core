@@ -58,3 +58,27 @@ describe('the priority the client can now set comes back', () => {
     expect(() => parseIssue({ ...valid, priority: 'urgent' })).toThrow();
   });
 });
+
+describe('the project and domain an issue is connected to', () => {
+  // ClickUp 14zdkkvzx60: an issue needs a project or a domain, the task
+  // optional. Both come back on the issue.
+  test('parses the project and the domain the payload carries', () => {
+    const issue = parseIssue({
+      ...valid,
+      projectId: 7,
+      projectName: 'Riverside Tower',
+      categoryId: 3,
+      categoryName: 'Concrete Works',
+    });
+    expect(issue.projectId).toBe(7);
+    expect(issue.projectName).toBe('Riverside Tower');
+    expect(issue.categoryId).toBe(3);
+    expect(issue.categoryName).toBe('Concrete Works');
+  });
+
+  test('an issue from a backend without the fields has neither', () => {
+    const issue = parseIssue(valid);
+    expect(issue.projectId).toBeUndefined();
+    expect(issue.categoryId).toBeUndefined();
+  });
+});
