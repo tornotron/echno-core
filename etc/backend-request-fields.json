@@ -3,9 +3,52 @@
     "repository": "tornotron/echno-backend",
     "ref": "development",
     "path": "docs/openapi.json",
-    "sha256": "9cb9b4b21532ade1a00f12004dee95370c046f34d616940d4d435401b6daf7ea"
+    "sha256": "a58f34cfcfdd58eacb21071bf940c2322ebc86b3ccb4c04f145ab6f4290da53a"
   },
   "operations": {
+    "POST /api/v1/assets": {
+      "schema": "AssetCreationDto",
+      "fields": [
+        "assetCondition",
+        "assetId",
+        "assignedProject",
+        "assignedProjectId",
+        "assignedTo",
+        "assignedToId",
+        "category",
+        "currentValue",
+        "depreciationRate",
+        "description",
+        "fuelType",
+        "insuranceExpiry",
+        "insuranceProvider",
+        "lastMaintenanceDate",
+        "locationId",
+        "maintenanceSchedule",
+        "manufacturer",
+        "maxUsageHours",
+        "model",
+        "movedAt",
+        "movementReason",
+        "name",
+        "nextMaintenanceDate",
+        "notes",
+        "policyNumber",
+        "purchaseDate",
+        "purchasePrice",
+        "registrationNumber",
+        "serialNumber",
+        "status",
+        "type",
+        "usageHours",
+        "vendorId",
+        "warrantyExpiry"
+      ],
+      "required": [
+        "name"
+      ],
+      "acceptsAnyField": false
+    },
     "POST /api/v1/assets/web": {
       "schema": "AssetCreationDto",
       "fields": [
@@ -108,6 +151,99 @@
       "required": [
         "reason"
       ],
+      "acceptsAnyField": false
+    },
+    "PUT /api/v1/assets/{id}": {
+      "schema": "AssetCreationDto",
+      "fields": [
+        "assetCondition",
+        "assetId",
+        "assignedProject",
+        "assignedProjectId",
+        "assignedTo",
+        "assignedToId",
+        "category",
+        "currentValue",
+        "depreciationRate",
+        "description",
+        "fuelType",
+        "insuranceExpiry",
+        "insuranceProvider",
+        "lastMaintenanceDate",
+        "locationId",
+        "maintenanceSchedule",
+        "manufacturer",
+        "maxUsageHours",
+        "model",
+        "movedAt",
+        "movementReason",
+        "name",
+        "nextMaintenanceDate",
+        "notes",
+        "policyNumber",
+        "purchaseDate",
+        "purchasePrice",
+        "registrationNumber",
+        "serialNumber",
+        "status",
+        "type",
+        "usageHours",
+        "vendorId",
+        "warrantyExpiry"
+      ],
+      "required": [
+        "name"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/assets/{id}/movements": {
+      "schema": "AssetMovementCreationDto",
+      "fields": [
+        "correctsMovementId",
+        "movedAt",
+        "notes",
+        "reason",
+        "referenceNumber",
+        "toAssignedTo",
+        "toAssignedToId",
+        "toLocationId",
+        "toProjectId"
+      ],
+      "required": [
+        "reason"
+      ],
+      "acceptsAnyField": false
+    },
+    "PATCH /api/v1/attachment/attachmentId/{attachmentId}/document": {
+      "schema": "AttachmentDocumentMetadataDto",
+      "fields": [
+        "documentType",
+        "expiresOn",
+        "issuedOn"
+      ],
+      "required": [],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/attachment/entityId/{entityId}/entityType/{entityType}": {
+      "schema": null,
+      "fields": [
+        "attachments"
+      ],
+      "required": [
+        "attachments"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/attachment/presign/entityId/{entityId}/entityType/{entityType}": {
+      "schema": null,
+      "fields": [],
+      "required": [],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/attachment/register/entityId/{entityId}/entityType/{entityType}": {
+      "schema": null,
+      "fields": [],
+      "required": [],
       "acceptsAnyField": false
     },
     "PATCH /api/v1/attachment/web/attachmentId/{attachmentId}/document": {
@@ -790,6 +926,30 @@
       "required": [],
       "acceptsAnyField": false
     },
+    "POST /api/v1/checklist-templates": {
+      "schema": "ChecklistTemplateRequest",
+      "fields": [
+        "active",
+        "applicableElementTypes",
+        "applicableProjectTypes",
+        "description",
+        "items",
+        "name",
+        "trade",
+        "tradeId"
+      ],
+      "required": [
+        "items",
+        "name"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/checklist-templates/starters/{trade}/adopt": {
+      "schema": null,
+      "fields": [],
+      "required": [],
+      "acceptsAnyField": false
+    },
     "POST /api/v1/checklist-templates/web": {
       "schema": "ChecklistTemplateRequest",
       "fields": [
@@ -815,6 +975,24 @@
       "acceptsAnyField": false
     },
     "PUT /api/v1/checklist-templates/web/{id}": {
+      "schema": "ChecklistTemplateRequest",
+      "fields": [
+        "active",
+        "applicableElementTypes",
+        "applicableProjectTypes",
+        "description",
+        "items",
+        "name",
+        "trade",
+        "tradeId"
+      ],
+      "required": [
+        "items",
+        "name"
+      ],
+      "acceptsAnyField": false
+    },
+    "PUT /api/v1/checklist-templates/{id}": {
       "schema": "ChecklistTemplateRequest",
       "fields": [
         "active",
@@ -1429,7 +1607,24 @@
       ],
       "acceptsAnyField": false
     },
+    "PUT /api/v1/document-ingestion/documents/{documentId}/classification": {
+      "schema": "ClassificationRequest",
+      "fields": [
+        "docClass",
+        "segments"
+      ],
+      "required": [
+        "docClass"
+      ],
+      "acceptsAnyField": false
+    },
     "POST /api/v1/document-ingestion/documents/{documentId}/parse": {
+      "schema": null,
+      "fields": [],
+      "required": [],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/document-ingestion/extract-jobs/{jobId}/retry-failed": {
       "schema": null,
       "fields": [],
       "required": [],
@@ -1477,6 +1672,12 @@
       ],
       "acceptsAnyField": false
     },
+    "POST /api/v1/document-ingestion/packages/{packageId}/classification/confirm-all": {
+      "schema": null,
+      "fields": [],
+      "required": [],
+      "acceptsAnyField": false
+    },
     "POST /api/v1/document-ingestion/packages/{packageId}/documents/presign": {
       "schema": "PresignDocumentRequest",
       "fields": [
@@ -1498,6 +1699,24 @@
       "required": [
         "key"
       ],
+      "acceptsAnyField": false
+    },
+    "PUT /api/v1/document-ingestion/packages/{packageId}/llm-budget": {
+      "schema": "LlmBudgetRequest",
+      "fields": [
+        "budgetTokens",
+        "budgetUsd"
+      ],
+      "required": [],
+      "acceptsAnyField": false
+    },
+    "PUT /api/v1/document-ingestion/settings/llm-budget": {
+      "schema": "LlmBudgetRequest",
+      "fields": [
+        "budgetTokens",
+        "budgetUsd"
+      ],
+      "required": [],
       "acceptsAnyField": false
     },
     "PUT /api/v1/document-ingestion/settings/llm-reading": {
@@ -1711,6 +1930,31 @@
       "required": [],
       "acceptsAnyField": false
     },
+    "POST /api/v1/expenses": {
+      "schema": "ExpenseCreationDto",
+      "fields": [
+        "amount",
+        "budgetId",
+        "category",
+        "currency",
+        "description",
+        "employeeId",
+        "expenseDate",
+        "invoiceId",
+        "notes",
+        "paymentId",
+        "paymentMethod",
+        "projectId",
+        "status",
+        "type",
+        "vendorId"
+      ],
+      "required": [
+        "amount",
+        "description"
+      ],
+      "acceptsAnyField": false
+    },
     "POST /api/v1/expenses/web": {
       "schema": "ExpenseCreationDto",
       "fields": [
@@ -1737,6 +1981,31 @@
       "acceptsAnyField": false
     },
     "PUT /api/v1/expenses/web/{id}": {
+      "schema": "ExpenseUpdateDto",
+      "fields": [
+        "amount",
+        "budgetId",
+        "category",
+        "currency",
+        "description",
+        "employeeId",
+        "expenseDate",
+        "invoiceId",
+        "notes",
+        "paymentId",
+        "paymentMethod",
+        "projectId",
+        "status",
+        "type",
+        "vendorId"
+      ],
+      "required": [
+        "amount",
+        "description"
+      ],
+      "acceptsAnyField": false
+    },
+    "PUT /api/v1/expenses/{id}": {
       "schema": "ExpenseUpdateDto",
       "fields": [
         "amount",
@@ -2486,6 +2755,123 @@
       "required": [],
       "acceptsAnyField": false
     },
+    "POST /api/v1/inspections": {
+      "schema": "CreateInspectionRequest",
+      "fields": [
+        "actualEndTime",
+        "actualStartTime",
+        "areaInspected",
+        "attendees",
+        "category",
+        "checkItems",
+        "clientRepresentative",
+        "contractorId",
+        "defects",
+        "drawingReference",
+        "duration",
+        "inspectorId",
+        "location",
+        "projectId",
+        "scheduledDate",
+        "scheduledTime",
+        "spatialNodeId",
+        "temperature",
+        "title",
+        "trade",
+        "tradeId",
+        "type",
+        "weatherConditions"
+      ],
+      "required": [
+        "inspectorId",
+        "scheduledDate",
+        "title",
+        "type"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/inspections/defects/{defectId}/reinspections": {
+      "schema": "ScheduleReinspectionRequest",
+      "fields": [
+        "assignedInspectorId",
+        "copyAllItems",
+        "targetDate"
+      ],
+      "required": [],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/inspections/observations": {
+      "schema": "CreateObservationRequest",
+      "fields": [
+        "category",
+        "description",
+        "evidenceAttachmentIds",
+        "inspectionId",
+        "locationNote",
+        "observedAt",
+        "projectId",
+        "regions",
+        "spatialNodeId",
+        "suggestedSeverity",
+        "title"
+      ],
+      "required": [
+        "projectId",
+        "title"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/inspections/observations/review-batch": {
+      "schema": "ReviewBatchRequest",
+      "fields": [
+        "decision",
+        "note",
+        "observationIds",
+        "rejectReason"
+      ],
+      "required": [
+        "decision",
+        "observationIds"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/inspections/observations/{id}/evidence/presign": {
+      "schema": null,
+      "fields": [],
+      "required": [],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/inspections/observations/{id}/evidence/register": {
+      "schema": null,
+      "fields": [],
+      "required": [],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/inspections/observations/{id}/review": {
+      "schema": "ReviewObservationRequest",
+      "fields": [
+        "changes",
+        "decision",
+        "note",
+        "outcome",
+        "rejectReason"
+      ],
+      "required": [
+        "decision"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/inspections/reinspections/{id}/outcome": {
+      "schema": "ReinspectionOutcomeRequest",
+      "fields": [
+        "outcome",
+        "remarks"
+      ],
+      "required": [
+        "outcome"
+      ],
+      "acceptsAnyField": false
+    },
     "POST /api/v1/inspections/web": {
       "schema": "CreateInspectionRequest",
       "fields": [
@@ -2742,6 +3128,76 @@
       "acceptsAnyField": false
     },
     "POST /api/v1/inspections/web/{id}/evidence/register": {
+      "schema": null,
+      "fields": [],
+      "required": [],
+      "acceptsAnyField": false
+    },
+    "PUT /api/v1/inspections/{id}": {
+      "schema": "UpdateInspectionRequest",
+      "fields": [
+        "actualEndTime",
+        "actualStartTime",
+        "areaInspected",
+        "attendees",
+        "category",
+        "checkItems",
+        "clientRepresentative",
+        "contractorId",
+        "defects",
+        "drawingReference",
+        "duration",
+        "inspectorId",
+        "location",
+        "projectId",
+        "result",
+        "scheduledDate",
+        "scheduledTime",
+        "spatialNodeId",
+        "status",
+        "temperature",
+        "title",
+        "trade",
+        "tradeId",
+        "type",
+        "weatherConditions"
+      ],
+      "required": [
+        "inspectorId",
+        "scheduledDate",
+        "status",
+        "title",
+        "type"
+      ],
+      "acceptsAnyField": false
+    },
+    "PUT /api/v1/inspections/{id}/annotations": {
+      "schema": "ReplaceAnnotationsRequest",
+      "fields": [
+        "annotations"
+      ],
+      "required": [
+        "annotations"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/inspections/{id}/evidence": {
+      "schema": null,
+      "fields": [
+        "attachments"
+      ],
+      "required": [
+        "attachments"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/inspections/{id}/evidence/presign": {
+      "schema": null,
+      "fields": [],
+      "required": [],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/inspections/{id}/evidence/register": {
       "schema": null,
       "fields": [],
       "required": [],
@@ -3031,6 +3487,40 @@
       "required": [],
       "acceptsAnyField": false
     },
+    "POST /api/v1/labour": {
+      "schema": "LabourCreationDto",
+      "fields": [
+        "additionalNotes",
+        "address",
+        "bankAccountNumber",
+        "bankName",
+        "currentProjectId",
+        "dailyRate",
+        "email",
+        "emergencyContactName",
+        "emergencyContactPhone",
+        "employmentType",
+        "fullName",
+        "ifscCode",
+        "joiningDate",
+        "labourID",
+        "overTimeRate",
+        "phoneNumber",
+        "skillLevel",
+        "specialization",
+        "status"
+      ],
+      "required": [
+        "employmentType",
+        "fullName",
+        "joiningDate",
+        "labourID",
+        "phoneNumber",
+        "skillLevel",
+        "status"
+      ],
+      "acceptsAnyField": false
+    },
     "POST /api/v1/labour/web": {
       "schema": "LabourCreationDto",
       "fields": [
@@ -3066,6 +3556,32 @@
       "acceptsAnyField": false
     },
     "PATCH /api/v1/labour/web/{id}": {
+      "schema": "LabourUpdateDto",
+      "fields": [
+        "additionalNotes",
+        "address",
+        "bankAccountNumber",
+        "bankName",
+        "currentProjectId",
+        "dailyRate",
+        "email",
+        "emergencyContactName",
+        "emergencyContactPhone",
+        "employmentType",
+        "fullName",
+        "ifscCode",
+        "joiningDate",
+        "labourID",
+        "overTimeRate",
+        "phoneNumber",
+        "skillLevel",
+        "specialization",
+        "status"
+      ],
+      "required": [],
+      "acceptsAnyField": false
+    },
+    "PATCH /api/v1/labour/{id}": {
       "schema": "LabourUpdateDto",
       "fields": [
         "additionalNotes",
@@ -3214,7 +3730,6 @@
         "maxDaysPerRequest",
         "minDaysPerRequest",
         "minServiceMonths",
-        "multiLevelApprovalEnabled",
         "organizationId",
         "requiresAttachment",
         "supportingDocumentNote",
@@ -3249,7 +3764,6 @@
         "maxDaysPerRequest",
         "minDaysPerRequest",
         "minServiceMonths",
-        "multiLevelApprovalEnabled",
         "organizationId",
         "requiresAttachment",
         "supportingDocumentNote",
@@ -3296,7 +3810,6 @@
         "maxDaysPerRequest",
         "minDaysPerRequest",
         "minServiceMonths",
-        "multiLevelApprovalEnabled",
         "requiresAttachment",
         "supportingDocumentNote",
         "weekendHolidayTreatment"
@@ -3325,7 +3838,6 @@
         "maxDaysPerRequest",
         "minDaysPerRequest",
         "minServiceMonths",
-        "multiLevelApprovalEnabled",
         "requiresAttachment",
         "supportingDocumentNote",
         "weekendHolidayTreatment"
@@ -3719,6 +4231,24 @@
       "required": [],
       "acceptsAnyField": false
     },
+    "POST /api/v1/ncrs": {
+      "schema": "CreateNcrRequest",
+      "fields": [
+        "defectId",
+        "description",
+        "inspectionId",
+        "severity",
+        "siteEngineerId",
+        "targetDate",
+        "title"
+      ],
+      "required": [
+        "description",
+        "inspectionId",
+        "title"
+      ],
+      "acceptsAnyField": false
+    },
     "POST /api/v1/ncrs/web": {
       "schema": "CreateNcrRequest",
       "fields": [
@@ -3788,6 +4318,66 @@
       "acceptsAnyField": false
     },
     "POST /api/v1/ncrs/web/{ncrId}/reinspections": {
+      "schema": "ScheduleReinspectionRequest",
+      "fields": [
+        "assignedInspectorId",
+        "copyAllItems",
+        "targetDate"
+      ],
+      "required": [],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/ncrs/{id}/assign": {
+      "schema": "AssignNcrRequest",
+      "fields": [
+        "siteEngineerId",
+        "targetDate"
+      ],
+      "required": [
+        "siteEngineerId"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/ncrs/{id}/close": {
+      "schema": null,
+      "fields": [],
+      "required": [],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/ncrs/{id}/corrective-action-complete": {
+      "schema": "NcrRemarksRequest",
+      "fields": [
+        "remarks"
+      ],
+      "required": [],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/ncrs/{id}/reject": {
+      "schema": "NcrRemarksRequest",
+      "fields": [
+        "remarks"
+      ],
+      "required": [],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/ncrs/{id}/reopen": {
+      "schema": "NcrRemarksRequest",
+      "fields": [
+        "remarks"
+      ],
+      "required": [],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/ncrs/{id}/verify": {
+      "schema": "VerifyNcrRequest",
+      "fields": [
+        "reinspectionId",
+        "remarks"
+      ],
+      "required": [],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/ncrs/{ncrId}/reinspections": {
       "schema": "ScheduleReinspectionRequest",
       "fields": [
         "assignedInspectorId",
@@ -4719,6 +5309,36 @@
       "required": [],
       "acceptsAnyField": false
     },
+    "POST /api/v1/receipts": {
+      "schema": "ReceiptCreationDto",
+      "fields": [
+        "amount",
+        "currency",
+        "customerId",
+        "description",
+        "invoiceId",
+        "issuedBy",
+        "notes",
+        "paymentId",
+        "paymentMethod",
+        "projectId",
+        "receiptDate",
+        "receivedFrom",
+        "receivedFromAddress",
+        "referenceNumber",
+        "status",
+        "taxAmount",
+        "taxRate",
+        "taxType",
+        "transactionId",
+        "type"
+      ],
+      "required": [
+        "amount",
+        "receivedFrom"
+      ],
+      "acceptsAnyField": false
+    },
     "POST /api/v1/receipts/web": {
       "schema": "ReceiptCreationDto",
       "fields": [
@@ -4750,6 +5370,36 @@
       "acceptsAnyField": false
     },
     "PUT /api/v1/receipts/web/{id}": {
+      "schema": "ReceiptUpdateDto",
+      "fields": [
+        "amount",
+        "currency",
+        "customerId",
+        "description",
+        "invoiceId",
+        "issuedBy",
+        "notes",
+        "paymentId",
+        "paymentMethod",
+        "projectId",
+        "receiptDate",
+        "receivedFrom",
+        "receivedFromAddress",
+        "referenceNumber",
+        "status",
+        "taxAmount",
+        "taxRate",
+        "taxType",
+        "transactionId",
+        "type"
+      ],
+      "required": [
+        "amount",
+        "receivedFrom"
+      ],
+      "acceptsAnyField": false
+    },
+    "PUT /api/v1/receipts/{id}": {
       "schema": "ReceiptUpdateDto",
       "fields": [
         "amount",
@@ -4963,6 +5613,33 @@
       "required": [],
       "acceptsAnyField": false
     },
+    "POST /api/v1/stock-adjustments": {
+      "schema": "StockAdjustmentCreationDto",
+      "fields": [
+        "adjustmentDate",
+        "adjustmentNumber",
+        "countMethod",
+        "effectiveDate",
+        "justification",
+        "lineItems",
+        "locationId",
+        "physicalCountBy",
+        "physicalCountDate",
+        "primaryReason",
+        "projectId",
+        "sourceDocumentId",
+        "sourceDocumentType",
+        "status",
+        "submittedBy",
+        "totalAdjustmentValue",
+        "totalVarianceQuantity",
+        "type"
+      ],
+      "required": [
+        "justification"
+      ],
+      "acceptsAnyField": false
+    },
     "POST /api/v1/stock-adjustments/web": {
       "schema": "StockAdjustmentCreationDto",
       "fields": [
@@ -5033,6 +5710,49 @@
       ],
       "acceptsAnyField": false
     },
+    "PUT /api/v1/stock-adjustments/{id}": {
+      "schema": "StockAdjustmentCreationDto",
+      "fields": [
+        "adjustmentDate",
+        "adjustmentNumber",
+        "countMethod",
+        "effectiveDate",
+        "justification",
+        "lineItems",
+        "locationId",
+        "physicalCountBy",
+        "physicalCountDate",
+        "primaryReason",
+        "projectId",
+        "sourceDocumentId",
+        "sourceDocumentType",
+        "status",
+        "submittedBy",
+        "totalAdjustmentValue",
+        "totalVarianceQuantity",
+        "type"
+      ],
+      "required": [
+        "justification"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/stock-adjustments/{id}/approve": {
+      "schema": null,
+      "fields": [],
+      "required": [],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/stock-adjustments/{id}/reject": {
+      "schema": "StockAdjustmentRejectionRequest",
+      "fields": [
+        "reason"
+      ],
+      "required": [
+        "reason"
+      ],
+      "acceptsAnyField": false
+    },
     "POST /api/v1/storage-locations": {
       "schema": "StorageLocationCreationDto",
       "fields": [
@@ -5082,6 +5802,59 @@
         "projectId"
       ],
       "required": [],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/sub-contracts": {
+      "schema": "SubContractCreationDto",
+      "fields": [
+        "accountManagerId",
+        "actualCompletionDate",
+        "bankAccountNumber",
+        "bankIfsc",
+        "bankName",
+        "completionPercentage",
+        "contractId",
+        "contractName",
+        "contractValue",
+        "contractorAddress",
+        "contractorContactPerson",
+        "contractorEmail",
+        "contractorGst",
+        "contractorLicense",
+        "contractorName",
+        "contractorPan",
+        "contractorPhone",
+        "currency",
+        "endDate",
+        "insuranceExpiry",
+        "insurancePolicyNumber",
+        "insuranceProvider",
+        "milestones",
+        "mobilizationAdvance",
+        "notes",
+        "overallRating",
+        "paymentTerms",
+        "penaltyClause",
+        "projectId",
+        "projectName",
+        "qualityRating",
+        "retentionPercentage",
+        "safetyRating",
+        "scopeOfWork",
+        "startDate",
+        "status",
+        "supervisorId",
+        "timelinessRating",
+        "totalDue",
+        "totalPaid",
+        "type",
+        "warrantyPeriod",
+        "workDescription"
+      ],
+      "required": [
+        "contractName",
+        "contractorName"
+      ],
       "acceptsAnyField": false
     },
     "POST /api/v1/sub-contracts/web": {
@@ -5138,6 +5911,59 @@
       "acceptsAnyField": false
     },
     "PUT /api/v1/sub-contracts/web/{id}": {
+      "schema": "SubContractCreationDto",
+      "fields": [
+        "accountManagerId",
+        "actualCompletionDate",
+        "bankAccountNumber",
+        "bankIfsc",
+        "bankName",
+        "completionPercentage",
+        "contractId",
+        "contractName",
+        "contractValue",
+        "contractorAddress",
+        "contractorContactPerson",
+        "contractorEmail",
+        "contractorGst",
+        "contractorLicense",
+        "contractorName",
+        "contractorPan",
+        "contractorPhone",
+        "currency",
+        "endDate",
+        "insuranceExpiry",
+        "insurancePolicyNumber",
+        "insuranceProvider",
+        "milestones",
+        "mobilizationAdvance",
+        "notes",
+        "overallRating",
+        "paymentTerms",
+        "penaltyClause",
+        "projectId",
+        "projectName",
+        "qualityRating",
+        "retentionPercentage",
+        "safetyRating",
+        "scopeOfWork",
+        "startDate",
+        "status",
+        "supervisorId",
+        "timelinessRating",
+        "totalDue",
+        "totalPaid",
+        "type",
+        "warrantyPeriod",
+        "workDescription"
+      ],
+      "required": [
+        "contractName",
+        "contractorName"
+      ],
+      "acceptsAnyField": false
+    },
+    "PUT /api/v1/sub-contracts/{id}": {
       "schema": "SubContractCreationDto",
       "fields": [
         "accountManagerId",

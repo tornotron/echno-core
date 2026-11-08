@@ -6,26 +6,29 @@
 
 Checked against `tornotron/echno-backend` `development`, reduced into `etc/backend-request-fields.json` by `scripts/backend-contract.ts`.
 
-Write calls in `src/services`: 237
+Write calls in `src/services`: 246
 
 ## Coverage
 
 | outcome | calls |
 | --- | --- |
-| checked | 165 |
-| sends nothing | 50 |
+| checked | 169 |
+| sends nothing | 52 |
 | endpoint accepts any field name | 0 |
 | endpoint documents no request body | 0 |
-| endpoint not in the document | 8 |
+| endpoint not in the document | 11 |
 | not readable | 14 |
 
-## Findings (8)
+## Findings (11)
 
 - src/services/access-service.ts:162  POST /api/v1/access/web/roles  is not an endpoint in the document
 - src/services/access-service.ts:175  PUT /api/v1/access/web/roles/{}  is not an endpoint in the document
 - src/services/access-service.ts:187  PUT /api/v1/access/web/roles/{}/grants  is not an endpoint in the document
 - src/services/access-service.ts:196  PUT /api/v1/access/web/roles/{}/grantable-roles  is not an endpoint in the document
 - src/services/access-service.ts:222  PUT /api/v1/access/web/users/{}/roles  is not an endpoint in the document
+- src/services/document-ingestion-service.ts:412  PUT /api/v1/document-ingestion/documents/{}/revision  is not an endpoint in the document
+- src/services/document-ingestion-service.ts:418  POST /api/v1/document-ingestion/documents/{}/revision-diff  is not an endpoint in the document
+- src/services/document-ingestion-service.ts:428  POST /api/v1/document-ingestion/candidates/{}/conflict  is not an endpoint in the document
 - src/services/member-invitations-service.ts:106  POST /api/v1/invitations/web/{}/resend  is not an endpoint in the document
 - src/services/member-invitations-service.ts:117  POST /api/v1/invitations/web/{}/revoke  is not an endpoint in the document
 - src/services/member-invitations-service.ts:93  POST /api/v1/invitations/web  is not an endpoint in the document
