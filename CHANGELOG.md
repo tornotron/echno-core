@@ -5,6 +5,44 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
+## [Unreleased]
+
+Document ingestion client, part two (tornotron/echno-backend#957, build plan step 15): document
+classes, extract jobs, the AI reading ledger and budgets, settings, the tender profile, revisions and
+change candidates, and typed readers for the new candidate kinds. Covers backend #1035 and #1038,
+and #1041 for revisions and conflicts. Additive.
+
+- Classification: `listClassifications`, `classifyDocument` (`ClassificationRequest` with optional
+  `ClassRange` page ranges), `confirmAllClassifications` and `confirmAllClassificationsFully`, which
+  calls again while documents remain. Types `DocumentClassification`, `IngestSegment`, `UnreadPage`,
+  `ConfirmAllResult`, `DocClass` with `DOC_CLASSES`, `ClassMethod`, `SegmentStatus`.
+- Extract jobs: `listExtractJobs` and `retryFailedChunks`, with `ExtractJob` and `ExtractJobStatus`.
+  `useExtractJobs` polls while any job is queued, running, waiting on the AI service or paused on
+  the budget (`isExtractJobActive`).
+- Ledger and budget: `listLlmCalls` (organization-wide, filtered by package or file),
+  `listPackageLlmCalls`, `getLlmSpend` and `setPackageLlmBudget`, with `LlmCall`, `LlmCallOutcome`,
+  `LlmCallListParams`, `LlmSpend` and `LlmBudgetRequest`. A null limit goes back to the default.
+- Settings: `getSettings`, `setMonthlyLlmBudget` and `setLlmReading`, with `IngestSettings` and
+  `IngestSettingChange`. A missing switch reads as on, as the backend treats a missing settings row.
+- Tender profile: `getTenderProfile` with `TenderProfile`. It resolves to null on the backend's 404,
+  which means no project field has been applied yet; `MODULE_DISABLED` still throws.
+- Revisions and changes: `setRevision` (`RevisionRequest`), `diffRevision` (`RevisionDiff`) and
+  `resolveConflict` (`ConflictChoice`: `APPLY_CHANGE` or `KEEP_RECORD`).
+- Payload readers, each a non-strict zod schema that never throws: `projectFieldOf`
+  (`ProjectFieldPayload`, keys in `PROJECT_FIELD_KEYS`, with `isProjectFieldOnProject`),
+  `milestoneOf` (`MilestonePayload`) and `changeOf` (`ChangePayload`, numbers as decimal strings,
+  with `overrideRecord`). `hasFlag`, `INGEST_FLAG` for the new flag codes and `INGEST_TARGET` for
+  every target type.
+- Hooks: `useIngestClassifications`, `useExtractJobs`, `useLlmCalls`, `usePackageLlmCalls`,
+  `useLlmSpend`, `useIngestSettings`, `useTenderProfile`, and the mutations
+  `useClassifyIngestDocument`, `useConfirmAllClassifications`, `useRetryExtractJob`,
+  `useSetPackageLlmBudget`, `useSetMonthlyLlmBudget`, `useSetLlmReading`, `useSetIngestRevision`,
+  `useDiffIngestRevision` and `useResolveChangeConflict`, each refreshing the whole domain.
+- `etc/backend-request-fields.json` refreshed from backend `development`, so the step 12 writes are
+  checked. The three revision and conflict calls are recorded in `etc/request-contract.md` as
+  endpoints not in that document until #1041 merges; checked against the #1041 branch's document
+  they line up with no finding.
+
 ## [v11.12.0] - 2026-11-08
 
 The Roles & Permissions screen's access client (tornotron/echno-backend#914, build plan step 29;

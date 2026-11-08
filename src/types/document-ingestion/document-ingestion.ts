@@ -4,7 +4,12 @@
  * Domain types for the Document Ingestion module (`MODULE_DOCUMENT_INGESTION`): tender files in a
  * package, read into candidate values a person accepts, edits or rejects, with a source reference on
  * each value and provenance on each value that reaches a live record. This version covers packages,
- * documents, BOQ sheets with their column mapping, review, apply and provenance.
+ * documents, BOQ sheets with their column mapping, review, apply and provenance; document classes
+ * and page segments, extract jobs, the AI reading ledger, budgets and settings; the tender profile;
+ * revisions of a file and the change candidates a corrigendum or a revised file gives.
+ *
+ * Each candidate kind's payload has a typed reader ({@link boqItemOf}, {@link projectFieldOf},
+ * {@link milestoneOf}, {@link changeOf}) that never throws: a field of the wrong type reads as absent.
  *
  * Backend design note: `docs/specs/2026-11-08-document-ingestion-design.md` in
  * tornotron/echno-backend. The module is off for every organization until an operator opens it, and
@@ -19,6 +24,7 @@ import { z } from 'zod';
 import { PresignedUpload, parsePresignedUpload } from '../attachment';
 import {
   backendDate,
+  money,
   nullableBoolean,
   nullableNumber,
   nullableString,
@@ -61,6 +67,132 @@ export const BOQ_FIELDS: readonly BoqField[] = ['itemCode', 'description', 'unit
 
 /** The `targetType` provenance carries for a row written to a contract BOQ. */
 export const CONTRACT_BOQ_ITEM_TARGET = 'CONTRACT_BOQ_ITEM';
+
+/**
+ * Every `targetType` an applied candidate or a provenance row carries. A `CHANGE` to a value not yet
+ * applied lands on a new candidate, so its target is `CANDIDATE`.
+ */
+export const INGEST_TARGET = {
+  CONTRACT_BOQ_ITEM: CONTRACT_BOQ_ITEM_TARGET,
+  PROJECT: 'PROJECT',
+  TENDER_PROFILE: 'TENDER_PROFILE',
+  WBS_ELEMENT: 'WBS_ELEMENT',
+  CONTRACT_MILESTONE: 'CONTRACT_MILESTONE',
+  CANDIDATE: 'CANDIDATE',
+} as const;
+export type IngestTargetType = (typeof INGEST_TARGET)[keyof typeof INGEST_TARGET];
+
+/** What a document, or a page range of one, is. */
+export type DocClass =
+  | 'NIT'
+  | 'ITB'
+  | 'ELIGIBILITY'
+  | 'GCC'
+  | 'SCC'
+  | 'CONTRACT_DATA'
+  | 'SCOPE'
+  | 'BOQ'
+  | 'SPECIFICATION'
+  | 'DRAWING'
+  | 'MILESTONE_SCHEDULE'
+  | 'CORRIGENDUM'
+  | 'OTHER';
+export const DOC_CLASSES: readonly DocClass[] = [
+  'NIT',
+  'ITB',
+  'ELIGIBILITY',
+  'GCC',
+  'SCC',
+  'CONTRACT_DATA',
+  'SCOPE',
+  'BOQ',
+  'SPECIFICATION',
+  'DRAWING',
+  'MILESTONE_SCHEDULE',
+  'CORRIGENDUM',
+  'OTHER',
+];
+/** Who set a class: a rule, the AI service, or a person. */
+export type ClassMethod = 'DETERMINISTIC' | 'LLM' | 'PERSON';
+export type SegmentStatus = 'PROPOSED' | 'CONFIRMED' | 'EXTRACTING' | 'EXTRACTED' | 'PARTIAL' | 'FAILED';
+/** `WAITING_LLM` and `PAUSED_BUDGET` keep what is done and resume by themselves; `PARTIAL` names the pages not read. */
+export type ExtractJobStatus = 'QUEUED' | 'RUNNING' | 'WAITING_LLM' | 'PAUSED_BUDGET' | 'PARTIAL' | 'DONE' | 'FAILED';
+export type LlmCallOutcome =
+  | 'OK'
+  | 'INVALID_ANSWER'
+  | 'TRUNCATED'
+  | 'RATE_LIMITED'
+  | 'SERVER_ERROR'
+  | 'TIMEOUT'
+  | 'UNREACHABLE'
+  | 'CLIENT_ERROR'
+  | 'MALFORMED_ENVELOPE';
+/** A person's choice on a change whose target was edited by hand since the value was applied. */
+export type ConflictChoice = 'APPLY_CHANGE' | 'KEEP_RECORD';
+/** Where a change was read from: corrigendum prose, or a row-by-row comparison of a revised file. */
+export type ChangeOrigin = 'CORRIGENDUM' | 'REVISED_FILE';
+
+/** The natural key of a `PROJECT_FIELD` candidate. The first two land on the project, the rest on the tender profile. */
+export type ProjectFieldKey =
+  | 'project_name'
+  | 'location'
+  | 'client'
+  | 'estimated_value'
+  | 'emd'
+  | 'tender_fee'
+  | 'bid_due_date'
+  | 'bid_validity'
+  | 'duration'
+  | 'consultant'
+  | 'engineer'
+  | 'scope';
+export const PROJECT_FIELD_KEYS: readonly ProjectFieldKey[] = [
+  'project_name',
+  'location',
+  'client',
+  'estimated_value',
+  'emd',
+  'tender_fee',
+  'bid_due_date',
+  'bid_validity',
+  'duration',
+  'consultant',
+  'engineer',
+  'scope',
+];
+/** The project fields applied to the project itself; every other key goes to the tender profile. */
+export const PROJECT_FIELD_KEYS_ON_PROJECT: readonly ProjectFieldKey[] = ['project_name', 'location'];
+
+/**
+ * Flag codes of the AI-read kinds and of changes. BOQ rows carry their own codes, such as
+ * `AMOUNT_MISMATCH`; {@link CandidateFlag.code} stays a plain string so a new code never breaks a parse.
+ */
+export const INGEST_FLAG = {
+  /** A value whose quote was not found on its page; never accepted in bulk. */
+  QUOTE_NOT_FOUND: 'QUOTE_NOT_FOUND',
+  /** A value read from a page that was OCRed. */
+  OCR_PAGE: 'OCR_PAGE',
+  /** A milestone schedule whose payment percentages do not add up to 100. */
+  PERCENT_TOTAL: 'PERCENT_TOTAL',
+  /** A milestone that falls before the one above it. */
+  DATE_ORDER: 'DATE_ORDER',
+  /** A time such as "Month 4", counted from a start date the project may not have yet. */
+  RELATIVE_TIME: 'RELATIVE_TIME',
+  /** A change that matches no earlier value; it stays on the unmatched list. */
+  UNMATCHED: 'UNMATCHED',
+  /** A change whose stated old value is not the earlier value. */
+  OLD_VALUE_DIFFERS: 'OLD_VALUE_DIFFERS',
+  /** A change to a tender before award, which may affect bids already prepared. */
+  TENDER_IMPACT: 'TENDER_IMPACT',
+  /** An item only the revised file has. */
+  ITEM_ADDED: 'ITEM_ADDED',
+  /** An item only the replaced file has. */
+  ITEM_REMOVED: 'ITEM_REMOVED',
+} as const;
+export type IngestFlagCode = (typeof INGEST_FLAG)[keyof typeof INGEST_FLAG];
+
+/** The key `POST /candidates/{id}/conflict` with `APPLY_CHANGE` sets on a change's accepted payload. */
+export const OVERRIDE_RECORD_KEY = 'overrideRecord';
 
 // ------------------------------------------------------------------------------------------ shapes
 
@@ -335,6 +467,255 @@ export interface IngestPage<T> {
   size: number;
   totalElements: number;
   totalPages: number;
+}
+
+/** A page that was not read, with why: shown as "not read". */
+export interface UnreadPage {
+  page: number;
+  reason: string;
+  detail?: string;
+}
+
+/** One part of a document under one class: a page range of a PDF, or a sheet of a workbook. */
+export interface IngestSegment {
+  id: string;
+  docClass?: DocClass;
+  method?: ClassMethod;
+  pageFrom?: number;
+  pageTo?: number;
+  sheetName?: string;
+  /** What the class was read from, in one sentence. */
+  reason?: string;
+  status?: SegmentStatus;
+  confirmedBy?: number;
+  confirmedAt?: string;
+  unreadPages: UnreadPage[];
+}
+
+/** A backend reading job over a segment, or over a whole document for classification. */
+export interface ExtractJob {
+  id: string;
+  documentId: string;
+  /** Absent for a job over a whole document, such as classification. */
+  segmentId?: string;
+  extractorKey: string;
+  extractorVersion: string;
+  status: ExtractJobStatus;
+  attempt: number;
+  maxAttempts: number;
+  chunksTotal: number;
+  chunksDone: number;
+  chunksFailed: number;
+  /** Why the job waits, paused or failed, in one plain sentence. */
+  message?: string;
+  /** Pages whose chunk got no usable answer after the retries. */
+  failedPages: UnreadPage[];
+  /** Pages not sent: not in English, or not readable by the file reader. */
+  unreadPages: UnreadPage[];
+  queuedAt?: string;
+  startedAt?: string;
+  finishedAt?: string;
+}
+
+/** A document's class and segments, as proposed or as a person confirmed them. */
+export interface DocumentClassification {
+  documentId: string;
+  fileName: string;
+  fileType?: IngestFileType;
+  status: IngestDocumentStatus;
+  pageCount?: number;
+  /** Absent while the document is not yet classified. */
+  docClass?: DocClass;
+  classMethod?: ClassMethod;
+  classReason?: string;
+  confirmed: boolean;
+  confirmedBy?: number;
+  confirmedAt?: string;
+  segments: IngestSegment[];
+  unreadPages: UnreadPage[];
+  /** The latest classification job; absent if none ran. */
+  classification?: ExtractJob;
+}
+
+/** A 1-based, inclusive page range under one class. */
+export interface ClassRange {
+  docClass: DocClass;
+  pageFrom: number;
+  pageTo: number;
+}
+
+/**
+ * Body of `PUT /document-ingestion/documents/{id}/classification`: the class a person confirms, and
+ * optionally the page ranges it splits into. Replaces what was proposed.
+ */
+export interface ClassificationRequest {
+  docClass: DocClass;
+  segments?: ClassRange[];
+}
+
+/** One confirm-all call. `remaining` above zero means call again. */
+export interface ConfirmAllResult {
+  documentsConfirmed: number;
+  segmentsConfirmed: number;
+  jobsQueued: number;
+  remaining: number;
+}
+
+/** One call to the AI service. Holds no document text. */
+export interface LlmCall {
+  id: string;
+  packageId: string;
+  documentId: string;
+  jobId: string;
+  chunkKey: string;
+  callNumber: number;
+  calledAt?: string;
+  extractorKey: string;
+  promptVersion: string;
+  model?: string;
+  modelVersion?: string;
+  promptTokens?: number;
+  completionTokens?: number;
+  estimatedCostUsd?: number;
+  finishReason?: string;
+  latencyMs: number;
+  outcome: LlmCallOutcome;
+  /** The pages this call sent. */
+  pages: number[];
+}
+
+export interface LlmCallListParams extends IngestPageParams {
+  /** Only calls for this package; the organization-wide ledger takes it as a filter. */
+  packageId?: string;
+  documentId?: string;
+}
+
+/** What reading a package with the AI service has used, against the package's and the month's limits. */
+export interface LlmSpend {
+  packageCalls: number;
+  packageTokens: number;
+  packageCostUsd: number;
+  packageTokenLimit: number;
+  packageUsdLimit: number;
+  monthCalls: number;
+  monthTokens: number;
+  monthCostUsd: number;
+  monthTokenLimit: number;
+  monthUsdLimit: number;
+  /** Whether every model used has a known price, so the dollar figures are complete. */
+  pricesKnown: boolean;
+  /** Why no further call fits; absent while there is room. */
+  exceeded?: string;
+}
+
+/**
+ * Body of `PUT /document-ingestion/packages/{id}/llm-budget` and `PUT /document-ingestion/settings/llm-budget`.
+ * Each limit sent as null goes back to the configured default.
+ */
+export interface LlmBudgetRequest {
+  /** Estimated dollars. */
+  budgetUsd: number | null;
+  /** Prompt and completion tokens together. */
+  budgetTokens: number | null;
+}
+
+/** One recorded change to a setting. */
+export interface IngestSettingChange {
+  setting: string;
+  oldValue?: string;
+  newValue?: string;
+  changedBy?: number;
+  changedAt?: string;
+}
+
+/** The organization's document ingestion settings. */
+export interface IngestSettings {
+  llmReadingEnabled: boolean;
+  /** The sentence the screen shows beside the switch. */
+  llmReadingDisclosure: string;
+  monthlyBudgetUsd?: number;
+  monthlyBudgetTokens?: number;
+  changedBy?: number;
+  changedAt?: string;
+  recentChanges: IngestSettingChange[];
+}
+
+/**
+ * The accepted facts of a tender that a project has no field for, each as printed (`...Text`), with
+ * a typed value where the text reads plainly as an amount, a date or a number of days.
+ */
+export interface TenderProfile {
+  id: string;
+  packageId: string;
+  projectId?: number;
+  client?: string;
+  estimatedValue?: number;
+  estimatedValueText?: string;
+  emdAmount?: number;
+  emdText?: string;
+  tenderFeeAmount?: number;
+  tenderFeeText?: string;
+  bidDueAt?: string;
+  bidDueText?: string;
+  bidValidityDays?: number;
+  bidValidityText?: string;
+  durationText?: string;
+  consultant?: string;
+  engineer?: string;
+  scope?: string;
+  updatedAt?: string;
+}
+
+/** Body of `PUT /document-ingestion/documents/{id}/revision`: this file replaces an earlier one of the package. */
+export interface RevisionRequest {
+  supersedesDocumentId: string;
+  revisionLabel?: string;
+}
+
+/** What comparing a revised BOQ with the file it replaces proposed, each a `CHANGE` candidate. */
+export interface RevisionDiff {
+  itemsCompared: number;
+  changesProposed: number;
+  itemsAdded: number;
+  itemsRemoved: number;
+}
+
+/** A `PROJECT_FIELD` candidate's payload: one fact, as printed, keyed by the candidate's natural key. */
+export interface ProjectFieldPayload {
+  /** The candidate's natural key; a key this client does not know is kept as it came. */
+  key?: ProjectFieldKey | string;
+  value?: string;
+}
+
+/** A `MILESTONE` candidate's payload. Every value is text as printed. */
+export interface MilestonePayload {
+  name?: string;
+  /** A date, or a relative time such as "Month 4". */
+  time?: string;
+  percent?: string;
+  amount?: string;
+  /** Sort order within the package. */
+  order?: number;
+}
+
+/**
+ * A `CHANGE` candidate's payload. Numbers are decimal strings. `priorValue` is the earlier value the
+ * change was matched to; `quantityVariance` and `moneyImpact` are worked out for a BOQ quantity or rate.
+ */
+export interface ChangePayload {
+  /** The kind of the value changed, such as `BOQ_ITEM`. */
+  targetKind?: string;
+  /** The changed value's natural key, such as a BOQ item code or a milestone's name. */
+  target?: string;
+  field?: string;
+  oldValue?: string;
+  newValue?: string;
+  priorValue?: string;
+  quantityVariance?: string;
+  moneyImpact?: string;
+  origin?: ChangeOrigin | string;
+  /** Set once a person chose to write the change over a record edited by hand. */
+  overrideRecord: boolean;
 }
 
 // ------------------------------------------------------------------------------------------ schemas
@@ -733,4 +1114,407 @@ export function parseIngestPage<T>(json: unknown, parseItem: (raw: unknown) => T
     totalElements: raw.totalElements ?? content.length,
     totalPages: raw.totalPages ?? (content.length > 0 ? 1 : 0),
   };
+}
+
+// ------------------------------------------------- classification, extraction, ledger, settings
+
+const UnreadPageSchema = z.object({ page: nullableNumber, reason: nullableString, detail: nullableString });
+const unreadPages = z.array(z.unknown()).nullish();
+
+const SegmentSchema = z.object({
+  id,
+  docClass: nullableString,
+  method: nullableString,
+  pageFrom: nullableNumber,
+  pageTo: nullableNumber,
+  sheetName: nullableString,
+  reason: nullableString,
+  status: nullableString,
+  confirmedBy: nullableNumber,
+  confirmedAt: backendDate,
+  unreadPages,
+});
+
+const ExtractJobSchema = z.object({
+  id,
+  documentId: optionalId,
+  segmentId: optionalId,
+  extractorKey: nullableString,
+  extractorVersion: nullableString,
+  status: nullableString,
+  attempt: nullableNumber,
+  maxAttempts: nullableNumber,
+  chunksTotal: nullableNumber,
+  chunksDone: nullableNumber,
+  chunksFailed: nullableNumber,
+  message: nullableString,
+  failedPages: unreadPages,
+  unreadPages,
+  queuedAt: backendDate,
+  startedAt: backendDate,
+  finishedAt: backendDate,
+});
+
+const ClassificationSchema = z.object({
+  documentId: id,
+  fileName: nullableString,
+  fileType: nullableString,
+  status: nullableString,
+  pageCount: nullableNumber,
+  docClass: nullableString,
+  classMethod: nullableString,
+  classReason: nullableString,
+  confirmed: nullableBoolean,
+  confirmedBy: nullableNumber,
+  confirmedAt: backendDate,
+  segments: z.array(z.unknown()).nullish(),
+  unreadPages,
+  classification: z.unknown().nullish(),
+});
+
+const LlmCallSchema = z.object({
+  id,
+  packageId: optionalId,
+  documentId: optionalId,
+  jobId: optionalId,
+  chunkKey: nullableString,
+  callNumber: nullableNumber,
+  calledAt: backendDate,
+  extractorKey: nullableString,
+  promptVersion: nullableString,
+  model: nullableString,
+  modelVersion: nullableString,
+  promptTokens: nullableNumber,
+  completionTokens: nullableNumber,
+  estimatedCostUsd: money,
+  finishReason: nullableString,
+  latencyMs: nullableNumber,
+  outcome: nullableString,
+  pages: z.array(z.number()).nullish(),
+});
+
+const LlmSpendSchema = z.object({
+  packageCalls: nullableNumber,
+  packageTokens: nullableNumber,
+  packageCostUsd: money,
+  packageTokenLimit: nullableNumber,
+  packageUsdLimit: money,
+  monthCalls: nullableNumber,
+  monthTokens: nullableNumber,
+  monthCostUsd: money,
+  monthTokenLimit: nullableNumber,
+  monthUsdLimit: money,
+  pricesKnown: nullableBoolean,
+  exceeded: nullableString,
+});
+
+const SettingChangeSchema = z.object({
+  setting: nullableString,
+  oldValue: nullableString,
+  newValue: nullableString,
+  changedBy: nullableNumber,
+  changedAt: backendDate,
+});
+
+const SettingsSchema = z.object({
+  llmReadingEnabled: nullableBoolean,
+  llmReadingDisclosure: nullableString,
+  monthlyBudgetUsd: money,
+  monthlyBudgetTokens: nullableNumber,
+  changedBy: nullableNumber,
+  changedAt: backendDate,
+  recentChanges: z.array(z.unknown()).nullish(),
+});
+
+const TenderProfileSchema = z.object({
+  id,
+  packageId: optionalId,
+  projectId: nullableNumber,
+  client: nullableString,
+  estimatedValue: money,
+  estimatedValueText: nullableString,
+  emdAmount: money,
+  emdText: nullableString,
+  tenderFeeAmount: money,
+  tenderFeeText: nullableString,
+  bidDueAt: backendDate,
+  bidDueText: nullableString,
+  bidValidityDays: nullableNumber,
+  bidValidityText: nullableString,
+  durationText: nullableString,
+  consultant: nullableString,
+  engineer: nullableString,
+  scope: nullableString,
+  updatedAt: backendDate,
+});
+
+export function parseUnreadPage(json: unknown): UnreadPage {
+  const raw = UnreadPageSchema.parse(json);
+  return { page: raw.page ?? 0, reason: raw.reason ?? '', detail: opt(raw.detail) };
+}
+
+export function parseIngestSegment(json: unknown): IngestSegment {
+  const raw = SegmentSchema.parse(json);
+  return {
+    id: raw.id,
+    docClass: opt(raw.docClass) as DocClass | undefined,
+    method: opt(raw.method) as ClassMethod | undefined,
+    pageFrom: opt(raw.pageFrom),
+    pageTo: opt(raw.pageTo),
+    sheetName: opt(raw.sheetName),
+    reason: opt(raw.reason),
+    status: opt(raw.status) as SegmentStatus | undefined,
+    confirmedBy: opt(raw.confirmedBy),
+    confirmedAt: opt(raw.confirmedAt),
+    unreadPages: (raw.unreadPages ?? []).map(parseUnreadPage),
+  };
+}
+
+export function parseExtractJob(json: unknown): ExtractJob {
+  const raw = ExtractJobSchema.parse(json);
+  return {
+    id: raw.id,
+    documentId: optString(raw.documentId) ?? '',
+    segmentId: optString(raw.segmentId),
+    extractorKey: raw.extractorKey ?? '',
+    extractorVersion: raw.extractorVersion ?? '',
+    // An unknown status reads as queued, so a screen keeps waiting rather than offering a retry.
+    status: (raw.status as ExtractJobStatus) ?? 'QUEUED',
+    attempt: raw.attempt ?? 0,
+    maxAttempts: raw.maxAttempts ?? 0,
+    chunksTotal: raw.chunksTotal ?? 0,
+    chunksDone: raw.chunksDone ?? 0,
+    chunksFailed: raw.chunksFailed ?? 0,
+    message: opt(raw.message),
+    failedPages: (raw.failedPages ?? []).map(parseUnreadPage),
+    unreadPages: (raw.unreadPages ?? []).map(parseUnreadPage),
+    queuedAt: opt(raw.queuedAt),
+    startedAt: opt(raw.startedAt),
+    finishedAt: opt(raw.finishedAt),
+  };
+}
+
+export function parseDocumentClassification(json: unknown): DocumentClassification {
+  const raw = ClassificationSchema.parse(json);
+  return {
+    documentId: raw.documentId,
+    fileName: raw.fileName ?? '',
+    fileType: opt(raw.fileType) as IngestFileType | undefined,
+    status: (raw.status as IngestDocumentStatus) ?? 'QUEUED',
+    pageCount: opt(raw.pageCount),
+    docClass: opt(raw.docClass) as DocClass | undefined,
+    classMethod: opt(raw.classMethod) as ClassMethod | undefined,
+    classReason: opt(raw.classReason),
+    confirmed: raw.confirmed ?? false,
+    confirmedBy: opt(raw.confirmedBy),
+    confirmedAt: opt(raw.confirmedAt),
+    segments: (raw.segments ?? []).map(parseIngestSegment),
+    unreadPages: (raw.unreadPages ?? []).map(parseUnreadPage),
+    classification: raw.classification ? parseExtractJob(raw.classification) : undefined,
+  };
+}
+
+export function parseConfirmAllResult(json: unknown): ConfirmAllResult {
+  const raw = z
+    .object({
+      documentsConfirmed: nullableNumber,
+      segmentsConfirmed: nullableNumber,
+      jobsQueued: nullableNumber,
+      remaining: nullableNumber,
+    })
+    .parse(json);
+  return {
+    documentsConfirmed: raw.documentsConfirmed ?? 0,
+    segmentsConfirmed: raw.segmentsConfirmed ?? 0,
+    jobsQueued: raw.jobsQueued ?? 0,
+    remaining: raw.remaining ?? 0,
+  };
+}
+
+export function parseLlmCall(json: unknown): LlmCall {
+  const raw = LlmCallSchema.parse(json);
+  return {
+    id: raw.id,
+    packageId: optString(raw.packageId) ?? '',
+    documentId: optString(raw.documentId) ?? '',
+    jobId: optString(raw.jobId) ?? '',
+    chunkKey: raw.chunkKey ?? '',
+    callNumber: raw.callNumber ?? 0,
+    calledAt: opt(raw.calledAt),
+    extractorKey: raw.extractorKey ?? '',
+    promptVersion: raw.promptVersion ?? '',
+    model: opt(raw.model),
+    modelVersion: opt(raw.modelVersion),
+    promptTokens: opt(raw.promptTokens),
+    completionTokens: opt(raw.completionTokens),
+    estimatedCostUsd: opt(raw.estimatedCostUsd),
+    finishReason: opt(raw.finishReason),
+    latencyMs: raw.latencyMs ?? 0,
+    // An unknown outcome reads as a failed call, so nothing counts it as a good answer.
+    outcome: (raw.outcome as LlmCallOutcome) ?? 'SERVER_ERROR',
+    pages: raw.pages ?? [],
+  };
+}
+
+export function parseLlmSpend(json: unknown): LlmSpend {
+  const raw = LlmSpendSchema.parse(json);
+  return {
+    packageCalls: raw.packageCalls ?? 0,
+    packageTokens: raw.packageTokens ?? 0,
+    packageCostUsd: raw.packageCostUsd ?? 0,
+    packageTokenLimit: raw.packageTokenLimit ?? 0,
+    packageUsdLimit: raw.packageUsdLimit ?? 0,
+    monthCalls: raw.monthCalls ?? 0,
+    monthTokens: raw.monthTokens ?? 0,
+    monthCostUsd: raw.monthCostUsd ?? 0,
+    monthTokenLimit: raw.monthTokenLimit ?? 0,
+    monthUsdLimit: raw.monthUsdLimit ?? 0,
+    pricesKnown: raw.pricesKnown ?? false,
+    exceeded: opt(raw.exceeded),
+  };
+}
+
+export function parseIngestSettings(json: unknown): IngestSettings {
+  const raw = SettingsSchema.parse(json);
+  return {
+    // A missing switch reads as on, as a missing settings row does on the backend.
+    llmReadingEnabled: raw.llmReadingEnabled ?? true,
+    llmReadingDisclosure: raw.llmReadingDisclosure ?? '',
+    monthlyBudgetUsd: opt(raw.monthlyBudgetUsd),
+    monthlyBudgetTokens: opt(raw.monthlyBudgetTokens),
+    changedBy: opt(raw.changedBy),
+    changedAt: opt(raw.changedAt),
+    recentChanges: (raw.recentChanges ?? []).map((c) => {
+      const change = SettingChangeSchema.parse(c);
+      return {
+        setting: change.setting ?? '',
+        oldValue: opt(change.oldValue),
+        newValue: opt(change.newValue),
+        changedBy: opt(change.changedBy),
+        changedAt: opt(change.changedAt),
+      };
+    }),
+  };
+}
+
+export function parseTenderProfile(json: unknown): TenderProfile {
+  const raw = TenderProfileSchema.parse(json);
+  return {
+    id: raw.id,
+    packageId: optString(raw.packageId) ?? '',
+    projectId: opt(raw.projectId),
+    client: opt(raw.client),
+    estimatedValue: opt(raw.estimatedValue),
+    estimatedValueText: opt(raw.estimatedValueText),
+    emdAmount: opt(raw.emdAmount),
+    emdText: opt(raw.emdText),
+    tenderFeeAmount: opt(raw.tenderFeeAmount),
+    tenderFeeText: opt(raw.tenderFeeText),
+    bidDueAt: opt(raw.bidDueAt),
+    bidDueText: opt(raw.bidDueText),
+    bidValidityDays: opt(raw.bidValidityDays),
+    bidValidityText: opt(raw.bidValidityText),
+    durationText: opt(raw.durationText),
+    consultant: opt(raw.consultant),
+    engineer: opt(raw.engineer),
+    scope: opt(raw.scope),
+    updatedAt: opt(raw.updatedAt),
+  };
+}
+
+export function parseRevisionDiff(json: unknown): RevisionDiff {
+  const raw = z
+    .object({
+      itemsCompared: nullableNumber,
+      changesProposed: nullableNumber,
+      itemsAdded: nullableNumber,
+      itemsRemoved: nullableNumber,
+    })
+    .parse(json);
+  return {
+    itemsCompared: raw.itemsCompared ?? 0,
+    changesProposed: raw.changesProposed ?? 0,
+    itemsAdded: raw.itemsAdded ?? 0,
+    itemsRemoved: raw.itemsRemoved ?? 0,
+  };
+}
+
+// ------------------------------------------------------------------------------- payload readers
+
+/**
+ * A payload value as text: a string as it is, a number in its plain spelling, anything else absent.
+ * Never fails, so a reader built from it never throws on a payload the backend shapes differently.
+ */
+const payloadText = z
+  .unknown()
+  .optional()
+  .transform((v): string | undefined =>
+    typeof v === 'string' ? (v === '' ? undefined : v) : typeof v === 'number' || typeof v === 'bigint' ? String(v) : undefined
+  );
+const payloadInt = z.unknown().optional().transform((v): number | undefined => (typeof v === 'number' ? v : undefined));
+const payloadFlag = z.unknown().optional().transform((v): boolean => v === true || v === 'true');
+
+/** The `PROJECT_FIELD` payload, read leniently. */
+export const ProjectFieldPayloadSchema = z.looseObject({ value: payloadText });
+/** The `MILESTONE` payload, read leniently. */
+export const MilestonePayloadSchema = z.looseObject({
+  name: payloadText,
+  time: payloadText,
+  percent: payloadText,
+  amount: payloadText,
+  order: payloadInt,
+});
+/** The `CHANGE` payload, read leniently. */
+export const ChangePayloadSchema = z.looseObject({
+  targetKind: payloadText,
+  target: payloadText,
+  field: payloadText,
+  oldValue: payloadText,
+  newValue: payloadText,
+  priorValue: payloadText,
+  quantityVariance: payloadText,
+  moneyImpact: payloadText,
+  origin: payloadText,
+  [OVERRIDE_RECORD_KEY]: payloadFlag,
+});
+
+const payloadOf = (candidate: Candidate): Record<string, unknown> => candidate.acceptedPayload ?? candidate.payload;
+
+/** A project field candidate's fact: the accepted payload when there is one, else what was extracted. */
+export function projectFieldOf(candidate: Candidate): ProjectFieldPayload {
+  const p = ProjectFieldPayloadSchema.parse(payloadOf(candidate));
+  return { key: candidate.naturalKey, value: p.value };
+}
+
+/** A milestone candidate's row: the accepted payload when there is one, else what was extracted. */
+export function milestoneOf(candidate: Candidate): MilestonePayload {
+  const p = MilestonePayloadSchema.parse(payloadOf(candidate));
+  return { name: p.name, time: p.time, percent: p.percent, amount: p.amount, order: p.order };
+}
+
+/** A change candidate's change: the accepted payload when there is one, else what was extracted. */
+export function changeOf(candidate: Candidate): ChangePayload {
+  const p = ChangePayloadSchema.parse(payloadOf(candidate));
+  return {
+    targetKind: p.targetKind,
+    target: p.target,
+    field: p.field,
+    oldValue: p.oldValue,
+    newValue: p.newValue,
+    priorValue: p.priorValue,
+    quantityVariance: p.quantityVariance,
+    moneyImpact: p.moneyImpact,
+    origin: p.origin,
+    overrideRecord: p[OVERRIDE_RECORD_KEY],
+  };
+}
+
+/** Whether a candidate carries a flag with this code. */
+export function hasFlag(candidate: Candidate, code: string): boolean {
+  return candidate.flags.some((f) => f.code === code);
+}
+
+/** Whether a project field is written to the project itself rather than to the tender profile. */
+export function isProjectFieldOnProject(key: string | undefined): boolean {
+  return key !== undefined && (PROJECT_FIELD_KEYS_ON_PROJECT as readonly string[]).includes(key);
 }

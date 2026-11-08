@@ -26,6 +26,22 @@
  * - `POST /document-ingestion/packages/{id}/candidates/decisions`             accept, edit or reject
  * - `POST /document-ingestion/packages/{id}/apply?kind=`                      write accepted values
  * - `GET  /document-ingestion/provenance?targetType=&targetId=`               where a record's fields came from
+ * - `GET  /document-ingestion/packages/{id}/classification`                   each file's class and segments
+ * - `PUT  /document-ingestion/documents/{id}/classification`                  confirm a file's class and page ranges
+ * - `POST /document-ingestion/packages/{id}/classification/confirm-all`       confirm every proposed class
+ * - `GET  /document-ingestion/packages/{id}/extract-jobs`                     the package's reading jobs
+ * - `POST /document-ingestion/extract-jobs/{id}/retry-failed`                 send only the failed chunks again
+ * - `GET  /document-ingestion/llm-calls?packageId=&documentId=`               the organization's AI reading ledger
+ * - `GET  /document-ingestion/packages/{id}/llm-calls?documentId=`            one package's ledger
+ * - `GET  /document-ingestion/packages/{id}/llm-spend`                        use against the limits
+ * - `PUT  /document-ingestion/packages/{id}/llm-budget`                       the package's limit
+ * - `GET  /document-ingestion/settings`                                       the organization's settings
+ * - `PUT  /document-ingestion/settings/llm-budget`                            the monthly limit
+ * - `PUT  /document-ingestion/settings/llm-reading`                           AI reading on or off
+ * - `GET  /document-ingestion/packages/{id}/tender-profile`                   accepted tender facts with no project field
+ * - `PUT  /document-ingestion/documents/{id}/revision`                        this file replaces an earlier one
+ * - `POST /document-ingestion/documents/{id}/revision-diff`                   compare a revised BOQ with the one it replaces
+ * - `POST /document-ingestion/candidates/{id}/conflict`                       apply a change over a hand edit, or keep the record
  *
  * Upload is three steps, as for bill documents: presign, PUT the file to `upload.url` with
  * `upload.contentType`, then register with `upload.key`.
@@ -41,31 +57,52 @@ import {
   BoqSheet,
   BoqTargetRequest,
   Candidate,
+  ClassificationRequest,
+  ConfirmAllResult,
+  ConflictChoice,
   CandidateDecision,
   CandidateKind,
   CandidateListParams,
   CreatePackageRequest,
   DecisionResult,
+  DocumentClassification,
   DocumentIngestionStatus,
   DocumentUpload,
   DownloadUrl,
+  ExtractJob,
   IngestDocument,
   IngestPackage,
   IngestPage,
   IngestPageParams,
+  IngestSettings,
+  LlmBudgetRequest,
+  LlmCall,
+  LlmCallListParams,
+  LlmSpend,
   PresignDocumentRequest,
   Provenance,
+  RevisionDiff,
+  RevisionRequest,
+  TenderProfile,
   parseApplyResult,
   parseBoqSheet,
   parseCandidate,
+  parseConfirmAllResult,
   parseDecisionResults,
+  parseDocumentClassification,
   parseDocumentIngestionStatus,
   parseDocumentUpload,
   parseDownloadUrl,
+  parseExtractJob,
   parseIngestDocument,
   parseIngestPackage,
   parseIngestPage,
+  parseIngestSettings,
+  parseLlmCall,
+  parseLlmSpend,
   parseProvenance,
+  parseRevisionDiff,
+  parseTenderProfile,
 } from '../types/document-ingestion/document-ingestion';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -247,5 +284,148 @@ export const documentIngestionService = {
   async provenance(targetType: string, targetId: string): Promise<Provenance[]> {
     const data = await api.get<ApiResponse>(`${BASE}/provenance`, { targetType, targetId });
     return parseWith('provenance', data, (raw) => (Array.isArray(raw) ? raw : []).map(parseProvenance));
+  },
+
+  // ------------------------------------------------------------------------------ classification
+
+  async listClassifications(
+    packageId: string,
+    params: IngestPageParams = {}
+  ): Promise<IngestPage<DocumentClassification>> {
+    const data = await api.get<ApiResponse>(`${BASE}/packages/${packageId}/classification`, pageQuery(params));
+    return parseWith('classification list', data, (raw) => parseIngestPage(raw, parseDocumentClassification));
+  },
+
+  /** Confirms a file's class, and optionally its page ranges, replacing what was proposed. */
+  async classifyDocument(documentId: string, req: ClassificationRequest): Promise<DocumentClassification> {
+    const payload: Record<string, unknown> = { docClass: req.docClass };
+    if (req.segments !== undefined) payload.segments = req.segments;
+    const data = await api.put<ApiResponse>(`${BASE}/documents/${documentId}/classification`, payload);
+    return parseWith('classification', data, parseDocumentClassification);
+  },
+
+  /** Confirms every proposed class in one batch. Call again while `remaining` is above zero. */
+  async confirmAllClassifications(packageId: string): Promise<ConfirmAllResult> {
+    const data = await api.post<ApiResponse>(`${BASE}/packages/${packageId}/classification/confirm-all`);
+    return parseWith('confirm-all result', data, parseConfirmAllResult);
+  },
+
+  /** Confirms every proposed class, calling again while some remain, and adds the results up. */
+  async confirmAllClassificationsFully(packageId: string, maxCalls = 20): Promise<ConfirmAllResult> {
+    const total: ConfirmAllResult = { documentsConfirmed: 0, segmentsConfirmed: 0, jobsQueued: 0, remaining: 0 };
+    for (let call = 0; call < maxCalls; call++) {
+      const result = await documentIngestionService.confirmAllClassifications(packageId);
+      total.documentsConfirmed += result.documentsConfirmed;
+      total.segmentsConfirmed += result.segmentsConfirmed;
+      total.jobsQueued += result.jobsQueued;
+      total.remaining = result.remaining;
+      if (result.remaining === 0 || result.documentsConfirmed === 0) break;
+    }
+    return total;
+  },
+
+  // --------------------------------------------------------------------------------- extract jobs
+
+  async listExtractJobs(packageId: string, params: IngestPageParams = {}): Promise<IngestPage<ExtractJob>> {
+    const data = await api.get<ApiResponse>(`${BASE}/packages/${packageId}/extract-jobs`, pageQuery(params));
+    return parseWith('extract job list', data, (raw) => parseIngestPage(raw, parseExtractJob));
+  },
+
+  /** Sends only the chunks that failed again; parts already read are skipped. */
+  async retryFailedChunks(jobId: string): Promise<ExtractJob> {
+    const data = await api.post<ApiResponse>(`${BASE}/extract-jobs/${jobId}/retry-failed`);
+    return parseWith('extract job', data, parseExtractJob);
+  },
+
+  // ------------------------------------------------------------------------------ ledger, budget
+
+  /** The organization's AI reading ledger, newest first; filter by package or file. */
+  async listLlmCalls(params: LlmCallListParams = {}): Promise<IngestPage<LlmCall>> {
+    const query: Record<string, string | number> = pageQuery(params);
+    if (params.packageId !== undefined) query.packageId = params.packageId;
+    if (params.documentId !== undefined) query.documentId = params.documentId;
+    const data = await api.get<ApiResponse>(`${BASE}/llm-calls`, query);
+    return parseWith('AI call list', data, (raw) => parseIngestPage(raw, parseLlmCall));
+  },
+
+  /** One package's AI reading ledger; `packageId` in the params is ignored. */
+  async listPackageLlmCalls(packageId: string, params: LlmCallListParams = {}): Promise<IngestPage<LlmCall>> {
+    const query: Record<string, string | number> = pageQuery(params);
+    if (params.documentId !== undefined) query.documentId = params.documentId;
+    const data = await api.get<ApiResponse>(`${BASE}/packages/${packageId}/llm-calls`, query);
+    return parseWith('AI call list', data, (raw) => parseIngestPage(raw, parseLlmCall));
+  },
+
+  async getLlmSpend(packageId: string): Promise<LlmSpend> {
+    const data = await api.get<ApiResponse>(`${BASE}/packages/${packageId}/llm-spend`);
+    return parseWith('AI spend', data, parseLlmSpend);
+  },
+
+  /** Sets the package's limit; a null limit goes back to the default. A job paused on the budget resumes once it has room. */
+  async setPackageLlmBudget(packageId: string, req: LlmBudgetRequest): Promise<LlmSpend> {
+    const payload: Record<string, unknown> = { budgetUsd: req.budgetUsd, budgetTokens: req.budgetTokens };
+    const data = await api.put<ApiResponse>(`${BASE}/packages/${packageId}/llm-budget`, payload);
+    return parseWith('AI spend', data, parseLlmSpend);
+  },
+
+  // ------------------------------------------------------------------------------------- settings
+
+  async getSettings(): Promise<IngestSettings> {
+    const data = await api.get<ApiResponse>(`${BASE}/settings`);
+    return parseWith('document ingestion settings', data, parseIngestSettings);
+  },
+
+  /** Sets the organization's monthly limit; a null limit goes back to the default. Each change is recorded. */
+  async setMonthlyLlmBudget(req: LlmBudgetRequest): Promise<IngestSettings> {
+    const payload: Record<string, unknown> = { budgetUsd: req.budgetUsd, budgetTokens: req.budgetTokens };
+    const data = await api.put<ApiResponse>(`${BASE}/settings/llm-budget`, payload);
+    return parseWith('document ingestion settings', data, parseIngestSettings);
+  },
+
+  /** Turns AI reading on or off for the organization. */
+  async setLlmReading(enabled: boolean): Promise<IngestSettings> {
+    const payload: Record<string, unknown> = { enabled };
+    const data = await api.put<ApiResponse>(`${BASE}/settings/llm-reading`, payload);
+    return parseWith('document ingestion settings', data, parseIngestSettings);
+  },
+
+  // ------------------------------------------------------------------------------ tender profile
+
+  /** The accepted tender facts with no project field, or null while none has been applied (the backend's 404). */
+  async getTenderProfile(packageId: string): Promise<TenderProfile | null> {
+    let data: ApiResponse;
+    try {
+      data = await api.get<ApiResponse>(`${BASE}/packages/${packageId}/tender-profile`);
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 404 && !isModuleDisabled(error)) return null;
+      throw error;
+    }
+    return parseWith('tender profile', data, parseTenderProfile);
+  },
+
+  // ------------------------------------------------------------------------- revisions, changes
+
+  /** Records that a file replaces an earlier file of the same package. A chain that would loop is refused. */
+  async setRevision(documentId: string, req: RevisionRequest): Promise<IngestDocument> {
+    const payload: Record<string, unknown> = { supersedesDocumentId: req.supersedesDocumentId };
+    if (req.revisionLabel !== undefined) payload.revisionLabel = req.revisionLabel;
+    const data = await api.put<ApiResponse>(`${BASE}/documents/${documentId}/revision`, payload);
+    return parseWith('document', data, parseIngestDocument);
+  },
+
+  /** Compares a revised BOQ with the file it replaces, row by row, proposing a `CHANGE` per difference. Run again, it adds nothing. */
+  async diffRevision(documentId: string): Promise<RevisionDiff> {
+    const data = await api.post<ApiResponse>(`${BASE}/documents/${documentId}/revision-diff`);
+    return parseWith('revision comparison', data, parseRevisionDiff);
+  },
+
+  /**
+   * A person's choice on a change refused because its target was edited by hand since it was
+   * applied: `APPLY_CHANGE` writes it over the record on the next apply, `KEEP_RECORD` rejects it.
+   */
+  async resolveConflict(candidateId: string, choice: ConflictChoice): Promise<Candidate> {
+    const payload: Record<string, unknown> = { choice };
+    const data = await api.post<ApiResponse>(`${BASE}/candidates/${candidateId}/conflict`, payload);
+    return parseWith('candidate', data, parseCandidate);
   },
 };

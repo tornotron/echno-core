@@ -10,8 +10,10 @@ import { documentIngestionService } from '../../services/document-ingestion-serv
 import { shouldRetry } from '../../lib/query/retry';
 import type {
   CandidateListParams,
+  ExtractJob,
   IngestDocument,
   IngestPageParams,
+  LlmCallListParams,
 } from '../../types/document-ingestion/document-ingestion';
 import { documentIngestionKeys } from './keys';
 
@@ -97,6 +99,82 @@ export function useProvenance(targetType: string | undefined, targetId: string |
     queryKey: documentIngestionKeys.provenance(targetType ?? '', targetId ?? ''),
     queryFn: () => documentIngestionService.provenance(targetType as string, targetId as string),
     enabled: Boolean(targetType && targetId),
+    retry: shouldRetry,
+  });
+}
+
+export function useIngestClassifications(packageId: string | undefined, params: IngestPageParams = {}) {
+  return useQuery({
+    queryKey: documentIngestionKeys.classification(packageId ?? '', params),
+    queryFn: () => documentIngestionService.listClassifications(packageId as string, params),
+    enabled: Boolean(packageId),
+    retry: shouldRetry,
+  });
+}
+
+/**
+ * Whether a reading job is still moving, so a list keeps polling. A job waiting on the AI service
+ * or paused on the budget resumes by itself, so it counts as moving.
+ */
+export function isExtractJobActive(job: ExtractJob): boolean {
+  return job.status === 'QUEUED' || job.status === 'RUNNING' || job.status === 'WAITING_LLM' || job.status === 'PAUSED_BUDGET';
+}
+
+/** A package's reading jobs. Polls every `pollMs` while any job is still moving. */
+export function useExtractJobs(packageId: string | undefined, params: IngestPageParams = {}, pollMs = 5000) {
+  return useQuery({
+    queryKey: documentIngestionKeys.extractJobs(packageId ?? '', params),
+    queryFn: () => documentIngestionService.listExtractJobs(packageId as string, params),
+    enabled: Boolean(packageId),
+    retry: shouldRetry,
+    refetchInterval: (query) => (query.state.data?.content.some(isExtractJobActive) ? pollMs : false),
+  });
+}
+
+/** The organization's AI reading ledger. */
+export function useLlmCalls(params: LlmCallListParams = {}, enabled = true) {
+  return useQuery({
+    queryKey: documentIngestionKeys.llmCalls(params),
+    queryFn: () => documentIngestionService.listLlmCalls(params),
+    enabled,
+    retry: shouldRetry,
+  });
+}
+
+/** One package's AI reading ledger. */
+export function usePackageLlmCalls(packageId: string | undefined, params: LlmCallListParams = {}) {
+  return useQuery({
+    queryKey: documentIngestionKeys.packageLlmCalls(packageId ?? '', params),
+    queryFn: () => documentIngestionService.listPackageLlmCalls(packageId as string, params),
+    enabled: Boolean(packageId),
+    retry: shouldRetry,
+  });
+}
+
+export function useLlmSpend(packageId: string | undefined) {
+  return useQuery({
+    queryKey: documentIngestionKeys.llmSpend(packageId ?? ''),
+    queryFn: () => documentIngestionService.getLlmSpend(packageId as string),
+    enabled: Boolean(packageId),
+    retry: shouldRetry,
+  });
+}
+
+export function useIngestSettings(enabled = true) {
+  return useQuery({
+    queryKey: documentIngestionKeys.settings(),
+    queryFn: () => documentIngestionService.getSettings(),
+    enabled,
+    retry: shouldRetry,
+  });
+}
+
+/** The package's tender profile; `data` is null while no project field has been applied. */
+export function useTenderProfile(packageId: string | undefined) {
+  return useQuery({
+    queryKey: documentIngestionKeys.tenderProfile(packageId ?? ''),
+    queryFn: () => documentIngestionService.getTenderProfile(packageId as string),
+    enabled: Boolean(packageId),
     retry: shouldRetry,
   });
 }

@@ -5,7 +5,7 @@
  * can refresh the whole domain at once.
  */
 
-import type { CandidateListParams, IngestPageParams } from '../../types/document-ingestion/document-ingestion';
+import type { CandidateListParams, IngestPageParams, LlmCallListParams } from '../../types/document-ingestion/document-ingestion';
 
 export const documentIngestionKeys = {
   all: ['document-ingestion'] as const,
@@ -20,4 +20,14 @@ export const documentIngestionKeys = {
     [...documentIngestionKeys.all, 'candidates', packageId, params] as const,
   provenance: (targetType: string, targetId: string) =>
     [...documentIngestionKeys.all, 'provenance', targetType, targetId] as const,
+  classification: (packageId: string, params: IngestPageParams = {}) =>
+    [...documentIngestionKeys.all, 'classification', packageId, params] as const,
+  extractJobs: (packageId: string, params: IngestPageParams = {}) =>
+    [...documentIngestionKeys.all, 'extract-jobs', packageId, params] as const,
+  llmCalls: (params: LlmCallListParams = {}) => [...documentIngestionKeys.all, 'llm-calls', params] as const,
+  packageLlmCalls: (packageId: string, params: LlmCallListParams = {}) =>
+    [...documentIngestionKeys.all, 'package-llm-calls', packageId, params] as const,
+  llmSpend: (packageId: string) => [...documentIngestionKeys.all, 'llm-spend', packageId] as const,
+  settings: () => [...documentIngestionKeys.all, 'settings'] as const,
+  tenderProfile: (packageId: string) => [...documentIngestionKeys.all, 'tender-profile', packageId] as const,
 };

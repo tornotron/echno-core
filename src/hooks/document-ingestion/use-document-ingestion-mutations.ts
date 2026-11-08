@@ -12,8 +12,12 @@ import type {
   BoqMappingRequest,
   CandidateDecision,
   CandidateKind,
+  ClassificationRequest,
+  ConflictChoice,
   CreatePackageRequest,
+  LlmBudgetRequest,
   PresignDocumentRequest,
+  RevisionRequest,
 } from '../../types/document-ingestion/document-ingestion';
 import { documentIngestionKeys } from './keys';
 
@@ -110,5 +114,90 @@ export function useApplyCandidates() {
       documentIngestionService.applyAll(packageId, kind),
     onSuccess: invalidate,
     onError: invalidate,
+  });
+}
+
+/** Mutate with `{ documentId, req }` to confirm a file's class and page ranges. */
+export function useClassifyIngestDocument() {
+  const invalidate = useInvalidateDocumentIngestion();
+  return useMutation({
+    mutationFn: ({ documentId, req }: { documentId: string; req: ClassificationRequest }) =>
+      documentIngestionService.classifyDocument(documentId, req),
+    onSuccess: invalidate,
+  });
+}
+
+/** Confirms every proposed class of a package, however many calls it takes. Mutate with the package id. */
+export function useConfirmAllClassifications() {
+  const invalidate = useInvalidateDocumentIngestion();
+  return useMutation({
+    mutationFn: (packageId: string) => documentIngestionService.confirmAllClassificationsFully(packageId),
+    onSuccess: invalidate,
+    onError: invalidate,
+  });
+}
+
+/** Mutate with the job id to send its failed chunks again. */
+export function useRetryExtractJob() {
+  const invalidate = useInvalidateDocumentIngestion();
+  return useMutation({
+    mutationFn: (jobId: string) => documentIngestionService.retryFailedChunks(jobId),
+    onSuccess: invalidate,
+  });
+}
+
+/** Mutate with `{ packageId, budget }`. */
+export function useSetPackageLlmBudget() {
+  const invalidate = useInvalidateDocumentIngestion();
+  return useMutation({
+    mutationFn: ({ packageId, budget }: { packageId: string; budget: LlmBudgetRequest }) =>
+      documentIngestionService.setPackageLlmBudget(packageId, budget),
+    onSuccess: invalidate,
+  });
+}
+
+export function useSetMonthlyLlmBudget() {
+  const invalidate = useInvalidateDocumentIngestion();
+  return useMutation({
+    mutationFn: (budget: LlmBudgetRequest) => documentIngestionService.setMonthlyLlmBudget(budget),
+    onSuccess: invalidate,
+  });
+}
+
+/** Mutate with whether AI reading should be on. */
+export function useSetLlmReading() {
+  const invalidate = useInvalidateDocumentIngestion();
+  return useMutation({
+    mutationFn: (enabled: boolean) => documentIngestionService.setLlmReading(enabled),
+    onSuccess: invalidate,
+  });
+}
+
+/** Mutate with `{ documentId, req }`: this file replaces `req.supersedesDocumentId`. */
+export function useSetIngestRevision() {
+  const invalidate = useInvalidateDocumentIngestion();
+  return useMutation({
+    mutationFn: ({ documentId, req }: { documentId: string; req: RevisionRequest }) =>
+      documentIngestionService.setRevision(documentId, req),
+    onSuccess: invalidate,
+  });
+}
+
+/** Mutate with the revised file's id to propose its changes against the file it replaces. */
+export function useDiffIngestRevision() {
+  const invalidate = useInvalidateDocumentIngestion();
+  return useMutation({
+    mutationFn: (documentId: string) => documentIngestionService.diffRevision(documentId),
+    onSuccess: invalidate,
+  });
+}
+
+/** Mutate with `{ candidateId, choice }` on a change that could not be applied over a hand edit. */
+export function useResolveChangeConflict() {
+  const invalidate = useInvalidateDocumentIngestion();
+  return useMutation({
+    mutationFn: ({ candidateId, choice }: { candidateId: string; choice: ConflictChoice }) =>
+      documentIngestionService.resolveConflict(candidateId, choice),
+    onSuccess: invalidate,
   });
 }
