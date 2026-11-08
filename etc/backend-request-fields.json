@@ -3,7 +3,7 @@
     "repository": "tornotron/echno-backend",
     "ref": "development",
     "path": "docs/openapi.json",
-    "sha256": "8322f3ff5c8ae654f87f44053a94d84176bf1ef57edbe118de50e509fe5593d4"
+    "sha256": "9cb9b4b21532ade1a00f12004dee95370c046f34d616940d4d435401b6daf7ea"
   },
   "operations": {
     "POST /api/v1/assets/web": {
@@ -1093,6 +1093,16 @@
       ],
       "acceptsAnyField": false
     },
+    "PUT /api/v1/contract-billing/projects/{projectId}/payment-authorizer": {
+      "schema": "SetPaymentAuthorizerRequest",
+      "fields": [
+        "employeeId"
+      ],
+      "required": [
+        "employeeId"
+      ],
+      "acceptsAnyField": false
+    },
     "PUT /api/v1/contract-billing/requirements/{requirementId}": {
       "schema": "MilestoneRequirementRequest",
       "fields": [
@@ -1372,6 +1382,16 @@
       ],
       "acceptsAnyField": false
     },
+    "PUT /api/v1/contract-billing/web/projects/{projectId}/payment-authorizer": {
+      "schema": "SetPaymentAuthorizerRequest",
+      "fields": [
+        "employeeId"
+      ],
+      "required": [
+        "employeeId"
+      ],
+      "acceptsAnyField": false
+    },
     "PUT /api/v1/contract-billing/web/requirements/{requirementId}": {
       "schema": "MilestoneRequirementRequest",
       "fields": [
@@ -1387,6 +1407,25 @@
       "required": [
         "title",
         "type"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/document-ingestion/documents/{documentId}/boq/sheets/detect": {
+      "schema": null,
+      "fields": [],
+      "required": [],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/document-ingestion/documents/{documentId}/boq/sheets/{sheetId}/extract": {
+      "schema": "BoqMappingRequest",
+      "fields": [
+        "codePrefix",
+        "columns",
+        "headerRow"
+      ],
+      "required": [
+        "columns",
+        "headerRow"
       ],
       "acceptsAnyField": false
     },
@@ -1420,6 +1459,14 @@
       "required": [],
       "acceptsAnyField": false
     },
+    "PUT /api/v1/document-ingestion/packages/{packageId}/boq-target": {
+      "schema": "BoqTargetRequest",
+      "fields": [
+        "subContractId"
+      ],
+      "required": [],
+      "acceptsAnyField": false
+    },
     "POST /api/v1/document-ingestion/packages/{packageId}/candidates/decisions": {
       "schema": "DecideCandidatesRequest",
       "fields": [
@@ -1450,6 +1497,16 @@
       ],
       "required": [
         "key"
+      ],
+      "acceptsAnyField": false
+    },
+    "PUT /api/v1/document-ingestion/settings/llm-reading": {
+      "schema": "LlmReadingRequest",
+      "fields": [
+        "enabled"
+      ],
+      "required": [
+        "enabled"
       ],
       "acceptsAnyField": false
     },
@@ -5790,33 +5847,6 @@
         "description",
         "name"
       ],
-      "acceptsAnyField": false
-    },
-    "POST /api/v1/document-ingestion/documents/{documentId}/boq/sheets/detect": {
-      "schema": null,
-      "fields": [],
-      "required": [],
-      "acceptsAnyField": false
-    },
-    "POST /api/v1/document-ingestion/documents/{documentId}/boq/sheets/{sheetId}/extract": {
-      "schema": "BoqMappingRequest",
-      "fields": [
-        "codePrefix",
-        "columns",
-        "headerRow"
-      ],
-      "required": [
-        "columns",
-        "headerRow"
-      ],
-      "acceptsAnyField": false
-    },
-    "PUT /api/v1/document-ingestion/packages/{packageId}/boq-target": {
-      "schema": "BoqTargetRequest",
-      "fields": [
-        "subContractId"
-      ],
-      "required": [],
       "acceptsAnyField": false
     }
   }

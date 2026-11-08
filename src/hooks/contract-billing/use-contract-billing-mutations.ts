@@ -20,6 +20,7 @@ import type {
   MilestoneRequirementRequest,
   RaiseBillPaymentRequest,
   RecordBillPaymentRequest,
+  SetPaymentAuthorizerRequest,
   UpdateBillRequest,
 } from '../../types/contract-billing/contract-billing';
 import { contractBillingKeys } from './keys';
@@ -260,6 +261,28 @@ export function useSyncBillPayment() {
   const invalidate = useInvalidateBilling();
   return useMutation({
     mutationFn: (paymentId: string) => contractBillingService.syncBillPayment(paymentId),
+    onSuccess: invalidate,
+  });
+}
+
+/**
+ * Names or changes a project's payment authorizer. Mutate with `{ projectId, req }`.
+ * Refreshes all of billing, since every bill page on the project shows who signs.
+ */
+export function useSetPaymentAuthorizer() {
+  const invalidate = useInvalidateBilling();
+  return useMutation({
+    mutationFn: ({ projectId, req }: { projectId: number; req: SetPaymentAuthorizerRequest }) =>
+      contractBillingService.setPaymentAuthorizer(projectId, req),
+    onSuccess: invalidate,
+  });
+}
+
+/** Leaves a project with no payment authorizer, so its payments wait. Mutate with the project id. */
+export function useClearPaymentAuthorizer() {
+  const invalidate = useInvalidateBilling();
+  return useMutation({
+    mutationFn: (projectId: number) => contractBillingService.clearPaymentAuthorizer(projectId),
     onSuccess: invalidate,
   });
 }

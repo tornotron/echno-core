@@ -50,6 +50,16 @@ export function useBillingActivity(params: { projectId?: number; limit?: number 
   });
 }
 
+/** Who authorizes payments on a project's bills, with the changes. Disabled until an id is known. */
+export function usePaymentAuthorizer(projectId: number | undefined, options: { enabled?: boolean } = {}) {
+  return useQuery({
+    queryKey: contractBillingKeys.paymentAuthorizer(projectId ?? 0),
+    queryFn: () => contractBillingService.getPaymentAuthorizer(projectId as number),
+    enabled: (options.enabled ?? true) && Boolean(projectId),
+    retry: shouldRetry,
+  });
+}
+
 /** A bill's payments and what is left to pay. Disabled until an id is known. */
 export function useBillPayments(billId: string | undefined, options: { enabled?: boolean } = {}) {
   return useQuery({

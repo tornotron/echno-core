@@ -6,6 +6,7 @@
  * - `['contract-billing', 'overview']`: home page figures.
  * - `['contract-billing', 'projects', params]`: one page of projects.
  * - `['contract-billing', 'project', id]`: one project's figures.
+ * - `['contract-billing', 'project', id, 'payment-authorizer']`: who signs its payments.
  * - `['contract-billing', 'activity', params]`: the latest bill events.
  * - `['contract-billing', 'contracts', params]`: one page of contracts.
  * - `['contract-billing', 'contract', id]`: one contract's billing.
@@ -20,6 +21,7 @@ export const contractBillingKeys = {
   overview: () => [...contractBillingKeys.all, 'overview'] as const,
   projects: (params: ProjectBillingListParams = {}) => [...contractBillingKeys.all, 'projects', params] as const,
   project: (projectId: number) => [...contractBillingKeys.all, 'project', projectId] as const,
+  paymentAuthorizer: (projectId: number) => [...contractBillingKeys.project(projectId), 'payment-authorizer'] as const,
   activity: (params: { projectId?: number; limit?: number } = {}) =>
     [...contractBillingKeys.all, 'activity', params] as const,
   contracts: (params: ContractBillingListParams = {}) => [...contractBillingKeys.all, 'contracts', params] as const,
