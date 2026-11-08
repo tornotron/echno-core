@@ -3,7 +3,7 @@
     "repository": "tornotron/echno-backend",
     "ref": "development",
     "path": "docs/openapi.json",
-    "sha256": "a58f34cfcfdd58eacb21071bf940c2322ebc86b3ccb4c04f145ab6f4290da53a"
+    "sha256": "87656399685bd0ad64e63add869b13cb16b69daa8be170758fb490ed2a9ca3cf"
   },
   "operations": {
     "POST /api/v1/assets": {
@@ -1588,6 +1588,29 @@
       ],
       "acceptsAnyField": false
     },
+    "POST /api/v1/document-ingestion/candidates/{candidateId}/conflict": {
+      "schema": "ConflictChoiceRequest",
+      "fields": [
+        "choice"
+      ],
+      "required": [
+        "choice"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/document-ingestion/contract-terms/{termId}/risk": {
+      "schema": "RaiseRiskRequest",
+      "fields": [
+        "category",
+        "impact",
+        "owner",
+        "probability",
+        "responseType",
+        "title"
+      ],
+      "required": [],
+      "acceptsAnyField": false
+    },
     "POST /api/v1/document-ingestion/documents/{documentId}/boq/sheets/detect": {
       "schema": null,
       "fields": [],
@@ -1624,9 +1647,39 @@
       "required": [],
       "acceptsAnyField": false
     },
+    "PUT /api/v1/document-ingestion/documents/{documentId}/revision": {
+      "schema": "RevisionRequest",
+      "fields": [
+        "revisionLabel",
+        "supersedesDocumentId"
+      ],
+      "required": [
+        "supersedesDocumentId"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/document-ingestion/documents/{documentId}/revision-diff": {
+      "schema": null,
+      "fields": [],
+      "required": [],
+      "acceptsAnyField": false
+    },
     "POST /api/v1/document-ingestion/extract-jobs/{jobId}/retry-failed": {
       "schema": null,
       "fields": [],
+      "required": [],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/document-ingestion/obligations/{obligationId}/risk": {
+      "schema": "RaiseRiskRequest",
+      "fields": [
+        "category",
+        "impact",
+        "owner",
+        "probability",
+        "responseType",
+        "title"
+      ],
       "required": [],
       "acceptsAnyField": false
     },

@@ -5,6 +5,13 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
+## [Unreleased]
+
+- `etc/backend-request-fields.json` and `etc/request-contract.md` refreshed from backend `development`
+  after #1046 (document ingestion step 14) merged. The revision, revision-diff and conflict calls of
+  `document-ingestion-service.ts` are now endpoints in the document, which clears their three
+  findings (11 to 8). No code change.
+
 ## [v11.13.0] - 2026-11-09
 
 Document ingestion client, part two (tornotron/echno-backend#957, build plan step 15): document
