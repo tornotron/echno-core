@@ -41,7 +41,10 @@
  * - `DELETE /contract-billing/web/bills/{id}/documents/{attachmentId}`        remove one
  * - `GET    /contract-billing/web/bills/{id}/payments`                        its payments and what is left to pay
  * - `POST   /contract-billing/web/bills/{id}/payments`                        raise a payment
- * - `POST   /contract-billing/web/bill-payments/{id}/authorize|reject|record|sync`
+ * - `POST   /contract-billing/web/bill-payments/{id}/authorize|reject|record|sync`  the project's payment authorizer's
+ * - `GET    /contract-billing/web/projects/{id}/payment-authorizer`          who authorizes a project's payments
+ * - `PUT    /contract-billing/web/projects/{id}/payment-authorizer`          name or change them
+ * - `DELETE /contract-billing/web/projects/{id}/payment-authorizer`          leave the project with none
  *
  * Every function throws {@link ApiError} on a non-2xx response or a parse
  * failure. The server's message is on the error, for the failure toast.
@@ -81,8 +84,10 @@ import {
   MilestoneRequirementRequest,
   ProjectBillingListParams,
   ProjectBillingSummary,
+  ProjectPaymentAuthorizer,
   RaiseBillPaymentRequest,
   RecordBillPaymentRequest,
+  SetPaymentAuthorizerRequest,
   UpdateBillRequest,
   parseBill,
   parseBillActivity,
@@ -97,6 +102,7 @@ import {
   parseDeductionRule,
   parseMilestoneRequirement,
   parseProjectBillingSummary,
+  parseProjectPaymentAuthorizer,
 } from '../types/contract-billing/contract-billing';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -480,5 +486,26 @@ export const contractBillingService = {
   async syncBillPayment(paymentId: string): Promise<BillPayments> {
     const data = await api.post<ApiResponse>(`${BASE}/bill-payments/${paymentId}/sync`);
     return parseWith('bill payments', data, parseBillPayments);
+  },
+
+  // ---------------------------------------------------------------- the project's payment authorizer
+
+  /** `GET /contract-billing/web/projects/{id}/payment-authorizer`: who signs the project's payments. */
+  async getPaymentAuthorizer(projectId: number): Promise<ProjectPaymentAuthorizer> {
+    const data = await api.get<ApiResponse>(`${BASE}/projects/${projectId}/payment-authorizer`);
+    return parseWith('payment authorizer', data, parseProjectPaymentAuthorizer);
+  },
+
+  /** `PUT /contract-billing/web/projects/{id}/payment-authorizer`: a system admin or a project manager. */
+  async setPaymentAuthorizer(projectId: number, req: SetPaymentAuthorizerRequest): Promise<ProjectPaymentAuthorizer> {
+    const payload: SetPaymentAuthorizerRequest = { employeeId: req.employeeId };
+    const data = await api.put<ApiResponse>(`${BASE}/projects/${projectId}/payment-authorizer`, payload);
+    return parseWith('payment authorizer', data, parseProjectPaymentAuthorizer);
+  },
+
+  /** `DELETE /contract-billing/web/projects/{id}/payment-authorizer`: its payments then wait. */
+  async clearPaymentAuthorizer(projectId: number): Promise<ProjectPaymentAuthorizer> {
+    const data = await api.delete<ApiResponse>(`${BASE}/projects/${projectId}/payment-authorizer`);
+    return parseWith('payment authorizer', data, parseProjectPaymentAuthorizer);
   },
 };

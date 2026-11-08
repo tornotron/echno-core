@@ -5,6 +5,28 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
+## [v11.9.0] - 2026-11-08
+
+Who authorizes a contractor bill payment (#169; backend echno-backend #1010, design note
+`docs/specs/2026-11-08-billing-in-inspection-and-payments.md` section 7). The second signature moves
+from the system admin to the employee each project names as its payment authorizer, and whoever raised
+a payment can no longer authorize it. Additive: every new field reads as absent or false from a backend
+that does not send it, so the page offers no signature the server would refuse.
+
+- `BillPayments`: `projectId`, `authorizerEmployeeId`, `authorizerName`, `authorizerActive` and
+  `readerIsAuthorizer`. The authorizer is the one who authorizes, rejects, records and checks
+  payments; no role does.
+- `BillPayment`: `readerMayAuthorize`, `authorizeBlock` (`BillPaymentAuthorizeBlock`: `NO_AUTHORIZER`,
+  `NOT_THE_AUTHORIZER`, `OWN_REQUEST`, `RAISED_BY_THE_AUTHORIZER`, for saying why the button is absent)
+  and `authorizedAs` (`BillPaymentAuthority.PROJECT_AUTHORIZER`). `selfAuthorized` is now true only on
+  payments from before the rule.
+- The project's authorizer: `ProjectPaymentAuthorizer`, `PaymentAuthorizerChange`,
+  `SetPaymentAuthorizerRequest` and `parseProjectPaymentAuthorizer`;
+  `contractBillingService.getPaymentAuthorizer`, `setPaymentAuthorizer` and `clearPaymentAuthorizer`;
+  `contractBillingKeys.paymentAuthorizer`, `usePaymentAuthorizer`, `useSetPaymentAuthorizer` and
+  `useClearPaymentAuthorizer`. Naming or clearing invalidates all of billing, since every bill page
+  on the project shows who signs.
+
 ## [v11.8.0] - 2026-11-08
 
 Document ingestion, first part: tender packages, their files, BOQ sheets read from Excel, review of

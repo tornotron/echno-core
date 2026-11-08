@@ -165,6 +165,24 @@ export enum BillPaymentProvider {
   RAZORPAY = 'RAZORPAY',
 }
 
+/** The capacity a payment's authorization was given in. */
+export enum BillPaymentAuthority {
+  /** The employee the project names as its payment authorizer. */
+  PROJECT_AUTHORIZER = 'PROJECT_AUTHORIZER',
+}
+
+/** Why the reader cannot authorize a requested payment, shown in place of the button. */
+export enum BillPaymentAuthorizeBlock {
+  /** The project has no payment authorizer, or the one named is no longer active. */
+  NO_AUTHORIZER = 'NO_AUTHORIZER',
+  /** Someone else is the project's payment authorizer. */
+  NOT_THE_AUTHORIZER = 'NOT_THE_AUTHORIZER',
+  /** The reader is the authorizer and raised it, so someone else has to sign. */
+  OWN_REQUEST = 'OWN_REQUEST',
+  /** The project's only authorizer raised it; it waits until another is named. */
+  RAISED_BY_THE_AUTHORIZER = 'RAISED_BY_THE_AUTHORIZER',
+}
+
 /** The document types a bill's supporting documents are filed under. */
 export const BILL_DOCUMENT_TYPES = ['photo', 'test-report', 'delivery-challan', 'measurement', 'other'] as const;
 export type BillDocumentType = (typeof BILL_DOCUMENT_TYPES)[number];
@@ -273,9 +291,18 @@ export interface BillPayment {
   requestedAt?: string;
   authorizedByName?: string;
   authorizedAt?: string;
-  /** True when the same system admin raised and authorized it. */
+  /**
+   * True only on a payment from before the requester was barred from
+   * authorizing it, when a system admin raised and authorized it.
+   */
   selfAuthorized: boolean;
+  /** The capacity it was authorized in; absent until then, and on older payments. */
+  authorizedAs?: BillPaymentAuthority;
   settledAt?: string;
+  /** Whether the reader may authorize this payment now. */
+  readerMayAuthorize: boolean;
+  /** On a requested payment the reader may not authorize, why not. */
+  authorizeBlock?: BillPaymentAuthorizeBlock;
 }
 
 /** A bill's payments and what is left to pay, as the payable has it. */
@@ -293,8 +320,49 @@ export interface BillPayments {
   inFlight: boolean;
   /** Whether the contract has the account number and IFSC a provider needs. */
   beneficiaryReady: boolean;
+  projectId?: number;
+  /** The employee the project names as its payment authorizer; absent when it names none. */
+  authorizerEmployeeId?: number;
+  authorizerName?: string;
+  /** False when the employee named is no longer active, which leaves the project without one. */
+  authorizerActive: boolean;
+  /**
+   * Whether the reader is the project's payment authorizer: they authorize,
+   * reject, record and check payments, though never one they raised.
+   */
+  readerIsAuthorizer: boolean;
   /** Newest first. */
   payments: BillPayment[];
+}
+
+/** One change to a project's payment authorizer. An absent employee on either side means none. */
+export interface PaymentAuthorizerChange {
+  id: string;
+  previousEmployeeId?: number;
+  previousEmployeeName?: string;
+  employeeId?: number;
+  employeeName?: string;
+  changedByName?: string;
+  changedAt?: string;
+}
+
+/** Who authorizes payments on a project's bills, and the changes to that. */
+export interface ProjectPaymentAuthorizer {
+  projectId: number;
+  projectName?: string;
+  /** Absent when the project names none; its payments then wait. */
+  employeeId?: number;
+  employeeName?: string;
+  /** False when the employee named is no longer active. */
+  active: boolean;
+  setByName?: string;
+  setAt?: string;
+  /** Whether the reader is this project's payment authorizer. */
+  readerIsAuthorizer: boolean;
+  /** Whether the reader may name or change it: a system admin or a project manager. */
+  readerMayChange: boolean;
+  /** Newest first, the latest 20. */
+  changes: PaymentAuthorizerChange[];
 }
 
 /** Whether a payment attempt still holds the bill's one payment slot. */
@@ -687,6 +755,12 @@ export interface RaiseBillPaymentRequest {
   note?: string;
 }
 
+/** Body of `PUT /contract-billing/web/projects/{id}/payment-authorizer`. */
+export interface SetPaymentAuthorizerRequest {
+  /** An active employee of the organization with a sign-in account. */
+  employeeId: number;
+}
+
 /** Body of `POST /contract-billing/web/bill-payments/{id}/record`. */
 export interface RecordBillPaymentRequest {
   /** The bank's reference for the transfer. */
@@ -738,6 +812,8 @@ const parseProjectState = oneOf(ProjectBillingState, ProjectBillingState.IN_PROG
 // would start another payment, and the server refuses anything out of turn.
 const parsePaymentStatus = oneOf(BillPaymentStatus, BillPaymentStatus.PROCESSING);
 const parsePaymentProvider = oneOf(BillPaymentProvider, BillPaymentProvider.MANUAL);
+const parseOptionalAuthority = optionalOneOf(BillPaymentAuthority);
+const parseOptionalAuthorizeBlock = optionalOneOf(BillPaymentAuthorizeBlock);
 
 const OverviewSchema = z.object({
   openBills: nullableNumber,
@@ -878,7 +954,10 @@ const PaymentSchema = z.object({
   authorizedByName: nullableString,
   authorizedAt: backendDate,
   selfAuthorized: nullableBoolean,
+  authorizedAs: nullableString,
   settledAt: backendDate,
+  readerMayAuthorize: nullableBoolean,
+  authorizeBlock: nullableString,
 });
 
 function parseBillPayment(json: unknown): BillPayment {
@@ -904,7 +983,11 @@ function parseBillPayment(json: unknown): BillPayment {
     authorizedByName: raw.authorizedByName ?? undefined,
     authorizedAt: raw.authorizedAt ?? undefined,
     selfAuthorized: raw.selfAuthorized ?? false,
+    authorizedAs: parseOptionalAuthority(raw.authorizedAs),
     settledAt: raw.settledAt ?? undefined,
+    // Absent reads as no: the page then offers no signature the server would refuse.
+    readerMayAuthorize: raw.readerMayAuthorize ?? false,
+    authorizeBlock: parseOptionalAuthorizeBlock(raw.authorizeBlock),
   };
 }
 
@@ -919,6 +1002,11 @@ const PaymentsSchema = z.object({
   paymentState: nullableString,
   inFlight: nullableBoolean,
   beneficiaryReady: nullableBoolean,
+  projectId: numeric.nullish(),
+  authorizerEmployeeId: numeric.nullish(),
+  authorizerName: nullableString,
+  authorizerActive: nullableBoolean,
+  readerIsAuthorizer: nullableBoolean,
   payments: z.array(z.unknown()).nullish(),
 });
 
@@ -936,7 +1024,63 @@ export function parseBillPayments(json: unknown): BillPayments {
     paymentState: parseOptionalPaymentState(raw.paymentState),
     inFlight: raw.inFlight ?? false,
     beneficiaryReady: raw.beneficiaryReady ?? false,
+    projectId: raw.projectId ?? undefined,
+    authorizerEmployeeId: raw.authorizerEmployeeId ?? undefined,
+    authorizerName: raw.authorizerName ?? undefined,
+    authorizerActive: raw.authorizerActive ?? false,
+    readerIsAuthorizer: raw.readerIsAuthorizer ?? false,
     payments: (raw.payments ?? []).map(parseBillPayment),
+  };
+}
+
+const AuthorizerChangeSchema = z.object({
+  id,
+  previousEmployeeId: numeric.nullish(),
+  previousEmployeeName: nullableString,
+  employeeId: numeric.nullish(),
+  employeeName: nullableString,
+  changedByName: nullableString,
+  changedAt: backendDate,
+});
+
+const ProjectAuthorizerSchema = z.object({
+  projectId: numeric,
+  projectName: nullableString,
+  employeeId: numeric.nullish(),
+  employeeName: nullableString,
+  active: nullableBoolean,
+  setByName: nullableString,
+  setAt: backendDate,
+  readerIsAuthorizer: nullableBoolean,
+  readerMayChange: nullableBoolean,
+  changes: z.array(z.unknown()).nullish(),
+});
+
+/** Parses who authorizes payments on a project's bills. `projectId` is required. */
+export function parseProjectPaymentAuthorizer(json: unknown): ProjectPaymentAuthorizer {
+  const raw = ProjectAuthorizerSchema.parse(json);
+  return {
+    projectId: raw.projectId,
+    projectName: raw.projectName ?? undefined,
+    employeeId: raw.employeeId ?? undefined,
+    employeeName: raw.employeeName ?? undefined,
+    active: raw.active ?? false,
+    setByName: raw.setByName ?? undefined,
+    setAt: raw.setAt ?? undefined,
+    readerIsAuthorizer: raw.readerIsAuthorizer ?? false,
+    readerMayChange: raw.readerMayChange ?? false,
+    changes: (raw.changes ?? []).map((change) => {
+      const c = AuthorizerChangeSchema.parse(change);
+      return {
+        id: String(c.id),
+        previousEmployeeId: c.previousEmployeeId ?? undefined,
+        previousEmployeeName: c.previousEmployeeName ?? undefined,
+        employeeId: c.employeeId ?? undefined,
+        employeeName: c.employeeName ?? undefined,
+        changedByName: c.changedByName ?? undefined,
+        changedAt: c.changedAt ?? undefined,
+      };
+    }),
   };
 }
 

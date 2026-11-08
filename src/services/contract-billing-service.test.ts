@@ -3,6 +3,8 @@ import { afterEach, describe, expect, spyOn, test } from 'bun:test';
 import { api, ApiError } from '../lib/api/api-client';
 import {
   BillEventType,
+  BillPaymentAuthority,
+  BillPaymentAuthorizeBlock,
   BillPaymentProvider,
   BillPaymentState,
   BillPaymentStatus,
@@ -18,6 +20,7 @@ import {
   parseBillingOverview,
   parseContractBillingSummary,
   parseProjectBillingSummary,
+  parseProjectPaymentAuthorizer,
 } from '../types/contract-billing/contract-billing';
 import { contractBillingService } from './contract-billing-service';
 
@@ -153,9 +156,69 @@ describe('project billing and payment paths', () => {
     expect(post).toHaveBeenLastCalledWith('/contract-billing/web/bill-payments/p1/sync');
   });
 
+  test("a project's payment authorizer is read, named and cleared on its own path", async () => {
+    const body = { projectId: 7, employeeId: 3, employeeName: 'Meera', active: true, changes: [] };
+    const get = spyOn(api, 'get').mockResolvedValue(body as never);
+    const put = spyOn(api, 'put').mockResolvedValue(body as never);
+    const del = spyOn(api, 'delete').mockResolvedValue({ projectId: 7, changes: [] } as never);
+    expect((await contractBillingService.getPaymentAuthorizer(7)).employeeName).toBe('Meera');
+    expect(get).toHaveBeenLastCalledWith('/contract-billing/web/projects/7/payment-authorizer');
+    await contractBillingService.setPaymentAuthorizer(7, { employeeId: 3 });
+    expect(put).toHaveBeenLastCalledWith('/contract-billing/web/projects/7/payment-authorizer', { employeeId: 3 });
+    expect((await contractBillingService.clearPaymentAuthorizer(7)).employeeId).toBeUndefined();
+    expect(del).toHaveBeenLastCalledWith('/contract-billing/web/projects/7/payment-authorizer');
+  });
+
   test('a malformed payments payload is an ApiError', async () => {
     spyOn(api, 'get').mockResolvedValue({ payments: 'nope' } as never);
     await expect(contractBillingService.getBillPayments(ID)).rejects.toBeInstanceOf(ApiError);
+  });
+});
+
+describe('who authorizes a payment', () => {
+  test('a payment says whether the reader may sign it and why not, and an absent answer reads as no', () => {
+    const view = parseBillPayments({
+      billId: ID,
+      billNumber: 'RA-01',
+      provider: 'MANUAL',
+      projectId: 7,
+      authorizerEmployeeId: '3',
+      authorizerName: 'Meera',
+      authorizerActive: true,
+      readerIsAuthorizer: true,
+      payments: [
+        { id: 'p1', billId: ID, amount: '10', status: 'REQUESTED', readerMayAuthorize: false, authorizeBlock: 'OWN_REQUEST' },
+        { id: 'p2', billId: ID, amount: '10', status: 'SETTLED', authorizedAs: 'PROJECT_AUTHORIZER' },
+        { id: 'p3', billId: ID, amount: '10', status: 'REQUESTED', authorizeBlock: 'SOMETHING_NEW' },
+      ],
+    });
+    expect(view.authorizerEmployeeId).toBe(3);
+    expect(view.readerIsAuthorizer).toBe(true);
+    expect(view.payments[0]?.authorizeBlock).toBe(BillPaymentAuthorizeBlock.OWN_REQUEST);
+    expect(view.payments[1]?.authorizedAs).toBe(BillPaymentAuthority.PROJECT_AUTHORIZER);
+    expect(view.payments[1]?.readerMayAuthorize).toBe(false);
+    expect(view.payments[2]?.authorizeBlock).toBeUndefined();
+
+    const older = parseBillPayments({ billId: ID, payments: [{ id: 'p1', billId: ID, status: 'REQUESTED' }] });
+    expect(older.readerIsAuthorizer).toBe(false);
+    expect(older.authorizerActive).toBe(false);
+    expect(older.payments[0]?.readerMayAuthorize).toBe(false);
+  });
+
+  test("a project's authorizer reads its history, and needs a project id", () => {
+    const parsed = parseProjectPaymentAuthorizer({
+      projectId: '7',
+      employeeId: 3,
+      employeeName: 'Meera',
+      active: true,
+      readerMayChange: true,
+      changes: [{ id: 'c1', previousEmployeeId: null, employeeId: 3, employeeName: 'Meera', changedByName: 'Ravi' }],
+    });
+    expect(parsed.projectId).toBe(7);
+    expect(parsed.readerIsAuthorizer).toBe(false);
+    expect(parsed.changes[0]?.previousEmployeeId).toBeUndefined();
+    expect(parsed.changes[0]?.changedByName).toBe('Ravi');
+    expect(() => parseProjectPaymentAuthorizer({ employeeId: 3 })).toThrow();
   });
 });
 
