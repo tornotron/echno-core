@@ -5,6 +5,41 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
+## [Unreleased]
+
+The Roles & Permissions screen's access client (tornotron/echno-backend#914, build plan step 29;
+backend #1025 for the reads, #1026 for the writes). Roles and Users only, no groups. The endpoints
+are on backend `auth-workos`, so until it reaches `development` each call answers as an unrouted
+path. Additive: every new field reads as absent, empty or false from a backend that does not send
+it, and the old fields are kept, derived from the new ones.
+
+- Catalog: `AccessArea.actionDetails` (`AccessAction`: `action`, `enforced`), `enforcedActions` and
+  `scopeAware`, matching the backend's catalog, whose actions now carry the enforced flag.
+  `offeredScopes(catalog, area)` gives every scope on a scope-aware area and only `ALL` elsewhere,
+  so the screen offers only what the server accepts. A bare action name reads as not enforced.
+- Roles: `AccessRole.carriedOver`, `organizationWideOnly` and `assignments` (`AccessAssignment`:
+  `employeeId`, `projectId`); `memberIds` is now derived from the assignments.
+  `accessService.getRole`, `accessKeys.role` and `useAccessRole` read one role for its panel.
+- People: `AccessUser.roles` (`AccessUserRole`: `roleId`, `projectId`) and grants as
+  `AccessUserGrant` with their `projectId`; `roleIds` is now derived from the roles.
+  `accessService.getUser`, `accessKeys.user` and `useAccessUser` read one person.
+- Writes: `createRole` (resolves to `AccessRoleCreated`, parsed by `parseAccessRoleCreated`),
+  `updateRole`, `setRoleGrants`, `setRoleGrantableRoles`, `deleteRole` and `setUserRoles`, with
+  `AccessRoleRequest`, `AccessGrantRequest` and `AccessUserRoleRequest`. Hooks:
+  `useCreateAccessRole`, `useUpdateAccessRole`, `useSetAccessRoleGrants`,
+  `useSetAccessRoleGrantableRoles`, `useDeleteAccessRole` and `useSetAccessUserRoles`. The writes
+  answer with no body, so each hook invalidates what it changed: the roles always, the people too
+  for a person's roles or a deleted role, and the caller's own access for a role's grants (the
+  baseline is a role the caller holds).
+- Current user: `CurrentUserAccess.projectGrants` (project id to permission to scopes),
+  `holdsPermissionOnProject` and `canOnProject` on `useCurrentUserAccess`. `can` still answers for
+  grants held across the organization only.
+- `AccessGrant.locked` is deprecated: the backend has no locked grants, so it reads as false.
+- Docs and tests name the reading action `read`, as the backend does.
+- `etc/request-contract.md` records the five new body-carrying writes as endpoints not in the
+  `development` document (findings 3 to 8). Checked against the `feat/914-access-write-endpoints`
+  document, all five are checked and clean.
+
 ## [v11.11.0] - 2026-11-08
 
 Issues: the task is optional, and an issue belongs to a project or a domain (#172; ClickUp

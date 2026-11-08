@@ -10,7 +10,11 @@ import { useQuery } from '@tanstack/react-query';
 import { accessService } from '../../services/access-service';
 import { shouldRetry } from '../../lib/query/retry';
 import { standardQueryOptions } from '../../lib/query/options';
-import { AccessScope, holdsPermission } from '../../types/access/current-user-access';
+import {
+  AccessScope,
+  holdsPermission,
+  holdsPermissionOnProject,
+} from '../../types/access/current-user-access';
 import { accessKeys } from './keys';
 
 /**
@@ -26,8 +30,12 @@ import { accessKeys } from './keys';
  * gate fails closed. Read `isLoading` first and hold the page, so a permitted
  * member does not see a flash of "Access Denied".
  *
+ * `can` answers for grants held across the organization; `canOnProject`
+ * also counts grants held only on the given project.
+ *
  * @returns `access` (the {@link CurrentUserAccess}, or `undefined` while
- *   loading), `can(area, action, scope?)`, `isLoading` and `error`.
+ *   loading), `can(area, action, scope?)`,
+ *   `canOnProject(projectId, area, action, scope?)`, `isLoading` and `error`.
  */
 export function useCurrentUserAccess() {
   const { data: access, isLoading, error } = useQuery({
@@ -42,5 +50,11 @@ export function useCurrentUserAccess() {
     [access]
   );
 
-  return { access, can, isLoading, error };
+  const canOnProject = useCallback(
+    (projectId: number, area: string, action: string, scope?: AccessScope) =>
+      holdsPermissionOnProject(access, projectId, area, action, scope),
+    [access]
+  );
+
+  return { access, can, canOnProject, isLoading, error };
 }

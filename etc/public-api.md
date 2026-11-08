@@ -9,14 +9,22 @@ Entry points: 201
 ## `@tornotron/echno-core`
 
 - abbreviatedName
+- AccessAction
 - AccessArea
+- AccessAssignment
 - AccessCatalog
 - AccessGrant
+- AccessGrantRequest
 - accessKeys
 - AccessRole
+- AccessRoleCreated
+- AccessRoleRequest
 - AccessScope
 - accessService
 - AccessUser
+- AccessUserGrant
+- AccessUserRole
+- AccessUserRoleRequest
 - Account
 - AccountLine
 - AccountTreeNode
@@ -492,6 +500,7 @@ Entry points: 201
 - hasPendingReinspection
 - hasRole
 - holdsPermission
+- holdsPermissionOnProject
 - Holiday
 - HolidayRequest
 - holidayRequestToJson
@@ -734,6 +743,7 @@ Entry points: 201
 - observationService
 - ObservationSource
 - observationSourceLabels
+- offeredScopes
 - Organization
 - OrganizationFiles
 - organizationKeys
@@ -763,6 +773,7 @@ Entry points: 201
 - PagedTask
 - parseAccessCatalog
 - parseAccessRole
+- parseAccessRoleCreated
 - parseAccessUser
 - parseAccount
 - parseAccountLine
@@ -1312,7 +1323,9 @@ Entry points: 201
 - UpsertPostingAccountMappingRequest
 - upsertPostingAccountMappingToJson
 - useAccessCatalog
+- useAccessRole
 - useAccessRoles
+- useAccessUser
 - useAccessUsers
 - useActivateLeavePolicy
 - useAddBillNote
@@ -1397,6 +1410,7 @@ Entry points: 201
 - useContractBilling
 - useCostCategories
 - useCostCategory
+- useCreateAccessRole
 - useCreateAccount
 - useCreateAttendanceProfile
 - useCreateBankAccount
@@ -1450,6 +1464,7 @@ Entry points: 201
 - useDeactivateCustomer
 - useDecideCandidates
 - useDelegateApproval
+- useDeleteAccessRole
 - useDeleteAttachment
 - useDeleteAttendance
 - useDeleteAttendanceProfile
@@ -1721,6 +1736,9 @@ Entry points: 201
 - useSearch
 - useSeedDefaultCostCategories
 - useSendableAssets
+- useSetAccessRoleGrantableRoles
+- useSetAccessRoleGrants
+- useSetAccessUserRoles
 - useSetBoqTarget
 - useSetDatasetConsent
 - useSetPaymentAuthorizer
@@ -1758,6 +1776,7 @@ Entry points: 201
 - useUnassignRole
 - useUnreadNotifications
 - useUnreadNotificationsCount
+- useUpdateAccessRole
 - useUpdateAccount
 - useUpdateAttendanceProfile
 - useUpdateBill
@@ -1879,9 +1898,17 @@ Entry points: 201
 
 - accessKeys
 - useAccessCatalog
+- useAccessRole
 - useAccessRoles
+- useAccessUser
 - useAccessUsers
+- useCreateAccessRole
 - useCurrentUserAccess
+- useDeleteAccessRole
+- useSetAccessRoleGrantableRoles
+- useSetAccessRoleGrants
+- useSetAccessUserRoles
+- useUpdateAccessRole
 
 ## `@tornotron/echno-core/access/hooks/keys`
 
@@ -1893,16 +1920,27 @@ Entry points: 201
 
 ## `@tornotron/echno-core/access/types`
 
+- AccessAction
 - AccessArea
+- AccessAssignment
 - AccessCatalog
 - AccessGrant
+- AccessGrantRequest
 - AccessRole
+- AccessRoleCreated
+- AccessRoleRequest
 - AccessScope
 - AccessUser
+- AccessUserGrant
+- AccessUserRole
+- AccessUserRoleRequest
 - CurrentUserAccess
 - holdsPermission
+- holdsPermissionOnProject
+- offeredScopes
 - parseAccessCatalog
 - parseAccessRole
+- parseAccessRoleCreated
 - parseAccessUser
 - parseCurrentUserAccess
 

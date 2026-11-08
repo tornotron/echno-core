@@ -2,7 +2,7 @@
  * @module use-access-admin
  *
  * Query hooks for the Roles & Permissions screen: the catalog, the roles and
- * people's access.
+ * people's access, and one role or person for a details panel.
  */
 
 import { useQuery } from '@tanstack/react-query';
@@ -49,6 +49,35 @@ export const useAccessUsers = () =>
   useQuery({
     queryKey: accessKeys.users(),
     queryFn: () => accessService.getUsers(),
+    ...standardQueryOptions,
+    retry: shouldRetry,
+  });
+
+/**
+ * Fetches one role, for the role's details panel (its module permissions and
+ * assigned users). Idle until `roleId` is given.
+ *
+ * @returns A TanStack `UseQueryResult` wrapping an {@link AccessRole}.
+ */
+export const useAccessRole = (roleId: string | undefined) =>
+  useQuery({
+    queryKey: accessKeys.role(roleId ?? ''),
+    queryFn: () => accessService.getRole(roleId as string),
+    enabled: !!roleId,
+    ...standardQueryOptions,
+    retry: shouldRetry,
+  });
+
+/**
+ * Fetches one person's roles and grants. Idle until `employeeId` is given.
+ *
+ * @returns A TanStack `UseQueryResult` wrapping an {@link AccessUser}.
+ */
+export const useAccessUser = (employeeId: number | undefined) =>
+  useQuery({
+    queryKey: accessKeys.user(employeeId ?? 0),
+    queryFn: () => accessService.getUser(employeeId as number),
+    enabled: employeeId !== undefined,
     ...standardQueryOptions,
     retry: shouldRetry,
   });
