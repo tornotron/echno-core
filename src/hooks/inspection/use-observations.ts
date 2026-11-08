@@ -2,8 +2,8 @@
  * @module use-observations
  *
  * Query and mutation hooks for observations: the pending queue, one
- * observation and its evidence, recording a human observation, and the
- * review decision.
+ * observation and its evidence, recording a human observation, the review
+ * decision, and the bulk decision on many.
  */
 
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -14,6 +14,7 @@ import {
 import type {
   CreateObservationRequest,
   Observation,
+  ReviewBatchRequest,
   ReviewObservationRequest,
 } from '../../types/inspection';
 import { ObservationOutcomeKind } from '../../types/inspection';
@@ -52,12 +53,23 @@ export function useObservations(params: ObservationListParams = {}) {
  * One observation by id. Disabled until the id resolves.
  *
  * @param id - UUID of the observation.
+ * @param options - `includeRetiredRegions` also loads the regions a review
+ *   replaced or removed (the "show history" view), under its own key.
  * @returns A TanStack `UseQueryResult` wrapping `Observation`.
  */
-export function useObservation(id?: string) {
+export function useObservation(
+  id?: string,
+  options: { includeRetiredRegions?: boolean } = {}
+) {
+  const includeRetiredRegions = options.includeRetiredRegions === true;
   return useQuery({
-    queryKey: observationKeys.detail(id ?? ''),
-    queryFn: () => observationService.getById(id as string),
+    queryKey: includeRetiredRegions
+      ? observationKeys.detailWithRetiredRegions(id ?? '')
+      : observationKeys.detail(id ?? ''),
+    queryFn: () =>
+      includeRetiredRegions
+        ? observationService.getById(id as string, { includeRetiredRegions })
+        : observationService.getById(id as string),
     enabled: !!id,
     ...standardQueryOptions,
     retry: shouldRetry,
@@ -157,5 +169,30 @@ export function useReviewObservation() {
     mutationFn: ({ id, req }: { id: string; req: ReviewObservationRequest }) =>
       observationService.review(id, req),
     onSuccess: (observation) => invalidate(observation),
+  });
+}
+
+/**
+ * Accepts with no outcome, or rejects with one reason and one note, many
+ * pending observations at once: the grid's bulk bar.
+ *
+ * `POST /inspections/web/observations/review-batch`. The result carries one
+ * status per id, so a partial success is still a success here; read
+ * `results` for the ones that were refused. On success invalidates the
+ * observations, the event log and the inspections (a bulk decision creates
+ * no defect or NCR, so those lists are left alone).
+ *
+ * @returns A TanStack `UseMutationResult` whose mutate function takes a
+ *   `ReviewBatchRequest` and resolves to a `ReviewBatchResult`.
+ */
+export function useReviewObservationBatch() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (req: ReviewBatchRequest) => observationService.reviewBatch(req),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: observationKeys.all });
+      queryClient.invalidateQueries({ queryKey: inspectionEventKeys.all });
+      queryClient.invalidateQueries({ queryKey: inspectionKeys.all });
+    },
   });
 }

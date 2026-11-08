@@ -4,9 +4,11 @@
  */
 import { afterEach, describe, expect, spyOn, test } from 'bun:test';
 import { api } from '../lib/api/api-client';
+import { ApiError } from '../lib/api/api-client';
 import {
   ObservationDecision,
   ObservationOutcomeKind,
+  RejectReason,
   ObservationReviewStatus,
   ObservationSource,
 } from '../types/inspection';
@@ -109,5 +111,95 @@ describe('observationService', () => {
 
   test('offers no intake: machine producers use a service account, not the console', () => {
     expect(observationService).not.toHaveProperty('intake');
+  });
+});
+
+describe('observationService, regions and bulk review (core #166)', () => {
+  test('the model filters reach the wire, with category repeated', async () => {
+    const get = spyOn(api, 'get').mockResolvedValue({ content: [] });
+    await observationService.list({
+      projectId: 7,
+      source: ObservationSource.AI,
+      modelName: 'ppe',
+      modelVersion: '0.1.0',
+      categories: ['ppe_helmet', 'ppe_vest'],
+      minConfidence: 0.3,
+      maxConfidence: 0.9,
+      hasRegions: true,
+      attachmentId: 18342,
+      sortByConfidence: 'asc',
+    });
+    expect(get).toHaveBeenCalledWith('/inspections/web/observations', {
+      projectId: 7,
+      source: 'ai',
+      modelName: 'ppe',
+      modelVersion: '0.1.0',
+      category: ['ppe_helmet', 'ppe_vest'],
+      minConfidence: 0.3,
+      maxConfidence: 0.9,
+      hasRegions: true,
+      attachmentId: 18342,
+      sort: 'confidence,asc',
+    });
+  });
+
+  test('an empty category list and an unset hasRegions send nothing', async () => {
+    const get = spyOn(api, 'get').mockResolvedValue({ content: [] });
+    await observationService.list({ projectId: 7, categories: [], hasRegions: false });
+    expect(get).toHaveBeenCalledWith('/inspections/web/observations', {
+      projectId: 7,
+      hasRegions: false,
+    });
+  });
+
+  test('getById asks for retired regions only when told to', async () => {
+    const get = spyOn(api, 'get').mockResolvedValue(row);
+    await observationService.getById(OBS, { includeRetiredRegions: true });
+    expect(get).toHaveBeenCalledWith(`/inspections/web/observations/${OBS}`, {
+      includeRetiredRegions: true,
+    });
+    await observationService.getById(OBS);
+    expect(get).toHaveBeenLastCalledWith(`/inspections/web/observations/${OBS}`);
+  });
+
+  test('reviewBatch posts the decision and parses each result', async () => {
+    const post = spyOn(api, 'post').mockResolvedValue({
+      batchId: '99999999-9999-9999-9999-999999999999',
+      results: [{ observationId: OBS, status: 'REVIEWED' }],
+    });
+    const result = await observationService.reviewBatch({
+      decision: ObservationDecision.REJECT,
+      observationIds: [OBS],
+      note: 'Shadows',
+      rejectReason: RejectReason.FALSE_POSITIVE,
+    });
+    expect(post).toHaveBeenCalledWith('/inspections/web/observations/review-batch', {
+      decision: 'reject',
+      observationIds: [OBS],
+      note: 'Shadows',
+      rejectReason: 'false-positive',
+    });
+    expect(result.results[0]?.status).toBe('REVIEWED');
+  });
+
+  test('a bulk modify is refused before the request', async () => {
+    const post = spyOn(api, 'post').mockResolvedValue({});
+    await expect(
+      observationService.reviewBatch({
+        decision: ObservationDecision.MODIFY as ObservationDecision.ACCEPT,
+        observationIds: [OBS],
+      })
+    ).rejects.toThrow(TypeError);
+    expect(post).not.toHaveBeenCalled();
+  });
+
+  test('a malformed bulk result is a 422 ApiError', async () => {
+    spyOn(api, 'post').mockResolvedValue({ results: [] });
+    await expect(
+      observationService.reviewBatch({
+        decision: ObservationDecision.ACCEPT,
+        observationIds: [OBS],
+      })
+    ).rejects.toBeInstanceOf(ApiError);
   });
 });

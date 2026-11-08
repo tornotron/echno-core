@@ -3,7 +3,7 @@
     "repository": "tornotron/echno-backend",
     "ref": "development",
     "path": "docs/openapi.json",
-    "sha256": "ee62cca5e5c7e4534cca1a67c6f47a088c3808d81c8edc9db6981b07e2d81b57"
+    "sha256": "33f07d2edae707ba998542f6ff6b583653cf10ec70e05d4bf9fac841d3277c66"
   },
   "operations": {
     "POST /api/v1/assets/web": {
@@ -1389,6 +1389,69 @@
       ],
       "acceptsAnyField": false
     },
+    "POST /api/v1/document-ingestion/documents/{documentId}/parse": {
+      "schema": null,
+      "fields": [],
+      "required": [],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/document-ingestion/packages": {
+      "schema": "CreatePackageRequest",
+      "fields": [
+        "name",
+        "projectId",
+        "stage"
+      ],
+      "required": [
+        "name"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/document-ingestion/packages/{packageId}/apply": {
+      "schema": null,
+      "fields": [],
+      "required": [],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/document-ingestion/packages/{packageId}/archive": {
+      "schema": null,
+      "fields": [],
+      "required": [],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/document-ingestion/packages/{packageId}/candidates/decisions": {
+      "schema": "DecideCandidatesRequest",
+      "fields": [
+        "decisions"
+      ],
+      "required": [
+        "decisions"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/document-ingestion/packages/{packageId}/documents/presign": {
+      "schema": "PresignDocumentRequest",
+      "fields": [
+        "contentType",
+        "fileName",
+        "fileSize"
+      ],
+      "required": [
+        "fileName",
+        "fileSize"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/document-ingestion/packages/{packageId}/documents/{documentId}/register": {
+      "schema": "RegisterDocumentRequest",
+      "fields": [
+        "key"
+      ],
+      "required": [
+        "key"
+      ],
+      "acceptsAnyField": false
+    },
     "POST /api/v1/document-reversals": {
       "schema": "DocumentReversalRequestDto",
       "fields": [
@@ -2474,6 +2537,20 @@
       "required": [
         "projectId",
         "title"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/inspections/web/observations/review-batch": {
+      "schema": "ReviewBatchRequest",
+      "fields": [
+        "decision",
+        "note",
+        "observationIds",
+        "rejectReason"
+      ],
+      "required": [
+        "decision",
+        "observationIds"
       ],
       "acceptsAnyField": false
     },
@@ -3685,6 +3762,7 @@
         "description",
         "evidenceRefs",
         "externalRef",
+        "inspectionId",
         "locationNote",
         "missionRef",
         "modelName",
@@ -3705,6 +3783,40 @@
         "source",
         "sourceDeviceId",
         "title"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/observations/intake/batch": {
+      "schema": "IntakeBatchRequest",
+      "fields": [
+        "items"
+      ],
+      "required": [
+        "items"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/observations/intake/evidence/presign": {
+      "schema": "IntakeUploadPresignRequest",
+      "fields": [
+        "projectId",
+        "uploads"
+      ],
+      "required": [
+        "projectId",
+        "uploads"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/observations/intake/evidence/register": {
+      "schema": "IntakeUploadRegisterRequest",
+      "fields": [
+        "uploadId",
+        "uploads"
+      ],
+      "required": [
+        "uploadId",
+        "uploads"
       ],
       "acceptsAnyField": false
     },
@@ -5584,6 +5696,84 @@
       "required": [
         "type",
         "value"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/vision/admin/models": {
+      "schema": "CreateCvModelRequest",
+      "fields": [
+        "family",
+        "key",
+        "name",
+        "task"
+      ],
+      "required": [
+        "family",
+        "key",
+        "name",
+        "task"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/vision/admin/models/{key}/versions": {
+      "schema": "RegisterCvModelVersionRequest",
+      "fields": [
+        "baseWeights",
+        "classes",
+        "evalReportUri",
+        "inputSize",
+        "licence",
+        "metrics",
+        "runtime",
+        "trainingRelease",
+        "trainingRunUri",
+        "version",
+        "weightsSha256",
+        "weightsUri"
+      ],
+      "required": [
+        "baseWeights",
+        "classes",
+        "licence",
+        "runtime",
+        "version",
+        "weightsSha256",
+        "weightsUri"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/vision/admin/models/{key}/versions/{version}/status": {
+      "schema": "ChangeCvModelVersionStatusRequest",
+      "fields": [
+        "note",
+        "status"
+      ],
+      "required": [
+        "status"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/vision/web/runs": {
+      "schema": "QueueVisionRunRequest",
+      "fields": [
+        "attachmentIds",
+        "inspectionId",
+        "modelKeys",
+        "observationId",
+        "rerun"
+      ],
+      "required": [],
+      "acceptsAnyField": false
+    },
+    "PUT /api/v1/vision/web/settings": {
+      "schema": "UpdateVisionSettingsRequest",
+      "fields": [
+        "autoInfer",
+        "modelKeys"
+      ],
+      "required": [
+        "autoInfer",
+        "modelKeys"
       ],
       "acceptsAnyField": false
     },

@@ -4,7 +4,7 @@
      Run `bun run api:snapshot` after an intended public-API change and commit the diff.
      See docs/API-STABILITY.md. -->
 
-Entry points: 193
+Entry points: 197
 
 ## `@tornotron/echno-core`
 
@@ -22,6 +22,7 @@ Entry points: 193
 - AccountTreeNode
 - AccountType
 - AccrualMethod
+- activeCvModelVersion
 - addMember
 - Address
 - addressToJson
@@ -302,6 +303,14 @@ Entry points: 193
 - CurrentUserAccess
 - Customer
 - CustomerListParams
+- CvModel
+- CvModelClass
+- CvModelFamily
+- cvModelFamilyLabels
+- CvModelTask
+- CvModelVersion
+- CvModelVersionStatus
+- cvModelVersionStatusLabels
 - DailyMovementSummary
 - DatasetConsent
 - DatasetConsentUpdateRequest
@@ -547,6 +556,8 @@ Entry points: 193
 - isNcrOverdue
 - isObservationPending
 - isPersonsChange
+- isRegionActive
+- isReviewBatchItemSettled
 - Issue
 - IssueComment
 - issueCommentKeys
@@ -672,6 +683,9 @@ Entry points: 193
 - ObservationOutcomeKind
 - observationOutcomeKindLabels
 - ObservationOutcomeRequest
+- ObservationRegion
+- ObservationRegionRequest
+- observationRegionRequestToJson
 - ObservationReviewChange
 - ObservationReviewChanges
 - ObservationReviewStatus
@@ -763,6 +777,12 @@ Entry points: 193
 - parseCostCategory
 - parseCurrentUserAccess
 - parseCustomer
+- parseCvModel
+- parseCvModelClass
+- parseCvModelFamily
+- parseCvModelTask
+- parseCvModelVersion
+- parseCvModelVersionStatus
 - parseDatasetConsent
 - parseDeductionRule
 - parseDefectAnnotationShape
@@ -839,6 +859,7 @@ Entry points: 193
 - parseNcrType
 - parseObservation
 - parseObservationOutcomeKind
+- parseObservationRegion
 - parseObservationReviewStatus
 - parseObservationSource
 - parseOrganization
@@ -864,12 +885,18 @@ Entry points: 193
 - parseProjectType
 - parsePurchaseOrder
 - parsePurchaseOrderItem
+- parseQueueVisionRunResult
 - parseReceipt
 - parseReceiptStatus
 - parseReceiptType
+- parseRegionOrigin
+- parseRegionShape
 - parseRegularizationCalendarDay
 - parseReinspection
 - parseReinspectionOutcome
+- parseRejectReason
+- parseReviewBatchItemStatus
+- parseReviewBatchResult
 - parseRisk
 - parseShiftTiming
 - parseSiteTransfer
@@ -896,6 +923,7 @@ Entry points: 193
 - parseUTCDate
 - parseUuid
 - parseVendor
+- parseVisionSettings
 - parseWbsActivity
 - parseWbsDependency
 - parseWbsSchedule
@@ -953,6 +981,10 @@ Entry points: 193
 - PurchaseOrderStatus
 - purchaseOrderStatusBadgeColors
 - purchaseOrderStatusLabels
+- QueryParamValue
+- QueueVisionRunRequest
+- QueueVisionRunResult
+- queueVisionRunToJson
 - QUOTA_PERIODS
 - QuotaPeriod
 - RaiseBillPaymentRequest
@@ -972,6 +1004,15 @@ Entry points: 193
 - RecordPaymentRequest
 - recordPaymentToJson
 - RecordProgressInspectionRequest
+- RegionBox
+- RegionEditKind
+- RegionEditOp
+- regionEditOpToJson
+- RegionGeometry
+- RegionOrigin
+- regionOriginLabels
+- RegionPoint
+- RegionShape
 - RegisterUploadRequest
 - RegularizationByDateRequest
 - regularizationByDateToJson
@@ -987,6 +1028,8 @@ Entry points: 193
 - reinspectionService
 - RejectDocumentReversalRequest
 - rejectDocumentReversalToJson
+- RejectReason
+- rejectReasonLabels
 - removeMember
 - ReplaceAnnotationsRequest
 - replaceAnnotationsToJson
@@ -997,6 +1040,14 @@ Entry points: 193
 - ReverseJournalRequest
 - ReversibleDocumentType
 - reversibleDocumentTypeLabels
+- REVIEW_BATCH_ITEM_STATUSES
+- REVIEW_BATCH_MAX_IDS
+- ReviewBatchItemResult
+- ReviewBatchItemStatus
+- reviewBatchItemStatusLabels
+- ReviewBatchRequest
+- ReviewBatchResult
+- reviewBatchToJson
 - ReviewObservationRequest
 - reviewObservationToJson
 - Risk
@@ -1176,6 +1227,8 @@ Entry points: 193
 - UpdateVendorTaxIdentifierRequest
 - updateVendorTaxIdentifierToJson
 - updateVendorToJson
+- UpdateVisionSettingsRequest
+- updateVisionSettingsToJson
 - UpdateWbsActivityRequest
 - UpdateWorkCategoryRequest
 - updateWorkCategoryToJson
@@ -1522,6 +1575,7 @@ Entry points: 193
 - usePurchaseOrder
 - usePurchaseOrders
 - usePurchaseOrdersPaginated
+- useQueueVisionRun
 - User
 - useRaiseBillPayment
 - useRecalculateBalances
@@ -1562,6 +1616,7 @@ Entry points: 193
 - useReturnBill
 - useReverseJournalEntry
 - useReviewObservation
+- useReviewObservationBatch
 - useRevokeMemberInvitation
 - UserFiles
 - userInitials
@@ -1657,6 +1712,7 @@ Entry points: 193
 - useUpdateVendorBankAccount
 - useUpdateVendorContact
 - useUpdateVendorTaxIdentifier
+- useUpdateVisionSettings
 - useUpdateWbsActivity
 - useUpdateWorkingWeek
 - useUploadAttachment
@@ -1679,6 +1735,9 @@ Entry points: 193
 - useVendorTaxIdentifiers
 - useVerifyCheckout
 - useVerifyMovement
+- useVisionModels
+- useVisionModelVersion
+- useVisionSettings
 - useWbsSchedule
 - useWithdrawLeaveRequest
 - useWorkCategories
@@ -1703,6 +1762,10 @@ Entry points: 193
 - VerifyCheckoutRequest
 - VerifyNcrRequest
 - verifyNcrToJson
+- VISION_RUN_MAX_ATTACHMENTS
+- visionKeys
+- visionService
+- VisionSettings
 - WbsActivity
 - WbsDependency
 - WbsDependencyType
@@ -2757,6 +2820,7 @@ Entry points: 193
 - useReinspection
 - useReinspectionsByNcr
 - useReviewObservation
+- useReviewObservationBatch
 - useScheduleReinspectionForDefect
 - useScheduleReinspectionForNcr
 - useTradeCatalogue
@@ -2859,6 +2923,8 @@ Entry points: 193
 - isLegacyInspectionTrade
 - isNcrOverdue
 - isObservationPending
+- isRegionActive
+- isReviewBatchItemSettled
 - LegacyInspectionTrade
 - MAX_DEFECT_ANNOTATIONS
 - Ncr
@@ -2878,6 +2944,9 @@ Entry points: 193
 - ObservationOutcomeKind
 - observationOutcomeKindLabels
 - ObservationOutcomeRequest
+- ObservationRegion
+- ObservationRegionRequest
+- observationRegionRequestToJson
 - ObservationReviewChange
 - ObservationReviewChanges
 - ObservationReviewStatus
@@ -2914,23 +2983,48 @@ Entry points: 193
 - parseNcrType
 - parseObservation
 - parseObservationOutcomeKind
+- parseObservationRegion
 - parseObservationReviewStatus
 - parseObservationSource
 - parseOrgElementType
 - parseOrgTrade
+- parseRegionOrigin
+- parseRegionShape
 - parseReinspection
 - parseReinspectionOutcome
+- parseRejectReason
+- parseReviewBatchItemStatus
+- parseReviewBatchResult
 - parseStarterChecklistTemplate
 - parseTradeCatalogueEntry
 - passedReinspections
 - readChecklistIncomplete
+- RegionBox
+- RegionEditKind
+- RegionEditOp
+- regionEditOpToJson
+- RegionGeometry
+- RegionOrigin
+- regionOriginLabels
+- RegionPoint
+- RegionShape
 - Reinspection
 - ReinspectionOutcome
 - reinspectionOutcomeLabels
 - ReinspectionOutcomeRequest
 - reinspectionOutcomeToJson
+- RejectReason
+- rejectReasonLabels
 - ReplaceAnnotationsRequest
 - replaceAnnotationsToJson
+- REVIEW_BATCH_ITEM_STATUSES
+- REVIEW_BATCH_MAX_IDS
+- ReviewBatchItemResult
+- ReviewBatchItemStatus
+- reviewBatchItemStatusLabels
+- ReviewBatchRequest
+- ReviewBatchResult
+- reviewBatchToJson
 - ReviewObservationRequest
 - reviewObservationToJson
 - ScheduleReinspectionRequest
@@ -3971,6 +4065,50 @@ Entry points: 193
 - VendorSummary
 - VendorTaxIdentifier
 - VendorType
+
+## `@tornotron/echno-core/vision/hooks`
+
+- useQueueVisionRun
+- useUpdateVisionSettings
+- useVisionModels
+- useVisionModelVersion
+- useVisionSettings
+- visionKeys
+
+## `@tornotron/echno-core/vision/hooks/keys`
+
+- visionKeys
+
+## `@tornotron/echno-core/vision/services`
+
+- visionService
+
+## `@tornotron/echno-core/vision/types`
+
+- activeCvModelVersion
+- CvModel
+- CvModelClass
+- CvModelFamily
+- cvModelFamilyLabels
+- CvModelTask
+- CvModelVersion
+- CvModelVersionStatus
+- cvModelVersionStatusLabels
+- parseCvModel
+- parseCvModelClass
+- parseCvModelFamily
+- parseCvModelTask
+- parseCvModelVersion
+- parseCvModelVersionStatus
+- parseQueueVisionRunResult
+- parseVisionSettings
+- QueueVisionRunRequest
+- QueueVisionRunResult
+- queueVisionRunToJson
+- UpdateVisionSettingsRequest
+- updateVisionSettingsToJson
+- VISION_RUN_MAX_ATTACHMENTS
+- VisionSettings
 
 ## `@tornotron/echno-core/wbs/hooks`
 

@@ -237,6 +237,18 @@ interface RequestOptions {
   headers?: Record<string, string>;
 }
 
+/**
+ * One query-string parameter value. An array repeats the key once per item
+ * (`category=a&category=b`), which is how Spring binds a repeatable
+ * `List<String>` request parameter; an empty array sends nothing. `null` and
+ * `undefined` values, at the top level or inside an array, are left out.
+ */
+export type QueryParamValue =
+  | string
+  | number
+  | boolean
+  | readonly (string | number | boolean)[];
+
 const DEFAULT_TIMEOUT_MS = 30_000; // 30 seconds
 const UPLOAD_TIMEOUT_MS = 120_000; // 2 minutes for file uploads
 const DEFAULT_RETRIES = 2;
@@ -294,7 +306,7 @@ class ApiClient {
    */
   private buildUrl(
     endpoint: string,
-    params?: Record<string, string | number | boolean>
+    params?: Record<string, QueryParamValue>
   ): URL {
     const target = `${this.baseURL}${endpoint}`;
     const origin =
@@ -305,8 +317,13 @@ class ApiClient {
 
     if (params) {
       for (const key of Object.keys(params)) {
-        if (params[key] !== undefined && params[key] !== null) {
-          url.searchParams.append(key, params[key].toString());
+        const value = params[key];
+        if (value === undefined || value === null) continue;
+        const items = Array.isArray(value) ? value : [value];
+        for (const item of items) {
+          if (item !== undefined && item !== null) {
+            url.searchParams.append(key, item.toString());
+          }
         }
       }
     }
@@ -468,7 +485,7 @@ class ApiClient {
    */
   async get<T = unknown>(
     endpoint: string,
-    params?: Record<string, string | number | boolean>,
+    params?: Record<string, QueryParamValue>,
     options?: RequestOptions
   ): Promise<T> {
     const url = this.buildUrl(endpoint, params);
@@ -499,7 +516,7 @@ class ApiClient {
    */
   async getBlob(
     endpoint: string,
-    params?: Record<string, string | number | boolean>,
+    params?: Record<string, QueryParamValue>,
     options?: RequestOptions
   ): Promise<Blob> {
     const url = this.buildUrl(endpoint, params);
@@ -540,7 +557,7 @@ class ApiClient {
   async post<T = unknown>(
     endpoint: string,
     data?: unknown,
-    params?: Record<string, string | number | boolean>,
+    params?: Record<string, QueryParamValue>,
     options?: RequestOptions
   ): Promise<T> {
     const url = this.buildUrl(endpoint, params);
@@ -573,7 +590,7 @@ class ApiClient {
   async put<T = unknown>(
     endpoint: string,
     data?: unknown,
-    params?: Record<string, string | number | boolean>,
+    params?: Record<string, QueryParamValue>,
     options?: RequestOptions
   ): Promise<T> {
     const url = this.buildUrl(endpoint, params);
@@ -609,7 +626,7 @@ class ApiClient {
   async patch<T = unknown>(
     endpoint: string,
     data?: unknown,
-    params?: Record<string, string | number | boolean>,
+    params?: Record<string, QueryParamValue>,
     options?: RequestOptions
   ): Promise<T> {
     const url = this.buildUrl(endpoint, params);
@@ -649,7 +666,7 @@ class ApiClient {
    */
   async delete<T = unknown>(
     endpoint: string,
-    params?: Record<string, string | number | boolean>,
+    params?: Record<string, QueryParamValue>,
     options?: RequestOptions
   ): Promise<T> {
     const url = this.buildUrl(endpoint, params);
