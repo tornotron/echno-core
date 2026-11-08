@@ -276,3 +276,16 @@ export * from './hooks/risk';
 export * from './types/contract-billing';
 export * from './services/contract-billing-service';
 export * from './hooks/contract-billing';
+
+// Member invitations: invitations by link to join the caller's organization, with the roles the
+// person gets and the employee details the join form collects (tornotron/echno-backend#914). The
+// invite-code exports under `// Invitation` stay until web has moved off them.
+export * from './types/member-invitations';
+export * from './services/member-invitations-service';
+export * from './hooks/member-invitations';
+
+// Access: what the signed-in member may do in their current organization, and what the Roles &
+// Permissions screen reads, from the access matrix (tornotron/echno-backend#914). Reads only.
+export * from './types/access';
+export * from './services/access-service';
+export * from './hooks/access';

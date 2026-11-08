@@ -5,6 +5,35 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
+## [v11.6.0] - 2026-11-08
+
+Invitations by link, and reading the access matrix (tornotron/echno-backend#914, step 22 of the
+WorkOS build plan). Additive: nothing existing changes, and the invite-code exports
+(`invitationService`, `Invitation`, `useInvitationsByOrganization`, `useResendInvitation` and the
+rest of `invitation/*`) stay until web has moved off them.
+
+- `types/member-invitations`, `services/member-invitations-service`, `hooks/member-invitations`
+  (`/invitations/web`): `MemberInvitation` with `MemberInvitationStage` (`PENDING`, `ACCEPTED`,
+  `ACCEPTED_BY_ANOTHER_ADDRESS`, `EXPIRED`, `REVOKED`; a stage the client does not know reads as
+  `UNKNOWN`), `MemberInvitationRole` (a role id, with a project or across the organization) and
+  `MemberInvitationEmployee`; `CreateMemberInvitationRequest`, `createMemberInvitationToJson`,
+  `parseMemberInvitation` and `isMemberInvitationOpen` (pending or expired, so resend and revoke
+  apply). `memberInvitationsService.list`, `get`, `create`, `resend` and `revoke`;
+  `useMemberInvitations`, `useMemberInvitation`, `useCreateMemberInvitation`,
+  `useResendMemberInvitation` and `useRevokeMemberInvitation`, under `memberInvitationsKeys`
+  (root `['member-invitations']`, apart from the invite-code `['invitations']`). Resending an
+  expired invitation renews its link and expiry.
+- `types/access`, `services/access-service`, `hooks/access`: `CurrentUserAccess`, `AccessScope`,
+  `parseCurrentUserAccess`, `holdsPermission` and `useCurrentUserAccess()` (with `can(area, action,
+  scope?)`, false while loading); `AccessCatalog`, `AccessArea`, `AccessGrant`, `AccessRole` and
+  `AccessUser` with their parsers, `useAccessCatalog`, `useAccessRoles` and `useAccessUsers`, under
+  `accessKeys`. Reads only, with no departments or groups.
+
+The invitation endpoints are on the backend's `auth-workos` branch and the access reads are not
+built yet, so neither answers on a backend built from `development`. The request contract is still
+checked against `development`, where the three invitation writes are recorded as endpoints not in
+the document; checked against `auth-workos` they pass.
+
 ## [v11.4.0] - 2026-11-08
 
 Billing grouped by project, and paying an approved bill (#164; backend design note

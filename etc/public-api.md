@@ -4,11 +4,19 @@
      Run `bun run api:snapshot` after an intended public-API change and commit the diff.
      See docs/API-STABILITY.md. -->
 
-Entry points: 185
+Entry points: 193
 
 ## `@tornotron/echno-core`
 
 - abbreviatedName
+- AccessArea
+- AccessCatalog
+- AccessGrant
+- accessKeys
+- AccessRole
+- AccessScope
+- accessService
+- AccessUser
 - Account
 - AccountLine
 - AccountTreeNode
@@ -242,6 +250,8 @@ Entry points: 185
 - CreateMaterialRequest
 - createMaterialToJson
 - CreateMaterialTransferLineRequest
+- CreateMemberInvitationRequest
+- createMemberInvitationToJson
 - CreateMovementRequest
 - createMovementToJson
 - CreateNcrRequest
@@ -289,6 +299,7 @@ Entry points: 185
 - CreateWorkCategoryRequest
 - createWorkCategoryToJson
 - creatorId
+- CurrentUserAccess
 - Customer
 - CustomerListParams
 - DailyMovementSummary
@@ -439,6 +450,7 @@ Entry points: 185
 - hasObservationChanges
 - hasPendingReinspection
 - hasRole
+- holdsPermission
 - Holiday
 - HolidayRequest
 - holidayRequestToJson
@@ -531,6 +543,7 @@ Entry points: 185
 - isLegacyInspectionTrade
 - isManager
 - isManagerOrAbove
+- isMemberInvitationOpen
 - isNcrOverdue
 - isObservationPending
 - isPersonsChange
@@ -611,6 +624,14 @@ Entry points: 185
 - MAX_DEFECT_ANNOTATIONS
 - MeasurementLineRequest
 - MeasurementRequest
+- MemberInvitation
+- MemberInvitationEmployee
+- MemberInvitationEmployeeRequest
+- MemberInvitationListParams
+- MemberInvitationRole
+- memberInvitationsKeys
+- memberInvitationsService
+- MemberInvitationStage
 - MergeBimElementRequest
 - mergeBimElementToJson
 - mergePreservingNested
@@ -683,6 +704,9 @@ Entry points: 185
 - PagedReceipt
 - PagedStatusTransition
 - PagedTask
+- parseAccessCatalog
+- parseAccessRole
+- parseAccessUser
 - parseAccount
 - parseAccountLine
 - parseAccountTree
@@ -737,6 +761,7 @@ Entry points: 185
 - parseContractBillingDetail
 - parseContractBillingSummary
 - parseCostCategory
+- parseCurrentUserAccess
 - parseCustomer
 - parseDatasetConsent
 - parseDeductionRule
@@ -805,6 +830,7 @@ Entry points: 185
 - parseMaterialStock
 - parseMaterialStockSummary
 - parseMaterialWithStock
+- parseMemberInvitation
 - parseMilestoneRequirement
 - parseModuleDescriptor
 - parseMovementRecord
@@ -1164,6 +1190,9 @@ Entry points: 185
 - UpsertPostingAccountMappingArgs
 - UpsertPostingAccountMappingRequest
 - upsertPostingAccountMappingToJson
+- useAccessCatalog
+- useAccessRoles
+- useAccessUsers
 - useActivateLeavePolicy
 - useAddBillNote
 - useAddBoqItem
@@ -1265,6 +1294,7 @@ Entry points: 185
 - useCreateLeavePolicy
 - useCreateLeaveRequest
 - useCreateMaterial
+- useCreateMemberInvitation
 - useCreateObservation
 - useCreateOrganization
 - useCreatePOItem
@@ -1285,6 +1315,7 @@ Entry points: 185
 - useCreateWbsActivity
 - useCreateWorkCategory
 - useCurrentSubscription
+- useCurrentUserAccess
 - useCurrentUserEmployee
 - useDatasetConsent
 - useDeactivateAccount
@@ -1441,6 +1472,8 @@ Entry points: 185
 - useMaterialStock
 - useMaterialStockSummary
 - useMaterialWithStock
+- useMemberInvitation
+- useMemberInvitations
 - useMergeBimElement
 - useMovementById
 - useMovementsByAttendance
@@ -1524,10 +1557,12 @@ Entry points: 185
 - useRequestRegularization
 - useRequestRegularizationByDate
 - useResendInvitation
+- useResendMemberInvitation
 - useRestoreSpatialNode
 - useReturnBill
 - useReverseJournalEntry
 - useReviewObservation
+- useRevokeMemberInvitation
 - UserFiles
 - userInitials
 - useRisk
@@ -1687,6 +1722,37 @@ Entry points: 185
 - workProgressKeys
 - workProgressService
 - WorkSubcategory
+
+## `@tornotron/echno-core/access/hooks`
+
+- accessKeys
+- useAccessCatalog
+- useAccessRoles
+- useAccessUsers
+- useCurrentUserAccess
+
+## `@tornotron/echno-core/access/hooks/keys`
+
+- accessKeys
+
+## `@tornotron/echno-core/access/services`
+
+- accessService
+
+## `@tornotron/echno-core/access/types`
+
+- AccessArea
+- AccessCatalog
+- AccessGrant
+- AccessRole
+- AccessScope
+- AccessUser
+- CurrentUserAccess
+- holdsPermission
+- parseAccessCatalog
+- parseAccessRole
+- parseAccessUser
+- parseCurrentUserAccess
 
 ## `@tornotron/echno-core/attachment/hooks`
 
@@ -3254,6 +3320,36 @@ Entry points: 185
 - parseMaterialWithStock
 - UpdateMaterialRequest
 - updateMaterialToJson
+
+## `@tornotron/echno-core/member-invitations/hooks`
+
+- memberInvitationsKeys
+- useCreateMemberInvitation
+- useMemberInvitation
+- useMemberInvitations
+- useResendMemberInvitation
+- useRevokeMemberInvitation
+
+## `@tornotron/echno-core/member-invitations/hooks/keys`
+
+- memberInvitationsKeys
+
+## `@tornotron/echno-core/member-invitations/services`
+
+- memberInvitationsService
+
+## `@tornotron/echno-core/member-invitations/types`
+
+- CreateMemberInvitationRequest
+- createMemberInvitationToJson
+- isMemberInvitationOpen
+- MemberInvitation
+- MemberInvitationEmployee
+- MemberInvitationEmployeeRequest
+- MemberInvitationListParams
+- MemberInvitationRole
+- MemberInvitationStage
+- parseMemberInvitation
 
 ## `@tornotron/echno-core/module/hooks`
 
