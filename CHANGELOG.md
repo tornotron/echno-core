@@ -5,7 +5,7 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
-## [Unreleased]
+## [v11.13.0] - 2026-11-09
 
 Document ingestion client, part two (tornotron/echno-backend#957, build plan step 15): document
 classes, extract jobs, the AI reading ledger and budgets, settings, the tender profile, revisions and
