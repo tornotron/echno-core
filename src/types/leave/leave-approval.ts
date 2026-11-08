@@ -75,7 +75,10 @@ export interface LeaveApproval {
 export interface LeaveApprovalAction {
   /** Optional comments to attach. */
   comments?: string;
-  /** Delegate target; set only when delegating. */
+  /**
+   * Transfer target; set only when transferring (the delegate action). Must be
+   * a manager above the current approver in their reporting line.
+   */
   delegateToId?: number;
 }
 

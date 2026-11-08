@@ -869,10 +869,13 @@ export const leaveService = {
   },
 
   /**
-   * Delegates a request's approval to another approver.
+   * Transfers a request to a manager above the current approver, who then
+   * decides it.
    *
    * `POST /leave-approvals/web/delegate?requestId={requestId}` (body). The
-   * response body is discarded.
+   * response body is discarded. The backend accepts only a manager above the
+   * caller in their own reporting line (ClickUp 14zdkkvzx68) and answers 400
+   * for anyone else.
    *
    * @param requestId - Surrogate id of the request.
    * @param dto - Delegation action details, including the delegate target
