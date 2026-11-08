@@ -5,6 +5,29 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
+## [v11.8.0] - 2026-11-08
+
+Document ingestion, first part: tender packages, their files, BOQ sheets read from Excel, review of
+the candidate values, apply to a sub-contract's BOQ, and provenance (tornotron/echno-backend#957,
+build plan steps 3, 4 and 7; design note `docs/specs/2026-11-08-document-ingestion-design.md`).
+Additive: nothing existing changes shape. The module is off for every organization until an operator
+opens it, and its endpoints answer 403 `MODULE_DISABLED` until then; `isModuleDisabled` recognises that.
+
+- Packages: `documentIngestionService.listPackages`, `getPackage`, `createPackage`, `archivePackage` and
+  `setBoqTarget`, with `useIngestPackages`, `useIngestPackage`, `useCreateIngestPackage`,
+  `useArchiveIngestPackage` and `useSetBoqTarget`.
+- Files: `listDocuments`, `getDocument`, `presignDocument`, `registerDocument`, `reparseDocument` and
+  `getDownloadUrl`, with `useIngestDocuments` (polls while a file is being read), `useIngestDocument`,
+  `usePresignIngestDocument`, `useRegisterIngestDocument` and `useReparseIngestDocument`.
+- BOQ sheets: `detectBoqSheets`, `listBoqSheets` and `extractBoqSheet`, with `useBoqSheets`,
+  `useDetectBoqSheets` and `useExtractBoqSheet`; types `BoqSheet`, `BoqMappingRequest`, `BoqField`,
+  `BoqSheetSummary`, `BoqWarning` and `BoqPreviewRow`.
+- Review and apply: `listCandidates` (by kind, status and sheet), `decide`, `apply`, `applyAll` and
+  `provenance`, with `useIngestCandidates`, `useDecideCandidates`, `useApplyCandidates` and
+  `useProvenance`; `boqItemOf` and `sourceOf` read a BOQ candidate. A BOQ candidate's numbers stay
+  decimal strings.
+- `useDocumentIngestionStatus` never retries, since its 403 is an answer.
+
 ## [v11.7.0] - 2026-11-08
 
 Computer vision on observations (#166; backend design note `docs/specs/2026-10-26-cv-phase4-design.md`,

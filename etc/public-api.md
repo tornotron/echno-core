@@ -4,7 +4,7 @@
      Run `bun run api:snapshot` after an intended public-API change and commit the diff.
      See docs/API-STABILITY.md. -->
 
-Entry points: 197
+Entry points: 201
 
 ## `@tornotron/echno-core`
 
@@ -40,6 +40,7 @@ Entry points: 197
 - ApiErrorData
 - ApiResponse
 - apiUtils
+- ApplyResult
 - ApprovalAction
 - approvalActionToJson
 - ApprovalChainResponse
@@ -129,8 +130,20 @@ Entry points: 197
 - BimTileManifest
 - BimVersionStatus
 - bimVersionStatuses
+- BOQ_FIELDS
+- BoqField
 - BoqItem
+- boqItemOf
+- BoqItemPayload
 - BoqItemRequest
+- BoqMappingRequest
+- BoqPreviewCell
+- BoqPreviewRow
+- BoqSheet
+- BoqSheetStatus
+- BoqSheetSummary
+- BoqTargetRequest
+- BoqWarning
 - BudgetAllocation
 - CalculateDays
 - CalculateDaysResponse
@@ -142,6 +155,12 @@ Entry points: 197
 - CancelSiteTransferRequest
 - cancelSiteTransferToJson
 - CancelSubscriptionRequest
+- Candidate
+- CandidateDecision
+- CandidateFlag
+- CandidateKind
+- CandidateListParams
+- CandidateStatus
 - CatalogueEntry
 - CatalogueGroup
 - catalogueGroupLabel
@@ -189,6 +208,7 @@ Entry points: 197
 - ConstructionPaymentVoucherStatus
 - ConsumptionType
 - consumptionTypeLabels
+- CONTRACT_BOQ_ITEM_TARGET
 - ContractBillingDetail
 - contractBillingKeys
 - ContractBillingListParams
@@ -261,6 +281,7 @@ Entry points: 197
 - createObservationToJson
 - CreateOrganizationRequest
 - createOrganizationToJson
+- CreatePackageRequest
 - CreateProjectRequest
 - createProjectToJson
 - CreatePurchaseOrderItemRequest
@@ -317,6 +338,9 @@ Entry points: 197
 - datasetConsentUpdateToJson
 - DayOfWeek
 - DAYS_OF_WEEK
+- DecisionAction
+- DecisionOutcome
+- DecisionResult
 - DeductionBasis
 - DeductionKind
 - DeductionRule
@@ -339,6 +363,9 @@ Entry points: 197
 - DirectUploadError
 - DirectUploadResult
 - DirectUploadStage
+- documentIngestionKeys
+- documentIngestionService
+- DocumentIngestionStatus
 - DocumentReversal
 - DocumentReversalEligibility
 - documentReversalKeys
@@ -346,6 +373,8 @@ Entry points: 197
 - DocumentReversalStatus
 - documentReversalStatusBadgeColors
 - documentReversalStatusLabels
+- DocumentUpload
+- DownloadUrl
 - ElementTypeCatalogueEntry
 - elementTypeKeys
 - elementTypeService
@@ -369,6 +398,7 @@ Entry points: 197
 - ExpensePageParams
 - ExpenseStatus
 - ExpenseType
+- ExtractionMethod
 - Feature
 - FEATURE_TYPES
 - FeatureAccessResult
@@ -476,6 +506,12 @@ Entry points: 197
 - indentStatusLabels
 - IndentSummary
 - IndentSummaryPage
+- IngestDocument
+- IngestDocumentStatus
+- IngestFileType
+- IngestPackage
+- IngestPage
+- IngestPageParams
 - InlinePurchaseOrderItemInput
 - Inspection
 - INSPECTION_EVENT_ACTOR_TYPES
@@ -536,6 +572,7 @@ Entry points: 197
 - isAdmin
 - isAnnotationWithinImage
 - isAssetTransferLineRequest
+- isAwaitingReading
 - isBillEditable
 - isBillOpen
 - isBillPaymentInFlight
@@ -553,6 +590,7 @@ Entry points: 197
 - isManager
 - isManagerOrAbove
 - isMemberInvitationOpen
+- isModuleDisabled
 - isNcrOverdue
 - isObservationPending
 - isPersonsChange
@@ -648,6 +686,7 @@ Entry points: 197
 - mergePreservingNested
 - MilestoneRequirement
 - MilestoneRequirementRequest
+- MODULE_DISABLED
 - ModuleDescriptor
 - ModuleId
 - moduleKeys
@@ -704,6 +743,8 @@ Entry points: 197
 - OrgRole
 - orgRoleFromString
 - OrgTrade
+- PackageStage
+- PackageStatus
 - PagedAttendance
 - PagedDocumentReversals
 - PagedEmployee
@@ -727,6 +768,7 @@ Entry points: 197
 - parseAccountType
 - parseAddress
 - parseAllocation
+- parseApplyResult
 - parseAttachment
 - parseAttendance
 - parseAttendanceProfile
@@ -752,7 +794,10 @@ Entry points: 197
 - parseBimSourceUpload
 - parseBimTileManifest
 - parseBoqItem
+- parseBoqSheet
+- parseBoqSheetSummary
 - parseBudgetAllocation
+- parseCandidate
 - parseCheckItemStatus
 - parseChecklistTemplate
 - parseChecklistTemplateItem
@@ -784,13 +829,17 @@ Entry points: 197
 - parseCvModelVersion
 - parseCvModelVersionStatus
 - parseDatasetConsent
+- parseDecisionResults
 - parseDeductionRule
 - parseDefectAnnotationShape
 - parseDefectPhotoAnnotation
 - parseDefectSeverity
 - parseDefectStatus
+- parseDocumentIngestionStatus
 - parseDocumentReversal
 - parseDocumentReversalEligibility
+- parseDocumentUpload
+- parseDownloadUrl
 - parseElementTypeCatalogueEntry
 - parseEmployee
 - parseEmployeeLookup
@@ -808,6 +857,9 @@ Entry points: 197
 - parseIndent
 - parseIndentItem
 - parseIndentSummary
+- parseIngestDocument
+- parseIngestPackage
+- parseIngestPage
 - parseInspection
 - parseInspectionCategory
 - parseInspectionCheckItem
@@ -827,6 +879,9 @@ Entry points: 197
 - parseInvoiceStatus
 - parseIssue
 - parseIssueComment
+- ParseJob
+- ParseJobStatus
+- ParseJobType
 - parseJournalEntry
 - parseJournalEntryLine
 - parseJournalEntryStatus
@@ -866,6 +921,7 @@ Entry points: 197
 - parseOrganizationSummary
 - parseOrgElementType
 - parseOrgTrade
+- parseParseJob
 - parsePayment
 - parsePlan
 - parsePlanFeature
@@ -883,6 +939,7 @@ Entry points: 197
 - parseProjectCostControlLine
 - parseProjectSummary
 - parseProjectType
+- parseProvenance
 - parsePurchaseOrder
 - parsePurchaseOrderItem
 - parseQueueVisionRunResult
@@ -902,6 +959,7 @@ Entry points: 197
 - parseSiteTransfer
 - parseSiteTransferAssetOption
 - parseSiteTransferItem
+- parseSourceRef
 - parseSpatialImportResult
 - parseSpatialLevel
 - parseSpatialNode
@@ -949,6 +1007,7 @@ Entry points: 197
 - PRE_DEBIT_NOTICE_HOURS
 - PresignBimSourceRequest
 - presignBimSourceToJson
+- PresignDocumentRequest
 - PresignedUpload
 - ProfitAndLossReport
 - ProgressInspection
@@ -974,6 +1033,7 @@ Entry points: 197
 - ProposedBimElement
 - ProposedBimFloor
 - ProposedBimZone
+- Provenance
 - PurchaseOrder
 - PurchaseOrderItem
 - purchaseOrderItemsService
@@ -1092,6 +1152,8 @@ Entry points: 197
 - siteTransferStatusBadgeColors
 - siteTransferStatusLabels
 - SkillLevel
+- sourceOf
+- SourceRef
 - SpatialImportRequest
 - SpatialImportResult
 - SpatialImportRow
@@ -1261,6 +1323,7 @@ Entry points: 197
 - useAllLeavePolicies
 - useAllMaterialConsumptions
 - useApplicableChecklistTemplates
+- useApplyCandidates
 - useApprovalChain
 - useApprovalHistory
 - useApprovalsForApprover
@@ -1269,6 +1332,7 @@ Entry points: 197
 - useApproveDocumentReversal
 - useApproveLeaveRequest
 - useApproverRequests
+- useArchiveIngestPackage
 - useArchiveSpatialNode
 - useAssignManager
 - useAssignRole
@@ -1306,6 +1370,7 @@ Entry points: 197
 - useBimModels
 - useBimModelVersion
 - useBimTiles
+- useBoqSheets
 - useCalculateDays
 - useCanApprove
 - useCancelConstructionInvoice
@@ -1341,6 +1406,7 @@ Entry points: 197
 - useCreateHoliday
 - useCreateIndent
 - useCreateIndentItem
+- useCreateIngestPackage
 - useCreateIssue
 - useCreateIssueComment
 - useCreateLabour
@@ -1375,6 +1441,7 @@ Entry points: 197
 - useDeactivateBankAccount
 - useDeactivateCostCategory
 - useDeactivateCustomer
+- useDecideCandidates
 - useDelegateApproval
 - useDeleteAttachment
 - useDeleteAttendance
@@ -1415,6 +1482,8 @@ Entry points: 197
 - useDeleteWbsActivity
 - useDeleteWorkCategory
 - useDepartmentCalendar
+- useDetectBoqSheets
+- useDocumentIngestionStatus
 - useDocumentReversal
 - useDocumentReversalEligibility
 - useDocumentReversalsByDocument
@@ -1440,6 +1509,7 @@ Entry points: 197
 - useExpense
 - useExpenses
 - useExpensesPage
+- useExtractBoqSheet
 - useFeatureAccess
 - useFinanceAccount
 - useFinanceAccountByCode
@@ -1472,6 +1542,11 @@ Entry points: 197
 - useIndents
 - useIndentsPaginated
 - useIndentSummaries
+- useIngestCandidates
+- useIngestDocument
+- useIngestDocuments
+- useIngestPackage
+- useIngestPackages
 - useInspectionEventQuery
 - useInspectionEvents
 - useInstalledModules
@@ -1558,6 +1633,7 @@ Entry points: 197
 - usePrefetchProject
 - usePrefetchTask
 - usePresignBimSource
+- usePresignIngestDocument
 - useProcessRegularization
 - useProfitAndLoss
 - useProgressInspection
@@ -1571,6 +1647,7 @@ Entry points: 197
 - useProjectsByOrganization
 - useProjectSettings
 - useProjectSummaries
+- useProvenance
 - usePublicPlans
 - usePurchaseOrder
 - usePurchaseOrders
@@ -1593,6 +1670,7 @@ Entry points: 197
 - useRegenerateBimHierarchyProposal
 - useRegisterBillDocuments
 - useRegisterBimSource
+- useRegisterIngestDocument
 - useRegisterProgressInspectionEvidence
 - useRegisterToolboxTalkPhotos
 - useRegularizationById
@@ -1606,6 +1684,7 @@ Entry points: 197
 - useRemoveManager
 - useRemoveToolboxTalkAttendee
 - useRemoveWbsDependency
+- useReparseIngestDocument
 - useReplaceBillAdjustments
 - useRequestDocumentReversal
 - useRequestRegularization
@@ -1634,6 +1713,7 @@ Entry points: 197
 - useSearch
 - useSeedDefaultCostCategories
 - useSendableAssets
+- useSetBoqTarget
 - useSetDatasetConsent
 - useSetVendorPaymentTerms
 - useShift
@@ -2251,6 +2331,99 @@ Entry points: 197
 - RequirementStatus
 - RequirementType
 - UpdateBillRequest
+
+## `@tornotron/echno-core/document-ingestion/hooks`
+
+- documentIngestionKeys
+- isAwaitingReading
+- useApplyCandidates
+- useArchiveIngestPackage
+- useBoqSheets
+- useCreateIngestPackage
+- useDecideCandidates
+- useDetectBoqSheets
+- useDocumentIngestionStatus
+- useExtractBoqSheet
+- useIngestCandidates
+- useIngestDocument
+- useIngestDocuments
+- useIngestPackage
+- useIngestPackages
+- usePresignIngestDocument
+- useProvenance
+- useRegisterIngestDocument
+- useReparseIngestDocument
+- useSetBoqTarget
+
+## `@tornotron/echno-core/document-ingestion/hooks/keys`
+
+- documentIngestionKeys
+
+## `@tornotron/echno-core/document-ingestion/services`
+
+- documentIngestionService
+- isModuleDisabled
+- MODULE_DISABLED
+
+## `@tornotron/echno-core/document-ingestion/types`
+
+- ApplyResult
+- BOQ_FIELDS
+- BoqField
+- boqItemOf
+- BoqItemPayload
+- BoqMappingRequest
+- BoqPreviewCell
+- BoqPreviewRow
+- BoqSheet
+- BoqSheetStatus
+- BoqSheetSummary
+- BoqTargetRequest
+- BoqWarning
+- Candidate
+- CandidateDecision
+- CandidateFlag
+- CandidateKind
+- CandidateListParams
+- CandidateStatus
+- CONTRACT_BOQ_ITEM_TARGET
+- CreatePackageRequest
+- DecisionAction
+- DecisionOutcome
+- DecisionResult
+- DocumentIngestionStatus
+- DocumentUpload
+- DownloadUrl
+- ExtractionMethod
+- IngestDocument
+- IngestDocumentStatus
+- IngestFileType
+- IngestPackage
+- IngestPage
+- IngestPageParams
+- PackageStage
+- PackageStatus
+- parseApplyResult
+- parseBoqSheet
+- parseBoqSheetSummary
+- parseCandidate
+- parseDecisionResults
+- parseDocumentIngestionStatus
+- parseDocumentUpload
+- parseDownloadUrl
+- parseIngestDocument
+- parseIngestPackage
+- parseIngestPage
+- ParseJob
+- ParseJobStatus
+- ParseJobType
+- parseParseJob
+- parseProvenance
+- parseSourceRef
+- PresignDocumentRequest
+- Provenance
+- sourceOf
+- SourceRef
 
 ## `@tornotron/echno-core/document-reversals/hooks`
 

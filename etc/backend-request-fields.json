@@ -3,7 +3,7 @@
     "repository": "tornotron/echno-backend",
     "ref": "development",
     "path": "docs/openapi.json",
-    "sha256": "33f07d2edae707ba998542f6ff6b583653cf10ec70e05d4bf9fac841d3277c66"
+    "sha256": "8322f3ff5c8ae654f87f44053a94d84176bf1ef57edbe118de50e509fe5593d4"
   },
   "operations": {
     "POST /api/v1/assets/web": {
@@ -427,6 +427,7 @@
         "userName"
       ],
       "required": [
+        "acceptTerms",
         "dateOfBirth",
         "email",
         "gender",
@@ -5789,6 +5790,33 @@
         "description",
         "name"
       ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/document-ingestion/documents/{documentId}/boq/sheets/detect": {
+      "schema": null,
+      "fields": [],
+      "required": [],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/document-ingestion/documents/{documentId}/boq/sheets/{sheetId}/extract": {
+      "schema": "BoqMappingRequest",
+      "fields": [
+        "codePrefix",
+        "columns",
+        "headerRow"
+      ],
+      "required": [
+        "columns",
+        "headerRow"
+      ],
+      "acceptsAnyField": false
+    },
+    "PUT /api/v1/document-ingestion/packages/{packageId}/boq-target": {
+      "schema": "BoqTargetRequest",
+      "fields": [
+        "subContractId"
+      ],
+      "required": [],
       "acceptsAnyField": false
     }
   }

@@ -296,3 +296,9 @@ export * from './hooks/access';
 export * from './types/vision';
 export * from './services/vision-service';
 export * from './hooks/vision';
+// Document Ingestion (`MODULE_DOCUMENT_INGESTION`): tender files read into candidate values a
+// person reviews, applied with provenance. Off until an operator opens it. Backend design note
+// docs/specs/2026-11-08-document-ingestion-design.md (tornotron/echno-backend#957).
+export * from './types/document-ingestion';
+export * from './services/document-ingestion-service';
+export * from './hooks/document-ingestion';
