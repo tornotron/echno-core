@@ -5,7 +5,7 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
-## [Unreleased]
+## [v11.12.0] - 2026-11-08
 
 The Roles & Permissions screen's access client (tornotron/echno-backend#914, build plan step 29;
 backend #1025 for the reads, #1026 for the writes). Roles and Users only, no groups. The endpoints
