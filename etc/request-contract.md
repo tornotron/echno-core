@@ -6,7 +6,7 @@
 
 Checked against `tornotron/echno-backend` `development`, reduced into `etc/backend-request-fields.json` by `scripts/backend-contract.ts`.
 
-Write calls in `src/services`: 232
+Write calls in `src/services`: 237
 
 ## Coverage
 
@@ -16,11 +16,16 @@ Write calls in `src/services`: 232
 | sends nothing | 50 |
 | endpoint accepts any field name | 0 |
 | endpoint documents no request body | 0 |
-| endpoint not in the document | 3 |
+| endpoint not in the document | 8 |
 | not readable | 14 |
 
-## Findings (3)
+## Findings (8)
 
+- src/services/access-service.ts:162  POST /api/v1/access/web/roles  is not an endpoint in the document
+- src/services/access-service.ts:175  PUT /api/v1/access/web/roles/{}  is not an endpoint in the document
+- src/services/access-service.ts:187  PUT /api/v1/access/web/roles/{}/grants  is not an endpoint in the document
+- src/services/access-service.ts:196  PUT /api/v1/access/web/roles/{}/grantable-roles  is not an endpoint in the document
+- src/services/access-service.ts:222  PUT /api/v1/access/web/users/{}/roles  is not an endpoint in the document
 - src/services/member-invitations-service.ts:106  POST /api/v1/invitations/web/{}/resend  is not an endpoint in the document
 - src/services/member-invitations-service.ts:117  POST /api/v1/invitations/web/{}/revoke  is not an endpoint in the document
 - src/services/member-invitations-service.ts:93  POST /api/v1/invitations/web  is not an endpoint in the document

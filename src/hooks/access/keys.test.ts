@@ -14,4 +14,11 @@ describe('Roles & Permissions keys', () => {
     expect(accessKeys.roles()).toEqual(['access', 'roles']);
     expect(accessKeys.users()).toEqual(['access', 'users']);
   });
+
+  test('one role or person nests under its list, so the list prefix refreshes it', () => {
+    expect(accessKeys.role('r-1')).toEqual(['access', 'roles', 'r-1']);
+    expect(accessKeys.role('r-1').slice(0, 2)).toEqual([...accessKeys.roles()]);
+    expect(accessKeys.user(7)).toEqual(['access', 'users', 7]);
+    expect(accessKeys.user(7).slice(0, 2)).toEqual([...accessKeys.users()]);
+  });
 });

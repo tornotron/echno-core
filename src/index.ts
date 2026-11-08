@@ -285,7 +285,8 @@ export * from './services/member-invitations-service';
 export * from './hooks/member-invitations';
 
 // Access: what the signed-in member may do in their current organization, and what the Roles &
-// Permissions screen reads, from the access matrix (tornotron/echno-backend#914). Reads only.
+// Permissions screen reads and writes, from the access matrix (tornotron/echno-backend#914). Roles
+// and Users only, no groups.
 export * from './types/access';
 export * from './services/access-service';
 export * from './hooks/access';
