@@ -289,3 +289,10 @@ export * from './hooks/member-invitations';
 export * from './types/access';
 export * from './services/access-service';
 export * from './hooks/access';
+
+// Computer Vision (`MODULE_VISION`; echno-backend docs/specs/2026-10-26-cv-phase4-design.md):
+// the platform-wide model registry, the organization's inference settings and on-demand runs.
+// The regions a model draws and their review are inspection types, exported above.
+export * from './types/vision';
+export * from './services/vision-service';
+export * from './hooks/vision';

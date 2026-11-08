@@ -177,6 +177,33 @@ const PINNED: Record<string, Record<string, string>> = {
     REJECT: 'reject',
     MODIFY: 'modify',
   },
+  // inspections/api/RegionShape.java, verified 8 Nov 2026
+  RegionShape: {
+    BOX: 'box',
+    POLYGON: 'polygon',
+  },
+  // inspections/RegionOrigin.java
+  RegionOrigin: {
+    PRODUCER: 'producer',
+    REVIEWER: 'reviewer',
+    HUMAN: 'human',
+  },
+  // inspections/ObservationRejectReason.java
+  RejectReason: {
+    FALSE_POSITIVE: 'false-positive',
+    DUPLICATE: 'duplicate',
+    OUT_OF_SCOPE: 'out-of-scope',
+    POOR_IMAGE: 'poor-image',
+  },
+  // inspections/RegionEditKind.java (request-only enum)
+  RegionEditKind: {
+    REPLACE: 'replace',
+    REMOVE: 'remove',
+    ADD: 'add',
+  },
+  // ReviewBatchResponse.Status has no @JsonValue and crosses the wire as its
+  // constant names, so review-batch.ts declares it as a string union rather
+  // than an enum, and its values are pinned in review-batch.test.ts.
 };
 
 /**

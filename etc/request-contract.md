@@ -6,13 +6,13 @@
 
 Checked against `tornotron/echno-backend` `development`, reduced into `etc/backend-request-fields.json` by `scripts/backend-contract.ts`.
 
-Write calls in `src/services`: 218
+Write calls in `src/services`: 221
 
 ## Coverage
 
 | outcome | calls |
 | --- | --- |
-| checked | 155 |
+| checked | 158 |
 | sends nothing | 46 |
 | endpoint accepts any field name | 0 |
 | endpoint documents no request body | 0 |
@@ -38,8 +38,8 @@ go unnoticed.
 - src/services/contract-billing-service.ts:421  POST /api/v1/contract-billing/web/bills/{}/documents/presign  (body is an array, which has no top-level field names)
 - src/services/contract-billing-service.ts:431  POST /api/v1/contract-billing/web/bills/{}/documents/register  (body is an array, which has no top-level field names)
 - src/services/finance-account-service.ts:216  POST /api/v1/finance/accounts/web/import  (body is a FormData assembled by the caller)
-- src/services/observation-service.ts:274  POST /api/v1/inspections/web/observations/{}/evidence/presign  (body is an array, which has no top-level field names)
-- src/services/observation-service.ts:297  POST /api/v1/inspections/web/observations/{}/evidence/register  (body is an array, which has no top-level field names)
+- src/services/observation-service.ts:351  POST /api/v1/inspections/web/observations/{}/evidence/presign  (body is an array, which has no top-level field names)
+- src/services/observation-service.ts:374  POST /api/v1/inspections/web/observations/{}/evidence/register  (body is an array, which has no top-level field names)
 - src/services/toolbox-talks-service.ts:145  POST /api/v1/toolbox-talks/web/{}/photos/presign  (body is an array, which has no top-level field names)
 - src/services/toolbox-talks-service.ts:157  POST /api/v1/toolbox-talks/web/{}/photos/register  (body is an array, which has no top-level field names)
 - src/services/work-progress-service.ts:108  POST /api/v1/progress-inspections/web/{}/evidence/presign  (body is an array, which has no top-level field names)

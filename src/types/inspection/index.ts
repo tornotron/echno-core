@@ -18,7 +18,9 @@
  *
  * And the {@link Observation}: a finding from any source, human or machine,
  * with a persistent id ahead of the human decision that turns it into one of
- * the records above.
+ * the records above, the boxes and polygons ({@link ObservationRegion}) a
+ * model or a person drew on its evidence, and the bulk decision
+ * ({@link ReviewBatchRequest}) a reviewer takes on many of them at once.
  */
 
 export * from './inspection';
@@ -29,3 +31,4 @@ export * from './reinspection';
 export * from './inspection-event';
 export * from './trade';
 export * from './observation';
+export * from './review-batch';

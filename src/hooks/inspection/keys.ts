@@ -31,6 +31,8 @@ import type { ObservationListParams } from '../../services/observation-service';
  * - `['observations']` — namespace root, invalidation prefix only.
  * - `['observations', 'list', params]` — one filtered page (consumed by {@link useObservations}).
  * - `['observations', 'detail', id]` — one observation.
+ * - `['observations', 'detail', id, 'with-retired-regions']`: the same, with
+ *   the regions a review replaced or removed.
  * - `['observations', 'evidence', id]` — the attachments it cites.
  */
 export const observationKeys = {
@@ -43,6 +45,9 @@ export const observationKeys = {
     [...observationKeys.lists(), params] as const,
   /** One observation. */
   detail: (id: string) => [...observationKeys.all, 'detail', id] as const,
+  /** One observation read with `includeRetiredRegions`; under `detail(id)`, so it refreshes with it. */
+  detailWithRetiredRegions: (id: string) =>
+    [...observationKeys.detail(id), 'with-retired-regions'] as const,
   /** The attachments one observation cites as evidence. */
   evidence: (id: string) => [...observationKeys.all, 'evidence', id] as const,
 };

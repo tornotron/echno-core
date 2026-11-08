@@ -16,6 +16,12 @@ describe('observation keys', () => {
     expect(observationKeys.list({ projectId: 7 })).toEqual(['observations', 'list', { projectId: 7 }]);
     expect(observationKeys.detail('o1')).toEqual(['observations', 'detail', 'o1']);
     expect(observationKeys.evidence('o1')).toEqual(['observations', 'evidence', 'o1']);
+    expect(observationKeys.detailWithRetiredRegions('o1')).toEqual([
+      'observations',
+      'detail',
+      'o1',
+      'with-retired-regions',
+    ]);
   });
 });
 
@@ -40,5 +46,16 @@ describe('observation mutations', () => {
       expect(body).toInclude('useObservationInvalidation()');
       expect(body).toInclude('onSuccess: (observation) => invalidate(observation)');
     }
+  });
+});
+
+describe('bulk review mutation', () => {
+  test('refreshes the observations, the timeline and the inspections', () => {
+    const start = source.indexOf('export function useReviewObservationBatch(');
+    expect(start).toBeGreaterThan(-1);
+    const body = source.slice(start, source.indexOf('\n}\n', start));
+    expect(body).toInclude('queryKey: observationKeys.all');
+    expect(body).toInclude('queryKey: inspectionEventKeys.all');
+    expect(body).toInclude('queryKey: inspectionKeys.all');
   });
 });

@@ -126,6 +126,21 @@ describe('api.get', () => {
     expect(url.searchParams.get('c')).toBe('true');
   });
 
+  test('repeats the key for an array param, skipping empty and missing items', async () => {
+    mockFetch(async () => jsonResponse({}));
+
+    await api.get('/x', {
+      category: ['ppe_helmet', 'ppe_vest'],
+      none: [],
+      mixed: ['a', null as unknown as string, 2],
+    });
+
+    const url = new URL(calledUrl());
+    expect(url.searchParams.getAll('category')).toEqual(['ppe_helmet', 'ppe_vest']);
+    expect(url.searchParams.has('none')).toBe(false);
+    expect(url.searchParams.getAll('mixed')).toEqual(['a', '2']);
+  });
+
   test('omits params that are null or undefined', async () => {
     mockFetch(async () => jsonResponse({}));
 

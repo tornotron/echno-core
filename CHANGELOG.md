@@ -5,6 +5,42 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
+## [v11.7.0] - 2026-11-08
+
+Computer vision on observations (#166; backend design note `docs/specs/2026-10-26-cv-phase4-design.md`,
+work package 5). Additive: nothing existing changes shape, and an observation from a backend that
+sends no regions reads as having none. 11.5.0 is claimed by an open pull request, so this release
+takes the next minor.
+
+- Regions: `Observation.regions` (`ObservationRegion[]`, active in draw order) with `RegionShape`,
+  `RegionOrigin`, `RegionBox`, `RegionPoint`, `parseObservationRegion` and `isRegionActive`. A
+  region that cannot be drawn is dropped with a warning instead of failing the observation.
+  `CreateObservationRequest.regions` (`ObservationRegionRequest[]`) for an inspector's own boxes and
+  polygons.
+- Rejection reason: `Observation.rejectReason` and `ReviewObservationRequest.rejectReason`
+  (`RejectReason`, sent on `REJECT` only).
+- Region edits on `MODIFY`: `ObservationReviewChanges.regions` takes an ordered list of
+  `RegionEditOp` (`RegionEditKind.REPLACE`, `REMOVE`, `ADD`). An empty list is no change.
+- Bulk review: `observationService.reviewBatch` and `useReviewObservationBatch`, with
+  `ReviewBatchRequest`, `ReviewBatchResult`, `ReviewBatchItemResult`, `ReviewBatchItemStatus` and
+  `isReviewBatchItemSettled`. The item statuses are upper case on the wire (the backend enum has no
+  `@JsonValue`), and an unreadable one reads as `REFUSED`.
+- Observation list filters: `modelName`, `modelVersion`, `categories` (sent as a repeated
+  `category`), `minConfidence`, `maxConfidence`, `hasRegions`, `attachmentId` and
+  `sortByConfidence`. `observationService.getById` and `useObservation` take
+  `{ includeRetiredRegions }`, cached under `observationKeys.detailWithRetiredRegions`.
+- Vision module: `visionService` (`listModels`, `getModelVersion`, `getSettings`, `updateSettings`,
+  `queueRun`), `visionKeys`, `useVisionModels`, `useVisionModelVersion`, `useVisionSettings`,
+  `useUpdateVisionSettings` and `useQueueVisionRun`, with `CvModel`, `CvModelVersion`,
+  `CvModelClass`, `CvModelTask`, `CvModelFamily`, `CvModelVersionStatus`, `activeCvModelVersion`,
+  `VisionSettings`, `UpdateVisionSettingsRequest`, `QueueVisionRunRequest` and
+  `QueueVisionRunResult`. The query hooks take `{ enabled }`, so a page can hold them back until
+  the module is in the enabled list.
+- `api.get` and the other client methods accept an array query value and repeat the key once per
+  item (`QueryParamValue`).
+- The settings and runs endpoints are checked against backend work package 6
+  (tornotron/echno-backend#1005); the index is refreshed here from backend `development`.
+
 ## [v11.6.0] - 2026-11-08
 
 Invitations by link, and reading the access matrix (tornotron/echno-backend#914, step 22 of the
