@@ -5,6 +5,19 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
+## [v11.10.0] - 2026-11-08
+
+Leave policies: the multi-level approval toggle is retired (#171; ClickUp 14zdkkvzx68, backend
+#1013). Every leave request now goes to the employee's immediate manager alone, who decides it or
+transfers it to a manager above them, and the backend no longer declares the field.
+
+- `CreateLeavePolicyRequest.multiLevelApprovalEnabled` and
+  `UpdateLeavePolicyRequest.multiLevelApprovalEnabled` are deprecated and no longer sent. The
+  fields stay so existing callers compile; setting them has no effect.
+- `leaveService.delegateApproval` and `LeaveApprovalAction.delegateToId` document the transfer
+  rule: the target must be a manager above the current approver in their reporting line, and the
+  backend answers 400 for anyone else.
+
 ## [v11.9.0] - 2026-11-08
 
 Who authorizes a contractor bill payment (#169; backend echno-backend #1010, design note

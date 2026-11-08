@@ -40,7 +40,14 @@ export interface CreateLeavePolicyRequest {
   requiresAttachment?: boolean;
   /** Days-per-request threshold above which an attachment is required. */
   attachmentRequiredAfterDays?: number;
-  /** Whether requests go through the full multi-level approval chain. */
+  /**
+   * Retired; never sent. Every leave request now has one approver, the
+   * employee's immediate manager, who may transfer it to a manager above them
+   * (ClickUp 14zdkkvzx68). The backend no longer has the toggle, so this field
+   * is dropped from the payload and kept only so existing callers compile.
+   *
+   * @deprecated Has no effect. Remove it from callers.
+   */
   multiLevelApprovalEnabled?: boolean;
   /** What the supporting document should be, shown when one is required. */
   supportingDocumentNote?: string;
@@ -97,8 +104,6 @@ export function createLeavePolicyToJson(
     json.requiresAttachment = dto.requiresAttachment;
   if (dto.attachmentRequiredAfterDays !== undefined)
     json.attachmentRequiredAfterDays = dto.attachmentRequiredAfterDays;
-  if (dto.multiLevelApprovalEnabled !== undefined)
-    json.multiLevelApprovalEnabled = dto.multiLevelApprovalEnabled;
   if (dto.supportingDocumentNote !== undefined)
     json.supportingDocumentNote = dto.supportingDocumentNote;
   if (dto.accrualMethod !== undefined) json.accrualMethod = dto.accrualMethod;
