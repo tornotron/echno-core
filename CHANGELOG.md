@@ -5,6 +5,24 @@ All notable changes to `@tornotron/echno-core` will be documented in this file.
 From `v1.0.0` the package follows [semantic versioning](https://semver.org/). See
 [docs/API-STABILITY.md](docs/API-STABILITY.md) for what counts as the public API.
 
+## [v11.11.0] - 2026-11-08
+
+Issues: the task is optional, and an issue belongs to a project or a domain (#172; ClickUp
+14zdkkvzx60, backend #1014). The domain is a work category, the same list tasks are classified
+under. Additive for readers; one behaviour change on create, below. Follows 11.10.0.
+
+- `createIssueToJson` now sends `projectId`, which it used to leave out on purpose, and the new
+  `CreateIssueRequest.categoryId`. `projectId` is no longer deprecated. A caller that sets a
+  project other than its task's gets a 400 from the backend.
+- `UpdateIssueRequest` gains `taskId`, `projectId` and `categoryId`, each `number | null` (null
+  clears the link; the backend refuses a change that leaves neither a project nor a domain).
+- `Issue` gains `projectId`, `projectName`, `categoryId` and `categoryName`. A backend without the
+  fields leaves them undefined.
+- `etc/backend-request-fields.json`: the issue create and update operations gain the new fields,
+  as the backend document on #1014's branch declares them. Edited in place rather than refreshed
+  whole, because the committed index already carries endpoints from backend work not yet on
+  `development`, and a full refresh from that branch would drop them.
+
 ## [v11.10.0] - 2026-11-08
 
 Leave policies: the multi-level approval toggle is retired (#171; ClickUp 14zdkkvzx68, backend

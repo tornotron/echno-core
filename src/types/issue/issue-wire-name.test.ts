@@ -53,3 +53,26 @@ describe('the name an issue category travels under', () => {
     expect(payload.type).toBe(IssueType.material);
   });
 });
+
+describe('what an issue is connected to travels with it', () => {
+  test('create sends the project and the domain, which an issue without a task needs', () => {
+    const payload = createIssueToJson({
+      title: 'Plaster cracking on the east elevation',
+      issueType: IssueType.quality,
+      projectId: 3,
+      categoryId: 9,
+    });
+
+    expect(payload.projectId).toBe(3);
+    expect(payload.categoryId).toBe(9);
+    expect(payload).not.toHaveProperty('taskId');
+  });
+
+  test('update sends a null link as null, which clears it', () => {
+    const payload = updateIssueToJson({ taskId: null, categoryId: 9 });
+
+    expect(payload.taskId).toBeNull();
+    expect(payload.categoryId).toBe(9);
+    expect(payload).not.toHaveProperty('projectId');
+  });
+});

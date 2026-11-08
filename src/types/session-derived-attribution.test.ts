@@ -35,12 +35,9 @@ describe('payloads no longer name who is acting', () => {
 
     expect(payload).not.toHaveProperty('createdById');
     expect(payload).not.toHaveProperty('creatorId');
-    // This line read `expect(payload.projectId).toBe(3)` and is deliberately
-    // reversed. `projectId` was never a field of `IssueCreationDto`: the
-    // backend takes an issue's project from its parent task, and the id here
-    // is the client's own cache-routing key. It leaves the payload for that
-    // reason, not because attribution moved. See dropped-request-fields.test.ts.
-    expect(payload).not.toHaveProperty('projectId');
+    // The project is sent: an issue without a task belongs to a project or a
+    // domain (ClickUp 14zdkkvzx60). See dropped-request-fields.test.ts.
+    expect(payload.projectId).toBe(3);
     expect(payload.assignedToId).toBe(8);
   });
 

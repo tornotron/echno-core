@@ -46,6 +46,22 @@ export interface UpdateIssueRequest {
 
   /** New assignee employee ID; pass `null` to explicitly unassign. */
   assigneeId?: number | null;
+
+  /**
+   * New task, if changing; `null` unlinks the task and the issue keeps its
+   * project. A new task brings its own project unless `projectId` is sent too.
+   */
+  taskId?: number | null;
+
+  /**
+   * New project, if changing; `null` clears it. The backend refuses a change
+   * that leaves the issue with neither a project nor a domain, and a project
+   * that is not the issue's task's.
+   */
+  projectId?: number | null;
+
+  /** New domain (work category id), if changing; `null` clears it. */
+  categoryId?: number | null;
 }
 
 /**
@@ -67,6 +83,9 @@ export function updateIssueToJson(
   if (dto.status !== undefined) payload.status = dto.status;
   if (dto.priority !== undefined) payload.priority = dto.priority;
   if (dto.assigneeId !== undefined) payload.assignedToId = dto.assigneeId;
+  if (dto.taskId !== undefined) payload.taskId = dto.taskId;
+  if (dto.projectId !== undefined) payload.projectId = dto.projectId;
+  if (dto.categoryId !== undefined) payload.categoryId = dto.categoryId;
 
   return payload;
 }

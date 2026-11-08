@@ -53,17 +53,22 @@ export interface CreateIssueRequest {
   priority?: IssuePriority;
 
   /**
-   * Not sent. An issue hangs off a task, and the backend walks
-   * {@link taskId} to the task's project rather than reading a project
-   * from the body; `IssueCreationDto` has no such field. It stays on this
-   * interface because the client still routes on it: `useCreateIssue`
-   * reads it to append the new issue to the right project's cached list.
-   *
-   * @deprecated Not part of the request body. Used only client-side.
+   * The project the issue belongs to. An issue needs a project or a domain
+   * ({@link categoryId}); a task supplies its own project, so this is needed
+   * only when there is no task. When sent with a task it must be the task's
+   * project (echno-backend, ClickUp 14zdkkvzx60). `useCreateIssue` also reads
+   * it to append the new issue to the right project's cached list.
    */
   projectId?: number;
 
-  /** Optional parent task ID; omit for project-scoped issues. */
+  /**
+   * The issue's domain: the id of the work category it concerns (Concrete
+   * Works, Masonry Works and so on), from the same list tasks are classified
+   * under. With a task and no domain, the issue takes the task's category.
+   */
+  categoryId?: number;
+
+  /** Optional task the issue was found on. */
   taskId?: number;
 
   /** Optional initial assignee. */
@@ -75,8 +80,8 @@ export interface CreateIssueRequest {
  * the backend. Optional fields are omitted from the payload when undefined
  * so the backend can apply its own defaults.
  *
- * `projectId` is deliberately left out: the backend reads the project off
- * the parent task, and the value serves the client's own cache routing.
+ * `projectId` and `categoryId` are sent when set: an issue without a task
+ * needs one of them.
  *
  * @param dto - The create request to serialize.
  * @returns A plain object matching the backend's expected request body shape.
@@ -93,6 +98,8 @@ export function createIssueToJson(
   if (dto.status !== undefined) payload.status = dto.status;
   if (dto.priority !== undefined) payload.priority = dto.priority;
   if (dto.taskId !== undefined) payload.taskId = dto.taskId;
+  if (dto.projectId !== undefined) payload.projectId = dto.projectId;
+  if (dto.categoryId !== undefined) payload.categoryId = dto.categoryId;
   if (dto.assigneeId !== undefined) payload.assignedToId = dto.assigneeId;
 
   return payload;
