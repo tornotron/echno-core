@@ -7,6 +7,8 @@ From `v1.0.0` the package follows [semantic versioning](https://semver.org/). Se
 
 ## [Unreleased]
 
+## [v11.15.0] - 2026-11-09
+
 - Document ingestion review-screen gaps (tornotron/echno-backend#1048, backend #1058). Additive.
   - `listPackages` and `useIngestPackages` take `PackageListParams`, which adds `projectId` to the
     page parameters, so a project's Documents tab asks the backend for its own packages.
