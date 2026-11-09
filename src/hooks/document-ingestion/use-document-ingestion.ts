@@ -15,6 +15,7 @@ import type {
   IngestPageParams,
   LlmCallListParams,
 } from '../../types/document-ingestion/document-ingestion';
+import type { DrawingListParams } from '../../types/document-ingestion/document-ingestion-registers';
 import { documentIngestionKeys } from './keys';
 
 /** Whether the module is open to the organization; an error means it is not. */
@@ -175,6 +176,115 @@ export function useTenderProfile(packageId: string | undefined) {
     queryKey: documentIngestionKeys.tenderProfile(packageId ?? ''),
     queryFn: () => documentIngestionService.getTenderProfile(packageId as string),
     enabled: Boolean(packageId),
+    retry: shouldRetry,
+  });
+}
+
+export function useContractTerms(packageId: string | undefined) {
+  return useQuery({
+    queryKey: documentIngestionKeys.contractTerms(packageId ?? ''),
+    queryFn: () => documentIngestionService.listContractTerms(packageId as string),
+    enabled: Boolean(packageId),
+    retry: shouldRetry,
+  });
+}
+
+/** Which of the 19 contract terms were found in the package, and the pages searched for each one not found. */
+export function useContractTermCoverage(packageId: string | undefined) {
+  return useQuery({
+    queryKey: documentIngestionKeys.contractTermCoverage(packageId ?? ''),
+    queryFn: () => documentIngestionService.getContractTermCoverage(packageId as string),
+    enabled: Boolean(packageId),
+    retry: shouldRetry,
+  });
+}
+
+export function useObligations(packageId: string | undefined, params: IngestPageParams = {}) {
+  return useQuery({
+    queryKey: documentIngestionKeys.obligations(packageId ?? '', params),
+    queryFn: () => documentIngestionService.listObligations(packageId as string, params),
+    enabled: Boolean(packageId),
+    retry: shouldRetry,
+  });
+}
+
+export function useDrawings(packageId: string | undefined, params: DrawingListParams = {}) {
+  return useQuery({
+    queryKey: documentIngestionKeys.drawings(packageId ?? '', params),
+    queryFn: () => documentIngestionService.listDrawings(packageId as string, params),
+    enabled: Boolean(packageId),
+    retry: shouldRetry,
+  });
+}
+
+export function useDrawingRevisions(drawingId: string | undefined) {
+  return useQuery({
+    queryKey: documentIngestionKeys.drawingRevisions(drawingId ?? ''),
+    queryFn: () => documentIngestionService.listDrawingRevisions(drawingId as string),
+    enabled: Boolean(drawingId),
+    retry: shouldRetry,
+  });
+}
+
+/**
+ * A short-lived link to a sheet's title-block crop; `data` is null when there is none. The link is
+ * signed, so it is held for a minute and fetched again after that rather than reused once expired.
+ */
+export function useTitleBlockImage(documentId: string | undefined, page: number | undefined) {
+  return useQuery({
+    queryKey: documentIngestionKeys.titleBlockImage(documentId ?? '', page ?? 0),
+    queryFn: () => documentIngestionService.getTitleBlockImage(documentId as string, page as number),
+    enabled: Boolean(documentId) && page !== undefined,
+    retry: shouldRetry,
+    staleTime: 60 * 1000,
+    gcTime: 60 * 1000,
+  });
+}
+
+/** The ITP rows read from one package. */
+export function useQualityRequirements(packageId: string | undefined, params: IngestPageParams = {}) {
+  return useQuery({
+    queryKey: documentIngestionKeys.qualityRequirements(packageId ?? '', params),
+    queryFn: () => documentIngestionService.listQualityRequirements(packageId as string, params),
+    enabled: Boolean(packageId),
+    retry: shouldRetry,
+  });
+}
+
+/** A project's inspection and test plan. */
+export function useProjectQualityRequirements(projectId: number | undefined, params: IngestPageParams = {}) {
+  return useQuery({
+    queryKey: documentIngestionKeys.projectQualityRequirements(projectId ?? 0, params),
+    queryFn: () => documentIngestionService.listProjectQualityRequirements(projectId as number, params),
+    enabled: projectId !== undefined && projectId > 0,
+    retry: shouldRetry,
+  });
+}
+
+export function useQualificationRequirements(packageId: string | undefined) {
+  return useQuery({
+    queryKey: documentIngestionKeys.qualificationRequirements(packageId ?? ''),
+    queryFn: () => documentIngestionService.listQualificationRequirements(packageId as string),
+    enabled: Boolean(packageId),
+    retry: shouldRetry,
+  });
+}
+
+/** The Tender Compliance Matrix; while `shown` is false its `notice` says why it has no rows. */
+export function useComplianceMatrix(packageId: string | undefined) {
+  return useQuery({
+    queryKey: documentIngestionKeys.complianceMatrix(packageId ?? ''),
+    queryFn: () => documentIngestionService.getComplianceMatrix(packageId as string),
+    enabled: Boolean(packageId),
+    retry: shouldRetry,
+  });
+}
+
+export function useCompanyProfile(enabled = true) {
+  return useQuery({
+    queryKey: documentIngestionKeys.companyProfile(),
+    queryFn: () => documentIngestionService.getCompanyProfile(),
+    enabled,
     retry: shouldRetry,
   });
 }

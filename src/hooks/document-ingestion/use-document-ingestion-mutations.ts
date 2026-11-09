@@ -6,7 +6,7 @@
  * of the file to the returned URL (the app's own uploader), then register.
  */
 
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { type QueryKey, useMutation, useQueryClient } from '@tanstack/react-query';
 import { documentIngestionService } from '../../services/document-ingestion-service';
 import type {
   BoqMappingRequest,
@@ -19,11 +19,24 @@ import type {
   PresignDocumentRequest,
   RevisionRequest,
 } from '../../types/document-ingestion/document-ingestion';
+import type {
+  CompanyProfileRequest,
+  CopyToTemplateRequest,
+  PresignEvidenceRequest,
+  RaiseRiskRequest,
+  RequirementStatusRequest,
+} from '../../types/document-ingestion/document-ingestion-registers';
+import { checklistTemplateKeys } from '../inspection/keys';
+import { riskKeys } from '../risk/keys';
 import { documentIngestionKeys } from './keys';
 
-function useInvalidateDocumentIngestion() {
+/** Refreshes the whole domain, and any other domain the write reaches, such as the risk register. */
+function useInvalidateDocumentIngestion(also: readonly QueryKey[] = []) {
   const queryClient = useQueryClient();
-  return () => queryClient.invalidateQueries({ queryKey: documentIngestionKeys.all });
+  return async () => {
+    await queryClient.invalidateQueries({ queryKey: documentIngestionKeys.all });
+    await Promise.all(also.map((queryKey) => queryClient.invalidateQueries({ queryKey })));
+  };
 }
 
 export function useCreateIngestPackage() {
@@ -198,6 +211,79 @@ export function useResolveChangeConflict() {
   return useMutation({
     mutationFn: ({ candidateId, choice }: { candidateId: string; choice: ConflictChoice }) =>
       documentIngestionService.resolveConflict(candidateId, choice),
+    onSuccess: invalidate,
+  });
+}
+
+/** Mutate with `{ termId, req }` to raise a project risk from a contract term; the risk register is refreshed too. */
+export function useRaiseContractTermRisk() {
+  const invalidate = useInvalidateDocumentIngestion([riskKeys.all]);
+  return useMutation({
+    mutationFn: ({ termId, req }: { termId: string; req?: RaiseRiskRequest }) =>
+      documentIngestionService.raiseContractTermRisk(termId, req),
+    onSuccess: invalidate,
+  });
+}
+
+/** Mutate with `{ obligationId, req }` to raise a project risk from an obligation; the risk register is refreshed too. */
+export function useRaiseObligationRisk() {
+  const invalidate = useInvalidateDocumentIngestion([riskKeys.all]);
+  return useMutation({
+    mutationFn: ({ obligationId, req }: { obligationId: string; req?: RaiseRiskRequest }) =>
+      documentIngestionService.raiseObligationRisk(obligationId, req),
+    onSuccess: invalidate,
+  });
+}
+
+/** Copies ITP rows into checklist templates; the templates are refreshed too. */
+export function useCopyQualityRequirementsToTemplate() {
+  const invalidate = useInvalidateDocumentIngestion([checklistTemplateKeys.all]);
+  return useMutation({
+    mutationFn: (req: CopyToTemplateRequest) => documentIngestionService.copyQualityRequirementsToTemplate(req),
+    onSuccess: invalidate,
+  });
+}
+
+/** Mutate with `{ requirementId, req }` to set or clear a person's status on a text requirement. */
+export function useSetQualificationStatus() {
+  const invalidate = useInvalidateDocumentIngestion();
+  return useMutation({
+    mutationFn: ({ requirementId, req }: { requirementId: string; req: RequirementStatusRequest }) =>
+      documentIngestionService.setQualificationStatus(requirementId, req),
+    onSuccess: invalidate,
+  });
+}
+
+/** Replaces the company profile; every compliance matrix reads again. */
+export function useSaveCompanyProfile() {
+  const invalidate = useInvalidateDocumentIngestion();
+  return useMutation({
+    mutationFn: (req: CompanyProfileRequest) => documentIngestionService.saveCompanyProfile(req),
+    onSuccess: invalidate,
+  });
+}
+
+/** Step 1 of an evidence upload. Nothing to refresh until the file is registered. */
+export function usePresignCompanyEvidence() {
+  return useMutation({
+    mutationFn: (req: PresignEvidenceRequest) => documentIngestionService.presignCompanyEvidence(req),
+  });
+}
+
+/** Step 3 of an evidence upload. Mutate with `{ evidenceId, key }`. */
+export function useRegisterCompanyEvidence() {
+  const invalidate = useInvalidateDocumentIngestion();
+  return useMutation({
+    mutationFn: ({ evidenceId, key }: { evidenceId: string; key: string }) =>
+      documentIngestionService.registerCompanyEvidence(evidenceId, key),
+    onSuccess: invalidate,
+  });
+}
+
+export function useDeleteCompanyEvidence() {
+  const invalidate = useInvalidateDocumentIngestion();
+  return useMutation({
+    mutationFn: (evidenceId: string) => documentIngestionService.deleteCompanyEvidence(evidenceId),
     onSuccess: invalidate,
   });
 }

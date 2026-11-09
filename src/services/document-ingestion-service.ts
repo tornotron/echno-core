@@ -42,9 +42,29 @@
  * - `PUT  /document-ingestion/documents/{id}/revision`                        this file replaces an earlier one
  * - `POST /document-ingestion/documents/{id}/revision-diff`                   compare a revised BOQ with the one it replaces
  * - `POST /document-ingestion/candidates/{id}/conflict`                       apply a change over a hand edit, or keep the record
+ * - `GET  /document-ingestion/packages/{id}/contract-terms`                   the contract term register
+ * - `GET  /document-ingestion/packages/{id}/contract-terms/coverage`          which terms were found, and the pages searched
+ * - `GET  /document-ingestion/packages/{id}/obligations`                      the obligation register, paged
+ * - `POST /document-ingestion/contract-terms/{id}/risk`                       raise a project risk from a term
+ * - `POST /document-ingestion/obligations/{id}/risk`                          raise a project risk from an obligation
+ * - `GET  /document-ingestion/packages/{id}/drawings?currentOnly=`            the drawing register, paged
+ * - `GET  /document-ingestion/drawings/{id}/revisions`                        a drawing number's revision chain
+ * - `GET  /document-ingestion/documents/{id}/title-blocks/{page}/image`       a short-lived link to a sheet's title-block crop
+ * - `GET  /document-ingestion/packages/{id}/quality-requirements`             the package's ITP rows, paged
+ * - `GET  /document-ingestion/projects/{id}/quality-requirements`             the project's ITP, paged
+ * - `POST /document-ingestion/quality-requirements/copy-to-template`          copy ITP rows into checklist templates
+ * - `GET  /document-ingestion/packages/{id}/qualification-requirements`       the qualification register
+ * - `PUT  /document-ingestion/qualification-requirements/{id}/status`         a person's status for a text requirement
+ * - `GET  /document-ingestion/packages/{id}/compliance-matrix`                the Tender Compliance Matrix
+ * - `GET  /document-ingestion/company-profile`                                the organization's company profile
+ * - `PUT  /document-ingestion/company-profile`                                replace it (evidence is kept)
+ * - `POST /document-ingestion/company-profile/evidence/presign`               step 1 of an evidence upload
+ * - `POST /document-ingestion/company-profile/evidence/{id}/register`         step 3: confirm it
+ * - `GET  /document-ingestion/company-profile/evidence/{id}/download`         a short-lived download link
+ * - `DELETE /document-ingestion/company-profile/evidence/{id}`                remove an evidence file
  *
  * Upload is three steps, as for bill documents: presign, PUT the file to `upload.url` with
- * `upload.contentType`, then register with `upload.key`.
+ * `upload.contentType`, then register with `upload.key`. Company evidence files upload the same way.
  *
  * Every function throws {@link ApiError} on a non-2xx response or a parse failure.
  */
@@ -104,6 +124,38 @@ import {
   parseRevisionDiff,
   parseTenderProfile,
 } from '../types/document-ingestion/document-ingestion';
+import {
+  CompanyEvidence,
+  CompanyProfile,
+  CompanyProfileRequest,
+  ComplianceMatrix,
+  ContractTermCoverage,
+  ContractTermEntry,
+  CopyToTemplateRequest,
+  CopyToTemplateResult,
+  DrawingEntry,
+  DrawingListParams,
+  EvidenceUpload,
+  ObligationEntry,
+  PresignEvidenceRequest,
+  QualificationRequirementEntry,
+  QualityRequirementEntry,
+  RaiseRiskRequest,
+  RaisedRisk,
+  RequirementStatusRequest,
+  parseCompanyEvidence,
+  parseCompanyProfile,
+  parseComplianceMatrix,
+  parseContractTermCoverage,
+  parseContractTermEntry,
+  parseCopyToTemplateResult,
+  parseDrawingEntry,
+  parseEvidenceUpload,
+  parseObligationEntry,
+  parseQualificationRequirementEntry,
+  parseQualityRequirementEntry,
+  parseRaisedRisk,
+} from '../types/document-ingestion/document-ingestion-registers';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ApiResponse = any;
@@ -127,6 +179,21 @@ function pageQuery(params: IngestPageParams): Record<string, number> {
   if (params.page !== undefined) query.page = params.page;
   if (params.size !== undefined) query.size = params.size;
   return query;
+}
+
+function listOf<T>(what: string, data: unknown, parse: (raw: unknown) => T): T[] {
+  return parseWith(what, data, (raw) => (Array.isArray(raw) ? raw : []).map(parse));
+}
+
+function riskPayload(req: RaiseRiskRequest): Record<string, unknown> {
+  const payload: Record<string, unknown> = {};
+  if (req.title !== undefined) payload.title = req.title;
+  if (req.category !== undefined) payload.category = req.category;
+  if (req.probability !== undefined) payload.probability = req.probability;
+  if (req.impact !== undefined) payload.impact = req.impact;
+  if (req.responseType !== undefined) payload.responseType = req.responseType;
+  if (req.owner !== undefined) payload.owner = req.owner;
+  return payload;
 }
 
 /**
@@ -427,5 +494,166 @@ export const documentIngestionService = {
     const payload: Record<string, unknown> = { choice };
     const data = await api.post<ApiResponse>(`${BASE}/candidates/${candidateId}/conflict`, payload);
     return parseWith('candidate', data, parseCandidate);
+  },
+
+  // ---------------------------------------------------------------------- contract terms, obligations
+
+  /** The package's accepted contract terms. */
+  async listContractTerms(packageId: string): Promise<ContractTermEntry[]> {
+    const data = await api.get<ApiResponse>(`${BASE}/packages/${packageId}/contract-terms`);
+    return listOf('contract terms', data, parseContractTermEntry);
+  },
+
+  /** Which of the 19 terms were found, every value found for each, and the pages searched for each term not found. */
+  async getContractTermCoverage(packageId: string): Promise<ContractTermCoverage> {
+    const data = await api.get<ApiResponse>(`${BASE}/packages/${packageId}/contract-terms/coverage`);
+    return parseWith('contract term coverage', data, parseContractTermCoverage);
+  },
+
+  async listObligations(packageId: string, params: IngestPageParams = {}): Promise<IngestPage<ObligationEntry>> {
+    const data = await api.get<ApiResponse>(`${BASE}/packages/${packageId}/obligations`, pageQuery(params));
+    return parseWith('obligation list', data, (raw) => parseIngestPage(raw, parseObligationEntry));
+  },
+
+  /** Raises one project risk from a contract term. Raised again, it answers with the same risk and `created` false. */
+  async raiseContractTermRisk(termId: string, req: RaiseRiskRequest = {}): Promise<RaisedRisk> {
+    const payload = riskPayload(req);
+    const data = await api.post<ApiResponse>(`${BASE}/contract-terms/${termId}/risk`, payload);
+    return parseWith('raised risk', data, parseRaisedRisk);
+  },
+
+  /** Raises one project risk from an obligation. Raised again, it answers with the same risk and `created` false. */
+  async raiseObligationRisk(obligationId: string, req: RaiseRiskRequest = {}): Promise<RaisedRisk> {
+    const payload = riskPayload(req);
+    const data = await api.post<ApiResponse>(`${BASE}/obligations/${obligationId}/risk`, payload);
+    return parseWith('raised risk', data, parseRaisedRisk);
+  },
+
+  // ------------------------------------------------------------------------------------- drawings
+
+  /** The drawing register by number and revision; `currentOnly` keeps the current revision of each number. */
+  async listDrawings(packageId: string, params: DrawingListParams = {}): Promise<IngestPage<DrawingEntry>> {
+    const query: Record<string, number | boolean> = pageQuery(params);
+    if (params.currentOnly !== undefined) query.currentOnly = params.currentOnly;
+    const data = await api.get<ApiResponse>(`${BASE}/packages/${packageId}/drawings`, query);
+    return parseWith('drawing list', data, (raw) => parseIngestPage(raw, parseDrawingEntry));
+  },
+
+  /** Every revision of the drawing's number, in revision order. */
+  async listDrawingRevisions(drawingId: string): Promise<DrawingEntry[]> {
+    const data = await api.get<ApiResponse>(`${BASE}/drawings/${drawingId}/revisions`);
+    return listOf('drawing revisions', data, parseDrawingEntry);
+  },
+
+  /** A short-lived link to a sheet's title-block crop, or null when the worker cropped none for that page (the backend's 404). */
+  async getTitleBlockImage(documentId: string, page: number): Promise<DownloadUrl | null> {
+    let data: ApiResponse;
+    try {
+      data = await api.get<ApiResponse>(`${BASE}/documents/${documentId}/title-blocks/${page}/image`);
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 404 && !isModuleDisabled(error)) return null;
+      throw error;
+    }
+    return parseWith('title-block image link', data, parseDownloadUrl);
+  },
+
+  // -------------------------------------------------------------------------- quality requirements
+
+  /** The ITP rows read from one package. */
+  async listQualityRequirements(
+    packageId: string,
+    params: IngestPageParams = {}
+  ): Promise<IngestPage<QualityRequirementEntry>> {
+    const data = await api.get<ApiResponse>(`${BASE}/packages/${packageId}/quality-requirements`, pageQuery(params));
+    return parseWith('quality requirement list', data, (raw) => parseIngestPage(raw, parseQualityRequirementEntry));
+  },
+
+  /** A project's inspection and test plan, across its packages. */
+  async listProjectQualityRequirements(
+    projectId: number,
+    params: IngestPageParams = {}
+  ): Promise<IngestPage<QualityRequirementEntry>> {
+    const data = await api.get<ApiResponse>(`${BASE}/projects/${projectId}/quality-requirements`, pageQuery(params));
+    return parseWith('quality requirement list', data, (raw) => parseIngestPage(raw, parseQualityRequirementEntry));
+  },
+
+  /**
+   * Copies ITP rows as check points into the checklist template of their trade, or of `tradeId` for
+   * every row. Each row reports its own outcome; a row copied before answers `ALREADY_COPIED`.
+   */
+  async copyQualityRequirementsToTemplate(req: CopyToTemplateRequest): Promise<CopyToTemplateResult> {
+    const payload: Record<string, unknown> = { requirementIds: req.requirementIds };
+    if (req.tradeId !== undefined) payload.tradeId = req.tradeId;
+    const data = await api.post<ApiResponse>(`${BASE}/quality-requirements/copy-to-template`, payload);
+    return parseWith('copy-to-template result', data, parseCopyToTemplateResult);
+  },
+
+  // ------------------------------------------------------------------ qualification, compliance
+
+  async listQualificationRequirements(packageId: string): Promise<QualificationRequirementEntry[]> {
+    const data = await api.get<ApiResponse>(`${BASE}/packages/${packageId}/qualification-requirements`);
+    return listOf('qualification requirements', data, parseQualificationRequirementEntry);
+  },
+
+  /** A person's status for an equipment or personnel requirement; a null status clears it. */
+  async setQualificationStatus(
+    requirementId: string,
+    req: RequirementStatusRequest
+  ): Promise<QualificationRequirementEntry> {
+    const payload: Record<string, unknown> = { status: req.status };
+    if (req.note !== undefined) payload.note = req.note;
+    const data = await api.put<ApiResponse>(`${BASE}/qualification-requirements/${requirementId}/status`, payload);
+    return parseWith('qualification requirement', data, parseQualificationRequirementEntry);
+  },
+
+  /** The package's requirements against the company profile, each `MATCH`, `GAP` or `UNKNOWN`. */
+  async getComplianceMatrix(packageId: string): Promise<ComplianceMatrix> {
+    const data = await api.get<ApiResponse>(`${BASE}/packages/${packageId}/compliance-matrix`);
+    return parseWith('compliance matrix', data, parseComplianceMatrix);
+  },
+
+  // ------------------------------------------------------------------------------ company profile
+
+  async getCompanyProfile(): Promise<CompanyProfile> {
+    const data = await api.get<ApiResponse>(`${BASE}/company-profile`);
+    return parseWith('company profile', data, parseCompanyProfile);
+  },
+
+  /** Replaces the whole profile. Evidence files are kept; a list left out is saved empty. */
+  async saveCompanyProfile(req: CompanyProfileRequest): Promise<CompanyProfile> {
+    const payload: Record<string, unknown> = {
+      yearsInBusiness: req.yearsInBusiness ?? null,
+      turnover: req.turnover ?? [],
+      similarProjects: req.similarProjects ?? [],
+      equipment: req.equipment ?? [],
+      personnel: req.personnel ?? [],
+    };
+    const data = await api.put<ApiResponse>(`${BASE}/company-profile`, payload);
+    return parseWith('company profile', data, parseCompanyProfile);
+  },
+
+  /** Step 1 of an evidence upload: declares the file and returns where to PUT it. */
+  async presignCompanyEvidence(req: PresignEvidenceRequest): Promise<EvidenceUpload> {
+    const payload: Record<string, unknown> = { section: req.section, fileName: req.fileName, fileSize: req.fileSize };
+    if (req.contentType !== undefined) payload.contentType = req.contentType;
+    if (req.label !== undefined) payload.label = req.label;
+    const data = await api.post<ApiResponse>(`${BASE}/company-profile/evidence/presign`, payload);
+    return parseWith('evidence upload', data, parseEvidenceUpload);
+  },
+
+  /** Step 3 of an evidence upload: confirms the PUT. */
+  async registerCompanyEvidence(evidenceId: string, key: string): Promise<CompanyEvidence> {
+    const payload: Record<string, unknown> = { key };
+    const data = await api.post<ApiResponse>(`${BASE}/company-profile/evidence/${evidenceId}/register`, payload);
+    return parseWith('company evidence', data, parseCompanyEvidence);
+  },
+
+  async getCompanyEvidenceDownloadUrl(evidenceId: string): Promise<DownloadUrl> {
+    const data = await api.get<ApiResponse>(`${BASE}/company-profile/evidence/${evidenceId}/download`);
+    return parseWith('download link', data, parseDownloadUrl);
+  },
+
+  async deleteCompanyEvidence(evidenceId: string): Promise<void> {
+    await api.delete(`${BASE}/company-profile/evidence/${evidenceId}`);
   },
 };

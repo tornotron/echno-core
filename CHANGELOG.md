@@ -11,6 +11,49 @@ From `v1.0.0` the package follows [semantic versioning](https://semver.org/). Se
   after #1046 (document ingestion step 14) merged. The revision, revision-diff and conflict calls of
   `document-ingestion-service.ts` are now endpoints in the document, which clears their three
   findings (11 to 8). No code change.
+- Document ingestion client, part three (tornotron/echno-backend#957, build plan step 22): the
+  registers accepted values land in, for backend #1043 (contract terms and obligations), #1050
+  (drawings), #1053 (quality requirements) and #1054 (qualification and the company profile).
+  Additive. The new types sit in `document-ingestion-registers`, exported beside the rest.
+  - Contract: `listContractTerms`, `getContractTermCoverage` (every value found per term, with the
+    general-conditions one marked `overridden`, and the pages searched for each term not found),
+    `listObligations`, `raiseContractTermRisk` and `raiseObligationRisk`. `RaiseRiskRequest` is
+    optional and sends only the choices given; raising twice answers with the same risk and
+    `created` false. Types `ContractTermEntry`, `ContractTermCoverage`, `TermCoverage`,
+    `FoundTermValue`, `ContractReadPart`, `ObligationEntry`, `RaisedRisk`, and `ContractTermKey`
+    with `CONTRACT_TERM_KEYS` for the 19 terms.
+  - Drawings: `listDrawings` (`DrawingListParams` with `currentOnly`), `listDrawingRevisions` and
+    `getTitleBlockImage`, which resolves to null on the backend's 404 (no crop for that page).
+    Types `DrawingEntry`, `DrawingRevisionNote`, `DrawingStatus`, `DrawingSourceFormat`.
+  - Quality: `listQualityRequirements` (per package), `listProjectQualityRequirements` (the
+    project's ITP) and `copyQualityRequirementsToTemplate`, which sends `tradeId` only when one is
+    chosen. Types `QualityRequirementEntry`, `CopyToTemplateRequest`, `CopyToTemplateResult`,
+    `CopyRowOutcome`, `TemplateCopy`.
+  - Qualification: `listQualificationRequirements`, `setQualificationStatus` (a null status
+    clears it) and `getComplianceMatrix`, with `ComplianceMatrix`, `ComplianceMatrixRow`,
+    `MatrixStatus` (`MATCH`, `GAP`, `UNKNOWN`; an unknown status reads as `UNKNOWN`),
+    `MatrixBasis` and `QualificationRequirementKey`.
+  - Company profile: `getCompanyProfile`, `saveCompanyProfile` (the whole profile; a list left
+    out is saved empty, and evidence is kept), and evidence in three steps as for documents:
+    `presignCompanyEvidence`, `registerCompanyEvidence`, then `getCompanyEvidenceDownloadUrl`
+    and `deleteCompanyEvidence`. Types `CompanyProfile`, `CompanyProfileRequest`, `TurnoverYear`,
+    `SimilarProject`, `EquipmentItem`, `PersonnelEntry`, `CompanyEvidence`, `EvidenceSection`.
+  - Payload readers, non-strict and never throwing: `contractTermOf`, `obligationOf`,
+    `drawingOf`, `qualityRequirementOf` (a single standard reads as a list of one) and
+    `qualificationRequirementOf`, which takes the type from the natural key before its `|`.
+    `INGEST_FLAG` gains `OVERRIDDEN_BY_SCC`, `NOT_READ`, `NUMBER_FROM_FILE_NAME`, `NO_REVISION`,
+    `FREQUENCY_NOT_STATED` and `ACCEPTANCE_NOT_STATED`; `INGEST_TARGET` gains the five registers
+    and `PROJECT_RISK`.
+  - Hooks: `useContractTerms`, `useContractTermCoverage`, `useObligations`, `useDrawings`,
+    `useDrawingRevisions`, `useTitleBlockImage` (held for a minute, as its link is signed),
+    `useQualityRequirements`, `useProjectQualityRequirements`, `useQualificationRequirements`,
+    `useComplianceMatrix`, `useCompanyProfile`, and the mutations `useRaiseContractTermRisk` and
+    `useRaiseObligationRisk` (which also refresh the risk register),
+    `useCopyQualityRequirementsToTemplate` (which also refreshes checklist templates),
+    `useSetQualificationStatus`, `useSaveCompanyProfile`, `usePresignCompanyEvidence`,
+    `useRegisterCompanyEvidence` and `useDeleteCompanyEvidence`.
+  - `etc/backend-request-fields.json` refreshed from backend `development` with steps 17 to 21
+    merged. The seven new write calls are all checked, with no finding.
 
 ## [v11.13.0] - 2026-11-09
 

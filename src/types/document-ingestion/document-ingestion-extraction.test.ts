@@ -268,7 +268,20 @@ describe('payload readers', () => {
 
   test('every target type is named once', () => {
     expect((Object.values(INGEST_TARGET) as string[]).sort()).toEqual(
-      ['CANDIDATE', 'CONTRACT_BOQ_ITEM', 'CONTRACT_MILESTONE', 'PROJECT', 'TENDER_PROFILE', 'WBS_ELEMENT'].sort()
+      [
+        'CANDIDATE',
+        'CONTRACT_BOQ_ITEM',
+        'CONTRACT_MILESTONE',
+        'PROJECT',
+        'TENDER_PROFILE',
+        'WBS_ELEMENT',
+        'CONTRACT_TERM',
+        'OBLIGATION',
+        'DRAWING',
+        'QUALITY_REQUIREMENT',
+        'QUALIFICATION_REQUIREMENT',
+        'PROJECT_RISK',
+      ].sort()
     );
   });
 });

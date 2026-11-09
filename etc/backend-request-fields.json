@@ -3,7 +3,7 @@
     "repository": "tornotron/echno-backend",
     "ref": "development",
     "path": "docs/openapi.json",
-    "sha256": "87656399685bd0ad64e63add869b13cb16b69daa8be170758fb490ed2a9ca3cf"
+    "sha256": "aa032783689c47a824997688792f9c78629ec37d971c3e8678081356fb5a7a62"
   },
   "operations": {
     "POST /api/v1/assets": {
@@ -1598,6 +1598,44 @@
       ],
       "acceptsAnyField": false
     },
+    "PUT /api/v1/document-ingestion/company-profile": {
+      "schema": "CompanyProfileRequest",
+      "fields": [
+        "equipment",
+        "personnel",
+        "similarProjects",
+        "turnover",
+        "yearsInBusiness"
+      ],
+      "required": [],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/document-ingestion/company-profile/evidence/presign": {
+      "schema": "PresignEvidenceRequest",
+      "fields": [
+        "contentType",
+        "fileName",
+        "fileSize",
+        "label",
+        "section"
+      ],
+      "required": [
+        "fileName",
+        "fileSize",
+        "section"
+      ],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/document-ingestion/company-profile/evidence/{evidenceId}/register": {
+      "schema": "RegisterDocumentRequest",
+      "fields": [
+        "key"
+      ],
+      "required": [
+        "key"
+      ],
+      "acceptsAnyField": false
+    },
     "POST /api/v1/document-ingestion/contract-terms/{termId}/risk": {
       "schema": "RaiseRiskRequest",
       "fields": [
@@ -1761,6 +1799,26 @@
         "budgetUsd"
       ],
       "required": [],
+      "acceptsAnyField": false
+    },
+    "PUT /api/v1/document-ingestion/qualification-requirements/{requirementId}/status": {
+      "schema": "RequirementStatusRequest",
+      "fields": [
+        "note",
+        "status"
+      ],
+      "required": [],
+      "acceptsAnyField": false
+    },
+    "POST /api/v1/document-ingestion/quality-requirements/copy-to-template": {
+      "schema": "CopyToTemplateRequest",
+      "fields": [
+        "requirementIds",
+        "tradeId"
+      ],
+      "required": [
+        "requirementIds"
+      ],
       "acceptsAnyField": false
     },
     "PUT /api/v1/document-ingestion/settings/llm-budget": {

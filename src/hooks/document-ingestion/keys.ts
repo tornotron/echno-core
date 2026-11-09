@@ -6,6 +6,7 @@
  */
 
 import type { CandidateListParams, IngestPageParams, LlmCallListParams } from '../../types/document-ingestion/document-ingestion';
+import type { DrawingListParams } from '../../types/document-ingestion/document-ingestion-registers';
 
 export const documentIngestionKeys = {
   all: ['document-ingestion'] as const,
@@ -30,4 +31,22 @@ export const documentIngestionKeys = {
   llmSpend: (packageId: string) => [...documentIngestionKeys.all, 'llm-spend', packageId] as const,
   settings: () => [...documentIngestionKeys.all, 'settings'] as const,
   tenderProfile: (packageId: string) => [...documentIngestionKeys.all, 'tender-profile', packageId] as const,
+  contractTerms: (packageId: string) => [...documentIngestionKeys.all, 'contract-terms', packageId] as const,
+  contractTermCoverage: (packageId: string) =>
+    [...documentIngestionKeys.all, 'contract-term-coverage', packageId] as const,
+  obligations: (packageId: string, params: IngestPageParams = {}) =>
+    [...documentIngestionKeys.all, 'obligations', packageId, params] as const,
+  drawings: (packageId: string, params: DrawingListParams = {}) =>
+    [...documentIngestionKeys.all, 'drawings', packageId, params] as const,
+  drawingRevisions: (drawingId: string) => [...documentIngestionKeys.all, 'drawing-revisions', drawingId] as const,
+  titleBlockImage: (documentId: string, page: number) =>
+    [...documentIngestionKeys.all, 'title-block-image', documentId, page] as const,
+  qualityRequirements: (packageId: string, params: IngestPageParams = {}) =>
+    [...documentIngestionKeys.all, 'quality-requirements', packageId, params] as const,
+  projectQualityRequirements: (projectId: number, params: IngestPageParams = {}) =>
+    [...documentIngestionKeys.all, 'project-quality-requirements', projectId, params] as const,
+  qualificationRequirements: (packageId: string) =>
+    [...documentIngestionKeys.all, 'qualification-requirements', packageId] as const,
+  complianceMatrix: (packageId: string) => [...documentIngestionKeys.all, 'compliance-matrix', packageId] as const,
+  companyProfile: () => [...documentIngestionKeys.all, 'company-profile'] as const,
 };

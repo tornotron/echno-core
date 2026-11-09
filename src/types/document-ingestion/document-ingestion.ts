@@ -6,10 +6,13 @@
  * each value and provenance on each value that reaches a live record. This version covers packages,
  * documents, BOQ sheets with their column mapping, review, apply and provenance; document classes
  * and page segments, extract jobs, the AI reading ledger, budgets and settings; the tender profile;
- * revisions of a file and the change candidates a corrigendum or a revised file gives.
+ * revisions of a file and the change candidates a corrigendum or a revised file gives. The registers
+ * accepted values land in (contract terms, obligations, drawings, the quality plan, qualification
+ * requirements and the company profile they are compared with) live in `document-ingestion-registers`.
  *
  * Each candidate kind's payload has a typed reader ({@link boqItemOf}, {@link projectFieldOf},
- * {@link milestoneOf}, {@link changeOf}) that never throws: a field of the wrong type reads as absent.
+ * {@link milestoneOf}, {@link changeOf}, and the register kinds' readers beside their registers)
+ * that never throws: a field of the wrong type reads as absent.
  *
  * Backend design note: `docs/specs/2026-11-08-document-ingestion-design.md` in
  * tornotron/echno-backend. The module is off for every organization until an operator opens it, and
@@ -29,6 +32,7 @@ import {
   nullableNumber,
   nullableString,
 } from '../../lib/validation/backend-schema';
+import { payloadFlag, payloadInt, payloadText } from './payload-values';
 
 // ------------------------------------------------------------------------------------------ enums
 
@@ -79,6 +83,13 @@ export const INGEST_TARGET = {
   WBS_ELEMENT: 'WBS_ELEMENT',
   CONTRACT_MILESTONE: 'CONTRACT_MILESTONE',
   CANDIDATE: 'CANDIDATE',
+  CONTRACT_TERM: 'CONTRACT_TERM',
+  OBLIGATION: 'OBLIGATION',
+  DRAWING: 'DRAWING',
+  QUALITY_REQUIREMENT: 'QUALITY_REQUIREMENT',
+  QUALIFICATION_REQUIREMENT: 'QUALIFICATION_REQUIREMENT',
+  /** A risk raised from a contract term or an obligation; its description carries the term's source. */
+  PROJECT_RISK: 'PROJECT_RISK',
 } as const;
 export type IngestTargetType = (typeof INGEST_TARGET)[keyof typeof INGEST_TARGET];
 
@@ -188,6 +199,21 @@ export const INGEST_FLAG = {
   ITEM_ADDED: 'ITEM_ADDED',
   /** An item only the replaced file has. */
   ITEM_REMOVED: 'ITEM_REMOVED',
+  /**
+   * A general-conditions term the special conditions or contract data restate. Their value is the
+   * one proposed, pointing at this one through `supersedesCandidateId`; this one is passed by in bulk.
+   */
+  OVERRIDDEN_BY_SCC: 'OVERRIDDEN_BY_SCC',
+  /** A drawing whose title block could not be read, such as a DWG; add a PDF or DXF copy. */
+  NOT_READ: 'NOT_READ',
+  /** A drawing number taken from the file name because the title block gave none. */
+  NUMBER_FROM_FILE_NAME: 'NUMBER_FROM_FILE_NAME',
+  /** A drawing sheet with no revision found. */
+  NO_REVISION: 'NO_REVISION',
+  /** A quality requirement whose specification states no frequency; the value stays empty. */
+  FREQUENCY_NOT_STATED: 'FREQUENCY_NOT_STATED',
+  /** A quality requirement whose specification states no acceptance criterion; the value stays empty. */
+  ACCEPTANCE_NOT_STATED: 'ACCEPTANCE_NOT_STATED',
 } as const;
 export type IngestFlagCode = (typeof INGEST_FLAG)[keyof typeof INGEST_FLAG];
 
@@ -1440,19 +1466,6 @@ export function parseRevisionDiff(json: unknown): RevisionDiff {
 }
 
 // ------------------------------------------------------------------------------- payload readers
-
-/**
- * A payload value as text: a string as it is, a number in its plain spelling, anything else absent.
- * Never fails, so a reader built from it never throws on a payload the backend shapes differently.
- */
-const payloadText = z
-  .unknown()
-  .optional()
-  .transform((v): string | undefined =>
-    typeof v === 'string' ? (v === '' ? undefined : v) : typeof v === 'number' || typeof v === 'bigint' ? String(v) : undefined
-  );
-const payloadInt = z.unknown().optional().transform((v): number | undefined => (typeof v === 'number' ? v : undefined));
-const payloadFlag = z.unknown().optional().transform((v): boolean => v === true || v === 'true');
 
 /** The `PROJECT_FIELD` payload, read leniently. */
 export const ProjectFieldPayloadSchema = z.looseObject({ value: payloadText });
