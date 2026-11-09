@@ -18,7 +18,8 @@ From `v1.0.0` the package follows [semantic versioning](https://semver.org/). Se
   - `Candidate` gains `conflictRecordValue` and `conflictAppliedValue`: for a change refused because
     its record was edited by hand, the value on the record and the value last applied, beside
     `applyError`.
-  - `etc/backend-request-fields.json` refreshed from backend `development` after #1058. No new
+  - `etc/public-api.md` updated for the new exports. `etc/backend-request-fields.json` refreshed
+    from backend `development` after #1058. No new
     request-contract findings.
 
 ## [v11.14.0] - 2026-11-09
