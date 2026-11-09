@@ -5,13 +5,18 @@
  * can refresh the whole domain at once.
  */
 
-import type { CandidateListParams, IngestPageParams, LlmCallListParams } from '../../types/document-ingestion/document-ingestion';
+import type {
+  CandidateListParams,
+  IngestPageParams,
+  LlmCallListParams,
+  PackageListParams,
+} from '../../types/document-ingestion/document-ingestion';
 import type { DrawingListParams } from '../../types/document-ingestion/document-ingestion-registers';
 
 export const documentIngestionKeys = {
   all: ['document-ingestion'] as const,
   status: () => [...documentIngestionKeys.all, 'status'] as const,
-  packages: (params: IngestPageParams = {}) => [...documentIngestionKeys.all, 'packages', params] as const,
+  packages: (params: PackageListParams = {}) => [...documentIngestionKeys.all, 'packages', params] as const,
   package: (packageId: string) => [...documentIngestionKeys.all, 'package', packageId] as const,
   documents: (packageId: string, params: IngestPageParams = {}) =>
     [...documentIngestionKeys.all, 'documents', packageId, params] as const,
@@ -39,6 +44,8 @@ export const documentIngestionKeys = {
   drawings: (packageId: string, params: DrawingListParams = {}) =>
     [...documentIngestionKeys.all, 'drawings', packageId, params] as const,
   drawingRevisions: (drawingId: string) => [...documentIngestionKeys.all, 'drawing-revisions', drawingId] as const,
+  pageImage: (documentId: string, page: number) =>
+    [...documentIngestionKeys.all, 'page-image', documentId, page] as const,
   titleBlockImage: (documentId: string, page: number) =>
     [...documentIngestionKeys.all, 'title-block-image', documentId, page] as const,
   qualityRequirements: (packageId: string, params: IngestPageParams = {}) =>

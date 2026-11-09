@@ -99,6 +99,7 @@ import {
   LlmCall,
   LlmCallListParams,
   LlmSpend,
+  PackageListParams,
   PresignDocumentRequest,
   Provenance,
   RevisionDiff,
@@ -216,8 +217,10 @@ export const documentIngestionService = {
 
   // ------------------------------------------------------------------------------------ packages
 
-  async listPackages(params: IngestPageParams = {}): Promise<IngestPage<IngestPackage>> {
-    const data = await api.get<ApiResponse>(`${BASE}/packages`, pageQuery(params));
+  async listPackages(params: PackageListParams = {}): Promise<IngestPage<IngestPackage>> {
+    const query: Record<string, number> = pageQuery(params);
+    if (params.projectId !== undefined) query.projectId = params.projectId;
+    const data = await api.get<ApiResponse>(`${BASE}/packages`, query);
     return parseWith('document package list', data, (raw) => parseIngestPage(raw, parseIngestPackage));
   },
 
@@ -543,6 +546,21 @@ export const documentIngestionService = {
   async listDrawingRevisions(drawingId: string): Promise<DrawingEntry[]> {
     const data = await api.get<ApiResponse>(`${BASE}/drawings/${drawingId}/revisions`);
     return listOf('drawing revisions', data, parseDrawingEntry);
+  },
+
+  /**
+   * A short-lived link to the file reader's image of one page of a PDF (pages from 1), for drawing a
+   * source box over, or null when there is none for that page (the backend's 404).
+   */
+  async getPageImage(documentId: string, page: number): Promise<DownloadUrl | null> {
+    let data: ApiResponse;
+    try {
+      data = await api.get<ApiResponse>(`${BASE}/documents/${documentId}/pages/${page}/image`);
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 404 && !isModuleDisabled(error)) return null;
+      throw error;
+    }
+    return parseWith('page image link', data, parseDownloadUrl);
   },
 
   /** A short-lived link to a sheet's title-block crop, or null when the worker cropped none for that page (the backend's 404). */

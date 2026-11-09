@@ -2,6 +2,7 @@ import { afterEach, describe, expect, spyOn, test } from 'bun:test';
 
 import { api, ApiError } from '../lib/api/api-client';
 import { documentIngestionService } from './document-ingestion-service';
+import { parseCandidate, parseIngestSettings } from '../types/document-ingestion/document-ingestion';
 
 const emptyPage = { content: [], number: 0, totalElements: 0, totalPages: 0 };
 const risk = { riskId: 'r1', riskNumber: 'R-007', projectId: 7, created: true };
@@ -73,6 +74,64 @@ describe('drawings', () => {
 
     get.mockRejectedValueOnce(new ApiError('Module disabled', 403, undefined, undefined, undefined, { code: 'MODULE_DISABLED' }));
     await expect(documentIngestionService.getTitleBlockImage('d1', 4)).rejects.toThrow();
+  });
+});
+
+describe('review screen gaps (backend #1048)', () => {
+  test('a page image is null on 404 and still throws when the module is off', async () => {
+    const get = spyOn(api, 'get');
+    get.mockResolvedValueOnce({ url: 'https://store.example/page.webp', expiresInSeconds: 300 });
+    expect(await documentIngestionService.getPageImage('d1', 3)).toEqual({
+      url: 'https://store.example/page.webp',
+      expiresInSeconds: 300,
+    });
+    expect(api.get).toHaveBeenCalledWith('/document-ingestion/documents/d1/pages/3/image');
+
+    get.mockRejectedValueOnce(new ApiError('Not found', 404));
+    expect(await documentIngestionService.getPageImage('d1', 9)).toBeNull();
+
+    get.mockRejectedValueOnce(new ApiError('Module disabled', 403, undefined, undefined, undefined, { code: 'MODULE_DISABLED' }));
+    await expect(documentIngestionService.getPageImage('d1', 3)).rejects.toThrow();
+  });
+
+  test('the package list sends projectId only when given', async () => {
+    spyOn(api, 'get').mockResolvedValue({ content: [], totalElements: 0 });
+    await documentIngestionService.listPackages({ size: 20 });
+    expect(api.get).toHaveBeenLastCalledWith('/document-ingestion/packages', { size: 20 });
+    await documentIngestionService.listPackages({ projectId: 7, page: 0 });
+    expect(api.get).toHaveBeenLastCalledWith('/document-ingestion/packages', { page: 0, projectId: 7 });
+  });
+
+  test('the settings name the AI provider and model', () => {
+    const settings = parseIngestSettings({
+      llmReadingEnabled: true,
+      llmReadingDisclosure: 'Text is sent.',
+      aiProvider: 'Example Inference Cloud',
+      aiModel: 'example-model-7b',
+      aiProviderPrivacyUrl: null,
+      recentChanges: [],
+    });
+    expect(settings.aiProvider).toBe('Example Inference Cloud');
+    expect(settings.aiModel).toBe('example-model-7b');
+    expect(settings.aiProviderPrivacyUrl).toBeUndefined();
+  });
+
+  test("a refused change carries the record's value and the value last applied", () => {
+    const c = parseCandidate({
+      id: 'ch-1',
+      packageId: 'p1',
+      kind: 'CHANGE',
+      status: 'APPLY_FAILED',
+      payload: { new_value: '920' },
+      flags: [],
+      applyError: 'The BOQ line 1.03 was edited by hand after it was applied.',
+      conflictRecordValue: '900',
+      conflictAppliedValue: '850',
+    });
+    expect(c.conflictRecordValue).toBe('900');
+    expect(c.conflictAppliedValue).toBe('850');
+    expect(parseCandidate({ id: 'c2', packageId: 'p1', kind: 'BOQ_ITEM', payload: {}, flags: [] }).conflictRecordValue)
+      .toBeUndefined();
   });
 });
 

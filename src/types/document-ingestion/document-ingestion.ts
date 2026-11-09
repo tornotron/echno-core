@@ -347,6 +347,13 @@ export interface Candidate {
   appliedTargetType?: string;
   appliedTargetId?: string;
   applyError?: string;
+  /**
+   * When a change was refused because its record was edited by hand after a value was applied: the
+   * value on the record at that apply. The change's own value is in the payload.
+   */
+  conflictRecordValue?: string;
+  /** With `conflictRecordValue`: the value last applied to the record from a document. */
+  conflictAppliedValue?: string;
   sources: SourceRef[];
 }
 
@@ -610,6 +617,11 @@ export interface LlmCall {
   pages: number[];
 }
 
+export interface PackageListParams extends IngestPageParams {
+  /** Only the packages tied to this project. */
+  projectId?: number;
+}
+
 export interface LlmCallListParams extends IngestPageParams {
   /** Only calls for this package; the organization-wide ledger takes it as a filter. */
   packageId?: string;
@@ -659,6 +671,12 @@ export interface IngestSettings {
   llmReadingEnabled: boolean;
   /** The sentence the screen shows beside the switch. */
   llmReadingDisclosure: string;
+  /** The outside AI service the text is sent to, from the backend's configuration. */
+  aiProvider?: string;
+  /** The model the text is read with, from the backend's configuration. */
+  aiModel?: string;
+  /** Where the provider states what it does with the text, when one is configured. */
+  aiProviderPrivacyUrl?: string;
   monthlyBudgetUsd?: number;
   monthlyBudgetTokens?: number;
   changedBy?: number;
@@ -832,6 +850,8 @@ const CandidateSchema = z.object({
   appliedTargetType: nullableString,
   appliedTargetId: nullableString,
   applyError: nullableString,
+  conflictRecordValue: nullableString,
+  conflictAppliedValue: nullableString,
   sources: z.array(z.unknown()).nullish(),
 });
 
@@ -1009,6 +1029,8 @@ export function parseCandidate(json: unknown): Candidate {
     appliedTargetType: opt(raw.appliedTargetType),
     appliedTargetId: opt(raw.appliedTargetId),
     applyError: opt(raw.applyError),
+    conflictRecordValue: opt(raw.conflictRecordValue),
+    conflictAppliedValue: opt(raw.conflictAppliedValue),
     sources: (raw.sources ?? []).map(parseSourceRef),
   };
 }
@@ -1245,6 +1267,9 @@ const SettingChangeSchema = z.object({
 const SettingsSchema = z.object({
   llmReadingEnabled: nullableBoolean,
   llmReadingDisclosure: nullableString,
+  aiProvider: nullableString,
+  aiModel: nullableString,
+  aiProviderPrivacyUrl: nullableString,
   monthlyBudgetUsd: money,
   monthlyBudgetTokens: nullableNumber,
   changedBy: nullableNumber,
@@ -1406,6 +1431,9 @@ export function parseIngestSettings(json: unknown): IngestSettings {
     // A missing switch reads as on, as a missing settings row does on the backend.
     llmReadingEnabled: raw.llmReadingEnabled ?? true,
     llmReadingDisclosure: raw.llmReadingDisclosure ?? '',
+    aiProvider: opt(raw.aiProvider),
+    aiModel: opt(raw.aiModel),
+    aiProviderPrivacyUrl: opt(raw.aiProviderPrivacyUrl),
     monthlyBudgetUsd: opt(raw.monthlyBudgetUsd),
     monthlyBudgetTokens: opt(raw.monthlyBudgetTokens),
     changedBy: opt(raw.changedBy),
