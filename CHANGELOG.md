@@ -7,6 +7,8 @@ From `v1.0.0` the package follows [semantic versioning](https://semver.org/). Se
 
 ## [Unreleased]
 
+## [v11.14.0] - 2026-11-09
+
 - `etc/backend-request-fields.json` and `etc/request-contract.md` refreshed from backend `development`
   after #1046 (document ingestion step 14) merged. The revision, revision-diff and conflict calls of
   `document-ingestion-service.ts` are now endpoints in the document, which clears their three
