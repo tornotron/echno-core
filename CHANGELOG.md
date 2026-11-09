@@ -7,6 +7,20 @@ From `v1.0.0` the package follows [semantic versioning](https://semver.org/). Se
 
 ## [Unreleased]
 
+- Document ingestion review-screen gaps (tornotron/echno-backend#1048, backend #1058). Additive.
+  - `listPackages` and `useIngestPackages` take `PackageListParams`, which adds `projectId` to the
+    page parameters, so a project's Documents tab asks the backend for its own packages.
+  - `getPageImage(documentId, page)` and `usePageImage`: a short-lived link to the file reader's
+    image of a page (`GET /documents/{id}/pages/{page}/image`), null on the backend's 404 and
+    thrown when the module is off, as `getTitleBlockImage` is. Query key `pageImage`.
+  - `IngestSettings` gains `aiProvider`, `aiModel` and `aiProviderPrivacyUrl`, from the backend's
+    endpoint configuration.
+  - `Candidate` gains `conflictRecordValue` and `conflictAppliedValue`: for a change refused because
+    its record was edited by hand, the value on the record and the value last applied, beside
+    `applyError`.
+  - `etc/backend-request-fields.json` refreshed from backend `development` after #1058. No new
+    request-contract findings.
+
 ## [v11.14.0] - 2026-11-09
 
 - `etc/backend-request-fields.json` and `etc/request-contract.md` refreshed from backend `development`

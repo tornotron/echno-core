@@ -14,6 +14,7 @@ import type {
   IngestDocument,
   IngestPageParams,
   LlmCallListParams,
+  PackageListParams,
 } from '../../types/document-ingestion/document-ingestion';
 import type { DrawingListParams } from '../../types/document-ingestion/document-ingestion-registers';
 import { documentIngestionKeys } from './keys';
@@ -29,7 +30,7 @@ export function useDocumentIngestionStatus(enabled = true) {
   });
 }
 
-export function useIngestPackages(params: IngestPageParams = {}, enabled = true) {
+export function useIngestPackages(params: PackageListParams = {}, enabled = true) {
   return useQuery({
     queryKey: documentIngestionKeys.packages(params),
     queryFn: () => documentIngestionService.listPackages(params),
@@ -223,6 +224,21 @@ export function useDrawingRevisions(drawingId: string | undefined) {
     queryFn: () => documentIngestionService.listDrawingRevisions(drawingId as string),
     enabled: Boolean(drawingId),
     retry: shouldRetry,
+  });
+}
+
+/**
+ * A short-lived link to the image of one page of a document; `data` is null when there is none. Held
+ * for a minute, as the title-block crop is, because the link is signed.
+ */
+export function usePageImage(documentId: string | undefined, page: number | undefined) {
+  return useQuery({
+    queryKey: documentIngestionKeys.pageImage(documentId ?? '', page ?? 0),
+    queryFn: () => documentIngestionService.getPageImage(documentId as string, page as number),
+    enabled: Boolean(documentId) && page !== undefined,
+    retry: shouldRetry,
+    staleTime: 60 * 1000,
+    gcTime: 60 * 1000,
   });
 }
 
